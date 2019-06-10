@@ -5,7 +5,11 @@
   "repository": "https://github.com/teamdigitale/io-functions-commons",
   "author": "https://teamdigitale.governo.it",
   "license": "MIT",
+  "files": [
+    "dist/"
+  ],
   "scripts": {
+    "prepare": "yarn build",
     "prebuild": "rimraf dist",
     "build": "yarn generate:definitions && tsc",
     "postversion": "git push && git push --tags",
