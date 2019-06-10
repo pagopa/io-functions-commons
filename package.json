@@ -1,23 +1,26 @@
 {
-  "name": "TODO",
+  "name": "io-functions-commons",
   "version": "0.0.1",
-  "description": "TODO",
-  "repository": "https://github.com/teamdigitale/TODO",
+  "description": "Common code for Azure functions",
+  "repository": "https://github.com/teamdigitale/io-functions-commons",
   "author": "https://teamdigitale.governo.it",
   "license": "MIT",
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "tsc",
+    "build": "yarn generate:definitions && tsc",
     "postversion": "git push && git push --tags",
     "test": "jest",
-    "lint": "tslint --project ."
+    "lint": "tslint --project .",
+    "generate:definitions": "rimraf ./generated/definitions && mkdir -p ./generated/definitions && gen-api-models --api-spec ./openapi/definitions.yaml --out-dir ./generated/definitions"
   },
   "devDependencies": {
+    "@types/documentdb": "^1.10.5",
     "@types/jest": "^24.0.13",
     "@types/node": "10.14.1",
     "danger": "^8.0.0",
     "danger-plugin-digitalcitizenship": "*",
     "italia-tslint-rules": "*",
+    "italia-utils": "^4.0.1",
     "jest": "^24.8.0",
     "prettier": "^1.12.1",
     "rimraf": "^2.6.2",
@@ -26,8 +29,12 @@
     "typescript": "^3.5.0"
   },
   "dependencies": {
-    "fp-ts": "1.12.0",
-    "io-ts": "1.8.5"
+    "azure-storage": "^2.10.3",
+    "documentdb": "^1.15.3",
+    "fp-ts": "^1.18.2",
+    "io-ts": "1.8.5",
+    "italia-ts-commons": "^5.1.4",
+    "ulid": "^2.3.0"
   },
   "jest": {
     "testEnvironment": "node",
