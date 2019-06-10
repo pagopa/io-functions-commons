@@ -1,3 +1,3 @@
-# TODO
+# io-functions-commons
 
-Use this template when creating new typescript projects.
+Common code across Azure functions of project IO.
