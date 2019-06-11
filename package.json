@@ -15,7 +15,7 @@
     "postversion": "git push && git push --tags",
     "test": "jest",
     "lint": "tslint --project .",
-    "generate:definitions": "rimraf ./generated/definitions && mkdir -p ./generated/definitions && gen-api-models --api-spec ./openapi/definitions.yaml --out-dir ./generated/definitions"
+    "generate:definitions": "rimraf ./generated/definitions && mkdir -p ./generated/definitions && gen-api-models --api-spec ./openapi/index.yaml --out-dir ./generated/definitions"
   },
   "devDependencies": {
     "@types/documentdb": "^1.10.5",
