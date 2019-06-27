@@ -3,6 +3,8 @@ import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { Millisecond } from "italia-ts-commons/lib/units";
 import { ServiceId } from "../../generated/definitions/ServiceId";
 
+export { TelemetryClient } from "applicationinsights";
+
 export interface ITelemetryParams {
   readonly operationId: NonEmptyString;
   readonly operationParentId?: NonEmptyString;
