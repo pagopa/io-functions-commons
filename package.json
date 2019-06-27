@@ -40,6 +40,7 @@
     "typescript": "^3.5.0"
   },
   "dependencies": {
+    "applicationinsights": "^1.0.3",
     "azure-storage": "^2.10.3",
     "cidr-matcher": "^2.1.0",
     "documentdb": "^1.15.3",
@@ -51,7 +52,11 @@
     "helmet-csp": "^2.5.1",
     "referrer-policy": "^1.1.0",
     "superagent": "^3.8.3",
-    "nodemailer": "^4.6.7"
+    "nodemailer": "^4.6.7",
+    "unified": "^7.1.0",
+    "rehype-stringify": "^3.0.0",
+    "remark-parse": "^5.0.0",
+    "remark-rehype": "^3.0.0"
   },
   "peerDependencies": {
     "@azure/functions": "^1.0.3",
