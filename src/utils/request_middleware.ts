@@ -23,15 +23,15 @@ export function wrapRequestHandler<R>(
   return (request, response, _) => {
     return handler(request).then(
       r => {
-        r.apply(response);
         winston.log(
           "debug",
           `wrapRequestHandler|SUCCESS|${request.url}|${r.kind}`
         );
+        r.apply(response);
       },
       e => {
-        ResponseErrorInternal(e).apply(response);
         winston.log("debug", `wrapRequestHandler|ERROR|${request.url}|${e}`);
+        ResponseErrorInternal(e).apply(response);
       }
     );
   };
