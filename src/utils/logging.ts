@@ -1,60 +1,56 @@
-// tslint:disable:no-object-mutation
-
 import { Context } from "@azure/functions";
-import * as logform from "logform";
-import * as winston from "winston";
+import { LogEntry } from "winston";
 import * as Transport from "winston-transport";
 
-const { timestamp, printf } = logform.format;
+/**
+ * Returns the Context logging function matching the provided logging level
+ */
+function getLoggerForLevel(
+  logger: Context["log"],
+  level: string
+): (...args: readonly unknown[]) => void {
+  switch (level) {
+    case "debug":
+      return logger.verbose;
+    case "info":
+      return logger.info;
+    case "warn":
+      return logger.warn;
+    case "error":
+      return logger.error;
+    default:
+      return (...args: readonly unknown[]) =>
+        logger.info(`[${level}] `, ...args);
+  }
+}
 
 /**
  * A custom Winston Transport that logs to the Azure Functions context
  */
-class AzureContextTransport extends Transport {
-  // tslint:disable-next-line:readonly-keyword
-  private azureContext: Context;
-
+export class AzureContextTransport extends Transport {
+  /**
+   * @param getContextLogger A function that returns the `log` method in the Context
+   * @param options Extra transport options
+   */
   constructor(
-    azureContext: Context,
+    private readonly getContextLogger: () => Context["log"] | undefined,
     options: Transport.TransportStreamOptions
   ) {
     super(options);
     this.level = options.level || "info";
-    this.azureContext = azureContext;
   }
 
   public log(
-    msg: string,
+    { level, message }: LogEntry,
     callback: (err: Error | undefined, cont: boolean) => void
   ): void {
     if (this.silent) {
       return callback(undefined, true);
     }
-    this.azureContext.log(msg);
+    const contextLogger = this.getContextLogger();
+    if (contextLogger !== undefined) {
+      getLoggerForLevel(contextLogger, level)(message);
+    }
     callback(undefined, true);
   }
-}
-
-/**
- * Configures Winston to log through the Azure Context log function
- */
-export function configureAzureContextTransport(
-  context: Context,
-  w: typeof winston,
-  level: string
-): void {
-  const azureContextTransport = new AzureContextTransport(context, {
-    level
-  });
-  w.configure({
-    format: w.format.combine(
-      timestamp(),
-      w.format.splat(),
-      w.format.simple(),
-      printf(nfo => {
-        return `${nfo.timestamp} [${nfo.level}]: ${nfo.message}`;
-      })
-    ),
-    transports: [azureContextTransport]
-  });
 }
