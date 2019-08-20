@@ -22,6 +22,7 @@ import {
 } from "../message";
 
 jest.mock("../../utils/azure_storage");
+import { ChannelPrivacyLevel } from "../../../generated/definitions/ChannelPrivacyLevel";
 import { MessageSubject } from "../../../generated/definitions/MessageSubject";
 import { ServiceId } from "../../../generated/definitions/ServiceId";
 import { TimeToLiveSeconds } from "../../../generated/definitions/TimeToLiveSeconds";
@@ -50,6 +51,7 @@ const aSerializedNewMessageWithContent = {
   fiscalCode: aFiscalCode,
   id: "A_MESSAGE_ID" as NonEmptyString,
   indexedId: "A_MESSAGE_ID" as NonEmptyString,
+  requiredChannelPrivacyLevel: "FULL" as ChannelPrivacyLevel,
   senderServiceId: "agid" as ServiceId,
   senderUserId: "u123" as NonEmptyString,
   timeToLiveSeconds: 3600 as TimeToLiveSeconds
