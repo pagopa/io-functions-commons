@@ -102,6 +102,8 @@ NewMessage:
       $ref: "#/MessageContent"
     default_addresses:
       $ref: "#/NewMessageDefaultAddresses"
+    required_channel_privacy_level:
+      $ref: "#/ChannelPrivacyLevel"
   required:
     - content
 PaymentData:
@@ -568,3 +570,11 @@ HttpsUrl:
   format: uri
   description: An http(s) url.
   pattern: "^https://[-a-zA-Z0-9@:%._+~#=]{2,256}[.][a-z]{2,6}\\\\b([-a-zA-Z0-9@:%_+.~#?&/=]*)$"
+ChannelPrivacyLevel:
+  type: string
+  description: The level of privacy the channel must guarantee.
+  x-extensible-enum:
+    - NONE
+    - FULL
+  default: "NONE"
+  

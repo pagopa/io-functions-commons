@@ -14,6 +14,7 @@ import { MessageContent } from "../../generated/definitions/MessageContent";
 
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 
+import { ChannelPrivacyLevel } from "../../generated/definitions/ChannelPrivacyLevel";
 import { ServiceId } from "../../generated/definitions/ServiceId";
 import { Timestamp } from "../../generated/definitions/Timestamp";
 import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds";
@@ -37,6 +38,9 @@ const MessageBaseR = t.interface({
 
   // time to live in seconds
   timeToLiveSeconds: TimeToLiveSeconds,
+
+  // the required channel privacy level for this message
+  requiredChannelPrivacyLevel: ChannelPrivacyLevel,
 
   // when the message was accepted by the system
   createdAt: Timestamp,
