@@ -122,7 +122,8 @@ PaymentData:
     - amount
     - notice_number
 PaymentNoticeNumber:
-  description: The field ["Numero Avviso"](https://pagopa-specifichepagamenti.readthedocs.io/it/latest/_docs/Capitolo7.html#il-numero-avviso-e-larchivio-dei-pagamenti-in-attesa)
+  description:
+    The field ["Numero Avviso"](https://pagopa-specifichepagamenti.readthedocs.io/it/latest/_docs/Capitolo7.html#il-numero-avviso-e-larchivio-dei-pagamenti-in-attesa)
     of pagoPa, needed to identify the payment. Format is `<aux digit (1n)>[<application code> (2n)]<codice IUV (15|17n)>`.
     See [pagoPa specs](https://www.agid.gov.it/sites/default/files/repository_files/specifiche_attuative_pagamenti_1_3_1_0.pdf) for more info on this field and the IUV.
   type: string
@@ -215,6 +216,8 @@ MessageResponseNotificationStatus:
   properties:
     email:
       $ref: "#/NotificationChannelStatusValue"
+    webhook:
+      $ref: "#/NotificationChannelStatusValue"
 MessageResponseWithContent:
   type: object
   properties:
@@ -301,8 +304,8 @@ CreatedMessageWithoutContentCollection:
 PaginatedCreatedMessageWithoutContentCollection:
   description: A paginated collection of messages
   allOf:
-  - $ref: "#/CreatedMessageWithoutContentCollection"
-  - $ref: "#/PaginationResponse"
+    - $ref: "#/CreatedMessageWithoutContentCollection"
+    - $ref: "#/PaginationResponse"
 BlockedInboxOrChannels:
   type: object
   additionalProperties:
@@ -468,9 +471,9 @@ Service:
       type: boolean
       default: false
     max_allowed_payment_amount:
-        $ref: "#/MaxAllowedPaymentAmount"
+      $ref: "#/MaxAllowedPaymentAmount"
     organization_fiscal_code:
-        $ref: "#/OrganizationFiscalCode"
+      $ref: "#/OrganizationFiscalCode"
     version:
       type: integer
     id:
@@ -496,8 +499,8 @@ ServiceTupleCollection:
 PaginatedServiceTupleCollection:
   description: A paginated collection of services tuples
   allOf:
-  - $ref: "#/ServiceTupleCollection"
-  - $ref: "#/PaginationResponse"
+    - $ref: "#/ServiceTupleCollection"
+    - $ref: "#/PaginationResponse"
 ServicePublic:
   title: Service (public)
   description: A Service associated to an user's subscription.
