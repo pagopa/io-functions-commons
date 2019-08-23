@@ -1,15 +1,19 @@
+import * as t from "io-ts";
+
+import winston = require("winston");
+
 import { Either, isRight, left, right } from "fp-ts/lib/Either";
 import { fromEither, isNone, none, Option, some } from "fp-ts/lib/Option";
-import * as t from "io-ts";
 
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 
+import { RetrievedMessage } from "../models/message";
+import { NotificationModel } from "../models/notification";
 import { NotificationStatusModel } from "../models/notification_status";
 
-import winston = require("winston");
+import { CreatedMessageWithoutContent } from "../../generated/definitions/CreatedMessageWithoutContent";
 import { NotificationChannelEnum } from "../../generated/definitions/NotificationChannel";
 import { NotificationChannelStatusValueEnum } from "../../generated/definitions/NotificationChannelStatusValue";
-import { NotificationModel } from "../models/notification";
 
 /**
  * Convenience structure to hold notification channels
@@ -101,4 +105,18 @@ export async function getMessageNotificationStatuses(
       new Error(`Error querying for NotificationStatus`)
     );
   }
+}
+
+/**
+ * Converts a retrieved message to a message that can be shared via API
+ */
+export function retrievedMessageToPublic(
+  retrievedMessage: RetrievedMessage
+): CreatedMessageWithoutContent {
+  return {
+    created_at: retrievedMessage.createdAt,
+    fiscal_code: retrievedMessage.fiscalCode,
+    id: retrievedMessage.id,
+    sender_service_id: retrievedMessage.senderServiceId
+  };
 }
