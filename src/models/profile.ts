@@ -19,6 +19,7 @@ import { AcceptedTosVersion } from "../../generated/definitions/AcceptedTosVersi
 import { BlockedInboxOrChannel } from "../../generated/definitions/BlockedInboxOrChannel";
 import { EmailAddress } from "../../generated/definitions/EmailAddress";
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
+import { IsEmailEnabled } from "../../generated/definitions/IsEmailEnabled";
 import { IsInboxEnabled } from "../../generated/definitions/IsInboxEnabled";
 import { IsWebhookEnabled } from "../../generated/definitions/IsWebhookEnabled";
 import { PreferredLanguages } from "../../generated/definitions/PreferredLanguages";
@@ -63,8 +64,13 @@ export const Profile = t.intersection([
     // Version of terms of services accepted by citizen
     acceptedTosVersion: AcceptedTosVersion,
 
-    // whether to push notifications to the default webhook
+    // whether to push notifications to the default webhook (defaults to false)
     isWebhookEnabled: IsWebhookEnabled,
+
+    // whether to send email notifications (defaults to true)
+    // this field defaults to true to keep backward compatibility with users
+    // that don't have this setting in their profile
+    isEmailEnabled: IsEmailEnabled,
 
     // array of user's preferred languages in ISO-3166-1-2 format
     // https://it.wikipedia.org/wiki/ISO_3166-2

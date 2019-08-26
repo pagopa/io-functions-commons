@@ -354,6 +354,8 @@ ExtendedProfile:
       $ref: "#/AcceptedTosVersion"
     is_webhook_enabled:
       $ref: "#/IsWebhookEnabled"
+    is_email_enabled:
+      $ref: "#/IsEmailEnabled"
     version:
       type: integer
   required:
@@ -375,6 +377,10 @@ IsWebhookEnabled:
   type: boolean
   default: false
   description: True if the recipient of a message wants to forward the notifications to the default webhook.
+IsEmailEnabled:
+  type: boolean
+  default: true
+  description: True if the recipient of a message wants to forward the notifications to his email address.
 TimeToLiveSeconds:
   type: integer
   default: 3600
