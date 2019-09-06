@@ -1,6 +1,12 @@
 swagger: "2.0"
 info:
+  title: "IO APIs, shared specs"
   version: "0.1"
 paths:
+  "/dummy":
+    get:
+      responses:
+        "200":
+          description: "ok"
 definitions:
   $ref: definitions.yaml
