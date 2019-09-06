@@ -56,6 +56,9 @@ export enum UserGroup {
   // messages: list all messages for any recipient
   ApiMessageList = "ApiMessageList",
 
+  // subscriptions: read access to the subscriptions feed
+  ApiSubscriptionsFeedRead = "ApiSubscriptionsFeedRead",
+
   // info: read system information
   ApiInfoRead = "ApiInfoRead",
 
