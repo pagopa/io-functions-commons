@@ -8,6 +8,70 @@ import { Either, fromOption, left, right, tryCatch } from "fp-ts/lib/Either";
 import { fromNullable, Option } from "fp-ts/lib/Option";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 
+type Resolve<T> = (value?: T | PromiseLike<T>) => void;
+
+/**
+ * Utility function to avoid code duplication detection by tslint
+ */
+const resolveErrorOrLeaseResult = (
+  resolve: Resolve<Either<Error, azureStorage.BlobService.LeaseResult>>
+) => (
+  err: Error,
+  result: azureStorage.BlobService.LeaseResult,
+  _: azureStorage.ServiceResponse
+) => {
+  if (err) {
+    return resolve(left(err));
+  } else {
+    return resolve(right(result));
+  }
+};
+
+/**
+ * Acquire lease for a blob.
+ *
+ * @param blobService     the Azure blob service
+ * @param containerName   the name of the Azure blob storage container
+ * @param blobName        blob file name
+ */
+export function acquireLease(
+  blobService: azureStorage.BlobService,
+  containerName: string,
+  blobName: string
+): Promise<Either<Error, azureStorage.BlobService.LeaseResult>> {
+  return new Promise(resolve => {
+    blobService.acquireLease(
+      containerName,
+      blobName,
+      resolveErrorOrLeaseResult(resolve)
+    );
+  });
+}
+
+/**
+ * Release lease for a blob.
+ *
+ * @param blobService     the Azure blob service
+ * @param containerName   the name of the Azure blob storage container
+ * @param blobName        blob file name
+ * @param leaseId         the id of the lease returned by acquireLease method
+ */
+export function releaseLease(
+  blobService: azureStorage.BlobService,
+  containerName: string,
+  blobName: string,
+  leaseId: string
+): Promise<Either<Error, azureStorage.BlobService.LeaseResult>> {
+  return new Promise(resolve => {
+    blobService.releaseLease(
+      containerName,
+      blobName,
+      leaseId,
+      resolveErrorOrLeaseResult(resolve)
+    );
+  });
+}
+
 /**
  * Create a new blob (media) from plain text.
  * Assumes that the container <containerName> already exists.
