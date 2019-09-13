@@ -5,10 +5,16 @@ import * as azureStorage from "azure-storage";
 import * as t from "io-ts";
 
 import { Either, fromOption, left, right, tryCatch } from "fp-ts/lib/Either";
-import { fromNullable, Option } from "fp-ts/lib/Option";
+import { fromNullable, Option, some } from "fp-ts/lib/Option";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 
+export const BlobNotFoundCode = "BlobNotFound";
+
 type Resolve<T> = (value?: T | PromiseLike<T>) => void;
+
+type StorageError = Error & {
+  code?: string;
+};
 
 /**
  * Utility function to avoid code duplication detection by tslint
@@ -138,15 +144,26 @@ export function upsertBlobFromObject<T>(
  * @param blobService     the Azure blob service
  * @param containerName   the name of the Azure blob storage container
  * @param blobName        blob file name
+ * @param defaultValue    if you want a default value insted of BlobNotFound error
  */
 export function getBlobAsText(
   blobService: azureStorage.BlobService,
   containerName: string,
-  blobName: string
+  blobName: string,
+  defaultValue?: string
 ): Promise<Either<Error, Option<string>>> {
   return new Promise(resolve => {
     blobService.getBlobToText(containerName, blobName, (err, result, __) => {
       if (err) {
+        // tslint:disable-next-line: no-any
+        const errorAsAny = err as StorageError;
+        if (
+          defaultValue !== undefined &&
+          errorAsAny.code !== undefined &&
+          errorAsAny.code === BlobNotFoundCode
+        ) {
+          return resolve(right<Error, Option<string>>(some(defaultValue)));
+        }
         return resolve(left<Error, Option<string>>(err));
       } else {
         return resolve(right<Error, Option<string>>(fromNullable(result)));
@@ -161,17 +178,20 @@ export function getBlobAsText(
  * @param blobService     the Azure blob service
  * @param containerName   the name of the Azure blob storage container
  * @param blobName        blob file name
+ * @param defaultValue    if you want a default value insted of BlobNotFound error
  */
 export async function getBlobAsObject<A, O, I>(
   type: t.Type<A, O, I>,
   blobService: azureStorage.BlobService,
   containerName: string,
-  blobName: string
+  blobName: string,
+  defaultValue?: O
 ): Promise<Either<Error, A>> {
   const errorOrMaybeJsonText = await getBlobAsText(
     blobService,
     containerName,
-    blobName
+    blobName,
+    defaultValue !== undefined ? JSON.stringify(defaultValue) : undefined
   );
   return errorOrMaybeJsonText.chain(maybeJsonText =>
     fromOption(new Error("getBlobAsObject: cannot get json from blob"))(
