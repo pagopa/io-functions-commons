@@ -148,24 +148,30 @@ export function upsertBlobFromObject<T>(
 export function getBlobAsText(
   blobService: azureStorage.BlobService,
   containerName: string,
-  blobName: string
+  blobName: string,
+  options: azureStorage.BlobService.GetBlobRequestOptions = {}
 ): Promise<Either<Error, Option<string>>> {
   return new Promise(resolve => {
-    blobService.getBlobToText(containerName, blobName, (err, result, __) => {
-      if (err) {
-        // tslint:disable-next-line: no-any
-        const errorAsStorageError = err as StorageError;
-        if (
-          errorAsStorageError.code !== undefined &&
-          errorAsStorageError.code === BlobNotFoundCode
-        ) {
-          return resolve(right<Error, Option<string>>(none));
+    blobService.getBlobToText(
+      containerName,
+      blobName,
+      options,
+      (err, result, __) => {
+        if (err) {
+          // tslint:disable-next-line: no-any
+          const errorAsStorageError = err as StorageError;
+          if (
+            errorAsStorageError.code !== undefined &&
+            errorAsStorageError.code === BlobNotFoundCode
+          ) {
+            return resolve(right<Error, Option<string>>(none));
+          }
+          return resolve(left<Error, Option<string>>(err));
+        } else {
+          return resolve(right<Error, Option<string>>(fromNullable(result)));
         }
-        return resolve(left<Error, Option<string>>(err));
-      } else {
-        return resolve(right<Error, Option<string>>(fromNullable(result)));
       }
-    });
+    );
   });
 }
 
@@ -180,12 +186,14 @@ export async function getBlobAsObject<A, O, I>(
   type: t.Type<A, O, I>,
   blobService: azureStorage.BlobService,
   containerName: string,
-  blobName: string
+  blobName: string,
+  options: azureStorage.BlobService.GetBlobRequestOptions = {}
 ): Promise<Either<Error, Option<A>>> {
   const errorOrMaybeText = await getBlobAsText(
     blobService,
     containerName,
-    blobName
+    blobName,
+    options
   );
   return errorOrMaybeText.chain(maybeText => {
     if (isNone(maybeText)) {
