@@ -4,11 +4,17 @@
 import * as azureStorage from "azure-storage";
 import * as t from "io-ts";
 
-import { Either, fromOption, left, right, tryCatch } from "fp-ts/lib/Either";
-import { fromNullable, Option } from "fp-ts/lib/Option";
+import { Either, left, right } from "fp-ts/lib/Either";
+import { fromNullable, isNone, none, Option, some } from "fp-ts/lib/Option";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 
+export const BlobNotFoundCode = "BlobNotFound";
+
 type Resolve<T> = (value?: T | PromiseLike<T>) => void;
+
+type StorageError = Error & {
+  code?: string;
+};
 
 /**
  * Utility function to avoid code duplication detection by tslint
@@ -147,6 +153,14 @@ export function getBlobAsText(
   return new Promise(resolve => {
     blobService.getBlobToText(containerName, blobName, (err, result, __) => {
       if (err) {
+        // tslint:disable-next-line: no-any
+        const errorAsStorageError = err as StorageError;
+        if (
+          errorAsStorageError.code !== undefined &&
+          errorAsStorageError.code === BlobNotFoundCode
+        ) {
+          return resolve(right<Error, Option<string>>(none));
+        }
         return resolve(left<Error, Option<string>>(err));
       } else {
         return resolve(right<Error, Option<string>>(fromNullable(result)));
@@ -167,19 +181,28 @@ export async function getBlobAsObject<A, O, I>(
   blobService: azureStorage.BlobService,
   containerName: string,
   blobName: string
-): Promise<Either<Error, A>> {
-  const errorOrMaybeJsonText = await getBlobAsText(
+): Promise<Either<Error, Option<A>>> {
+  const errorOrMaybeText = await getBlobAsText(
     blobService,
     containerName,
     blobName
   );
-  return errorOrMaybeJsonText.chain(maybeJsonText =>
-    fromOption(new Error("getBlobAsObject: cannot get json from blob"))(
-      maybeJsonText
-    )
-      .chain(jsonText => tryCatch(() => JSON.parse(jsonText)))
-      .chain(parsedJson =>
-        type.decode(parsedJson).mapLeft(errs => new Error(readableReport(errs)))
-      )
-  );
+  return errorOrMaybeText.chain(maybeText => {
+    if (isNone(maybeText)) {
+      return right(none);
+    }
+
+    const text = maybeText.value;
+    try {
+      const json = JSON.parse(text);
+      return type
+        .decode(json)
+        .fold<Either<Error, Option<A>>>(
+          err => left(new Error(readableReport(err))),
+          _ => right(some(_))
+        );
+    } catch (e) {
+      return left(e);
+    }
+  });
 }
