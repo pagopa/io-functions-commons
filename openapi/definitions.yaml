@@ -102,6 +102,8 @@ NewMessage:
       $ref: "#/MessageContent"
     default_addresses:
       $ref: "#/NewMessageDefaultAddresses"
+    fiscal_code:
+      $ref: "#/FiscalCode"
   required:
     - content
 PaymentData:
