@@ -43,12 +43,14 @@ const resolveErrorOrLeaseResult = (
 export function acquireLease(
   blobService: azureStorage.BlobService,
   containerName: string,
-  blobName: string
+  blobName: string,
+  options: azureStorage.BlobService.AcquireLeaseRequestOptions = {}
 ): Promise<Either<Error, azureStorage.BlobService.LeaseResult>> {
   return new Promise(resolve => {
     blobService.acquireLease(
       containerName,
       blobName,
+      options,
       resolveErrorOrLeaseResult(resolve)
     );
   });
@@ -66,13 +68,15 @@ export function releaseLease(
   blobService: azureStorage.BlobService,
   containerName: string,
   blobName: string,
-  leaseId: string
+  leaseId: string,
+  options: azureStorage.BlobService.AcquireLeaseRequestOptions = {}
 ): Promise<Either<Error, azureStorage.BlobService.LeaseResult>> {
   return new Promise(resolve => {
     blobService.releaseLease(
       containerName,
       blobName,
       leaseId,
+      options,
       resolveErrorOrLeaseResult(resolve)
     );
   });
