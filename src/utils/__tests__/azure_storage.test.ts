@@ -18,7 +18,7 @@ const TestObject = t.interface({
 type TestObject = t.TypeOf<typeof TestObject>;
 
 const blobServiceMock = {
-  getBlobToText: jest.fn((_, __, f) => {
+  getBlobToText: jest.fn((_, __, ___, f) => {
     f({
       code: BlobNotFoundCode
     });
