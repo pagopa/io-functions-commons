@@ -95,13 +95,15 @@ export function upsertBlobFromText(
   blobService: azureStorage.BlobService,
   containerName: string,
   blobName: string,
-  text: string | Buffer
+  text: string | Buffer,
+  options: azureStorage.BlobService.CreateBlobRequestOptions = {}
 ): Promise<Either<Error, Option<azureStorage.BlobService.BlobResult>>> {
   return new Promise(resolve =>
     blobService.createBlockBlobFromText(
       containerName,
       blobName,
       text,
+      options,
       (err, result, __) => {
         if (err) {
           return resolve(
@@ -132,13 +134,15 @@ export function upsertBlobFromObject<T>(
   blobService: azureStorage.BlobService,
   containerName: string,
   blobName: string,
-  content: T
+  content: T,
+  options: azureStorage.BlobService.CreateBlobRequestOptions = {}
 ): Promise<Either<Error, Option<azureStorage.BlobService.BlobResult>>> {
   return upsertBlobFromText(
     blobService,
     containerName,
     blobName,
-    JSON.stringify(content)
+    JSON.stringify(content),
+    options
   );
 }
 
