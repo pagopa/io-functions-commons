@@ -54,6 +54,8 @@ export const Service = t.interface({
   organizationFiscalCode: OrganizationFiscalCode,
   // the name of the organization
   organizationName: NonEmptyString,
+  // if the service require secure channels
+  requireSecureChannels: withDefault(t.boolean, false),
   // this equals user's subscriptionId
   serviceId: NonEmptyString,
   // the name of the service
@@ -157,6 +159,7 @@ function toBaseType(o: RetrievedService): Service {
       "maxAllowedPaymentAmount",
       "organizationFiscalCode",
       "organizationName",
+      "requireSecureChannels",
       "serviceId",
       "serviceName"
     ],

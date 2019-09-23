@@ -484,6 +484,9 @@ Service:
       type: integer
     id:
       type: string
+    require_secure_channels:
+      type: boolean
+      default: false
   required:
     - service_id
     - service_name
