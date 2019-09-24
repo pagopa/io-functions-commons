@@ -10,6 +10,7 @@ export const CreatedMessageEventSenderMetadata = t.interface({
   departmentName: NonEmptyString,
   organizationFiscalCode: OrganizationFiscalCode,
   organizationName: NonEmptyString,
+  requireSecureChannels: t.boolean,
   serviceName: NonEmptyString
 });
 
