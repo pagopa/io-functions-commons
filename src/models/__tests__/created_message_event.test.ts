@@ -35,6 +35,7 @@ describe("", () => {
           departmentName: "IT",
           organizationFiscalCode: "00000000000",
           organizationName: "AgID",
+          requireSecureChannels: false,
           serviceName: "Test"
         },
         serviceVersion: 1
