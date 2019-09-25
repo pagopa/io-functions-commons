@@ -38,6 +38,7 @@ const aService: Service = {
   maxAllowedPaymentAmount: 0 as MaxAllowedPaymentAmount,
   organizationFiscalCode: anOrganizationFiscalCode,
   organizationName: "MyService" as NonEmptyString,
+  requireSecureChannels: false,
   serviceId: "serviceId" as NonEmptyString,
   serviceName: "MyService" as NonEmptyString
 };

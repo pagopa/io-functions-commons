@@ -42,6 +42,7 @@ const aRetrievedService: RetrievedService = {
   maxAllowedPaymentAmount: 0 as MaxAllowedPaymentAmount,
   organizationFiscalCode: anOrganizationFiscalCode,
   organizationName: "MyOrg" as NonEmptyString,
+  requireSecureChannels: false,
   serviceId: aServiceId,
   serviceName: "MyService" as NonEmptyString,
   version: 0 as NonNegativeNumber
@@ -125,6 +126,7 @@ describe("createService", () => {
       maxAllowedPaymentAmount: 0 as MaxAllowedPaymentAmount,
       organizationFiscalCode: anOrganizationFiscalCode,
       organizationName: "MyService" as NonEmptyString,
+      requireSecureChannels: false,
       serviceId: aServiceId,
       serviceName: "MyService" as NonEmptyString
     };
@@ -162,6 +164,7 @@ describe("createService", () => {
       maxAllowedPaymentAmount: 0 as MaxAllowedPaymentAmount,
       organizationFiscalCode: anOrganizationFiscalCode,
       organizationName: "MyService" as NonEmptyString,
+      requireSecureChannels: false,
       serviceId: aServiceId,
       serviceName: "MyService" as NonEmptyString
     };

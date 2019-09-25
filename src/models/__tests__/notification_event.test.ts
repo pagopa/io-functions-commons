@@ -41,6 +41,7 @@ const aSenderMetadata: CreatedMessageEventSenderMetadata = {
   departmentName: "IT" as NonEmptyString,
   organizationFiscalCode: anOrganizationFiscalCode,
   organizationName: "AgID" as NonEmptyString,
+  requireSecureChannels: false,
   serviceName: "Test" as NonEmptyString
 };
 
