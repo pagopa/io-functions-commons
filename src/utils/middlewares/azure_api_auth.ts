@@ -30,6 +30,8 @@ export enum UserGroup {
   ApiFullProfileRead = "ApiFullProfileRead",
   // profiles: create and update full profile
   ApiProfileWrite = "ApiProfileWrite",
+  // profiles: create development profile
+  ApiDevelopmentProfileWrite = "ApiDevelopmentProfileWrite",
 
   // services: read services attributes
   ApiServiceRead = "ApiServiceRead",
