@@ -404,7 +404,7 @@ ExtendedProfile:
 IsEmailValidated:
   type: boolean
   description: |-
-    True if the user email has benn validated.
+    True if the user email has been validated.
 IsInboxEnabled:
   type: boolean
   default: false
