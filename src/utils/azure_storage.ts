@@ -1,5 +1,5 @@
 /**
- * Utility functions to interact with an Azure Blob Storage.
+ * Utility functions to interact with an Azure Storage.
  */
 import * as azureStorage from "azure-storage";
 import * as t from "io-ts";
@@ -8,13 +8,14 @@ import { Either, left, right } from "fp-ts/lib/Either";
 import { fromNullable, isNone, none, Option, some } from "fp-ts/lib/Option";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 
-export const BlobNotFoundCode = "BlobNotFound";
-
 type Resolve<T> = (value?: T | PromiseLike<T>) => void;
 
 type StorageError = Error & {
   code?: string;
 };
+
+// Blob storage stuff
+export const BlobNotFoundCode = "BlobNotFound";
 
 /**
  * Utility function to avoid code duplication detection by tslint
@@ -220,5 +221,108 @@ export async function getBlobAsObject<A, O, I>(
     } catch (e) {
       return left(e);
     }
+  });
+}
+
+// Table storage stuff
+export const TableEntity = t.interface({
+  PartitionKey: t.string,
+  RowKey: t.string
+});
+export type ITableEntity = t.TypeOf<typeof TableEntity>;
+
+const ResourceNotFoundCode = "ResourceNotFound";
+
+// TODO: Improve typing
+/**
+ * The TableService retrieveEntity function returns an object with a format like
+ *
+ * `"Key": {"&": DataType, "_": Value}`
+ *
+ * this function converts to an object containing only the values like:
+ *
+ * `"Key": Value`
+ *
+ * @param entityResult the object returned by TableService retrieveEntity function
+ */
+// tslint:disable-next-line: no-any
+export function getValueOnlyEntityResolver(entityResult: any): any {
+  // tslint:disable-next-line: no-any
+  return Object.keys(entityResult).reduce<any>((accumulator, key) => {
+    return {
+      ...accumulator,
+      [key]: entityResult[key]._
+    };
+  }, {});
+}
+
+/**
+ * Insert an entity in table storage
+ *
+ * @param tableService the Azure table service
+ * @param tableName the name of the table
+ * @param entity the entity to store
+ */
+export async function insertTableEntity<T extends ITableEntity>(
+  tableService: azureStorage.TableService,
+  tableName: string,
+  entity: T
+): Promise<Either<Error, azureStorage.TableService.EntityMetadata>> {
+  return new Promise(resolve => {
+    // tslint:disable-next-line: no-identical-functions
+    tableService.insertEntity<T>(tableName, entity, (err, result, _) => {
+      if (err) {
+        return resolve(left(err));
+      } else {
+        return resolve(right(result));
+      }
+    });
+  });
+}
+
+/**
+ * Retrieve an entity from table storage
+ *
+ * @param type used to decode the result
+ * @param tableService the Azure table service
+ * @param tableName the name of the table
+ * @param partitionKey
+ * @param rowKey
+ */
+export async function retrieveTableEntity<A, O, I>(
+  type: t.Type<A, O, I>,
+  tableService: azureStorage.TableService,
+  tableName: string,
+  partitionKey: string,
+  rowKey: string,
+  options: azureStorage.TableService.TableEntityRequestOptions = {
+    entityResolver: getValueOnlyEntityResolver
+  }
+): Promise<Either<Error, Option<A>>> {
+  return new Promise(resolve => {
+    tableService.retrieveEntity<I>(
+      tableName,
+      partitionKey,
+      rowKey,
+      options,
+      (err, result, _) => {
+        if (err) {
+          const errorAsStorageError = err as StorageError;
+          if (errorAsStorageError.code === ResourceNotFoundCode) {
+            return resolve(right(none));
+          }
+          return resolve(left(err));
+        } else {
+          return resolve(
+            type
+              .decode(result)
+              .fold(
+                e => left(new Error(readableReport(e))),
+                v => right(some(v))
+              )
+          );
+        }
+      }
+    );
   });
 }
