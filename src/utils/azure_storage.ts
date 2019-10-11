@@ -14,7 +14,9 @@ type StorageError = Error & {
   code?: string;
 };
 
-// Blob storage stuff
+// BLOB STORAGE FUNCTIONS AND TYPES
+
+// Code used by blobService when a blob is not found
 export const BlobNotFoundCode = "BlobNotFound";
 
 /**
@@ -224,16 +226,31 @@ export async function getBlobAsObject<A, O, I>(
   });
 }
 
-// Table storage stuff
+// TABLE STORAGE FUNCTIONS AND TYPES
+
+// Basic type for a table entity
 export const TableEntity = t.interface({
   PartitionKey: t.string,
   RowKey: t.string
 });
 export type ITableEntity = t.TypeOf<typeof TableEntity>;
 
+// Code used by tableService when an entity is not found
 const ResourceNotFoundCode = "ResourceNotFound";
 
-// TODO: Improve typing
+// Describe a entity returned by the retrieveEntity function
+interface IEntityResult {
+  [key: string]: {
+    _: unknown; // Contains the value
+    $?: string; // Contains the type (Ex. `Edm.String`)
+  };
+}
+
+// A type used to map IEntityResult to an object containing only values
+interface IEntityResultValueOnly {
+  [key: string]: unknown;
+}
+
 /**
  * The TableService retrieveEntity function returns an object with a format like
  *
@@ -245,15 +262,21 @@ const ResourceNotFoundCode = "ResourceNotFound";
  *
  * @param entityResult the object returned by TableService retrieveEntity function
  */
-// tslint:disable-next-line: no-any
-export function getValueOnlyEntityResolver(entityResult: any): any {
-  // tslint:disable-next-line: no-any
-  return Object.keys(entityResult).reduce<any>((accumulator, key) => {
-    return {
-      ...accumulator,
-      [key]: entityResult[key]._
-    };
-  }, {});
+export function getValueOnlyEntityResolver(
+  // We use Object becuase it is required by the azure-storage TableEntityRequestOptions type
+  // tslint:disable-next-line: ban-types
+  entityResult: Object
+): IEntityResultValueOnly {
+  const typedEntityResult = entityResult as IEntityResult;
+  return Object.keys(typedEntityResult).reduce<IEntityResultValueOnly>(
+    (accumulator, key) => {
+      return {
+        ...accumulator,
+        [key]: typedEntityResult[key]._
+      };
+    },
+    {}
+  );
 }
 
 /**
@@ -271,11 +294,7 @@ export async function insertTableEntity<T extends ITableEntity>(
   return new Promise(resolve => {
     // tslint:disable-next-line: no-identical-functions
     tableService.insertEntity<T>(tableName, entity, (err, result, _) => {
-      if (err) {
-        return resolve(left(err));
-      } else {
-        return resolve(right(result));
-      }
+      return resolve(err ? left(err) : right(result));
     });
   });
 }
