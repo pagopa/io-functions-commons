@@ -236,7 +236,7 @@ export const TableEntity = t.interface({
 export type ITableEntity = t.TypeOf<typeof TableEntity>;
 
 // Code used by tableService when an entity is not found
-const ResourceNotFoundCode = "ResourceNotFound";
+export const ResourceNotFoundCode = "ResourceNotFound";
 
 // Describe a entity returned by the retrieveEntity function
 interface IEntityResult {
