@@ -6,6 +6,7 @@ import * as t from "io-ts";
 
 import { Either, left, right } from "fp-ts/lib/Either";
 import { fromNullable, isNone, none, Option, some } from "fp-ts/lib/Option";
+
 import { readableReport } from "italia-ts-commons/lib/reporters";
 
 type Resolve<T> = (value?: T | PromiseLike<T>) => void;
@@ -317,7 +318,7 @@ export async function retrieveTableEntity<A, O, I>(
   options: azureStorage.TableService.TableEntityRequestOptions = {
     entityResolver: getValueOnlyEntityResolver
   }
-): Promise<Either<Error, Option<A>>> {
+): Promise<Either<Error | ReadonlyArray<t.ValidationError>, Option<A>>> {
   return new Promise(resolve => {
     tableService.retrieveEntity<I>(
       tableName,
@@ -333,12 +334,7 @@ export async function retrieveTableEntity<A, O, I>(
           return resolve(left(err));
         } else {
           return resolve(
-            type
-              .decode(result)
-              .fold(
-                e => left(new Error(readableReport(e))),
-                v => right(some(v))
-              )
+            type.decode(result).fold(e => left(e), v => right(some(v)))
           );
         }
       }
