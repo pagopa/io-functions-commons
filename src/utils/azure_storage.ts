@@ -11,7 +11,7 @@ import { readableReport } from "italia-ts-commons/lib/reporters";
 
 type Resolve<T> = (value?: T | PromiseLike<T>) => void;
 
-type StorageError = Error & {
+export type StorageError = Error & {
   code?: string;
 };
 
@@ -303,14 +303,12 @@ export async function insertTableEntity<T extends ITableEntity>(
 /**
  * Retrieve an entity from table storage
  *
- * @param type used to decode the result
  * @param tableService the Azure table service
  * @param tableName the name of the table
  * @param partitionKey
  * @param rowKey
  */
-export async function retrieveTableEntity<A, O, I>(
-  type: t.Type<A, O, I>,
+export async function retrieveTableEntity(
   tableService: azureStorage.TableService,
   tableName: string,
   partitionKey: string,
@@ -318,9 +316,9 @@ export async function retrieveTableEntity<A, O, I>(
   options: azureStorage.TableService.TableEntityRequestOptions = {
     entityResolver: getValueOnlyEntityResolver
   }
-): Promise<Either<Error | ReadonlyArray<t.ValidationError>, Option<A>>> {
+): Promise<Either<StorageError, Option<unknown>>> {
   return new Promise(resolve => {
-    tableService.retrieveEntity<I>(
+    tableService.retrieveEntity(
       tableName,
       partitionKey,
       rowKey,
@@ -331,12 +329,10 @@ export async function retrieveTableEntity<A, O, I>(
           if (errorAsStorageError.code === ResourceNotFoundCode) {
             return resolve(right(none));
           }
-          return resolve(left(err));
-        } else {
-          return resolve(
-            type.decode(result).fold(e => left(e), v => right(some(v)))
-          );
+          return resolve(left(errorAsStorageError));
         }
+
+        return resolve(right(some(result)));
       }
     );
   });
