@@ -322,14 +322,42 @@ BlockedInboxOrChannels:
   description: |-
     All the notification channels blocked by the user.
     Each channel is related to a specific service (sender).
-Profile:
+NewProfile:
+  type: object
   description: |-
-    Describes the citizen's profile, mostly interesting for preferences
-    attributes.
-  x-one-of: true
-  allOf:
-    - $ref: "#/LimitedProfile"
-    - $ref: "#/ExtendedProfile"
+    Describes a new citizen's profile.
+    Used for profile creation.
+  properties:
+    email:
+      $ref: "#/EmailAddress"
+    is_email_validated:
+      $ref: "#/IsEmailValidated"
+  required:
+    - is_email_validated
+Profile:
+  type: object
+  description: |-
+    Describes the citizen's profile.
+    Used for profile update.
+  properties:
+    email:
+      $ref: "#/EmailAddress"
+    blocked_inbox_or_channels:
+      $ref: "#/BlockedInboxOrChannels"
+    preferred_languages:
+      $ref: "#/PreferredLanguages"
+    is_inbox_enabled:
+      $ref: "#/IsInboxEnabled"
+    accepted_tos_version:
+      $ref: "#/AcceptedTosVersion"
+    is_webhook_enabled:
+      $ref: "#/IsWebhookEnabled"
+    is_email_enabled:
+      $ref: "#/IsEmailEnabled"
+    version:
+      type: integer
+  required:
+    - version
 LimitedProfile:
   description: |-
     Describes the citizen's profile, mostly interesting for preferences
@@ -367,10 +395,16 @@ ExtendedProfile:
       $ref: "#/IsEmailEnabled"
     version:
       type: integer
+    is_email_validated:
+      $ref: "#/IsEmailValidated"
   required:
     - is_inbox_enabled
     - is_webhook_enabled
     - version
+IsEmailValidated:
+  type: boolean
+  description: |-
+    True if the user email has been validated.
 IsInboxEnabled:
   type: boolean
   default: false
