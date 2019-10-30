@@ -20,6 +20,7 @@ import { BlockedInboxOrChannel } from "../../generated/definitions/BlockedInboxO
 import { EmailAddress } from "../../generated/definitions/EmailAddress";
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { IsEmailEnabled } from "../../generated/definitions/IsEmailEnabled";
+import { IsEmailValidated } from "../../generated/definitions/IsEmailValidated";
 import { IsInboxEnabled } from "../../generated/definitions/IsInboxEnabled";
 import { IsWebhookEnabled } from "../../generated/definitions/IsWebhookEnabled";
 import { PreferredLanguages } from "../../generated/definitions/PreferredLanguages";
@@ -57,6 +58,9 @@ export const Profile = t.intersection([
     // if defined, will override the default email provided by the API client
     // if defined, will enable email notifications for the citizen
     email: EmailAddress,
+
+    // if true the email has been validated by the user
+    isEmailValidated: IsEmailValidated,
 
     // whether to store the content of messages sent to this citizen
     isInboxEnabled: IsInboxEnabled,
