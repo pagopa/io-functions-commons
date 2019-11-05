@@ -1,20 +1,24 @@
 /**
- * Utility functions to interact with an Azure Blob Storage.
+ * Utility functions to interact with an Azure Storage.
  */
 import * as azureStorage from "azure-storage";
 import * as t from "io-ts";
 
 import { Either, left, right } from "fp-ts/lib/Either";
 import { fromNullable, isNone, none, Option, some } from "fp-ts/lib/Option";
-import { readableReport } from "italia-ts-commons/lib/reporters";
 
-export const BlobNotFoundCode = "BlobNotFound";
+import { readableReport } from "italia-ts-commons/lib/reporters";
 
 type Resolve<T> = (value?: T | PromiseLike<T>) => void;
 
-type StorageError = Error & {
+export type StorageError = Error & {
   code?: string;
 };
+
+// BLOB STORAGE FUNCTIONS AND TYPES
+
+// Code used by blobService when a blob is not found
+export const BlobNotFoundCode = "BlobNotFound";
 
 /**
  * Utility function to avoid code duplication detection by tslint
@@ -220,5 +224,116 @@ export async function getBlobAsObject<A, O, I>(
     } catch (e) {
       return left(e);
     }
+  });
+}
+
+// TABLE STORAGE FUNCTIONS AND TYPES
+
+// Basic type for a table entity
+export const TableEntity = t.interface({
+  PartitionKey: t.string,
+  RowKey: t.string
+});
+export type ITableEntity = t.TypeOf<typeof TableEntity>;
+
+// Code used by tableService when an entity is not found
+export const ResourceNotFoundCode = "ResourceNotFound";
+
+// Describe a entity returned by the retrieveEntity function
+interface IEntityResult {
+  [key: string]: {
+    _: unknown; // Contains the value
+    $?: string; // Contains the type (Ex. `Edm.String`)
+  };
+}
+
+// A type used to map IEntityResult to an object containing only values
+interface IEntityResultValueOnly {
+  [key: string]: unknown;
+}
+
+/**
+ * The TableService retrieveEntity function returns an object with a format like
+ *
+ * `"Key": {"&": DataType, "_": Value}`
+ *
+ * this function converts to an object containing only the values like:
+ *
+ * `"Key": Value`
+ *
+ * @param entityResult the object returned by TableService retrieveEntity function
+ */
+export function getValueOnlyEntityResolver(
+  // We use Object becuase it is required by the azure-storage TableEntityRequestOptions type
+  // tslint:disable-next-line: ban-types
+  entityResult: Object
+): IEntityResultValueOnly {
+  const typedEntityResult = entityResult as IEntityResult;
+  return Object.keys(typedEntityResult).reduce<IEntityResultValueOnly>(
+    (accumulator, key) => {
+      return {
+        ...accumulator,
+        [key]: typedEntityResult[key]._
+      };
+    },
+    {}
+  );
+}
+
+/**
+ * Insert an entity in table storage
+ *
+ * @param tableService the Azure table service
+ * @param tableName the name of the table
+ * @param entity the entity to store
+ */
+export async function insertTableEntity<T extends ITableEntity>(
+  tableService: azureStorage.TableService,
+  tableName: string,
+  entity: T
+): Promise<Either<Error, azureStorage.TableService.EntityMetadata>> {
+  return new Promise(resolve => {
+    // tslint:disable-next-line: no-identical-functions
+    tableService.insertEntity<T>(tableName, entity, (err, result, _) => {
+      return resolve(err ? left(err) : right(result));
+    });
+  });
+}
+
+/**
+ * Retrieve an entity from table storage
+ *
+ * @param tableService the Azure table service
+ * @param tableName the name of the table
+ * @param partitionKey
+ * @param rowKey
+ */
+export async function retrieveTableEntity(
+  tableService: azureStorage.TableService,
+  tableName: string,
+  partitionKey: string,
+  rowKey: string,
+  options: azureStorage.TableService.TableEntityRequestOptions = {
+    entityResolver: getValueOnlyEntityResolver
+  }
+): Promise<Either<StorageError, Option<unknown>>> {
+  return new Promise(resolve => {
+    tableService.retrieveEntity(
+      tableName,
+      partitionKey,
+      rowKey,
+      options,
+      (err, result, _) => {
+        if (err) {
+          const errorAsStorageError = err as StorageError;
+          if (errorAsStorageError.code === ResourceNotFoundCode) {
+            return resolve(right(none));
+          }
+          return resolve(left(errorAsStorageError));
+        }
+
+        return resolve(right(some(result)));
+      }
+    );
   });
 }
