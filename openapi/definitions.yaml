@@ -566,6 +566,8 @@ ServicePublic:
       $ref: "#/DepartmentName"
     organization_fiscal_code:
       $ref: "#/OrganizationFiscalCode"
+    available_notification_channels:
+        $ref: "#/AvailableNotificationChannels"
     version:
       type: integer
   required:
@@ -608,6 +610,12 @@ DepartmentName:
     The department inside the organization that runs the service. Will
     be added to the content of sent messages.
   minLength: 1
+AvailableNotificationChannels:
+  description: |-
+      All the notification channels available for a service.
+  type: array
+  items:
+    $ref: "#/NotificationChannel"
 CIDR:
   type: string
   description: Describes a single IP or a range of IPs.
