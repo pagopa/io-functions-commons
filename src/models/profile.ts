@@ -137,10 +137,7 @@ function updateModelId(
 }
 
 function toBaseType(o: RetrievedProfile): Profile {
-  return {
-    email: o.email,
-    fiscalCode: o.fiscalCode
-  };
+  return t.exact(Profile).encode(o);
 }
 
 /**

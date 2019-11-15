@@ -393,11 +393,13 @@ ExtendedProfile:
       $ref: "#/IsWebhookEnabled"
     is_email_enabled:
       $ref: "#/IsEmailEnabled"
-    version:
-      type: integer
     is_email_validated:
       $ref: "#/IsEmailValidated"
+    version:
+      type: integer
   required:
+    - is_email_enabled
+    - is_email_validated
     - is_inbox_enabled
     - is_webhook_enabled
     - version
@@ -407,7 +409,6 @@ IsEmailValidated:
     True if the user email has been validated.
 IsInboxEnabled:
   type: boolean
-  default: false
   description: |-
     True if the recipient of a message wants to store its content for
     later retrieval.
@@ -418,11 +419,9 @@ AcceptedTosVersion:
     Version of latest terms of service accepted by the user.
 IsWebhookEnabled:
   type: boolean
-  default: false
   description: True if the recipient of a message wants to forward the notifications to the default webhook.
 IsEmailEnabled:
   type: boolean
-  default: true
   description: True if the recipient of a message wants to forward the notifications to his email address.
 TimeToLiveSeconds:
   type: integer
