@@ -39,11 +39,6 @@ const aRetrievedProfile: RetrievedProfile = {
   version: 0 as NonNegativeNumber
 };
 
-const aRetrievedProfileWithDefaults: RetrievedProfile = {
-  ...aRetrievedProfile,
-  isEmailEnabled: true
-};
-
 describe("findOneProfileByFiscalCode", () => {
   it("should resolve a promise to an existing profile", async () => {
     const iteratorMock = {
@@ -65,7 +60,7 @@ describe("findOneProfileByFiscalCode", () => {
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
       expect(result.value.isSome()).toBeTruthy();
-      expect(result.value.toUndefined()).toEqual(aRetrievedProfileWithDefaults);
+      expect(result.value.toUndefined()).toEqual(aRetrievedProfile);
     }
   });
 
