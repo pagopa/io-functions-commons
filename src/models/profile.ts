@@ -1,6 +1,6 @@
 import * as t from "io-ts";
 
-import { readonlySetType, tag } from "italia-ts-commons/lib/types";
+import { tag } from "italia-ts-commons/lib/types";
 
 import * as DocumentDb from "documentdb";
 import * as DocumentDbUtils from "../utils/documentdb";
@@ -16,7 +16,7 @@ import { Option } from "fp-ts/lib/Option";
 import { NonNegativeNumber } from "italia-ts-commons/lib/numbers";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { AcceptedTosVersion } from "../../generated/definitions/AcceptedTosVersion";
-import { BlockedInboxOrChannel } from "../../generated/definitions/BlockedInboxOrChannel";
+import { BlockedInboxOrChannels } from "../../generated/definitions/BlockedInboxOrChannels";
 import { EmailAddress } from "../../generated/definitions/EmailAddress";
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { IsEmailEnabled } from "../../generated/definitions/IsEmailEnabled";
@@ -24,22 +24,10 @@ import { IsEmailValidated } from "../../generated/definitions/IsEmailValidated";
 import { IsInboxEnabled } from "../../generated/definitions/IsInboxEnabled";
 import { IsWebhookEnabled } from "../../generated/definitions/IsWebhookEnabled";
 import { PreferredLanguages } from "../../generated/definitions/PreferredLanguages";
-import { ServiceId } from "../../generated/definitions/ServiceId";
 import { fiscalCodeToModelId } from "../utils/conversions";
 
 export const PROFILE_COLLECTION_NAME = "profiles";
 export const PROFILE_MODEL_PK_FIELD = "fiscalCode";
-
-const ProfileBlockedInboxOrChannels = t.dictionary(
-  ServiceId,
-  readonlySetType(BlockedInboxOrChannel, "ProfileBlockedInboxOrChannel"),
-  "ProfileBlockedInboxOrChannels"
-);
-
-// typescript does not allow to have ServiceId as key type here
-export interface IProfileBlockedInboxOrChannels {
-  readonly [serviceId: string]: ReadonlySet<BlockedInboxOrChannel>;
-}
 
 /**
  * Base interface for Profile objects
@@ -52,7 +40,7 @@ export const Profile = t.intersection([
   t.partial({
     // Notification channels blocked by the user;
     // each channel is related to a specific Service (sender)
-    blockedInboxOrChannels: ProfileBlockedInboxOrChannels,
+    blockedInboxOrChannels: BlockedInboxOrChannels,
 
     // the preferred email for receiving email notifications
     // if defined, will override the default email provided by the API client
