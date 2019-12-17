@@ -547,7 +547,7 @@ describe("getStoredContent", () => {
   });
 });
 
-describe("saveContentAsBlob", () => {
+describe("storeContentAsBlob", () => {
   const aMessageId = "MESSAGE_ID";
   const aBlobResult = {
     name: "blobName"
