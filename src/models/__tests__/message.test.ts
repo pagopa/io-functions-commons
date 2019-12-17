@@ -3,6 +3,7 @@
 import * as azureStorage from "azure-storage";
 import * as DocumentDb from "documentdb";
 import { isLeft, isRight, left, right } from "fp-ts/lib/Either";
+import { isSome } from "fp-ts/lib/Option";
 
 import * as DocumentDbUtils from "../../utils/documentdb";
 
@@ -18,7 +19,8 @@ import {
   MESSAGE_COLLECTION_NAME,
   MessageModel,
   NewMessageWithContent,
-  RetrievedMessageWithContent
+  RetrievedMessageWithContent,
+  Message
 } from "../message";
 
 jest.mock("../../utils/azure_storage");
@@ -542,5 +544,136 @@ describe("getStoredContent", () => {
       expect(content.value).toBe(none);
     }
     getAttachmentsSpy.mockReset();
+  });
+});
+
+describe("saveContentAsBlob", () => {
+  const aMessageId = "MESSAGE_ID";
+  const aBlobResult = {
+    name: "blobName"
+  } as azureStorage.BlobService.BlobResult;
+  it("should save the message content in a blob", async () => {
+    const blobServiceMock = {};
+
+    const clientMock = {};
+    const model = new MessageModel(
+      (clientMock as any) as DocumentDb.DocumentClient,
+      aMessagesCollectionUrl,
+      MESSAGE_CONTAINER_NAME
+    );
+
+    const upsertBlobFromObjectSpy = jest
+      .spyOn(azureStorageUtils, "upsertBlobFromObject")
+      .mockReturnValueOnce(Promise.resolve(right(fromNullable(aBlobResult))));
+
+    const blob = await model.storeContentAsBlob(
+      blobServiceMock as any,
+      aMessageId,
+      aMessageContent
+    );
+
+    expect(upsertBlobFromObjectSpy).toBeCalledWith(
+      blobServiceMock,
+      expect.any(String),
+      expect.any(String),
+      aMessageContent
+    );
+    expect(isRight(blob)).toBeTruthy();
+    if (isRight(blob)) {
+      expect(blob.value.map(b => expect(b).toEqual(aBlobResult)));
+    }
+
+    upsertBlobFromObjectSpy.mockReset();
+  });
+});
+
+describe("getContentFromBlob", () => {
+  const aMessageId = "MESSAGE_ID";
+  const blobServiceMock = {};
+  const model = new MessageModel(
+    ({} as any) as DocumentDb.DocumentClient,
+    aMessagesCollectionUrl,
+    MESSAGE_CONTAINER_NAME
+  );
+
+  it("should get message content from stored blob", async () => {
+    const getBlobAsTextSpy = jest
+      .spyOn(azureStorageUtils, "getBlobAsText")
+      .mockReturnValueOnce(
+        Promise.resolve(right(some(JSON.stringify(aMessageContent))))
+      );
+
+    const errorOrMaybeMessageContent = await model.getContentFromBlob(
+      blobServiceMock as any,
+      aMessageId
+    );
+
+    expect(getBlobAsTextSpy).toBeCalledWith(
+      blobServiceMock,
+      expect.any(String), // Container name
+      `${aMessageId}.json`
+    );
+    expect(isRight(errorOrMaybeMessageContent)).toBeTruthy();
+    if (isRight(errorOrMaybeMessageContent)) {
+      const maybeMessageContent = errorOrMaybeMessageContent.value;
+      expect(isSome(maybeMessageContent)).toBeTruthy();
+      if (isSome(maybeMessageContent)) {
+        expect(maybeMessageContent.value).toEqual(aMessageContent);
+      }
+    }
+
+    getBlobAsTextSpy.mockReset();
+  });
+
+  it("should fail with an error when the blob cannot be retrieved", async () => {
+    const err = Error();
+    const getBlobAsTextSpy = jest
+      .spyOn(azureStorageUtils, "getBlobAsText")
+      .mockReturnValueOnce(Promise.resolve(left(err)));
+
+    const errorOrMaybeMessageContent = await model.getContentFromBlob(
+      blobServiceMock as any,
+      aMessageId
+    );
+
+    expect(isLeft(errorOrMaybeMessageContent)).toBeTruthy();
+    expect(errorOrMaybeMessageContent.value).toEqual(err);
+
+    getBlobAsTextSpy.mockReset();
+  });
+
+  it("should fail with an error when the retrieved blob is empty", async () => {
+    const getBlobAsTextSpy = jest
+      .spyOn(azureStorageUtils, "getBlobAsText")
+      .mockResolvedValueOnce(right(none));
+
+    const errorOrMaybeMessageContent = await model.getContentFromBlob(
+      blobServiceMock as any,
+      aMessageId
+    );
+
+    expect(isLeft(errorOrMaybeMessageContent)).toBeTruthy();
+    expect(errorOrMaybeMessageContent.value).toBeInstanceOf(Error);
+
+    getBlobAsTextSpy.mockReset();
+  });
+
+  it("should fail with an error when the retrieved blob can't be decoded", async () => {
+    const invalidMessageContent = {};
+    const getBlobAsTextSpy = jest
+      .spyOn(azureStorageUtils, "getBlobAsText")
+      .mockResolvedValueOnce(
+        right(some(JSON.stringify(invalidMessageContent)))
+      );
+
+    const errorOrMaybeMessageContent = await model.getContentFromBlob(
+      blobServiceMock as any,
+      aMessageId
+    );
+
+    expect(isLeft(errorOrMaybeMessageContent)).toBeTruthy();
+    expect(errorOrMaybeMessageContent.value).toBeInstanceOf(Error);
+
+    getBlobAsTextSpy.mockReset();
   });
 });

@@ -396,4 +396,66 @@ export class MessageModel extends DocumentDbModel<
     const content = contentOrError.value;
     return right<Error, Option<MessageContent>>(some(content));
   }
+
+  public async storeContentAsBlob(
+    blobService: BlobService,
+    messageId: string,
+    messageContent: MessageContent
+  ): Promise<
+    Either<Error | DocumentDb.QueryError, Option<BlobService.BlobResult>>
+  > {
+    // this is the media filename
+    const blobId = blobIdFromMessageId(messageId);
+
+    // store message content in blob storage
+    return await upsertBlobFromObject<MessageContent>(
+      blobService,
+      this.containerName,
+      blobId,
+      messageContent
+    );
+  }
+
+  public async getContentFromBlob(
+    blobService: BlobService,
+    messageId: string
+  ): Promise<Either<Error, Option<MessageContent>>> {
+    const blobId = blobIdFromMessageId(messageId);
+
+    // retrieve blob content and deserialize
+    const maybeContentAsTextOrError = await getBlobAsText(
+      blobService,
+      this.containerName,
+      blobId
+    );
+
+    if (isLeft(maybeContentAsTextOrError)) {
+      return left<Error, Option<MessageContent>>(
+        maybeContentAsTextOrError.value
+      );
+    }
+
+    // media exists but the content is empty
+    const maybeContentAsText = maybeContentAsTextOrError.value;
+    if (isNone(maybeContentAsText)) {
+      return left<Error, Option<MessageContent>>(
+        new Error("Cannot get stored message content from attachment")
+      );
+    }
+
+    const contentAsText = maybeContentAsText.value;
+
+    // deserialize text into JSON
+    const contentOrError = MessageContent.decode(JSON.parse(contentAsText));
+
+    if (isLeft(contentOrError)) {
+      const errors: string = readableReport(contentOrError.value);
+      return left<Error, Option<MessageContent>>(
+        new Error(`Cannot deserialize stored message content: ${errors}`)
+      );
+    }
+
+    const content = contentOrError.value;
+    return right<Error, Option<MessageContent>>(some(content));
+  }
 }
