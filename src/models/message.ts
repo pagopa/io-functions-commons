@@ -1,7 +1,7 @@
 import { BlobService } from "azure-storage";
 import * as DocumentDb from "documentdb";
 import { Either, isLeft, left, right } from "fp-ts/lib/Either";
-import { isNone, none, Option, some } from "fp-ts/lib/Option";
+import { isNone, Option, some } from "fp-ts/lib/Option";
 import * as t from "io-ts";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
@@ -18,7 +18,6 @@ import { ServiceId } from "../../generated/definitions/ServiceId";
 import { Timestamp } from "../../generated/definitions/Timestamp";
 import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds";
 import { getBlobAsText, upsertBlobFromObject } from "../utils/azure_storage";
-import { iteratorToArray } from "../utils/documentdb";
 
 export const MESSAGE_COLLECTION_NAME = "messages";
 export const MESSAGE_MODEL_PK_FIELD = "fiscalCode";
@@ -276,91 +275,44 @@ export class MessageModel extends DocumentDbModel<
   }
 
   /**
-   * Attach a media (a stored text blob) to the existing message document.
+   * Store the message content in a blob
    *
-   * @param blobService     the azure.BlobService used to store the media
-   * @param messageId       the message document id
-   * @param partitionKey    the message document partitionKey
-   * @param messageContent  the message document content
+   * @param blobService The azure.BlobService used to store the media
+   * @param messageId The id of the message used to set the blob name
+   * @param messageContent The content to store in the blob
    */
-  public async attachStoredContent(
+  public async storeContentAsBlob(
     blobService: BlobService,
     messageId: string,
-    partitionKey: string,
     messageContent: MessageContent
   ): Promise<
-    Either<Error | DocumentDb.QueryError, Option<DocumentDb.AttachmentMeta>>
+    Either<Error | DocumentDb.QueryError, Option<BlobService.BlobResult>>
   > {
-    // this is the attachment id __and__ the media filename
-    const blobId = blobIdFromMessageId(messageId);
+    // Set the blob name
+    const blobName = blobIdFromMessageId(messageId);
 
-    // store media (attachment) with message content in blob storage
-    const errorOrMessageContent = await upsertBlobFromObject<MessageContent>(
+    // Store message content in blob storage
+    return await upsertBlobFromObject<MessageContent>(
       blobService,
       this.containerName,
-      blobId,
+      blobName,
       messageContent
     );
-
-    if (isLeft(errorOrMessageContent)) {
-      return left<
-        Error | DocumentDb.QueryError,
-        Option<DocumentDb.AttachmentMeta>
-      >(errorOrMessageContent.value);
-    }
-
-    const mediaUrl = blobService.getUrl(this.containerName, blobId);
-
-    // attach the created media to the message identified by messageId and partitionKey
-    const errorOrAttachmentMeta = await this.attach(messageId, partitionKey, {
-      contentType: "application/json",
-      id: blobId,
-      media: mediaUrl
-    });
-
-    if (isLeft(errorOrAttachmentMeta)) {
-      return left<
-        Error | DocumentDb.QueryError,
-        Option<DocumentDb.AttachmentMeta>
-      >(errorOrAttachmentMeta.value);
-    }
-
-    return right<
-      Error | DocumentDb.QueryError,
-      Option<DocumentDb.AttachmentMeta>
-    >(errorOrAttachmentMeta.value);
   }
 
   /**
-   * Get stored MessageContent (if any) from blob service.
+   * Retrieve the message content from a blob
+   *
+   * @param blobService The azure.BlobService used to store the media
+   * @param messageId The id of the message used to set the blob name
    */
-  public async getStoredContent(
+  public async getContentFromBlob(
     blobService: BlobService,
-    messageId: string,
-    fiscalCode: FiscalCode
+    messageId: string
   ): Promise<Either<Error, Option<MessageContent>>> {
-    // get link to attached blob(s)
-    const errorOrMedia = await iteratorToArray(
-      await this.getAttachments(messageId, {
-        partitionKey: fiscalCode
-      })
-    );
-
-    if (isLeft(errorOrMedia)) {
-      const queryError = errorOrMedia.value;
-      return left<Error, Option<MessageContent>>(new Error(queryError.body));
-    }
-
-    const media = errorOrMedia.value;
-
-    // no blob(s) attached to the message
-    if (!media || !media[0]) {
-      return right<Error, Option<MessageContent>>(none);
-    }
-
     const blobId = blobIdFromMessageId(messageId);
 
-    // retrieve blob content and deserialize
+    // Retrieve blob content and deserialize
     const maybeContentAsTextOrError = await getBlobAsText(
       blobService,
       this.containerName,
@@ -373,17 +325,17 @@ export class MessageModel extends DocumentDbModel<
       );
     }
 
-    // media exists but the content is empty
+    // Blob exists but the content is empty
     const maybeContentAsText = maybeContentAsTextOrError.value;
     if (isNone(maybeContentAsText)) {
       return left<Error, Option<MessageContent>>(
-        new Error("Cannot get stored message content from attachment")
+        new Error("Cannot get stored message content from blob")
       );
     }
 
     const contentAsText = maybeContentAsText.value;
 
-    // deserialize text into JSON
+    // Try to decode the MessageContent
     const contentOrError = MessageContent.decode(JSON.parse(contentAsText));
 
     if (isLeft(contentOrError)) {
