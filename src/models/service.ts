@@ -1,5 +1,6 @@
 import * as t from "io-ts";
 import { PathReporter } from "io-ts/lib/PathReporter";
+import { enumType } from "italia-ts-commons/lib/types";
 
 import * as DocumentDb from "documentdb";
 import * as DocumentDbUtils from "../utils/documentdb";
@@ -35,10 +36,51 @@ import { MaxAllowedPaymentAmount } from "../../generated/definitions/MaxAllowedP
 export const SERVICE_COLLECTION_NAME = "services";
 export const SERVICE_MODEL_PK_FIELD = "serviceId";
 
+export enum ScopeEnum {
+  "NATIONAL" = "NATIONAL",
+
+  "LOCAL" = "LOCAL"
+}
+
+// required attributes
+const ServiceMetadataR = t.interface({
+  scope: enumType<ScopeEnum>(ScopeEnum, "scope")
+});
+
+// optional attributes
+const ServiceMetadataO = t.partial({
+  description: t.string,
+
+  webUrl: t.string,
+
+  appIos: t.string,
+
+  appAndroid: t.string,
+
+  tosUrl: t.string,
+
+  privacyUrl: t.string,
+
+  address: t.string,
+
+  phone: t.string,
+
+  email: t.string,
+
+  pec: t.string
+});
+
+export const ServiceMetadata = t.intersection(
+  [ServiceMetadataR, ServiceMetadataO],
+  "ServiceMetadata"
+);
+
+export type ServiceMetadata = t.TypeOf<typeof ServiceMetadata>;
+
 /**
  * Base interface for Service objects
  */
-export const ServiceBase = t.interface({
+const ServiceR = t.interface({
   // authorized source CIDRs
   authorizedCIDRs: readonlySetType(CIDR, "CIDRs"),
   // list of authorized fiscal codes
@@ -62,53 +104,12 @@ export const ServiceBase = t.interface({
   serviceName: NonEmptyString
 });
 
-import { enumType } from "italia-ts-commons/lib/types";
-
-export enum ScopeEnum {
-  "NATIONAL" = "NATIONAL",
-
-  "LOCAL" = "LOCAL"
-}
-
-// required attributes
-const ServiceMetadataR = t.interface({});
-
-// optional attributes
-const ServiceMetadataO = t.partial({
-  description: t.string,
-
-  webUrl: t.string,
-
-  appIos: t.string,
-
-  appAndroid: t.string,
-
-  tosUrl: t.string,
-
-  privacyUrl: t.string,
-
-  address: t.string,
-
-  phone: t.string,
-
-  email: t.string,
-
-  pec: t.string,
-  // The attribute `scope` should be required, but it's currently optional for backward-compatibility reasons
-  scope: enumType<ScopeEnum>(ScopeEnum, "scope")
+const ServiceO = t.partial({
+  // the metadata of the service
+  serviceMetadata: ServiceMetadata
 });
 
-export const ServiceMetadata = t.intersection(
-  [ServiceMetadataR, ServiceMetadataO],
-  "ServiceMetadata"
-);
-
-export type ServiceMetadata = t.TypeOf<typeof ServiceMetadata>;
-
-export const Service = t.intersection(
-  [ServiceBase, ServiceMetadata],
-  "Service"
-);
+export const Service = t.intersection([ServiceR, ServiceO], "Service");
 
 export type Service = t.TypeOf<typeof Service>;
 
@@ -209,19 +210,8 @@ function toBaseType(o: RetrievedService): Service {
       "organizationName",
       "requireSecureChannels",
       "serviceId",
-      "serviceName",
-      // properties from ServiceMetadata
-      "description",
-      "webUrl",
-      "appIos",
-      "appAndroid",
-      "tosUrl",
-      "privacyUrl",
-      "address",
-      "phone",
-      "email",
-      "pec",
-      "scope"
+      "serviceMetadata",
+      "serviceName"
     ],
     o
   );

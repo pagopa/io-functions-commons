@@ -527,6 +527,19 @@ Service:
     require_secure_channels:
       type: boolean
       default: false
+    service_metadata:
+      $ref: "#/ServiceMetadata"
+  required:
+    - service_id
+    - service_name
+    - organization_name
+    - department_name
+    - authorized_cidrs
+    - authorized_recipients
+    - organization_fiscal_code
+ServiceMetadata:
+  type: object
+  properties:
     description:
       type: string
     web_url:
@@ -548,19 +561,12 @@ Service:
     pec:
       type: string
     scope:
-      # This property should be required, but it's currently optional for backward-compatibility reasons
       type: string
       x-extensible-enum:
         - NATIONAL
         - LOCAL
   required:
-    - service_id
-    - service_name
-    - organization_name
-    - department_name
-    - authorized_cidrs
-    - authorized_recipients
-    - organization_fiscal_code
+    - scope
 ServiceTupleCollection:
   description: A collection of services tuples (service and version)
   type: object
