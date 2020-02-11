@@ -49,25 +49,25 @@ const ServiceMetadataR = t.interface({
 
 // optional attributes
 const ServiceMetadataO = t.partial({
-  description: t.string,
+  description: NonEmptyString,
 
-  webUrl: t.string,
+  webUrl: NonEmptyString,
 
-  appIos: t.string,
+  appIos: NonEmptyString,
 
-  appAndroid: t.string,
+  appAndroid: NonEmptyString,
 
-  tosUrl: t.string,
+  tosUrl: NonEmptyString,
 
-  privacyUrl: t.string,
+  privacyUrl: NonEmptyString,
 
-  address: t.string,
+  address: NonEmptyString,
 
-  phone: t.string,
+  phone: NonEmptyString,
 
-  email: t.string,
+  email: NonEmptyString,
 
-  pec: t.string
+  pec: NonEmptyString
 });
 
 export const ServiceMetadata = t.intersection(

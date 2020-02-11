@@ -542,24 +542,34 @@ ServiceMetadata:
   properties:
     description:
       type: string
+      minLength: 1
     web_url:
       type: string
+      minLength: 1
     app_ios:
       type: string
+      minLength: 1
     app_android:
       type: string
+      minLength: 1
     tos_url:
       type: string
+      minLength: 1
     privacy_url:
       type: string
+      minLength: 1
     address:
       type: string
+      minLength: 1
     phone:
       type: string
+      minLength: 1
     email:
       type: string
+      minLength: 1
     pec:
       type: string
+      minLength: 1
     scope:
       type: string
       x-extensible-enum:
