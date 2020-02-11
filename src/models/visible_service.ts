@@ -6,54 +6,15 @@ import * as t from "io-ts";
 
 import { collect, StrMap } from "fp-ts/lib/StrMap";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
-import { enumType } from "italia-ts-commons/lib/types";
 import { OrganizationFiscalCode } from "../../generated/definitions/OrganizationFiscalCode";
 import { ServiceId } from "../../generated/definitions/ServiceId";
 import { ServicePublic } from "../../generated/definitions/ServicePublic";
 import { ServiceTuple } from "../../generated/definitions/ServiceTuple";
+import { ServiceMetadata } from "./service";
 
 // this is not a CosmosDB model, but entities are stored into blob storage
 export const VISIBLE_SERVICE_CONTAINER = "cached";
 export const VISIBLE_SERVICE_BLOB_ID = "visible-services.json";
-
-export enum ScopeEnum {
-  "NATIONAL" = "NATIONAL",
-
-  "LOCAL" = "LOCAL"
-}
-
-// required attributes
-const ServiceMetadataR = t.interface({
-  scope: enumType<ScopeEnum>(ScopeEnum, "scope")
-});
-
-// optional attributes
-const ServiceMetadataO = t.partial({
-  description: NonEmptyString,
-
-  webUrl: NonEmptyString,
-
-  appIos: NonEmptyString,
-
-  appAndroid: NonEmptyString,
-
-  tosUrl: NonEmptyString,
-
-  privacyUrl: NonEmptyString,
-
-  address: NonEmptyString,
-
-  phone: NonEmptyString,
-
-  email: NonEmptyString,
-
-  pec: NonEmptyString
-});
-
-export const ServiceMetadata = t.intersection(
-  [ServiceMetadataR, ServiceMetadataO],
-  "ServiceMetadata"
-);
 
 const VisibleServiceR = t.type({
   departmentName: NonEmptyString,
