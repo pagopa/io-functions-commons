@@ -611,6 +611,8 @@ ServicePublic:
         $ref: "#/AvailableNotificationChannels"
     version:
       type: integer
+    service_metadata:
+      $ref: "#/ServiceMetadata"
   required:
     - service_id
     - service_name

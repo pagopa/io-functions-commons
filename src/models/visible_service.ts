@@ -6,6 +6,7 @@ import * as t from "io-ts";
 
 import { collect, StrMap } from "fp-ts/lib/StrMap";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { enumType } from "italia-ts-commons/lib/types";
 import { OrganizationFiscalCode } from "../../generated/definitions/OrganizationFiscalCode";
 import { ServiceId } from "../../generated/definitions/ServiceId";
 import { ServicePublic } from "../../generated/definitions/ServicePublic";
@@ -15,7 +16,46 @@ import { ServiceTuple } from "../../generated/definitions/ServiceTuple";
 export const VISIBLE_SERVICE_CONTAINER = "cached";
 export const VISIBLE_SERVICE_BLOB_ID = "visible-services.json";
 
-export const VisibleService = t.type({
+export enum ScopeEnum {
+  "NATIONAL" = "NATIONAL",
+
+  "LOCAL" = "LOCAL"
+}
+
+// required attributes
+const ServiceMetadataR = t.interface({
+  scope: enumType<ScopeEnum>(ScopeEnum, "scope")
+});
+
+// optional attributes
+const ServiceMetadataO = t.partial({
+  description: NonEmptyString,
+
+  webUrl: NonEmptyString,
+
+  appIos: NonEmptyString,
+
+  appAndroid: NonEmptyString,
+
+  tosUrl: NonEmptyString,
+
+  privacyUrl: NonEmptyString,
+
+  address: NonEmptyString,
+
+  phone: NonEmptyString,
+
+  email: NonEmptyString,
+
+  pec: NonEmptyString
+});
+
+export const ServiceMetadata = t.intersection(
+  [ServiceMetadataR, ServiceMetadataO],
+  "ServiceMetadata"
+);
+
+const VisibleServiceR = t.type({
   departmentName: NonEmptyString,
   id: NonEmptyString,
   organizationFiscalCode: OrganizationFiscalCode,
@@ -24,6 +64,16 @@ export const VisibleService = t.type({
   serviceName: NonEmptyString,
   version: t.Integer
 });
+
+const VisibleServiceO = t.partial({
+  serviceMetadata: ServiceMetadata
+});
+
+export const VisibleService = t.intersection(
+  [VisibleServiceR, VisibleServiceO],
+  "VisibleService"
+);
+
 export type VisibleService = t.TypeOf<typeof VisibleService>;
 
 export function toServicePublic(visibleService: VisibleService): ServicePublic {
@@ -32,6 +82,7 @@ export function toServicePublic(visibleService: VisibleService): ServicePublic {
     organization_fiscal_code: visibleService.organizationFiscalCode,
     organization_name: visibleService.organizationName,
     service_id: visibleService.serviceId,
+    service_metadata: visibleService.serviceMetadata,
     service_name: visibleService.serviceName,
     version: visibleService.version
   };
