@@ -1,5 +1,6 @@
 import * as t from "io-ts";
 import { PathReporter } from "io-ts/lib/PathReporter";
+import { enumType } from "italia-ts-commons/lib/types";
 
 import * as DocumentDb from "documentdb";
 import * as DocumentDbUtils from "../utils/documentdb";
@@ -35,10 +36,51 @@ import { MaxAllowedPaymentAmount } from "../../generated/definitions/MaxAllowedP
 export const SERVICE_COLLECTION_NAME = "services";
 export const SERVICE_MODEL_PK_FIELD = "serviceId";
 
+export enum ScopeEnum {
+  "NATIONAL" = "NATIONAL",
+
+  "LOCAL" = "LOCAL"
+}
+
+// required attributes
+const ServiceMetadataR = t.interface({
+  scope: enumType<ScopeEnum>(ScopeEnum, "scope")
+});
+
+// optional attributes
+const ServiceMetadataO = t.partial({
+  description: NonEmptyString,
+
+  webUrl: NonEmptyString,
+
+  appIos: NonEmptyString,
+
+  appAndroid: NonEmptyString,
+
+  tosUrl: NonEmptyString,
+
+  privacyUrl: NonEmptyString,
+
+  address: NonEmptyString,
+
+  phone: NonEmptyString,
+
+  email: NonEmptyString,
+
+  pec: NonEmptyString
+});
+
+export const ServiceMetadata = t.intersection(
+  [ServiceMetadataR, ServiceMetadataO],
+  "ServiceMetadata"
+);
+
+export type ServiceMetadata = t.TypeOf<typeof ServiceMetadata>;
+
 /**
  * Base interface for Service objects
  */
-export const Service = t.interface({
+const ServiceR = t.interface({
   // authorized source CIDRs
   authorizedCIDRs: readonlySetType(CIDR, "CIDRs"),
   // list of authorized fiscal codes
@@ -61,6 +103,13 @@ export const Service = t.interface({
   // the name of the service
   serviceName: NonEmptyString
 });
+
+const ServiceO = t.partial({
+  // the metadata of the service
+  serviceMetadata: ServiceMetadata
+});
+
+export const Service = t.intersection([ServiceR, ServiceO], "Service");
 
 export type Service = t.TypeOf<typeof Service>;
 
@@ -161,6 +210,7 @@ function toBaseType(o: RetrievedService): Service {
       "organizationName",
       "requireSecureChannels",
       "serviceId",
+      "serviceMetadata",
       "serviceName"
     ],
     o
