@@ -80,5 +80,8 @@
     ],
     "preset": "ts-jest",
     "testMatch": null
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
   }
 }
