@@ -15,6 +15,7 @@ import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 import { UserDataProcessingChoiceEnum } from "../../../generated/definitions/UserDataProcessingChoice";
 import { UserDataProcessingStatusEnum } from "../../../generated/definitions/UserDataProcessingStatus";
 import {
+  makeUserDataProcessingId,
   RetrievedUserDataProcessing,
   USER_DATA_PROCESSING_COLLECTION_NAME,
   UserDataProcessing,
@@ -27,16 +28,20 @@ const userDataProcessingCollectionUrl = DocumentDbUtils.getCollectionUri(
   USER_DATA_PROCESSING_COLLECTION_NAME
 );
 
-const aModelId = "xyz" as NonEmptyString;
 const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
 const aUserDataProcessingChoice = UserDataProcessingChoiceEnum.DOWNLOAD;
 const aUserDataProcessingStatus = UserDataProcessingStatusEnum.PENDING;
+const aModelId = makeUserDataProcessingId(
+  aFiscalCode,
+  aUserDataProcessingChoice
+);
 
 const aRetrievedUserDataProcessing: RetrievedUserDataProcessing = {
   _self: "xyz",
   _ts: 123,
+  id: "xyz" as NonEmptyString,
   fiscalCode: aFiscalCode,
-  id: aModelId,
+  userDataProcessingId: aModelId,
   choice: aUserDataProcessingChoice,
   status: aUserDataProcessingStatus,
   createdAt: new Date(),
@@ -101,48 +106,6 @@ describe("findLastVersionByModelId", () => {
   });
 });
 
-describe("getUserDataProcessingExisting", () => {
-  it("should resolve a promise to an existing userDataProcessing given fiscalCode and Choice", async () => {
-    const iteratorMock = {
-      executeNext: jest.fn(cb =>
-        cb(undefined, [aRetrievedUserDataProcessing], undefined)
-      ),
-      hasMoreResults: jest.fn().mockReturnValue(false)
-    };
-
-    const clientMock = {
-      queryDocuments: jest.fn((__, ___) => iteratorMock)
-    };
-
-    const model = new UserDataProcessingModel(
-      (clientMock as any) as DocumentDb.DocumentClient,
-      userDataProcessingCollectionUrl
-    );
-
-    const checkExistFalseOrMaybeRegisteredOne = await model.getUserDataProcessingExisting(
-      aFiscalCode,
-      aUserDataProcessingChoice
-    );
-    expect(isRight(checkExistFalseOrMaybeRegisteredOne)).toBeTruthy();
-    if (isRight(checkExistFalseOrMaybeRegisteredOne)) {
-      // user data processing is already registered for current user
-      // Updating updatedAt in this case
-      const userDataProcessingRetrieved = checkExistFalseOrMaybeRegisteredOne.value.getOrElseL(
-        () => {
-          throw Error("User data processing retrieve error");
-        }
-      );
-
-      expect(userDataProcessingRetrieved.fiscalCode).toEqual(
-        aRetrievedUserDataProcessing.fiscalCode
-      );
-      expect(userDataProcessingRetrieved.id).toEqual(
-        aRetrievedUserDataProcessing.id
-      );
-    }
-  });
-});
-
 describe("createUserDataProcessing", () => {
   it("should create a new user data processing", async () => {
     const clientMock: any = {
@@ -161,7 +124,7 @@ describe("createUserDataProcessing", () => {
     );
 
     const newUserDataProcessing: UserDataProcessing = {
-      id: aModelId,
+      userDataProcessingId: aModelId,
       fiscalCode: aFiscalCode,
       choice: aUserDataProcessingChoice,
       status: aUserDataProcessingStatus,
@@ -182,8 +145,8 @@ describe("createUserDataProcessing", () => {
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
       expect(result.value.fiscalCode).toEqual(newUserDataProcessing.fiscalCode);
-      expect(result.value.id).toEqual(
-        `${newUserDataProcessing.id}-${"0".repeat(16)}`
+      expect(result.value.userDataProcessingId).toEqual(
+        `${newUserDataProcessing.userDataProcessingId}`
       );
       expect(result.value.version).toEqual(0);
     }
@@ -202,7 +165,7 @@ describe("createUserDataProcessing", () => {
     );
 
     const newUserDataProcessing: UserDataProcessing = {
-      id: aModelId,
+      userDataProcessingId: aModelId,
       fiscalCode: aFiscalCode,
       choice: aUserDataProcessingChoice,
       status: aUserDataProcessingStatus,
@@ -241,7 +204,7 @@ describe("update", () => {
     );
 
     const result = await model.update(
-      aRetrievedUserDataProcessing.id,
+      aRetrievedUserDataProcessing.userDataProcessingId,
       aRetrievedUserDataProcessing.fiscalCode,
       p => {
         return {
@@ -266,7 +229,9 @@ describe("update", () => {
           aRetrievedUserDataProcessing.fiscalCode
         );
         expect(updatedUserDataProcessing.id).toEqual(
-          `${aRetrievedUserDataProcessing.id}-${"0".repeat(15)}1`
+          `${aRetrievedUserDataProcessing.userDataProcessingId}-${"0".repeat(
+            15
+          )}1`
         );
         expect(updatedUserDataProcessing.version).toEqual(1);
         expect(updatedUserDataProcessing.status).toEqual(

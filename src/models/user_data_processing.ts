@@ -11,7 +11,7 @@ import {
 } from "../utils/documentdb_model_versioned";
 
 import { Either, isLeft, isRight, left, right } from "fp-ts/lib/Either";
-import { isNone, Option } from "fp-ts/lib/Option";
+import { isSome, Option } from "fp-ts/lib/Option";
 
 import { QueryError } from "documentdb";
 import { NonNegativeNumber } from "italia-ts-commons/lib/numbers";
@@ -20,19 +20,26 @@ import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { Timestamp } from "../../generated/definitions/Timestamp";
 import { UserDataProcessingChoice } from "../../generated/definitions/UserDataProcessingChoice";
 import { UserDataProcessingStatus } from "../../generated/definitions/UserDataProcessingStatus";
-import { iteratorToArray } from "../utils/documentdb";
+import { userDataProcessingIdToModelId } from "../utils/conversions";
 
 export const USER_DATA_PROCESSING_COLLECTION_NAME = "user-data-processing";
 export const USER_DATA_PROCESSING_MODEL_PK_FIELD = "fiscalCode";
-export const USER_DATA_PROCESSING_MODEL_ID_FIELD = "id";
+export const USER_DATA_PROCESSING_MODEL_ID_FIELD = "userDataProcessingId";
 
+interface IUserDataProcessingIdTag {
+  readonly kind: "IUserDataProcessingIdTag";
+}
+
+export const UserDataProcessingId = tag<IUserDataProcessingIdTag>()(t.string);
+export type UserDataProcessingId = t.TypeOf<typeof UserDataProcessingId>;
 /**
  * Base interface for User Data Processing objects
  */
 export const UserDataProcessing = t.intersection([
   t.interface({
-    // the unique identifier of a user data processing request
-    id: NonEmptyString,
+    // the unique identifier of a user data processing request identified by concatenation of
+    // fiscalCode - choice
+    userDataProcessingId: UserDataProcessingId,
 
     // the fiscal code of the citized associated to this user data processing request
     fiscalCode: FiscalCode,
@@ -101,11 +108,27 @@ function toRetrieved(
 }
 
 function toBaseType(o: RetrievedUserDataProcessing): UserDataProcessing {
-  return pick(["id", "fiscalCode", "choice", "status", "createdAt"], o);
+  return pick(
+    ["userDataProcessingId", "fiscalCode", "choice", "status", "createdAt"],
+    o
+  );
 }
 
 function getModelId(o: UserDataProcessing): ModelId {
-  return (o.id as string) as ModelId;
+  return userDataProcessingIdToModelId(
+    makeUserDataProcessingId(o.fiscalCode, o.choice)
+  );
+}
+
+export function makeUserDataProcessingId(
+  fiscalCode: FiscalCode,
+  choice: UserDataProcessingChoice
+): UserDataProcessingId {
+  return UserDataProcessingId.decode(`${fiscalCode}-${choice}`).getOrElseL(
+    () => {
+      throw new Error("Invalid User Data Processing id");
+    }
+  );
 }
 
 function updateModelId(
@@ -155,7 +178,7 @@ export class UserDataProcessingModel extends DocumentDbModelVersioned<
    * @param id
    */
   public findOneUserDataProcessingById(
-    id: NonEmptyString,
+    id: UserDataProcessingId,
     fiscalCode: FiscalCode
   ): Promise<Either<DocumentDb.QueryError, Option<UserDataProcessing>>> {
     return super.findLastVersionByModelId(
@@ -169,96 +192,26 @@ export class UserDataProcessingModel extends DocumentDbModelVersioned<
   public async createOrUpdateByNewOne(
     userDataProcessing: UserDataProcessing
   ): Promise<Either<QueryError, UserDataProcessing>> {
-    const checkExistFalseOrMaybeRegisteredOne = await this.getUserDataProcessingExisting(
+    const newId = makeUserDataProcessingId(
       userDataProcessing.fiscalCode,
       userDataProcessing.choice
     );
-    if (isRight(checkExistFalseOrMaybeRegisteredOne)) {
-      // user data processing is already registered for current user
-      // Updating updatedAt in this case
-      const existingUserDataProcessing = checkExistFalseOrMaybeRegisteredOne.value.getOrElseL(
-        () => {
-          throw Error("User data processing retrieve error");
-        }
-      );
-      const toUpdate = {
-        id: existingUserDataProcessing.id,
-        // tslint:disable-next-line: object-literal-sort-keys
-        fiscalCode: existingUserDataProcessing.fiscalCode,
-        choice: existingUserDataProcessing.choice,
-        status: existingUserDataProcessing.status,
-        createdAt: existingUserDataProcessing.createdAt,
-        updatedAt: userDataProcessing.createdAt
-      };
-      return super.upsert(
-        toUpdate,
-        USER_DATA_PROCESSING_MODEL_ID_FIELD,
-        toUpdate.id,
-        USER_DATA_PROCESSING_MODEL_PK_FIELD,
-        toUpdate.fiscalCode
-      );
-    } else {
-      // user data processing is a new request
-      return super.create(userDataProcessing, userDataProcessing.fiscalCode);
-    }
-  }
 
-  public async getUserDataProcessingExisting(
-    fiscalCode: FiscalCode,
-    userDataProcessingChoice: UserDataProcessingChoice
-  ): Promise<Either<DocumentDb.QueryError, Option<UserDataProcessing>>> {
-    return await this.findAllByFiscalCodeAndChoice(
-      fiscalCode,
-      userDataProcessingChoice
-    );
-  }
-
-  /**
-   * Searches for all user data processing request with the provided fiscalCode and choice
-   *
-   * @param fiscalCode: FiscalCode
-   * @param choice: UserDataProcessingChoice
-   */
-  public findAllByFiscalCodeAndChoice(
-    fiscalCode: FiscalCode,
-    userDataProcessingChoice: UserDataProcessingChoice
-  ): Promise<Either<DocumentDb.QueryError, Option<UserDataProcessing>>> {
-    return DocumentDbUtils.queryOneDocument(
-      this.dbClient,
-      this.collectionUri,
-      {
-        parameters: [
-          {
-            name: "@fiscalCode",
-            value: fiscalCode
-          },
-          {
-            name: "@choice",
-            value: userDataProcessingChoice
-          }
-        ],
-        query: `SELECT TOP 1 * FROM user-data-processing n WHERE (n.fiscalCode = @fiscalCode AND n.choice = @choice) ORDER BY n.version DESC`
-      },
-      fiscalCode
-    );
-  }
-
-  public findAllByFiscalCode(
-    fiscalCode: FiscalCode
-  ): DocumentDbUtils.IResultIterator<UserDataProcessing> {
-    return DocumentDbUtils.queryDocuments(
-      this.dbClient,
-      this.collectionUri,
-      {
-        parameters: [
-          {
-            name: "@fiscalCode",
-            value: fiscalCode
-          }
-        ],
-        query: `SELECT * FROM user-data-processing n WHERE n.fiscalCode = @fiscalCode`
-      },
-      fiscalCode
+    const toUpdate: UserDataProcessing = {
+      userDataProcessingId: newId,
+      // tslint:disable-next-line: object-literal-sort-keys
+      fiscalCode: userDataProcessing.fiscalCode,
+      choice: userDataProcessing.choice,
+      status: userDataProcessing.status,
+      createdAt: userDataProcessing.createdAt,
+      updatedAt: userDataProcessing.createdAt
+    };
+    return super.upsert(
+      toUpdate,
+      USER_DATA_PROCESSING_MODEL_ID_FIELD,
+      toUpdate.userDataProcessingId,
+      USER_DATA_PROCESSING_MODEL_PK_FIELD,
+      toUpdate.fiscalCode
     );
   }
 }

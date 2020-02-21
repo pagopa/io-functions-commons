@@ -718,4 +718,13 @@ UserDataProcessingChoice:
     - DOWNLOAD
     - DELETE
   example: DOWNLOAD
+UserDataProcessingChoiceRequest:
+  type: object
+  description: |-
+    A request wrapper for User data processing choice
+  properties:
+    choice: 
+      $ref: "#/UserDataProcessingChoice"
+  required:
+    - choice
     
