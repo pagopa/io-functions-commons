@@ -1,6 +1,6 @@
 {
   "name": "io-functions-commons",
-  "version": "1.7.0",
+  "version": "1.9.0",
   "description": "Common code for Azure functions",
   "repository": "https://github.com/teamdigitale/io-functions-commons",
   "author": "https://teamdigitale.governo.it",
@@ -34,6 +34,7 @@
     "italia-utils": "^4.0.1",
     "jest": "^24.8.0",
     "prettier": "^1.12.1",
+    "release-it": "^12.4.3",
     "rimraf": "^2.6.2",
     "ts-jest": "^24.0.2",
     "tslint": "^5.1.0",
@@ -79,5 +80,8 @@
     ],
     "preset": "ts-jest",
     "testMatch": null
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
   }
 }
