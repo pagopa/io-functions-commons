@@ -10,8 +10,8 @@ import {
   VersionedModel
 } from "../utils/documentdb_model_versioned";
 
-import { Either, isLeft, isRight, left, right } from "fp-ts/lib/Either";
-import { isSome, Option } from "fp-ts/lib/Option";
+import { Either } from "fp-ts/lib/Either";
+import { Option } from "fp-ts/lib/Option";
 
 import { QueryError } from "documentdb";
 import { NonNegativeNumber } from "italia-ts-commons/lib/numbers";
