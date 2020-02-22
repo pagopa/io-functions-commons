@@ -704,7 +704,7 @@ HttpsUrl:
 UserDataProcessingStatus:
   type: string
   description: |-
-    The status of a requested user data processing request
+    The status of a user data processing request
   enum:
     - PENDING
     - WIP
