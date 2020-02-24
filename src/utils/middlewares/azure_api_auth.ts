@@ -24,6 +24,9 @@ import { IRequestMiddleware } from "../request_middleware";
  * A Scope associates an Access Type to a Resource.
  */
 export enum UserGroup {
+  // API management users: get, list, create user's subscriptions and groups
+  ApiUserAdmin = "AipUserAdmin",
+
   // profiles: read limited profile (without addresses)
   ApiLimitedProfileRead = "ApiLimitedProfileRead",
   // profiles: read full profile (with addresses)
