@@ -10,10 +10,9 @@ import {
   VersionedModel
 } from "../utils/documentdb_model_versioned";
 
+import { QueryError } from "documentdb";
 import { Either } from "fp-ts/lib/Either";
 import { Option } from "fp-ts/lib/Option";
-
-import { QueryError } from "documentdb";
 import { NonNegativeNumber } from "italia-ts-commons/lib/numbers";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
@@ -96,8 +95,9 @@ export const RetrievedUserDataProcessing = tag<IRetrievedUserDataProcessing>()(
   ])
 );
 
-// tslint:disable-next-line: prettier
-export type RetrievedUserDataProcessing = t.TypeOf<typeof RetrievedUserDataProcessing>;
+export type RetrievedUserDataProcessing = t.TypeOf<
+  typeof RetrievedUserDataProcessing
+>;
 
 function toRetrieved(
   result: DocumentDb.RetrievedDocument
@@ -116,13 +116,13 @@ function toBaseType(o: RetrievedUserDataProcessing): UserDataProcessing {
 
 function getModelId(o: UserDataProcessing): ModelId {
   return userDataProcessingIdToModelId(
-    makeUserDataProcessingId(o.fiscalCode, o.choice)
+    makeUserDataProcessingId(o.choice, o.fiscalCode)
   );
 }
 
 export function makeUserDataProcessingId(
-  fiscalCode: FiscalCode,
-  choice: UserDataProcessingChoice
+  choice: UserDataProcessingChoice,
+  fiscalCode: FiscalCode
 ): UserDataProcessingId {
   return UserDataProcessingId.decode(`${fiscalCode}-${choice}`).getOrElseL(
     () => {
@@ -178,12 +178,12 @@ export class UserDataProcessingModel extends DocumentDbModelVersioned<
    * @param id
    */
   public findOneUserDataProcessingById(
-    id: UserDataProcessingId,
-    fiscalCode: FiscalCode
+    fiscalCode: FiscalCode,
+    userDataProcessingId: UserDataProcessingId
   ): Promise<Either<DocumentDb.QueryError, Option<UserDataProcessing>>> {
     return super.findLastVersionByModelId(
       USER_DATA_PROCESSING_MODEL_ID_FIELD,
-      id,
+      userDataProcessingId,
       USER_DATA_PROCESSING_MODEL_PK_FIELD,
       fiscalCode
     );
@@ -193,18 +193,17 @@ export class UserDataProcessingModel extends DocumentDbModelVersioned<
     userDataProcessing: UserDataProcessing
   ): Promise<Either<QueryError, UserDataProcessing>> {
     const newId = makeUserDataProcessingId(
-      userDataProcessing.fiscalCode,
-      userDataProcessing.choice
+      userDataProcessing.choice,
+      userDataProcessing.fiscalCode
     );
 
     const toUpdate: UserDataProcessing = {
-      userDataProcessingId: newId,
-      // tslint:disable-next-line: object-literal-sort-keys
-      fiscalCode: userDataProcessing.fiscalCode,
       choice: userDataProcessing.choice,
-      status: userDataProcessing.status,
       createdAt: userDataProcessing.createdAt,
-      updatedAt: userDataProcessing.createdAt
+      fiscalCode: userDataProcessing.fiscalCode,
+      status: userDataProcessing.status,
+      updatedAt: userDataProcessing.createdAt,
+      userDataProcessingId: newId
     };
     return super.upsert(
       toUpdate,

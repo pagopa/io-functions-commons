@@ -642,27 +642,23 @@ UserDataProcessing:
   description: |-
     A representation of a single user data processing request
   properties:
-    id:
-      type: string
-      minLength: 1
-    fiscalCode:
+    fiscal_code:
       $ref: "#/FiscalCode"
     choice:
       $ref: "#/UserDataProcessingChoice"
     status:
       $ref: "#/UserDataProcessingStatus"
-    createdAt:
+    created_at:
       $ref: "#/Timestamp"
-    updatedAt:
+    updated_at:
       $ref: "#/Timestamp"
     version:
       type: integer
   required:
-    - id
-    - fiscalCode
+    - fiscal_code
     - choice
     - status
-    - createdAt
+    - created_at
     - version 
 ServiceName:
   type: string
