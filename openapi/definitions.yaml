@@ -637,6 +637,28 @@ ServiceTuple:
   required:
     - service_id
     - version
+UserDataProcessing:
+  type: object
+  description: |-
+    A representation of a single user data processing request
+  properties:
+    fiscal_code:
+      $ref: "#/FiscalCode"
+    choice:
+      $ref: "#/UserDataProcessingChoice"
+    status:
+      $ref: "#/UserDataProcessingStatus"
+    created_at:
+      $ref: "#/Timestamp"
+    updated_at:
+      $ref: "#/Timestamp"
+    version:
+      type: integer
+  required:
+    - fiscal_code
+    - choice
+    - status
+    - version 
 ServiceName:
   type: string
   description: The name of the service. Will be added to the content of sent messages.
@@ -674,3 +696,30 @@ HttpsUrl:
   format: uri
   description: An http(s) url.
   pattern: "^https://[-a-zA-Z0-9@:%._+~#=]{2,256}[.][a-z]{2,6}\\\\b([-a-zA-Z0-9@:%_+.~#?&/=]*)$"
+UserDataProcessingStatus:
+  type: string
+  description: |-
+    The status of a user data processing request
+  enum:
+    - PENDING
+    - WIP
+    - CLOSED
+  example: PENDING
+UserDataProcessingChoice:
+  type: string
+  description: |-
+    User's choice to delete or download his own data.
+  enum:
+    - DOWNLOAD
+    - DELETE
+  example: DOWNLOAD
+UserDataProcessingChoiceRequest:
+  type: object
+  description: |-
+    A request wrapper for User data processing choice
+  properties:
+    choice: 
+      $ref: "#/UserDataProcessingChoice"
+  required:
+    - choice
+    
