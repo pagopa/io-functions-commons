@@ -708,7 +708,7 @@ UserDataProcessingStatus:
 UserDataProcessingChoice:
   type: string
   description: |-
-    User's choice to delete or download its own data.
+    User's choice to delete or download his own data.
   enum:
     - DOWNLOAD
     - DELETE
