@@ -35,8 +35,14 @@ export enum UserGroup {
 
   // services: read services attributes
   ApiServiceRead = "ApiServiceRead",
+  // services: list services
+  ApiServiceList = "ApiServiceList",
   // services: create and update services
   ApiServiceWrite = "ApiServiceWrite",
+  // services: read the api keys
+  ApiServiceKeyRead = "ApiServiceKeyRead",
+  // services: write the api keys
+  ApiServiceKeyWrite = "ApiServiceKeyWrite",
 
   // services: read services attributes (public API)
   ApiPublicServiceRead = "ApiPublicServiceRead",
