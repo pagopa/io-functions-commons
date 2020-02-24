@@ -32,20 +32,20 @@ const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
 const aUserDataProcessingChoice = UserDataProcessingChoiceEnum.DOWNLOAD;
 const aUserDataProcessingStatus = UserDataProcessingStatusEnum.PENDING;
 const aModelId = makeUserDataProcessingId(
-  aFiscalCode,
-  aUserDataProcessingChoice
+  aUserDataProcessingChoice,
+  aFiscalCode
 );
 
 const aRetrievedUserDataProcessing: RetrievedUserDataProcessing = {
   _self: "xyz",
   _ts: 123,
-  id: "xyz" as NonEmptyString,
-  fiscalCode: aFiscalCode,
-  userDataProcessingId: aModelId,
   choice: aUserDataProcessingChoice,
-  status: aUserDataProcessingStatus,
   createdAt: new Date(),
+  fiscalCode: aFiscalCode,
+  id: "xyz" as NonEmptyString,
   kind: "IRetrievedUserDataProcessing",
+  status: aUserDataProcessingStatus,
+  userDataProcessingId: aModelId,
   version: 0 as NonNegativeNumber
 };
 
@@ -68,8 +68,8 @@ describe("findLastVersionByModelId", () => {
     );
 
     const result = await model.findOneUserDataProcessingById(
-      aModelId,
-      aFiscalCode
+      aFiscalCode,
+      aModelId
     );
 
     expect(isRight(result)).toBeTruthy();
@@ -95,8 +95,8 @@ describe("findLastVersionByModelId", () => {
     );
 
     const result = await model.findOneUserDataProcessingById(
-      aModelId,
-      aFiscalCode
+      aFiscalCode,
+      aModelId
     );
 
     expect(isRight(result)).toBeTruthy();
@@ -124,11 +124,11 @@ describe("createUserDataProcessing", () => {
     );
 
     const newUserDataProcessing: UserDataProcessing = {
-      userDataProcessingId: aModelId,
-      fiscalCode: aFiscalCode,
       choice: aUserDataProcessingChoice,
+      createdAt: new Date(),
+      fiscalCode: aFiscalCode,
       status: aUserDataProcessingStatus,
-      createdAt: new Date()
+      userDataProcessingId: aModelId
     };
 
     const result = await model.create(
@@ -165,11 +165,11 @@ describe("createUserDataProcessing", () => {
     );
 
     const newUserDataProcessing: UserDataProcessing = {
-      userDataProcessingId: aModelId,
-      fiscalCode: aFiscalCode,
       choice: aUserDataProcessingChoice,
+      createdAt: new Date(),
+      fiscalCode: aFiscalCode,
       status: aUserDataProcessingStatus,
-      createdAt: new Date()
+      userDataProcessingId: aModelId
     };
 
     const result = await model.create(newUserDataProcessing, "fiscalCode");
