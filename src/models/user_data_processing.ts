@@ -180,7 +180,9 @@ export class UserDataProcessingModel extends DocumentDbModelVersioned<
   public findOneUserDataProcessingById(
     fiscalCode: FiscalCode,
     userDataProcessingId: UserDataProcessingId
-  ): Promise<Either<DocumentDb.QueryError, Option<UserDataProcessing>>> {
+  ): Promise<
+    Either<DocumentDb.QueryError, Option<RetrievedUserDataProcessing>>
+  > {
     return super.findLastVersionByModelId(
       USER_DATA_PROCESSING_MODEL_ID_FIELD,
       userDataProcessingId,
@@ -191,7 +193,7 @@ export class UserDataProcessingModel extends DocumentDbModelVersioned<
 
   public async createOrUpdateByNewOne(
     userDataProcessing: UserDataProcessing
-  ): Promise<Either<QueryError, UserDataProcessing>> {
+  ): Promise<Either<QueryError, RetrievedUserDataProcessing>> {
     const newId = makeUserDataProcessingId(
       userDataProcessing.choice,
       userDataProcessing.fiscalCode
