@@ -61,7 +61,7 @@ export const UserDataProcessing = t.intersection([
 export type UserDataProcessing = t.TypeOf<typeof UserDataProcessing>;
 
 /**
- * Interface for new Profile objects
+ * Interface for new User Data processing objects
  */
 
 interface INewUserDataProcessing {
@@ -81,7 +81,7 @@ export type NewUserDataProcessing = t.TypeOf<typeof NewUserDataProcessing>;
 /**
  * Interface for retrieved User Data Processing objects
  *
- * Existing profile records have a version number.
+ * Existing user data processing records have a version number.
  */
 interface IRetrievedUserDataProcessing {
   readonly kind: "IRetrievedUserDataProcessing";
