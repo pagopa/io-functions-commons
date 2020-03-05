@@ -642,8 +642,6 @@ UserDataProcessing:
   description: |-
     A representation of a single user data processing request
   properties:
-    fiscal_code:
-      $ref: "#/FiscalCode"
     choice:
       $ref: "#/UserDataProcessingChoice"
     status:
@@ -655,7 +653,6 @@ UserDataProcessing:
     version:
       type: integer
   required:
-    - fiscal_code
     - choice
     - status
     - version 
