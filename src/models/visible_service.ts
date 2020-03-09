@@ -5,7 +5,6 @@
 import * as t from "io-ts";
 
 import { collect, StrMap } from "fp-ts/lib/StrMap";
-import { pick } from "italia-ts-commons/lib/types";
 import {
   NotificationChannel,
   NotificationChannelEnum
