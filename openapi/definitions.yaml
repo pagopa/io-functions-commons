@@ -571,12 +571,14 @@ ServiceMetadata:
       type: string
       minLength: 1
     scope:
-      type: string
-      x-extensible-enum:
-        - NATIONAL
-        - LOCAL
+      $ref: "#/ServiceScope"
   required:
     - scope
+ServiceScope:
+  type: string
+  x-extensible-enum:
+    - NATIONAL
+    - LOCAL
 ServiceTupleCollection:
   description: A collection of services tuples (service and version)
   type: object
@@ -608,7 +610,7 @@ ServicePublic:
     organization_fiscal_code:
       $ref: "#/OrganizationFiscalCode"
     available_notification_channels:
-        $ref: "#/AvailableNotificationChannels"
+      $ref: "#/AvailableNotificationChannels"
     version:
       type: integer
     service_metadata:
@@ -632,6 +634,8 @@ ServiceTuple:
   properties:
     service_id:
       $ref: "#/ServiceId"
+    scope:
+      $ref: "#/ServiceScope"
     version:
       type: integer
   required:
@@ -655,7 +659,7 @@ UserDataProcessing:
   required:
     - choice
     - status
-    - version 
+    - version
 ServiceName:
   type: string
   description: The name of the service. Will be added to the content of sent messages.
@@ -674,7 +678,7 @@ DepartmentName:
   minLength: 1
 AvailableNotificationChannels:
   description: |-
-      All the notification channels available for a service.
+    All the notification channels available for a service.
   type: array
   items:
     $ref: "#/NotificationChannel"
@@ -715,8 +719,7 @@ UserDataProcessingChoiceRequest:
   description: |-
     A request wrapper for User data processing choice
   properties:
-    choice: 
+    choice:
       $ref: "#/UserDataProcessingChoice"
   required:
     - choice
-    

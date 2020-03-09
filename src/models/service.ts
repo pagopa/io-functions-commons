@@ -1,6 +1,5 @@
 import * as t from "io-ts";
 import { PathReporter } from "io-ts/lib/PathReporter";
-import { enumType } from "italia-ts-commons/lib/types";
 
 import * as DocumentDb from "documentdb";
 import * as DocumentDbUtils from "../utils/documentdb";
@@ -32,19 +31,14 @@ import {
   withDefault
 } from "italia-ts-commons/lib/types";
 import { MaxAllowedPaymentAmount } from "../../generated/definitions/MaxAllowedPaymentAmount";
+import { ServiceScope } from "../../generated/definitions/ServiceScope";
 
 export const SERVICE_COLLECTION_NAME = "services";
 export const SERVICE_MODEL_PK_FIELD = "serviceId";
 
-export enum ScopeEnum {
-  "NATIONAL" = "NATIONAL",
-
-  "LOCAL" = "LOCAL"
-}
-
 // required attributes
 const ServiceMetadataR = t.interface({
-  scope: enumType<ScopeEnum>(ScopeEnum, "scope")
+  scope: ServiceScope
 });
 
 // optional attributes
