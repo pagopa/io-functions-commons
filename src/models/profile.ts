@@ -1,6 +1,6 @@
 import * as t from "io-ts";
 
-import { tag } from "italia-ts-commons/lib/types";
+import { tag, withDefault } from "italia-ts-commons/lib/types";
 
 import * as DocumentDb from "documentdb";
 import * as DocumentDbUtils from "../utils/documentdb";
@@ -48,7 +48,9 @@ export const Profile = t.intersection([
     email: EmailAddress,
 
     // if true the email has been validated by the user
-    isEmailValidated: IsEmailValidated,
+    // this field defaults to true to keep backward compatibility with users
+    // that don't have this setting in their profile
+    isEmailValidated: withDefault(IsEmailValidated, true),
 
     // whether to store the content of messages sent to this citizen
     isInboxEnabled: IsInboxEnabled,
@@ -62,7 +64,7 @@ export const Profile = t.intersection([
     // whether to send email notifications (defaults to true)
     // this field defaults to true to keep backward compatibility with users
     // that don't have this setting in their profile
-    isEmailEnabled: IsEmailEnabled,
+    isEmailEnabled: withDefault(IsEmailEnabled, true),
 
     // array of user's preferred languages in ISO-3166-1-2 format
     // https://it.wikipedia.org/wiki/ISO_3166-2
