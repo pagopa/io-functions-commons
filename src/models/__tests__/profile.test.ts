@@ -33,6 +33,7 @@ const aRetrievedProfile: RetrievedProfile = {
   acceptedTosVersion: 1,
   fiscalCode: aFiscalCode,
   id: "xyz" as NonEmptyString,
+  isEmailValidated: false,
   isInboxEnabled: false,
   isWebhookEnabled: false,
   kind: "IRetrievedProfile",
@@ -60,7 +61,10 @@ describe("findOneProfileByFiscalCode", () => {
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
       expect(result.value.isSome()).toBeTruthy();
-      expect(result.value.toUndefined()).toEqual(aRetrievedProfile);
+      expect(result.value.toUndefined()).toEqual({
+        ...aRetrievedProfile,
+        isEmailEnabled: true
+      });
     }
   });
 
