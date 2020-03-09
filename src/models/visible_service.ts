@@ -5,7 +5,6 @@
 import * as t from "io-ts";
 
 import { collect, StrMap } from "fp-ts/lib/StrMap";
-import { pick } from "italia-ts-commons/lib/types";
 import {
   NotificationChannel,
   NotificationChannelEnum
@@ -21,22 +20,26 @@ import { Service, ServiceMetadata } from "./service";
 export const VISIBLE_SERVICE_CONTAINER = "cached";
 export const VISIBLE_SERVICE_BLOB_ID = "visible-services.json";
 
+const {
+  departmentName,
+  organizationFiscalCode,
+  organizationName,
+  requireSecureChannels,
+  serviceId,
+  serviceName
+} = Service.types[0].props;
+
 // Public view of RetrivedService type
 const VisibleServiceR = t.intersection([
   DocumentDbUtils.NewDocument,
   VersionedModel,
   t.type({
-    ...pick(
-      [
-        "departmentName",
-        "organizationFiscalCode",
-        "organizationName",
-        "requireSecureChannels",
-        "serviceId",
-        "serviceName"
-      ],
-      Service.types[0].props
-    )
+    departmentName,
+    organizationFiscalCode,
+    organizationName,
+    requireSecureChannels,
+    serviceId,
+    serviceName
   })
 ]);
 
