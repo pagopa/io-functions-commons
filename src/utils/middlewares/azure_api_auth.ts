@@ -25,7 +25,7 @@ import { IRequestMiddleware } from "../request_middleware";
  */
 export enum UserGroup {
   // API management users: get, list, create user's subscriptions and groups
-  ApiUserAdmin = "AipUserAdmin",
+  ApiUserAdmin = "ApiUserAdmin",
 
   // profiles: read limited profile (without addresses)
   ApiLimitedProfileRead = "ApiLimitedProfileRead",
