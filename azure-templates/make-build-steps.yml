@@ -1,9 +1,5 @@
-# Azure DevOps pipeline template used to checkout, install node dependencies and build the code. 
-#
-# Note. The dependencies include packages from GitHub package registry that can be downloaded by  
-# configuring the .npmrc file and setting the following pipeline variable with a personal access 
-# token (with scope read:packages):
-# GITHUB_TOKEN
+# Azure DevOps pipeline template used to checkout, install node dependencies 
+# and build the code. 
 
 parameters:
   - name: 'make'
@@ -30,12 +26,6 @@ steps:
     inputs:
       version: $(NODE_VERSION)
     displayName: 'Set up Node.js'
-    
-  - bash: |
-      ./scripts/init-npm.sh
-    env:
-      GITHUB_TOKEN: $(GITHUB_TOKEN)    
-    displayName: 'Init .npmrc file'
     
   - script: |
       yarn install --frozen-lockfile
