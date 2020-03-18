@@ -15,7 +15,7 @@
     "postversion": "git push && git push --tags",
     "test": "jest -i",
     "lint": "tslint --project .",
-    "generate:definitions": "rimraf ./generated/definitions && mkdir -p ./generated/definitions && gen-api-models --api-spec ./openapi/index.yaml --out-dir ./generated/definitions"
+    "generate:definitions": "rimraf ./generated/definitions && shx mkdir -p ./generated/definitions && gen-api-models --api-spec ./openapi/index.yaml --out-dir ./generated/definitions"
   },
   "devDependencies": {
     "@azure/functions": "^1.0.3",
@@ -34,8 +34,9 @@
     "italia-utils": "^4.0.1",
     "jest": "^24.8.0",
     "prettier": "^1.12.1",
-    "release-it": "^12.4.3",
+    "release-it": "^13.1.1",
     "rimraf": "^2.6.2",
+    "shx": "^0.3.2",
     "ts-jest": "^24.0.2",
     "tslint": "^5.1.0",
     "typescript": "^3.5.0"
