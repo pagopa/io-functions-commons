@@ -10,6 +10,7 @@ import { NotificationEvent } from "../notification_event";
 import { MessageContent } from "../../../generated/definitions/MessageContent";
 
 import { isRight } from "fp-ts/lib/Either";
+import { EmailAddress } from "../../../generated/definitions/EmailAddress";
 import { MessageSubject } from "../../../generated/definitions/MessageSubject";
 import { OrganizationFiscalCode } from "../../../generated/definitions/OrganizationFiscalCode";
 import { TimeToLiveSeconds } from "../../../generated/definitions/TimeToLiveSeconds";
@@ -42,7 +43,8 @@ const aSenderMetadata: CreatedMessageEventSenderMetadata = {
   organizationFiscalCode: anOrganizationFiscalCode,
   organizationName: "AgID" as NonEmptyString,
   requireSecureChannels: false,
-  serviceName: "Test" as NonEmptyString
+  serviceName: "Test" as NonEmptyString,
+  serviceUserEmail: "email@example.com" as EmailAddress
 };
 
 describe("isNotificationEvent", () => {
