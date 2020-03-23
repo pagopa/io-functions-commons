@@ -33,7 +33,9 @@ export enum NotificationAddressSourceEnum {
   // the notification address comes from the user profile
   PROFILE_ADDRESS = "PROFILE_ADDRESS",
   // the notification address was provided as default address by the sender
-  DEFAULT_ADDRESS = "DEFAULT_ADDRESS"
+  DEFAULT_ADDRESS = "DEFAULT_ADDRESS",
+  // the notification address was provided by the sending user email
+  ACCOUNT_ADDRESS = "ACCOUNT_ADDRESS"
 }
 
 export const NotificationAddressSource = enumType<
