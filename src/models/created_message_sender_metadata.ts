@@ -1,6 +1,6 @@
 import * as t from "io-ts";
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { EmailString, NonEmptyString } from "italia-ts-commons/lib/strings";
 import { OrganizationFiscalCode } from "../../generated/definitions/OrganizationFiscalCode";
 
 /**
@@ -11,7 +11,8 @@ export const CreatedMessageEventSenderMetadata = t.interface({
   organizationFiscalCode: OrganizationFiscalCode,
   organizationName: NonEmptyString,
   requireSecureChannels: t.boolean,
-  serviceName: NonEmptyString
+  serviceName: NonEmptyString,
+  userEmail: EmailString
 });
 
 export type CreatedMessageEventSenderMetadata = t.TypeOf<
