@@ -37,7 +37,7 @@ describe("", () => {
           organizationName: "AgID",
           requireSecureChannels: false,
           serviceName: "Test",
-          userEmail: "email@exmaple.com"
+          serviceUserEmail: "email@exmaple.com"
         },
         serviceVersion: 1
       }

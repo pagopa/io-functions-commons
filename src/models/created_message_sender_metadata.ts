@@ -12,7 +12,7 @@ export const CreatedMessageEventSenderMetadata = t.interface({
   organizationName: NonEmptyString,
   requireSecureChannels: t.boolean,
   serviceName: NonEmptyString,
-  userEmail: EmailString
+  serviceUserEmail: EmailString
 });
 
 export type CreatedMessageEventSenderMetadata = t.TypeOf<

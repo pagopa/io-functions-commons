@@ -44,7 +44,7 @@ const aSenderMetadata: CreatedMessageEventSenderMetadata = {
   organizationName: "AgID" as NonEmptyString,
   requireSecureChannels: false,
   serviceName: "Test" as NonEmptyString,
-  userEmail: "email@example.com" as EmailAddress
+  serviceUserEmail: "email@example.com" as EmailAddress
 };
 
 describe("isNotificationEvent", () => {
