@@ -92,12 +92,14 @@ stages:
               npx oval validate -p openapi/index.yaml
             displayName: 'Validate openAPI'
 
-      # A4) Check source code with danger (ignore when master)
+      # A4) Run Danger (skipping if not executing on a PR)
       - job: danger
-        condition: and(succeeded(),
+        condition: 
+          and(
+            succeeded(), 
             and(
-              variables['DANGER_GITHUB_API_TOKEN'], 
-              ne(variables['Build.SourceBranch'], 'refs/heads/master')
+              eq(variables['Build.Reason'], 'PullRequest'),
+              ne(variables['DANGER_GITHUB_API_TOKEN'], 'skip')
             )
           )
         steps:
@@ -107,6 +109,8 @@ stages:
 
           - bash: |
               yarn danger ci
+            env:
+              DANGER_GITHUB_API_TOKEN: '$(DANGER_GITHUB_API_TOKEN)'
             displayName: 'Danger CI'
 
 
