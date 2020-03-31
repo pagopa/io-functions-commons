@@ -113,10 +113,10 @@ PrescriptionData:
   description: |-
     Metadata needed to process medical prescriptions.
   properties:
-    iup:
-      $ref: "#/PrescriptionIup"
     nre:
       $ref: "#/PrescriptionNre"
+    iup:
+      $ref: "#/PrescriptionIup"
     doctor_fiscal_code:
       $ref: "#/DoctorFiscalCode"
   required:
@@ -129,7 +129,7 @@ PrescriptionIup:
 PrescriptionNre:
   description: The field *Numero ricetta elettronica* identifies the medical prescription at national level.
   type: string
-  minLength: 1
+  minLength: 15
   maxLength: 15
 PaymentData:
   type: object
