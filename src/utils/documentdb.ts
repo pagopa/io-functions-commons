@@ -303,17 +303,17 @@ function executeNext<T>(
           >(error)
         );
       } else if (documents && documents.length > 0) {
-        const readonlyDocuments: ReadonlyArray<
-          DocumentDb.RetrievedDocument
-        > = documents;
+        const readonlyDocuments: ReadonlyArray<DocumentDb.RetrievedDocument> = documents;
         resolve(
           right<
             DocumentDb.QueryError,
             Option<ReadonlyArray<T & DocumentDb.RetrievedDocument>>
           >(
-            some(readonlyDocuments as ReadonlyArray<
-              T & DocumentDb.RetrievedDocument
-            >)
+            some(
+              readonlyDocuments as ReadonlyArray<
+                T & DocumentDb.RetrievedDocument
+              >
+            )
           )
         );
       } else if (!documentIterator.hasMoreResults()) {
@@ -763,17 +763,17 @@ export function queryAttachments<T>(
               >(error)
             );
           } else if (attachments && attachments.length > 0) {
-            const readonlyAttachments: ReadonlyArray<
-              DocumentDb.AttachmentMeta
-            > = attachments;
+            const readonlyAttachments: ReadonlyArray<DocumentDb.AttachmentMeta> = attachments;
             resolve(
               right<
                 DocumentDb.QueryError,
                 Option<ReadonlyArray<T & DocumentDb.AttachmentMeta>>
               >(
-                some(readonlyAttachments as ReadonlyArray<
-                  T & DocumentDb.AttachmentMeta
-                >)
+                some(
+                  readonlyAttachments as ReadonlyArray<
+                    T & DocumentDb.AttachmentMeta
+                  >
+                )
               )
             );
           } else {
