@@ -215,12 +215,10 @@ export async function getBlobAsObject<A, O, I>(
     const text = maybeText.value;
     try {
       const json = JSON.parse(text);
-      return type
-        .decode(json)
-        .fold<Either<Error, Option<A>>>(
-          err => left(new Error(readableReport(err))),
-          _ => right(some(_))
-        );
+      return type.decode(json).fold<Either<Error, Option<A>>>(
+        err => left(new Error(readableReport(err))),
+        _ => right(some(_))
+      );
     } catch (e) {
       return left(e);
     }
