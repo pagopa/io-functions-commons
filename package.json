@@ -42,7 +42,7 @@
     "typescript": "^3.5.0"
   },
   "dependencies": {
-    "applicationinsights": "^1.0.3",
+    "applicationinsights": "^1.7.3",
     "azure-storage": "^2.10.3",
     "cidr-matcher": "^2.1.0",
     "documentdb": "^1.15.3",
