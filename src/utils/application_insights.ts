@@ -1,71 +1,101 @@
-import * as ApplicationInsights from "applicationinsights";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import * as appInsights from "applicationinsights";
 import { Millisecond } from "italia-ts-commons/lib/units";
-import { ServiceId } from "../../generated/definitions/ServiceId";
 
-export { TelemetryClient } from "applicationinsights";
-
-export interface ITelemetryParams {
-  readonly operationId: NonEmptyString;
-  readonly operationParentId?: NonEmptyString;
-  readonly serviceId?: ServiceId;
-}
-
-/**
- * A TelemetryClient instance cannot be shared between track calls
- * as custom properties and tags (ie. operationId) are part
- * of a mutable shared state attached to the instance.
- *
- * This method returns a TelemetryClient with a custom
- * TelemetryProcessor that stores tags and properties
- * before any call to track(); in this way the returned
- * instance of the TelemetryClient can be shared safely.
- */
-export function wrapCustomTelemetryClient(
-  isTracingDisabled: boolean,
-  client: ApplicationInsights.TelemetryClient
-): (
-  params: ITelemetryParams,
-  commonProperties?: Record<string, string>
-) => ApplicationInsights.TelemetryClient {
-  if (isTracingDisabled) {
-    // this won't disable manual calls to trackEvent / trackDependency
-    ApplicationInsights.Configuration.setAutoCollectConsole(false)
-      .setAutoCollectDependencies(false)
-      .setAutoCollectPerformance(false)
-      .setAutoCollectRequests(false)
-      .setInternalLogging(false)
-      // see https://stackoverflow.com/questions/49438235/application-insights-metric-in-aws-lambda/49441135#49441135
-      .setUseDiskRetryCaching(false);
-  }
-  return (params, commonProperties) => {
-    client.addTelemetryProcessor(env => {
-      // tslint:disable-next-line:no-object-mutation
-      env.tags = {
-        ...env.tags,
-        [client.context.keys.operationId]: params.operationId,
-        [client.context.keys.operationParentId]: params.operationParentId,
-        [client.context.keys.userAccountId]: params.serviceId
-      };
-      // cast needed due to https://github.com/Microsoft/ApplicationInsights-node.js/issues/392
-      const data = env.data as ApplicationInsights.Contracts.Data<
-        ApplicationInsights.Contracts.EventData
-      >;
-      // tslint:disable-next-line:no-object-mutation
-      data.baseData.properties = {
-        ...data.baseData.properties,
-        ...commonProperties
-      };
-      // return true to execute the following telemetry processor
-      return true;
-    });
-    return client;
+interface IInsightsRequestData {
+  baseType: "RequestData";
+  baseData: {
+    ver: number;
+    properties: {};
+    measurements: {};
+    id: string;
+    name: string;
+    url: string;
+    source?: string;
+    duration: string;
+    responseCode: string;
+    success: boolean;
   };
 }
 
-export type CustomTelemetryClientFactory = ReturnType<
-  typeof wrapCustomTelemetryClient
->;
+export interface IInsightsOptions {
+  isTracingEnabled: boolean;
+  cloudRole: string;
+  version: string;
+}
+
+/**
+ * App Insights is initialized to collect the following informations:
+ * - Incoming API calls
+ * - Server performance information (CPU, RAM)
+ * - Unandled Runtime Exceptions
+ * - Outcoming API Calls (dependencies)
+ * - Realtime API metrics
+ */
+export function startAppInsights(
+  instrumentationKey: string,
+  config: IInsightsOptions &
+    Partial<
+      Pick<appInsights.TelemetryClient["config"], "httpAgent" | "httpsAgent">
+    >
+): appInsights.TelemetryClient {
+  const ai = appInsights
+    .setup(instrumentationKey)
+    .setAutoDependencyCorrelation(config.isTracingEnabled)
+    .setAutoCollectRequests(config.isTracingEnabled)
+    .setAutoCollectPerformance(config.isTracingEnabled)
+    .setAutoCollectExceptions(config.isTracingEnabled)
+    .setAutoCollectDependencies(config.isTracingEnabled)
+    .setAutoCollectConsole(config.isTracingEnabled)
+    .setSendLiveMetrics(config.isTracingEnabled)
+    // see https://stackoverflow.com/questions/49438235/application-insights-metric-in-aws-lambda/49441135#49441135
+    .setUseDiskRetryCaching(false);
+
+  appInsights.defaultClient.addTelemetryProcessor(
+    removeQueryParamsPreprocessor
+  );
+
+  // Configure the data context of the telemetry client
+  // refering to the current application version with a specific CloudRole
+
+  // tslint:disable-next-line: no-object-mutation
+  appInsights.defaultClient.context.tags[
+    appInsights.defaultClient.context.keys.applicationVersion
+  ] = config.version;
+
+  // tslint:disable-next-line: no-object-mutation
+  appInsights.defaultClient.context.tags[
+    appInsights.defaultClient.context.keys.cloudRole
+  ] = config.cloudRole;
+
+  if (config.httpAgent !== undefined) {
+    // tslint:disable-next-line: no-object-mutation
+    appInsights.defaultClient.config.httpAgent = config.httpAgent;
+  }
+
+  if (config.httpsAgent !== undefined) {
+    // tslint:disable-next-line: no-object-mutation
+    appInsights.defaultClient.config.httpsAgent = config.httpsAgent;
+  }
+
+  ai.start();
+  return appInsights.defaultClient;
+}
+
+export function removeQueryParamsPreprocessor(
+  envelope: appInsights.Contracts.Envelope,
+  _?: {
+    [name: string]: unknown;
+  }
+): boolean {
+  if (envelope.data.baseType === "RequestData") {
+    const originalUrl = (envelope.data as IInsightsRequestData).baseData.url;
+    // tslint:disable-next-line: no-object-mutation
+    (envelope.data as IInsightsRequestData).baseData.url = originalUrl.split(
+      "?"
+    )[0];
+  }
+  return true;
+}
 
 const NANOSEC_PER_MILLISEC = 1e6;
 const MILLISEC_PER_SEC = 1e3;
