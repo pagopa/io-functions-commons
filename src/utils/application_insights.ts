@@ -154,7 +154,10 @@ export function initAppInsights(
 const NANOSEC_PER_MILLISEC = 1e6;
 const MILLISEC_PER_SEC = 1e3;
 
-// tslint:disable-next-line: no-any
+/**
+ * Wraps a function handler with a telemetry context,
+ * useful in case you want to set correlation id.
+ */
 export function withAppInsightsContext<R>(context: Context, f: () => R): R {
   const correlationContext = CorrelationContextManager.generateContextObject(
     // it is not totally clear if this should be context.invocationId
