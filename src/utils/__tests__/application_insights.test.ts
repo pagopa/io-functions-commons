@@ -2,7 +2,8 @@ import * as appInsights from "applicationinsights";
 import { Configuration } from "applicationinsights";
 import {
   initAppInsights,
-  removeQueryParamsPreprocessor
+  removeQueryParamsPreprocessor,
+  withAppInsightsContext
 } from "../application_insights";
 
 describe("Create an App Insights Telemetry Client", () => {
@@ -100,6 +101,23 @@ describe("Create an App Insights Telemetry Client", () => {
       removeQueryParamsPreprocessor
     );
     expect(telemetryClient).toEqual(expectedTelemetryClient);
+  });
+});
+
+describe("Wrap an handler with Application Insights context", () => {
+  it("should return the handler value", async () => {
+    const handler = (a: string, b: number) => `${a}${b}`;
+    const ret = withAppInsightsContext(
+      {
+        executionContext: {
+          functionName: "foo"
+        },
+        invocationId: "123"
+        // tslint:disable-next-line: no-any
+      } as any,
+      () => handler("bar", 2)
+    );
+    expect(ret).toEqual("bar2");
   });
 });
 
