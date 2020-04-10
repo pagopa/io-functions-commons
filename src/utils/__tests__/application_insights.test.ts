@@ -1,17 +1,18 @@
 import * as appInsights from "applicationinsights";
 import { Configuration } from "applicationinsights";
 import {
-  removeQueryParamsPreprocessor,
-  startAppInsights
+  initAppInsights,
+  removeQueryParamsPreprocessor
 } from "../application_insights";
 
 describe("Create an App Insights Telemetry Client", () => {
-  const mockSetAutoDependencyCorrelation = jest.fn();
   const mockSetAutoCollectRequests = jest.fn();
   const mockSetAutoCollectPerformance = jest.fn();
   const mockSetAutoCollectExceptions = jest.fn();
   const mockSetAutoCollectDependencies = jest.fn();
   const mockSetAutoCollectConsole = jest.fn();
+  const mockSetAutoDependencyCorrelation = jest.fn();
+  const mockSetDistributedTracingMode = jest.fn();
   const mockSetUseDiskRetryCaching = jest.fn();
   const mockSetSendLiveMetrics = jest.fn();
   const mockStart = jest.fn();
@@ -23,10 +24,23 @@ describe("Create an App Insights Telemetry Client", () => {
     setAutoCollectPerformance: mockSetAutoCollectPerformance,
     setAutoCollectRequests: mockSetAutoCollectRequests,
     setAutoDependencyCorrelation: mockSetAutoDependencyCorrelation,
+    setDistributedTracingMode: mockSetDistributedTracingMode,
     setSendLiveMetrics: mockSetSendLiveMetrics,
     setUseDiskRetryCaching: mockSetUseDiskRetryCaching,
     start: mockStart
   };
+
+  mockSetAutoCollectConsole.mockImplementation(() => mockedConfiguration);
+  mockSetAutoCollectDependencies.mockImplementation(() => mockedConfiguration);
+  mockSetAutoCollectExceptions.mockImplementation(() => mockedConfiguration);
+  mockSetAutoCollectPerformance.mockImplementation(() => mockedConfiguration);
+  mockSetAutoCollectRequests.mockImplementation(() => mockedConfiguration);
+  mockSetAutoDependencyCorrelation.mockImplementation(
+    () => mockedConfiguration
+  );
+  mockSetDistributedTracingMode.mockImplementation(() => mockedConfiguration);
+  mockSetUseDiskRetryCaching.mockImplementation(() => mockedConfiguration);
+
   const mockSetup = jest
     .spyOn(appInsights, "setup")
     // tslint:disable-next-line: no-any
@@ -51,33 +65,18 @@ describe("Create an App Insights Telemetry Client", () => {
 
   const expectedAppInsightsKey = "SECRET-KEY";
 
-  mockSetAutoDependencyCorrelation.mockImplementation(
-    () => mockedConfiguration
-  );
-  mockSetAutoCollectRequests.mockImplementation(() => mockedConfiguration);
-  mockSetAutoCollectPerformance.mockImplementation(() => mockedConfiguration);
-  mockSetAutoCollectExceptions.mockImplementation(() => mockedConfiguration);
-  mockSetAutoCollectDependencies.mockImplementation(() => mockedConfiguration);
-  mockSetAutoCollectConsole.mockImplementation(() => mockedConfiguration);
-  mockSetUseDiskRetryCaching.mockImplementation(() => mockedConfiguration);
-  mockSetSendLiveMetrics.mockImplementation(() => mockedConfiguration);
-
   it("should create a new App Insights Telemetry Client with tracing enabled", () => {
     // tslint:disable-next-line: no-unused-expression
-    const telemetryClient = startAppInsights(expectedAppInsightsKey, {
-      cloudRole: "ai.role",
-      isTracingEnabled: true,
-      version: "1.1.1"
-    });
+    const telemetryClient = initAppInsights(
+      expectedAppInsightsKey,
+      {},
+      {
+        applicationVersion: "1.1.1",
+        cloudRole: "ai.role"
+      }
+    );
     expect(mockSetup).toBeCalledWith(expectedAppInsightsKey);
-    expect(mockSetAutoDependencyCorrelation).toBeCalledWith(true);
-    expect(mockSetAutoCollectRequests).toBeCalledWith(true);
-    expect(mockSetAutoCollectPerformance).toBeCalledWith(true);
-    expect(mockSetAutoCollectExceptions).toBeCalledWith(true);
-    expect(mockSetAutoCollectDependencies).toBeCalledWith(true);
-    expect(mockSetAutoCollectConsole).toBeCalledWith(true);
-    expect(mockSetUseDiskRetryCaching).toBeCalledWith(false);
-    expect(mockSetSendLiveMetrics).toBeCalledWith(true);
+    expect(mockSetAutoDependencyCorrelation).not.toBeCalled();
     expect(mockAddTelemetryProcessor).toBeCalledWith(
       removeQueryParamsPreprocessor
     );
@@ -86,20 +85,17 @@ describe("Create an App Insights Telemetry Client", () => {
 
   it("should create a new App Insights Telemetry Client with tracing disabled", () => {
     // tslint:disable-next-line: no-unused-expression
-    const telemetryClient = startAppInsights(expectedAppInsightsKey, {
-      cloudRole: "ai.role",
-      isTracingEnabled: false,
-      version: "1.1.1"
-    });
+    const telemetryClient = initAppInsights(
+      expectedAppInsightsKey,
+      {},
+      {
+        applicationVersion: "1.1.1",
+        cloudRole: "ai.role",
+        isTracingDisabled: true
+      }
+    );
     expect(mockSetup).toBeCalledWith(expectedAppInsightsKey);
     expect(mockSetAutoDependencyCorrelation).toBeCalledWith(false);
-    expect(mockSetAutoCollectRequests).toBeCalledWith(false);
-    expect(mockSetAutoCollectPerformance).toBeCalledWith(false);
-    expect(mockSetAutoCollectExceptions).toBeCalledWith(false);
-    expect(mockSetAutoCollectDependencies).toBeCalledWith(false);
-    expect(mockSetAutoCollectConsole).toBeCalledWith(false);
-    expect(mockSetUseDiskRetryCaching).toBeCalledWith(false);
-    expect(mockSetSendLiveMetrics).toBeCalledWith(false);
     expect(mockAddTelemetryProcessor).toBeCalledWith(
       removeQueryParamsPreprocessor
     );
