@@ -1,4 +1,6 @@
 import * as appInsights from "applicationinsights";
+import { DistributedTracingModes } from "applicationinsights";
+import { agent } from "italia-ts-commons";
 import { Millisecond } from "italia-ts-commons/lib/units";
 
 interface IInsightsRequestData {
@@ -18,37 +20,38 @@ interface IInsightsRequestData {
 }
 
 export interface IInsightsOptions {
-  isTracingEnabled: boolean;
-  cloudRole: string;
-  version: string;
+  isTracingDisabled?: boolean;
+  cloudRole?: string;
+  applicationVersion?: string;
 }
 
 /**
- * App Insights is initialized to collect the following informations:
- * - Incoming API calls
- * - Server performance information (CPU, RAM)
- * - Unandled Runtime Exceptions
- * - Outcoming API Calls (dependencies)
- * - Realtime API metrics
+ * Internal usage, do not export
  */
-export function startAppInsights(
+function startAppInsights(
   instrumentationKey: string,
   config: IInsightsOptions &
     Partial<
       Pick<appInsights.TelemetryClient["config"], "httpAgent" | "httpsAgent">
     >
 ): appInsights.TelemetryClient {
-  const ai = appInsights
-    .setup(instrumentationKey)
-    .setAutoDependencyCorrelation(config.isTracingEnabled)
-    .setAutoCollectRequests(config.isTracingEnabled)
-    .setAutoCollectPerformance(config.isTracingEnabled)
-    .setAutoCollectExceptions(config.isTracingEnabled)
-    .setAutoCollectDependencies(config.isTracingEnabled)
-    .setAutoCollectConsole(config.isTracingEnabled)
-    .setSendLiveMetrics(config.isTracingEnabled)
-    // see https://stackoverflow.com/questions/49438235/application-insights-metric-in-aws-lambda/49441135#49441135
-    .setUseDiskRetryCaching(false);
+  const ai = appInsights.setup(instrumentationKey);
+
+  if (config.isTracingDisabled) {
+    ai.setAutoCollectConsole(false)
+      .setAutoCollectPerformance(false)
+      .setAutoCollectDependencies(false)
+      .setAutoCollectRequests(false)
+      .setAutoDependencyCorrelation(false)
+      .setSendLiveMetrics(false);
+  }
+
+  // @see https://github.com/Azure/azure-functions-host/issues/3747
+  // @see https://github.com/Azure/azure-functions-nodejs-worker/pull/244
+  ai.setDistributedTracingMode(DistributedTracingModes.AI_AND_W3C)
+    // @see https://stackoverflow.com/questions/49438235/application-insights-metric-in-aws-lambda/49441135#49441135
+    .setUseDiskRetryCaching(false)
+    .start();
 
   appInsights.defaultClient.addTelemetryProcessor(
     removeQueryParamsPreprocessor
@@ -57,15 +60,19 @@ export function startAppInsights(
   // Configure the data context of the telemetry client
   // refering to the current application version with a specific CloudRole
 
-  // tslint:disable-next-line: no-object-mutation
-  appInsights.defaultClient.context.tags[
-    appInsights.defaultClient.context.keys.applicationVersion
-  ] = config.version;
+  if (config.applicationVersion !== undefined) {
+    // tslint:disable-next-line: no-object-mutation
+    appInsights.defaultClient.context.tags[
+      appInsights.defaultClient.context.keys.applicationVersion
+    ] = config.applicationVersion;
+  }
 
-  // tslint:disable-next-line: no-object-mutation
-  appInsights.defaultClient.context.tags[
-    appInsights.defaultClient.context.keys.cloudRole
-  ] = config.cloudRole;
+  if (config.cloudRole !== undefined) {
+    // tslint:disable-next-line: no-object-mutation
+    appInsights.defaultClient.context.tags[
+      appInsights.defaultClient.context.keys.cloudRole
+    ] = config.cloudRole;
+  }
 
   if (config.httpAgent !== undefined) {
     // tslint:disable-next-line: no-object-mutation
@@ -77,7 +84,6 @@ export function startAppInsights(
     appInsights.defaultClient.config.httpsAgent = config.httpsAgent;
   }
 
-  ai.start();
   return appInsights.defaultClient;
 }
 
@@ -95,6 +101,51 @@ export function removeQueryParamsPreprocessor(
     )[0];
   }
   return true;
+}
+
+/**
+ * Configure Application Insights default client
+ * using settings taken from the environment:
+ *
+ * - setup tracing options
+ * - setup cloudRole and version
+ * - eventually setup http keeplive to prevent SNAT port exhaustion
+ * - start application insights
+ *
+ * As the default client is a singleton shared between functions
+ * you may want to prevent bootstrapping insights more than once
+ * checking if appInsights.defaultClient id already set in the caller.
+ *
+ * To enable http agent keepalive set up these environment variables:
+ * https://github.com/pagopa/io-ts-commons/blob/master/src/agent.ts#L11
+ *
+ * If you need to programmatically call Application Insights methods
+ * set operationId = context.Tracecontext.traceparent to correlate
+ * the call with the parent request.
+ *
+ */
+export function initAppInsights(
+  aiInstrumentationKey: string,
+  env: typeof process.env = process.env,
+  config?: IInsightsOptions
+): ReturnType<typeof startAppInsights> {
+  // @see https://github.com/pagopa/io-ts-commons/blob/master/src/agent.ts
+  // @see https://docs.microsoft.com/it-it/azure/load-balancer/load-balancer-outbound-connections
+  const agentOpts = agent.isFetchKeepaliveEnabled(env)
+    ? {
+        httpAgent: agent.newHttpAgent(agent.getKeepAliveAgentOptions(env)),
+        httpsAgent: agent.newHttpsAgent(agent.getKeepAliveAgentOptions(env))
+      }
+    : {};
+
+  // defaults to the name of the function app if not set in config
+  const cloudRole = config?.cloudRole || env.WEBSITE_SITE_NAME;
+
+  return startAppInsights(aiInstrumentationKey, {
+    cloudRole,
+    ...config,
+    ...agentOpts
+  });
 }
 
 const NANOSEC_PER_MILLISEC = 1e6;
