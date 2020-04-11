@@ -3,7 +3,11 @@ import * as appInsights from "applicationinsights";
 import { DistributedTracingModes } from "applicationinsights";
 // tslint:disable-next-line: no-submodule-imports
 import { CorrelationContextManager } from "applicationinsights/out/AutoCollection/CorrelationContextManager";
+// tslint:disable-next-line: no-submodule-imports
+import Traceparent = require("applicationinsights/out/Library/Traceparent");
+import { fromNullable } from "fp-ts/lib/Option";
 import { agent } from "italia-ts-commons";
+import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { Millisecond } from "italia-ts-commons/lib/units";
 
 interface IInsightsRequestData {
@@ -159,11 +163,18 @@ const MILLISEC_PER_SEC = 1e3;
  * useful in case you want to set correlation id.
  */
 export function withAppInsightsContext<R>(context: Context, f: () => R): R {
+  // @see https://github.com/Azure/azure-functions-host/issues/5170#issuecomment-553583362
+  const traceId = fromNullable(context.traceContext).fold(
+    context.invocationId,
+    tc =>
+      NonEmptyString.decode(tc.traceparent).fold(
+        _ => context.invocationId,
+        _ => new Traceparent(_).traceId
+      )
+  );
   const correlationContext = CorrelationContextManager.generateContextObject(
-    // it is not totally clear if this should be context.invocationId
-    // @see https://github.com/Azure/azure-functions-host/issues/5170#issuecomment-553583362
-    context.invocationId,
-    context.invocationId,
+    traceId,
+    traceId,
     context.executionContext.functionName
   );
   return CorrelationContextManager.runWithContext(correlationContext, () => {
