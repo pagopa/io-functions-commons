@@ -117,8 +117,8 @@ PrescriptionData:
       $ref: "#/PrescriptionNRE"
     iup:
       $ref: "#/PrescriptionIUP"
-    doctor_fiscal_code:
-      $ref: "#/DoctorFiscalCode"
+    prescriber_fiscal_code:
+      $ref: "#/PrescriberFiscalCode"
   required:
     - nre
 PrescriptionIUP:
@@ -271,7 +271,7 @@ FiscalCode:
   format: FiscalCode
   x-import: italia-ts-commons/lib/strings
   example: SPNDNL80R13C555X
-DoctorFiscalCode:
+PrescriberFiscalCode:
   type: string
   description: Fiscal code of the Doctor that made the prescription.
   format: FiscalCode
