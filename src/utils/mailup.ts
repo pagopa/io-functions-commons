@@ -135,12 +135,14 @@ async function sendTransactionalMail(
   creds: SmtpAuthInfo,
   payload: EmailPayload
 ): Promise<Either<Error, ApiResponse>> {
-  return (await callMailUpApi(
-    "POST",
-    SEND_TRANSACTIONAL_MAIL_ENDPOINT,
-    creds,
-    payload
-  )).chain(response => {
+  return (
+    await callMailUpApi(
+      "POST",
+      SEND_TRANSACTIONAL_MAIL_ENDPOINT,
+      creds,
+      payload
+    )
+  ).chain(response => {
     if (response && response.Code && response.Code === "0") {
       return right(response);
     } else {
@@ -234,9 +236,11 @@ export function MailUpTransport(
       // Convert SMTP headers from the format used by nodemailer
       // to (N: <headerName>, V: <headerValue>) tuples
       // used by the MailUp APIs
-      const headers = Object.keys(mail.data.headers as {
-        readonly [s: string]: string;
-      }).map(header => ({
+      const headers = Object.keys(
+        mail.data.headers as {
+          readonly [s: string]: string;
+        }
+      ).map(header => ({
         N: header,
         // tslint:disable-next-line:no-any
         V: (mail.data.headers as any)[header]
