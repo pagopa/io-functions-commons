@@ -7,8 +7,6 @@ import Mail = require("nodemailer/lib/mailer");
 
 import * as nodemailer from "nodemailer";
 
-import * as superagent from "superagent";
-
 import { MailUpTransport, SmtpAuthInfo } from "../mailup";
 
 afterEach(() => {
