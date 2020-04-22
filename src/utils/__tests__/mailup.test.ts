@@ -179,7 +179,7 @@ describe("sendMail", () => {
     const fetchAgent = mockFetch(400, {
       Code: "-1",
       Message: "foobar",
-      Status: "200"
+      Status: "400"
     });
     const aNodemailerTransporter = nodemailer.createTransport(
       MailUpTransport({
