@@ -7,7 +7,11 @@ import Mail = require("nodemailer/lib/mailer");
 
 import * as nodemailer from "nodemailer";
 
-import { MailUpTransport, SmtpAuthInfo } from "../mailup";
+import {
+  MailUpTransport,
+  SEND_TRANSACTIONAL_MAIL_ENDPOINT,
+  SmtpAuthInfo
+} from "../mailup";
 
 afterEach(() => {
   jest.restoreAllMocks();
@@ -52,28 +56,33 @@ const aResponsePayload = {
 };
 
 const mockFetch = <T>(status: number, json: T, ok = true) => {
-  return (jest.fn(() => ({
-    json: () => Promise.resolve(json),
-    ok,
-    status,
-    then: () => mockFetch
-  })) as unknown) as typeof fetch;
+  return jest.fn().mockReturnValue(
+    Promise.resolve({
+      json: () => Promise.resolve(json),
+      ok,
+      status
+    })
+  );
 };
 
 describe("sendMail", () => {
   it("should get a success response from the API endpoint", async () => {
+    const fetchAgent = mockFetch(200, aResponsePayload);
     const aNodemailerTransporter = nodemailer.createTransport(
       MailUpTransport({
         creds: someCreds,
-        fetchAgent: mockFetch(200, aResponsePayload)
+        fetchAgent
       })
     );
 
     const response = await aNodemailerTransporter.sendMail(anEmailMessage);
 
-    expect(mockFetch).toHaveBeenCalledWith({
-      ...anEmailPayload,
-      User: someCreds
+    expect(fetchAgent).toHaveBeenCalledWith(SEND_TRANSACTIONAL_MAIL_ENDPOINT, {
+      body: JSON.stringify({
+        ...anEmailPayload,
+        User: someCreds
+      }),
+      method: "POST"
     });
     expect(response).toEqual(aResponsePayload);
   });
@@ -132,18 +141,41 @@ describe("sendMail", () => {
     }
   });
 
-  it("should fail on API error", async () => {
+  it("should fail on fetch error", async () => {
+    const fetchAgent = mockFetch(400, aResponsePayload, false);
     const aNodemailerTransporter = nodemailer.createTransport(
       MailUpTransport({
         creds: someCreds,
-        fetchAgent: mockFetch(500, aResponsePayload)
+        fetchAgent
       })
     );
-    expect.assertions(1);
+    expect.assertions(2);
     try {
       await aNodemailerTransporter.sendMail(anEmailMessage);
     } catch (e) {
       expect(e).toBeInstanceOf(Error);
+      expect(e.message).toContain("400");
+    }
+  });
+
+  it("should fail on API error", async () => {
+    const fetchAgent = mockFetch(400, {
+      Code: "-1",
+      Message: "foobar",
+      Status: "200"
+    });
+    const aNodemailerTransporter = nodemailer.createTransport(
+      MailUpTransport({
+        creds: someCreds,
+        fetchAgent
+      })
+    );
+    expect.assertions(2);
+    try {
+      await aNodemailerTransporter.sendMail(anEmailMessage);
+    } catch (e) {
+      expect(e).toBeInstanceOf(Error);
+      expect(e.message).toContain("foobar");
     }
   });
 });
