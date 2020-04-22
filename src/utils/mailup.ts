@@ -115,6 +115,9 @@ function sendTransactionalMail(
     () =>
       fetchAgent(SEND_TRANSACTIONAL_MAIL_ENDPOINT, {
         body: JSON.stringify({ ...payload, User: creds }),
+        headers: {
+          "Content-Type": "application/json"
+        },
         method: "POST"
       }),
     err => new Error(`Error posting to MailUp: ${err}`)
@@ -127,7 +130,7 @@ function sendTransactionalMail(
     )
     .chain(response =>
       tryCatch(
-        response.json,
+        () => response.json(),
         err => new Error(`Error getting MailUp API payload: ${err}`)
       )
     )
