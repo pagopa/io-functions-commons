@@ -141,6 +141,23 @@ describe("sendMail", () => {
     }
   });
 
+  it("should fail on network error", async () => {
+    const fetchAgent = jest.fn().mockRejectedValueOnce("foo");
+    const aNodemailerTransporter = nodemailer.createTransport(
+      MailUpTransport({
+        creds: someCreds,
+        fetchAgent
+      })
+    );
+    expect.assertions(2);
+    try {
+      await aNodemailerTransporter.sendMail(anEmailMessage);
+    } catch (e) {
+      expect(e).toBeInstanceOf(Error);
+      expect(e.message).toContain("foo");
+    }
+  });
+
   it("should fail on fetch error", async () => {
     const fetchAgent = mockFetch(400, aResponsePayload, false);
     const aNodemailerTransporter = nodemailer.createTransport(
