@@ -41,14 +41,18 @@
     "typescript": "^3.8.0"
   },
   "dependencies": {
+    "@types/node-fetch": "^2.5.6",
     "applicationinsights": "^1.7.3",
     "azure-storage": "^2.10.3",
     "cidr-matcher": "^2.1.0",
     "documentdb": "^1.15.3",
+    "fp-ts": "1.17.4",
     "helmet": "^3.13.0",
     "helmet-csp": "^2.5.1",
     "io-functions-express": "^0.1.1",
+    "io-ts": "1.8.5",
     "italia-ts-commons": "^7.0.1",
+    "node-fetch": "^2.6.0",
     "nodemailer": "^4.6.7",
     "referrer-policy": "^1.1.0",
     "rehype-stringify": "^3.0.0",
@@ -61,9 +65,7 @@
   },
   "peerDependencies": {
     "@azure/functions": "^1.0.3",
-    "express": "^4.0.0",
-    "fp-ts": "1.12.0",
-    "io-ts": "1.8.5"
+    "express": "^4.0.0"
   },
   "jest": {
     "testEnvironment": "node",
@@ -82,5 +84,8 @@
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
+  },
+  "resolutions": {
+    "fp-ts": "1.17.4"
   }
 }

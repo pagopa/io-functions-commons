@@ -14,17 +14,6 @@ afterEach(() => {
   jest.resetAllMocks();
 });
 
-// as superagent does not export request methods directly
-// we must override the superagent.Request prototype
-// so we can set up our jest mock to use it instead
-// of the send() method
-const mockSuperagentResponse = (response: any) => {
-  const sendMock = jest.fn();
-  // tslint:disable-next-line:no-object-mutation
-  (superagent as any).Request.prototype.send = sendMock;
-  return sendMock.mockReturnValueOnce(Promise.resolve(response));
-};
-
 // format required by nodemailer
 const anEmailMessage: Mail.Options = {
   from: "foo <foo@example.com>",
@@ -62,22 +51,25 @@ const aResponsePayload = {
   Status: "200"
 };
 
-const aNodemailerTransporter = nodemailer.createTransport(
-  MailUpTransport({
-    creds: someCreds
-  })
-);
+const mockFetch = <T>(status: number, json: T) => {
+  return (jest.fn(() => ({
+    json: () => Promise.resolve(json),
+    status,
+    then: () => Promise.resolve(json)
+  })) as unknown) as typeof fetch;
+};
 
 describe("sendMail", () => {
   it("should get a success response from the API endpoint", async () => {
-    const requestSpy = mockSuperagentResponse({
-      body: aResponsePayload,
-      status: 200
-    });
+    const aNodemailerTransporter = nodemailer.createTransport(
+      MailUpTransport({
+        creds: someCreds
+      })
+    );
 
     const response = await aNodemailerTransporter.sendMail(anEmailMessage);
 
-    expect(requestSpy).toHaveBeenCalledWith({
+    expect(mockFetch).toHaveBeenCalledWith({
       ...anEmailPayload,
       User: someCreds
     });
@@ -85,6 +77,12 @@ describe("sendMail", () => {
   });
 
   it("should fail on empty from address", async () => {
+    const aNodemailerTransporter = nodemailer.createTransport(
+      MailUpTransport({
+        creds: someCreds,
+        fetchAgent: mockFetch(200, aResponsePayload)
+      })
+    );
     expect.assertions(1);
     try {
       await aNodemailerTransporter.sendMail({
@@ -97,6 +95,12 @@ describe("sendMail", () => {
   });
 
   it("should fail on malformed email payload", async () => {
+    const aNodemailerTransporter = nodemailer.createTransport(
+      MailUpTransport({
+        creds: someCreds,
+        fetchAgent: mockFetch(200, aResponsePayload)
+      })
+    );
     expect.assertions(1);
     try {
       await aNodemailerTransporter.sendMail({
@@ -109,6 +113,12 @@ describe("sendMail", () => {
   });
 
   it("should fail on empty destination address", async () => {
+    const aNodemailerTransporter = nodemailer.createTransport(
+      MailUpTransport({
+        creds: someCreds,
+        fetchAgent: mockFetch(200, aResponsePayload)
+      })
+    );
     expect.assertions(1);
     try {
       await aNodemailerTransporter.sendMail({
@@ -121,11 +131,12 @@ describe("sendMail", () => {
   });
 
   it("should fail on API error", async () => {
-    mockSuperagentResponse({
-      body: aResponsePayload,
-      error: "500",
-      status: 500
-    });
+    const aNodemailerTransporter = nodemailer.createTransport(
+      MailUpTransport({
+        creds: someCreds,
+        fetchAgent: mockFetch(500, aResponsePayload)
+      })
+    );
     expect.assertions(1);
     try {
       await aNodemailerTransporter.sendMail(anEmailMessage);
