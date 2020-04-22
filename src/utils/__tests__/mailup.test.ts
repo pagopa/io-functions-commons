@@ -82,6 +82,9 @@ describe("sendMail", () => {
         ...anEmailPayload,
         User: someCreds
       }),
+      headers: {
+        "Content-Type": "application/json"
+      },
       method: "POST"
     });
     expect(response).toEqual(aResponsePayload);
