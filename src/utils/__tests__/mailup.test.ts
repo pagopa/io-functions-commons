@@ -51,11 +51,12 @@ const aResponsePayload = {
   Status: "200"
 };
 
-const mockFetch = <T>(status: number, json: T) => {
+const mockFetch = <T>(status: number, json: T, ok = true) => {
   return (jest.fn(() => ({
     json: () => Promise.resolve(json),
+    ok,
     status,
-    then: () => Promise.resolve(json)
+    then: () => mockFetch
   })) as unknown) as typeof fetch;
 };
 
@@ -63,7 +64,8 @@ describe("sendMail", () => {
   it("should get a success response from the API endpoint", async () => {
     const aNodemailerTransporter = nodemailer.createTransport(
       MailUpTransport({
-        creds: someCreds
+        creds: someCreds,
+        fetchAgent: mockFetch(200, aResponsePayload)
       })
     );
 

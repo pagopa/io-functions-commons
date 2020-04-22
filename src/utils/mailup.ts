@@ -29,8 +29,6 @@ import { readableReport } from "italia-ts-commons/lib/reporters";
 export const SEND_TRANSACTIONAL_MAIL_ENDPOINT =
   "https://send.mailup.com/API/v2.0/messages/sendmessage";
 
-type HttpMethod = "GET" | "POST";
-
 const TRANSPORT_NAME = "MailUp";
 const TRANSPORT_VERSION = "0.1";
 
