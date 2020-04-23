@@ -51,38 +51,46 @@ const aResponsePayload = {
   Status: "200"
 };
 
-const mockFetch = <T>(status: number, json: T, ok = true) => {
-  return (jest.fn(() => ({
+const mockFetch = (status: number, json: unknown, ok = true) => {
+  const mockResponse = Promise.resolve({
     json: () => Promise.resolve(json),
     ok,
-    status,
-    then: () => mockFetch
-  })) as unknown) as typeof fetch;
+    status
+  });
+  return (jest.fn(() => mockResponse) as unknown) as typeof fetch;
 };
 
 describe("sendMail", () => {
   it("should get a success response from the API endpoint", async () => {
+    const fetchAgent = mockFetch(200, aResponsePayload);
     const aNodemailerTransporter = nodemailer.createTransport(
       MailUpTransport({
         creds: someCreds,
-        fetchAgent: mockFetch(200, aResponsePayload)
+        fetchAgent
       })
     );
 
     const response = await aNodemailerTransporter.sendMail(anEmailMessage);
 
-    expect(mockFetch).toHaveBeenCalledWith({
-      ...anEmailPayload,
-      User: someCreds
-    });
+    expect(fetchAgent).toHaveBeenCalledWith(
+      "https://send.mailup.com/API/v2.0/messages/sendmessage",
+      {
+        body: JSON.stringify({
+          ...anEmailPayload,
+          User: someCreds
+        }),
+        method: "POST"
+      }
+    );
     expect(response).toEqual(aResponsePayload);
   });
 
   it("should fail on empty from address", async () => {
+    const fetchAgent = mockFetch(200, aResponsePayload);
     const aNodemailerTransporter = nodemailer.createTransport(
       MailUpTransport({
         creds: someCreds,
-        fetchAgent: mockFetch(200, aResponsePayload)
+        fetchAgent
       })
     );
     expect.assertions(1);
@@ -97,10 +105,11 @@ describe("sendMail", () => {
   });
 
   it("should fail on malformed email payload", async () => {
+    const fetchAgent = mockFetch(200, aResponsePayload);
     const aNodemailerTransporter = nodemailer.createTransport(
       MailUpTransport({
         creds: someCreds,
-        fetchAgent: mockFetch(200, aResponsePayload)
+        fetchAgent
       })
     );
     expect.assertions(1);
@@ -115,10 +124,11 @@ describe("sendMail", () => {
   });
 
   it("should fail on empty destination address", async () => {
+    const fetchAgent = mockFetch(200, aResponsePayload);
     const aNodemailerTransporter = nodemailer.createTransport(
       MailUpTransport({
         creds: someCreds,
-        fetchAgent: mockFetch(200, aResponsePayload)
+        fetchAgent
       })
     );
     expect.assertions(1);
@@ -133,10 +143,27 @@ describe("sendMail", () => {
   });
 
   it("should fail on API error", async () => {
+    const fetchAgent = mockFetch(500, aResponsePayload, false);
     const aNodemailerTransporter = nodemailer.createTransport(
       MailUpTransport({
         creds: someCreds,
-        fetchAgent: mockFetch(500, aResponsePayload)
+        fetchAgent
+      })
+    );
+    expect.assertions(1);
+    try {
+      await aNodemailerTransporter.sendMail(anEmailMessage);
+    } catch (e) {
+      expect(e).toBeInstanceOf(Error);
+    }
+  });
+
+  it("should fail on invalid response payload", async () => {
+    const fetchAgent = mockFetch(200, {});
+    const aNodemailerTransporter = nodemailer.createTransport(
+      MailUpTransport({
+        creds: someCreds,
+        fetchAgent
       })
     );
     expect.assertions(1);
