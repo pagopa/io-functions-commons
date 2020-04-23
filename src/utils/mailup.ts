@@ -5,11 +5,16 @@
  * see http://help.mailup.com/display/mailupapi/Transactional+Emails+using+APIs
  *
  */
+import { isLeft, isRight } from "fp-ts/lib/Either";
+import {
+  fromEither,
+  fromPredicate,
+  TaskEither,
+  tryCatch
+} from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
-import * as request from "superagent";
-
-import { Either, isLeft, isRight, left, right } from "fp-ts/lib/Either";
 import { EmailString, NonEmptyString } from "italia-ts-commons/lib/strings";
+import nodeFetch from "node-fetch";
 
 import * as nodemailer from "nodemailer";
 
@@ -21,13 +26,8 @@ import * as winston from "winston";
 import { fromNullable, Option } from "fp-ts/lib/Option";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 
-// request timeout in milliseconds
-const DEFAULT_REQUEST_TIMEOUT_MS = 10000;
-
 export const SEND_TRANSACTIONAL_MAIL_ENDPOINT =
   "https://send.mailup.com/API/v2.0/messages/sendmessage";
-
-type HttpMethod = "GET" | "POST";
 
 const TRANSPORT_NAME = "MailUp";
 const TRANSPORT_VERSION = "0.1";
@@ -94,6 +94,7 @@ type EmailPayload = t.TypeOf<typeof EmailPayload>;
 
 export interface IMailUpTransportOptions {
   readonly creds: SmtpAuthInfo;
+  readonly fetchAgent?: typeof fetch;
 }
 
 interface IAddresses {
@@ -105,52 +106,55 @@ interface IAddresses {
   readonly to?: ReadonlyArray<NodemailerAddress>;
 }
 
-function callMailUpApi(
-  method: HttpMethod,
-  url: string,
+function sendTransactionalMail(
   creds: SmtpAuthInfo,
-  payload: {}
-): Promise<Either<Error, ApiResponse>> {
-  return request(method, url)
-    .timeout(DEFAULT_REQUEST_TIMEOUT_MS)
-    .send({ ...payload, User: creds })
-    .then(response => {
-      if (response.error) {
-        return left<Error, ApiResponse>(
+  payload: EmailPayload,
+  fetchAgent: typeof fetch
+): TaskEither<Error, ApiResponse> {
+  return tryCatch(
+    () =>
+      fetchAgent(SEND_TRANSACTIONAL_MAIL_ENDPOINT, {
+        body: JSON.stringify({ ...payload, User: creds }),
+        headers: {
+          "Content-Type": "application/json"
+        },
+        method: "POST"
+      }),
+    err => new Error(`Error posting to MailUp: ${err}`)
+  )
+    .chain(
+      fromPredicate<Error, Response>(
+        r => r.ok,
+        r => new Error(`Error returned from MailUp API: ${r.status}`)
+      )
+    )
+    .chain(response =>
+      tryCatch(
+        () => response.json(),
+        err => new Error(`Error getting MailUp API payload: ${err}`)
+      )
+    )
+    .chain(json =>
+      fromEither(
+        ApiResponse.decode(json).mapLeft(
+          errors =>
+            new Error(
+              `Error while decoding response from MailUp: ${readableReport(
+                errors
+              )})`
+            )
+        )
+      )
+    )
+    .chain(
+      fromPredicate(
+        ar => ar.Code === "0",
+        ar =>
           new Error(
-            `Error calling MailUp API: ${response.status} - ${response.text}`
+            `Error sending email using MailUp: ${ar.Code}:${ar.Message}`
           )
-        );
-      }
-      return right<Error, ApiResponse>(response.body);
-    })
-    .catch(err =>
-      left<Error, ApiResponse>(
-        new Error(`Error calling MailUp API: ${err.code}:${err.errno}`)
       )
     );
-}
-
-async function sendTransactionalMail(
-  creds: SmtpAuthInfo,
-  payload: EmailPayload
-): Promise<Either<Error, ApiResponse>> {
-  return (
-    await callMailUpApi(
-      "POST",
-      SEND_TRANSACTIONAL_MAIL_ENDPOINT,
-      creds,
-      payload
-    )
-  ).chain(response => {
-    if (response && response.Code && response.Code === "0") {
-      return right(response);
-    } else {
-      return left<Error, ApiResponse>(
-        new Error(`Error sending email: ${response.Code}:${response.Message}`)
-      );
-    }
-  });
 }
 
 /**
@@ -199,7 +203,8 @@ function toMailupAddress(
  *     creds: {
  *       Username: <SMPT+Username>,
  *       Secret: <SMPT+Password>
- *     }
+ *     },
+ *     fetchAgent: customFetch
  *   })
  * );
  *
@@ -218,6 +223,10 @@ function toMailupAddress(
 export function MailUpTransport(
   options: IMailUpTransportOptions
 ): nodemailer.Transport {
+  const fetchAgent =
+    options.fetchAgent !== undefined
+      ? options.fetchAgent
+      : ((nodeFetch as unknown) as typeof fetch);
   return {
     name: TRANSPORT_NAME,
 
@@ -284,7 +293,11 @@ export function MailUpTransport(
 
       const email = errorOrEmail.value;
 
-      const errorOrResponse = await sendTransactionalMail(options.creds, email);
+      const errorOrResponse = await sendTransactionalMail(
+        options.creds,
+        email,
+        fetchAgent
+      ).run();
 
       if (isRight(errorOrResponse)) {
         // tslint:disable-next-line:no-null-keyword
