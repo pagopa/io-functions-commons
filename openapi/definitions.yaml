@@ -736,6 +736,7 @@ UserDataProcessingStatus:
     - PENDING
     - WIP
     - CLOSED
+    - FAILED
   example: PENDING
 UserDataProcessingChoice:
   type: string
