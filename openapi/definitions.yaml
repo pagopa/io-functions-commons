@@ -430,6 +430,8 @@ ExtendedProfile:
       $ref: "#/IsEmailEnabled"
     is_email_validated:
       $ref: "#/IsEmailValidated"
+    is_test_profile:
+      $ref: "#/IsTestProfile"
     version:
       type: integer
   required:
