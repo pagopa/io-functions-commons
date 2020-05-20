@@ -363,8 +363,11 @@ NewProfile:
       $ref: "#/EmailAddress"
     is_email_validated:
       $ref: "#/IsEmailValidated"
+    is_test_profile:
+      $ref: "#/IsTestProfile"
   required:
     - is_email_validated
+    - is_test_profile
 Profile:
   type: object
   description: |-
@@ -385,6 +388,8 @@ Profile:
       $ref: "#/IsWebhookEnabled"
     is_email_enabled:
       $ref: "#/IsEmailEnabled"
+    is_test_profile:
+      $ref: "#/IsTestProfile"
     version:
       type: integer
   required:
@@ -454,6 +459,10 @@ IsWebhookEnabled:
 IsEmailEnabled:
   type: boolean
   description: True if the recipient of a message wants to forward the notifications to his email address.
+IsTestProfile:
+  type: boolean
+  description: True if the user's profile is only for test purpose. 
+  default: false
 TimeToLiveSeconds:
   type: integer
   default: 3600
