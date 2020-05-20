@@ -367,7 +367,6 @@ NewProfile:
       $ref: "#/IsTestProfile"
   required:
     - is_email_validated
-    - is_test_profile
 Profile:
   type: object
   description: |-
