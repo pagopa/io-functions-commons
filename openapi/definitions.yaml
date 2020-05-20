@@ -387,8 +387,6 @@ Profile:
       $ref: "#/IsWebhookEnabled"
     is_email_enabled:
       $ref: "#/IsEmailEnabled"
-    is_test_profile:
-      $ref: "#/IsTestProfile"
     version:
       type: integer
   required:
