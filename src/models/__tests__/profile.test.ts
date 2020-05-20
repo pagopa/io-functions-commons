@@ -63,7 +63,8 @@ describe("findOneProfileByFiscalCode", () => {
       expect(result.value.isSome()).toBeTruthy();
       expect(result.value.toUndefined()).toEqual({
         ...aRetrievedProfile,
-        isEmailEnabled: true
+        isEmailEnabled: true,
+        isTestProfile: false
       });
     }
   });
@@ -123,6 +124,7 @@ describe("createProfile", () => {
       expect(result.value.fiscalCode).toEqual(newProfile.fiscalCode);
       expect(result.value.id).toEqual(`${aFiscalCode}-${"0".repeat(16)}`);
       expect(result.value.version).toEqual(0);
+      expect(result.value.isTestProfile).toEqual(false);
     }
   });
 
