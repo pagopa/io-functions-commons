@@ -22,6 +22,7 @@ import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { IsEmailEnabled } from "../../generated/definitions/IsEmailEnabled";
 import { IsEmailValidated } from "../../generated/definitions/IsEmailValidated";
 import { IsInboxEnabled } from "../../generated/definitions/IsInboxEnabled";
+import { IsTestProfile } from "../../generated/definitions/IsTestProfile";
 import { IsWebhookEnabled } from "../../generated/definitions/IsWebhookEnabled";
 import { PreferredLanguages } from "../../generated/definitions/PreferredLanguages";
 import { fiscalCodeToModelId } from "../utils/conversions";
@@ -68,7 +69,10 @@ export const Profile = t.intersection([
 
     // array of user's preferred languages in ISO-3166-1-2 format
     // https://it.wikipedia.org/wiki/ISO_3166-2
-    preferredLanguages: PreferredLanguages
+    preferredLanguages: PreferredLanguages,
+
+    // if true this profile is only for test purpose
+    isTestProfile: IsTestProfile
   })
 ]);
 
