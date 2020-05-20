@@ -72,7 +72,7 @@ export const Profile = t.intersection([
     preferredLanguages: PreferredLanguages,
 
     // if true this profile is only for test purpose
-    isTestProfile: withDefault(IsTestProfile, false)
+    isTestProfile: IsTestProfile
   })
 ]);
 
