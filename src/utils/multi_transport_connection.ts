@@ -31,7 +31,7 @@ export type MailMultiTransportConnections = t.TypeOf<
  *
  * Multiple providers can be specified as following:
  *
- * transport:username:password[;transport:username:pasword][;transport:username:pasword]...
+ * transport:username:password[;transport:username:password][;transport:username:password]...
  *
  */
 function parseMultiProviderConnection(
@@ -57,7 +57,7 @@ function parseMultiProviderConnection(
 }
 
 /**
- * Decodes an arrat of nodemailer transport connections from a multi
+ * Decodes an array of nodemailer transport connections from a multi
  * transport connection string.
  */
 export const MailMultiTransportConnectionsFromString = new t.Type<
