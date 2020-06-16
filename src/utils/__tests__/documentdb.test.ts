@@ -724,7 +724,7 @@ describe("fromQueryEither", () => {
 
     const errorMessage = "generic error";
     const queryFn: () => Promise<
-      Either<DocumentDb.QueryError | Error, IExpectedResultType>
+      Either<DocumentDb.QueryError, IExpectedResultType>
     > = async () => {
       throw new Error(errorMessage);
     };
