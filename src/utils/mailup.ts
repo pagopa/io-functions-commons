@@ -232,7 +232,7 @@ export function MailUpTransport(
 
     version: TRANSPORT_VERSION,
 
-    send: async (mail, callback) => {
+    send: (mail, callback) => {
       // We don't extract email addresses from mail.data.from / mail.data.to
       // as they are just strings that can contain invalid addresses.
       // Instead, mail.message.getAddresses() gets the email addresses
@@ -293,21 +293,20 @@ export function MailUpTransport(
 
       const email = errorOrEmail.value;
 
-      const errorOrResponse = await sendTransactionalMail(
-        options.creds,
-        email,
-        fetchAgent
-      ).run();
-
-      if (isRight(errorOrResponse)) {
-        // tslint:disable-next-line:no-null-keyword
-        return callback(null, {
-          ...errorOrResponse.value,
-          messageId: mail.data.messageId
-        });
-      } else {
-        return callback(errorOrResponse.value, undefined);
-      }
+      sendTransactionalMail(options.creds, email, fetchAgent)
+        .run()
+        .then(errorOrResponse => {
+          if (isRight(errorOrResponse)) {
+            // tslint:disable-next-line:no-null-keyword
+            return callback(null, {
+              ...errorOrResponse.value,
+              messageId: mail.data.messageId
+            });
+          } else {
+            return callback(errorOrResponse.value, undefined);
+          }
+        })
+        .catch(e => callback(e, undefined));
     }
   };
 }
