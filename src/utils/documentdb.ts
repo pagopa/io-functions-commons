@@ -16,7 +16,8 @@ import { NonEmptyString } from "italia-ts-commons/lib/strings";
 
 import { isNone, none, Option, some } from "fp-ts/lib/Option";
 
-import { Either, isLeft, left, right } from "fp-ts/lib/Either";
+import { Either, isLeft, left, right, toError } from "fp-ts/lib/Either";
+import { fromEither, TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 
 //
 // Definition of types
@@ -789,5 +790,32 @@ export function queryAttachments<T>(
     }
   };
 }
+
+/**
+ * A convenient type that extends Cosmos' DocumentDb.QueryError with a generic status that maps a runtime error (instance of Error)
+ */
+export type QueryError =
+  | DocumentDb.QueryError
+  | { code: "error"; body: string };
+
+/**
+ * Converts a Promise<Either> into a TaskEither
+ * This is needed because our models return unconvenient type. Both left and rejection cases are handled as a TaskEither left
+ * @param lazyPromise a lazy promise to convert
+ *
+ * @returns either the query result or a query failure
+ */
+export const fromQueryEither = <R>(
+  lazyPromise: () => Promise<Either<DocumentDb.QueryError | Error, R>>
+): TaskEither<QueryError, R> =>
+  tryCatch(lazyPromise, toError).foldTaskEither<QueryError, R>(
+    err => fromEither(left({ code: "error", body: err.message })),
+    errorOrResult =>
+      fromEither(errorOrResult).mapLeft(l =>
+        l instanceof Error
+          ? { code: "error", body: l.message }
+          : { code: l.code, body: l.body }
+      )
+  );
 
 ///////////// </Attachments>

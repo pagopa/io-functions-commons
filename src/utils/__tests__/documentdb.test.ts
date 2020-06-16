@@ -5,9 +5,10 @@ import { NonEmptyString } from "italia-ts-commons/lib/strings";
 
 import * as DocumentDb from "documentdb";
 
-import { isLeft, isRight, left, right } from "fp-ts/lib/Either";
+import { Either, isLeft, isRight, left, right } from "fp-ts/lib/Either";
 import { none, some } from "fp-ts/lib/Option";
 
+import { TaskEither } from "fp-ts/lib/TaskEither";
 import * as DocumentDbUtils from "../documentdb";
 
 describe("getDatabaseUri", () => {
@@ -669,5 +670,73 @@ describe("queryAttachments", () => {
       expect(result.value.isSome()).toBeTruthy();
       expect(result.value.toUndefined()).toEqual(["result"]);
     }
+  });
+});
+
+describe("fromQueryEither", () => {
+  it("should return the correct query result", async () => {
+    interface IExpectedResultType {
+      foo: string;
+    }
+    const documentResult: IExpectedResultType = { foo: "bar" };
+    const queryFn: () => Promise<
+      Either<DocumentDb.QueryError, IExpectedResultType>
+    > = async () => right(documentResult);
+
+    const resultTE: TaskEither<
+      DocumentDbUtils.QueryError,
+      IExpectedResultType
+    > = DocumentDbUtils.fromQueryEither(queryFn);
+
+    const result = await resultTE.run();
+
+    expect(result.isRight()).toBeTruthy();
+    expect(result.value).toEqual(documentResult);
+  });
+
+  it("should return the correct query error on query left", async () => {
+    interface IExpectedResultType {
+      foo: string;
+    }
+    const cosmosdbError: DocumentDb.QueryError = {
+      body: "Bad Request",
+      code: 400
+    };
+    const queryFn: () => Promise<
+      Either<DocumentDb.QueryError, IExpectedResultType>
+    > = async () => left(cosmosdbError);
+
+    const resultTE: TaskEither<
+      DocumentDbUtils.QueryError,
+      IExpectedResultType
+    > = DocumentDbUtils.fromQueryEither(queryFn);
+
+    const result = await resultTE.run();
+
+    expect(result.isLeft()).toBeTruthy();
+    expect(result.value).toEqual(cosmosdbError);
+  });
+
+  it("should return the correct query error on rejection", async () => {
+    interface IExpectedResultType {
+      foo: string;
+    }
+
+    const errorMessage = "generic error";
+    const queryFn: () => Promise<
+      Either<DocumentDb.QueryError | Error, IExpectedResultType>
+    > = async () => {
+      throw new Error(errorMessage);
+    };
+
+    const resultTE: TaskEither<
+      DocumentDbUtils.QueryError,
+      IExpectedResultType
+    > = DocumentDbUtils.fromQueryEither(queryFn);
+
+    const result = await resultTE.run();
+
+    expect(result.isLeft()).toBeTruthy();
+    expect(result.value).toEqual({ code: "error", body: errorMessage });
   });
 });
