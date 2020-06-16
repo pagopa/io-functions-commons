@@ -806,7 +806,7 @@ export type QueryError =
  * @returns either the query result or a query failure
  */
 export const fromQueryEither = <R>(
-  lazyPromise: () => Promise<Either<DocumentDb.QueryError | Error, R>>
+  lazyPromise: () => Promise<Either<DocumentDb.QueryError, R>>
 ): TaskEither<QueryError, R> =>
   tryCatch(lazyPromise, toError).foldTaskEither<QueryError, R>(
     err => fromEither(left({ code: "error", body: err.message })),
