@@ -842,12 +842,7 @@ export const fromQueryEither = <R>(
 ): TaskEither<QueryError, R> =>
   tryCatch(lazyPromise, toQueryError).foldTaskEither<QueryError, R>(
     err => fromLeft(err),
-    errorOrResult =>
-      fromEither(errorOrResult).mapLeft(l =>
-        l instanceof Error
-          ? { code: "error", body: l.message }
-          : { code: l.code, body: l.body }
-      )
+    errorOrResult => fromEither(errorOrResult)
   );
 
 ///////////// </Attachments>
