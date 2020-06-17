@@ -16,8 +16,13 @@ import { NonEmptyString } from "italia-ts-commons/lib/strings";
 
 import { isNone, none, Option, some } from "fp-ts/lib/Option";
 
-import { Either, isLeft, left, right, toError } from "fp-ts/lib/Either";
-import { fromEither, TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
+import { Either, isLeft, left, right } from "fp-ts/lib/Either";
+import {
+  fromEither,
+  fromLeft,
+  TaskEither,
+  tryCatch
+} from "fp-ts/lib/TaskEither";
 
 //
 // Definition of types
@@ -794,9 +799,36 @@ export function queryAttachments<T>(
 /**
  * A convenient type that extends Cosmos' DocumentDb.QueryError with a generic status that maps a runtime error (instance of Error)
  */
-export type QueryError =
-  | DocumentDb.QueryError
-  | { code: "error"; body: string };
+export type QueryError = t.TypeOf<typeof QueryError>;
+export const QueryError = t.union(
+  [
+    // represents DocumentDb.QueryError
+    t.interface({
+      body: t.string,
+      code: t.number
+    }),
+    // a custom, unhandled error
+    t.interface({
+      body: t.string,
+      code: t.literal("error")
+    })
+  ],
+  "QueryError"
+);
+
+/**
+ * Helper that converts an unknown value representing an error into a QueryError object.
+ *
+ * @param err
+ *
+ * @returns if a QueryError object is passed, such value is returned. If an instance of Error is passed, a QueryError with code="error" and body=<the error message> is returned. Otherwise it tries to stringify the object
+ */
+export const toQueryError = (err: unknown): QueryError =>
+  err instanceof Error
+    ? { code: "error", body: err.message }
+    : QueryError.is(err)
+    ? err
+    : { code: "error", body: JSON.stringify(err) };
 
 /**
  * Converts a Promise<Either> into a TaskEither
@@ -808,8 +840,8 @@ export type QueryError =
 export const fromQueryEither = <R>(
   lazyPromise: () => Promise<Either<DocumentDb.QueryError, R>>
 ): TaskEither<QueryError, R> =>
-  tryCatch(lazyPromise, toError).foldTaskEither<QueryError, R>(
-    err => fromEither(left({ code: "error", body: err.message })),
+  tryCatch(lazyPromise, toQueryError).foldTaskEither<QueryError, R>(
+    err => fromLeft(err),
     errorOrResult =>
       fromEither(errorOrResult).mapLeft(l =>
         l instanceof Error

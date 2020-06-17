@@ -739,4 +739,58 @@ describe("fromQueryEither", () => {
     expect(result.isLeft()).toBeTruthy();
     expect(result.value).toEqual({ code: "error", body: errorMessage });
   });
+
+  it("should return the correct query error on rejection", async () => {
+    interface IExpectedResultType {
+      foo: string;
+    }
+
+    const cosmosdbError: DocumentDb.QueryError = {
+      body: "Bad Request",
+      code: 400
+    };
+    const queryFn: () => Promise<
+      Either<DocumentDb.QueryError, IExpectedResultType>
+    > = async () => {
+      throw cosmosdbError;
+    };
+
+    const resultTE: TaskEither<
+      DocumentDbUtils.QueryError,
+      IExpectedResultType
+    > = DocumentDbUtils.fromQueryEither(queryFn);
+
+    const result = await resultTE.run();
+
+    expect(result.isLeft()).toBeTruthy();
+    expect(result.value).toEqual(cosmosdbError);
+  });
+
+  it("should return the correct query error when an unknown error is thrown", async () => {
+    interface IExpectedResultType {
+      foo: string;
+    }
+
+    const unknownError = {
+      foo: "bar"
+    };
+    const queryFn: () => Promise<
+      Either<DocumentDb.QueryError, IExpectedResultType>
+    > = async () => {
+      throw unknownError;
+    };
+
+    const resultTE: TaskEither<
+      DocumentDbUtils.QueryError,
+      IExpectedResultType
+    > = DocumentDbUtils.fromQueryEither(queryFn);
+
+    const result = await resultTE.run();
+
+    expect(result.isLeft()).toBeTruthy();
+    expect(result.value).toEqual({
+      body: JSON.stringify(unknownError),
+      code: "error"
+    });
+  });
 });
