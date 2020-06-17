@@ -740,7 +740,7 @@ describe("fromQueryEither", () => {
     expect(result.value).toEqual({ code: "error", body: errorMessage });
   });
 
-  it("should return the correct query error on rejection", async () => {
+  it("should return the correct query error when a QueryError is thrown", async () => {
     interface IExpectedResultType {
       foo: string;
     }
