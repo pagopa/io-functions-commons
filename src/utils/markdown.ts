@@ -1,4 +1,5 @@
 import * as html from "rehype-stringify";
+import * as frontmatter from "remark-frontmatter";
 import * as markdown from "remark-parse";
 import * as remark2rehype from "remark-rehype";
 import unified = require("unified");
@@ -9,5 +10,6 @@ import unified = require("unified");
  */
 export const markdownToHtml = unified()
   .use(markdown)
+  .use(frontmatter, ["yaml"])
   .use(remark2rehype)
   .use(html);
