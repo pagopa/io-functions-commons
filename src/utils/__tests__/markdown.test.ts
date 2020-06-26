@@ -12,4 +12,37 @@ How are you?
       "<h1>Helloworld</h1><p>Howareyou?</p>"
     );
   });
+
+  it("should remove the frontmatter", async () => {
+    return Promise.all(
+      [
+        `---
+---
+test
+`,
+        `---
+some: var
+---
+test
+`,
+        `---
+nasty: "---"
+---
+test
+`,
+        `
+---
+
+with extra lines
+
+---
+
+test
+`
+      ].map(async md => {
+        const result = await markdownToHtml.process(md);
+        expect(result.toString().replace(/[ \n]/g, "")).toBe("<p>test</p>");
+      })
+    );
+  });
 });
