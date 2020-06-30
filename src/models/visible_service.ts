@@ -13,7 +13,7 @@ import { ServicePublic } from "../../generated/definitions/ServicePublic";
 import { ServiceScopeEnum } from "../../generated/definitions/ServiceScope";
 import { ServiceTuple } from "../../generated/definitions/ServiceTuple";
 import * as DocumentDbUtils from "../utils/documentdb";
-import { VersionedModel } from "../utils/documentdb_model_versioned";
+import { VersionedModel } from "../utils/cosmosdb_model_versioned";
 import { Service, ServiceMetadata } from "./service";
 
 // This is not a CosmosDB model, but entities are stored into blob storage

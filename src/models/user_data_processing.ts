@@ -5,10 +5,10 @@ import { pick, tag } from "italia-ts-commons/lib/types";
 import * as DocumentDb from "documentdb";
 import * as DocumentDbUtils from "../utils/documentdb";
 import {
-  DocumentDbModelVersioned,
+  CosmosdbModelVersioned,
   ModelId,
   VersionedModel
-} from "../utils/documentdb_model_versioned";
+} from "../utils/cosmosdb_model_versioned";
 
 import { QueryError } from "documentdb";
 import { Either } from "fp-ts/lib/Either";
@@ -147,7 +147,7 @@ function updateModelId(
 /**
  * A model for handling UserDataProcessing
  */
-export class UserDataProcessingModel extends DocumentDbModelVersioned<
+export class UserDataProcessingModel extends CosmosdbModelVersioned<
   UserDataProcessing,
   NewUserDataProcessing,
   RetrievedUserDataProcessing

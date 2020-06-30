@@ -4,10 +4,10 @@ import { PathReporter } from "io-ts/lib/PathReporter";
 import * as DocumentDb from "documentdb";
 import * as DocumentDbUtils from "../utils/documentdb";
 import {
-  DocumentDbModelVersioned,
+  CosmosdbModelVersioned,
   ModelId,
   VersionedModel
-} from "../utils/documentdb_model_versioned";
+} from "../utils/cosmosdb_model_versioned";
 
 import { Either } from "fp-ts/lib/Either";
 import { Option } from "fp-ts/lib/Option";
@@ -214,7 +214,7 @@ function toBaseType(o: RetrievedService): Service {
 /**
  * A model for handling Services
  */
-export class ServiceModel extends DocumentDbModelVersioned<
+export class ServiceModel extends CosmosdbModelVersioned<
   Service,
   NewService,
   RetrievedService

@@ -1,110 +1,58 @@
-/* tslint:disable:no-any */
-
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
-
-jest.mock("../documentdb");
-import * as DocumentDb from "documentdb";
-import * as DocumentDbUtils from "../documentdb";
+import * as t from "io-ts";
 
 import { isRight, left, right } from "fp-ts/lib/Either";
 import { none, some } from "fp-ts/lib/Option";
+
 import { NonNegativeNumber } from "italia-ts-commons/lib/numbers";
+
+import { Container } from "@azure/cosmos";
+
+import { ResourceT, BaseModel } from "../cosmosdb_model";
 import {
-  DocumentDbModelVersioned,
+  CosmosdbModelVersioned,
   ModelId,
   VersionedModel
-} from "../documentdb_model_versioned";
+} from "../cosmosdb_model_versioned";
 
-afterEach(() => {
-  jest.resetAllMocks();
-});
-
-const aModelIdField = "aModelIdField";
+const aModelIdField = "aModelIdField" as const;
 const aModelIdValue = "aModelIdValue";
 const aPartitionKeyField = "aPartitionKeyField";
 const aPartitionKeyValue = "aPartitionKeyValue";
 
-interface IMyDocument {
-  readonly [aModelIdField]: string;
-  readonly test: string;
-}
+const MyDocument = t.interface({
+  [aModelIdField]: t.string,
+  test: t.string
+});
+type MyDocument = t.TypeOf<typeof MyDocument>;
 
-interface INewMyDocument
-  extends IMyDocument,
-    DocumentDb.NewDocument,
-    VersionedModel {
-  readonly kind: "INewMyDocument";
-}
+const NewMyDocument = t.intersection([
+  MyDocument,
+  t.partial({
+    version: NonNegativeNumber
+  })
+]);
+type NewMyDocument = t.TypeOf<typeof NewMyDocument>;
 
-interface IRetrievedMyDocument
-  extends IMyDocument,
-    DocumentDb.RetrievedDocument,
-    VersionedModel {
-  readonly test: string;
-  readonly kind: "IRetrievedMyDocument";
-}
+const RetrievedMyDocument = t.intersection([
+  MyDocument,
+  VersionedModel,
+  BaseModel
+]);
+type RetrievedMyDocument = t.TypeOf<typeof RetrievedMyDocument>;
 
-function getModelId(_: IMyDocument): ModelId {
-  return (aModelIdValue as any) as ModelId;
-}
-
-function updateModelId(
-  o: IMyDocument,
-  id: NonEmptyString,
-  version: NonNegativeNumber
-): INewMyDocument {
-  return {
-    ...o,
-    id,
-    kind: "INewMyDocument",
-    version
-  };
-}
-
-class MyModel extends DocumentDbModelVersioned<
-  IMyDocument,
-  INewMyDocument,
-  IRetrievedMyDocument
+class MyModel extends CosmosdbModelVersioned<
+  MyDocument,
+  NewMyDocument,
+  RetrievedMyDocument
 > {
-  constructor(
-    dbClient: DocumentDb.DocumentClient,
-    collectionUrl: DocumentDbUtils.IDocumentDbCollectionUri
-  ) {
-    super(
-      dbClient,
-      collectionUrl,
-      // toBaseType
-      o => {
-        return {
-          aModelIdField: o.aModelIdField,
-          test: o.test
-        };
-      },
-      // toRetrieved
-      result => {
-        return {
-          ...result,
-          aModelIdField: aModelIdValue,
-          kind: "IRetrievedMyDocument",
-          test: result.test,
-          version: result.version
-        };
-      },
-      getModelId,
-      updateModelId
-    );
+  constructor(container: Container) {
+    super(container, NewMyDocument, RetrievedMyDocument, aModelIdField);
   }
 }
-const aDbClient: DocumentDb.DocumentClient = {} as any;
-const aDatabaseUri = DocumentDbUtils.getDatabaseUri("mydb" as NonEmptyString);
-const aCollectionUri = DocumentDbUtils.getCollectionUri(
-  aDatabaseUri,
-  "mydocuments"
-);
 
 const aMyDocumentId = aModelIdValue + "-000000000000000";
 
-const aNewMyDocument: IMyDocument = {
+const aNewMyDocument: NewMyDocument = {
   [aModelIdField]: aModelIdValue,
   test: "aNewMyDocument"
 };
@@ -124,7 +72,7 @@ const anExistingDocument = {
 };
 
 describe("upsert", () => {
-  it("should create a new document", async () => {
+  it("should create a new document with implicit version", async () => {
     const model = new MyModel(aDbClient, aCollectionUri);
     (DocumentDbUtils.queryOneDocument as any).mockReturnValueOnce(
       Promise.resolve(right(none))

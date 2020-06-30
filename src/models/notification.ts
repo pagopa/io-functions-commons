@@ -11,7 +11,7 @@ import * as t from "io-ts";
 import { tag } from "italia-ts-commons/lib/types";
 
 import * as DocumentDbUtils from "../utils/documentdb";
-import { DocumentDbModel } from "../utils/documentdb_model";
+import { CosmosdbModel } from "../utils/cosmosdb_model";
 
 import { EmailAddress } from "../../generated/definitions/EmailAddress";
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
@@ -168,7 +168,7 @@ function toRetrieved(
 /**
  * A model for handling Notifications
  */
-export class NotificationModel extends DocumentDbModel<
+export class NotificationModel extends CosmosdbModel<
   Notification,
   NewNotification,
   RetrievedNotification
@@ -196,7 +196,7 @@ export class NotificationModel extends DocumentDbModel<
     messageId: string
   ): Promise<Either<DocumentDb.QueryError, Option<RetrievedNotification>>> {
     return DocumentDbUtils.queryOneDocument(
-      this.dbClient,
+      this.container,
       this.collectionUri,
       {
         parameters: [

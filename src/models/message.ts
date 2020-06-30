@@ -8,7 +8,7 @@ import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { pick, tag } from "italia-ts-commons/lib/types";
 
 import * as DocumentDbUtils from "../utils/documentdb";
-import { DocumentDbModel } from "../utils/documentdb_model";
+import { CosmosdbModel } from "../utils/cosmosdb_model";
 
 import { MessageContent } from "../../generated/definitions/MessageContent";
 
@@ -213,7 +213,7 @@ function blobIdFromMessageId(messageId: string): string {
 /**
  * A model for handling Messages
  */
-export class MessageModel extends DocumentDbModel<
+export class MessageModel extends CosmosdbModel<
   Message,
   NewMessage,
   RetrievedMessage
@@ -259,7 +259,7 @@ export class MessageModel extends DocumentDbModel<
     fiscalCode: FiscalCode
   ): DocumentDbUtils.IResultIterator<RetrievedMessageWithContent> {
     return DocumentDbUtils.queryDocuments(
-      this.dbClient,
+      this.container,
       this.collectionUri,
       {
         parameters: [

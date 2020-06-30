@@ -5,10 +5,10 @@ import { pick, tag } from "italia-ts-commons/lib/types";
 import * as DocumentDb from "documentdb";
 import * as DocumentDbUtils from "../utils/documentdb";
 import {
-  DocumentDbModelVersioned,
+  CosmosdbModelVersioned,
   ModelId,
   VersionedModel
-} from "../utils/documentdb_model_versioned";
+} from "../utils/cosmosdb_model_versioned";
 
 import { Either } from "fp-ts/lib/Either";
 import { Option } from "fp-ts/lib/Option";
@@ -185,7 +185,7 @@ export const getNotificationStatusUpdater = (
 /**
  * A model for handling NotificationStatus
  */
-export class NotificationStatusModel extends DocumentDbModelVersioned<
+export class NotificationStatusModel extends CosmosdbModelVersioned<
   NotificationStatus,
   NewNotificationStatus,
   RetrievedNotificationStatus

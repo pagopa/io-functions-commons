@@ -19,7 +19,6 @@
   },
   "devDependencies": {
     "@azure/functions": "^1.0.3",
-    "@types/documentdb": "^1.10.5",
     "@types/express": "^4.17.0",
     "@types/helmet": "^0.0.40",
     "@types/jest": "^24.0.13",
@@ -41,11 +40,11 @@
     "typescript": "^3.8.0"
   },
   "dependencies": {
+    "@azure/cosmos": "^3.7.2",
     "@types/node-fetch": "^2.5.6",
     "applicationinsights": "^1.7.3",
     "azure-storage": "^2.10.3",
     "cidr-matcher": "^2.1.0",
-    "documentdb": "^1.15.3",
     "fp-ts": "1.17.4",
     "helmet": "^3.13.0",
     "helmet-csp": "^2.5.1",

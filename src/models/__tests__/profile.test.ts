@@ -4,10 +4,6 @@
 import { isLeft, isRight } from "fp-ts/lib/Either";
 import { isSome } from "fp-ts/lib/Option";
 
-import * as DocumentDb from "documentdb";
-
-import * as DocumentDbUtils from "../../utils/documentdb";
-
 import { NonNegativeNumber } from "italia-ts-commons/lib/numbers";
 import { EmailString, NonEmptyString } from "italia-ts-commons/lib/strings";
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
@@ -19,20 +15,32 @@ import {
   RetrievedProfile
 } from "../profile";
 
-const aDatabaseUri = DocumentDbUtils.getDatabaseUri("mockdb" as NonEmptyString);
-const profilesCollectionUrl = DocumentDbUtils.getCollectionUri(
-  aDatabaseUri,
-  PROFILE_COLLECTION_NAME
-);
+import { Container } from "@azure/cosmos";
 
 const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
 
-const aRetrievedProfile: RetrievedProfile = {
+const aStoredProfile = {
+  _etag: "xyz",
+  _rid: "xyz",
   _self: "xyz",
   _ts: 123,
   acceptedTosVersion: 1,
   fiscalCode: aFiscalCode,
-  id: "xyz" as NonEmptyString,
+  id: "xyz-0",
+  isEmailValidated: false,
+  isInboxEnabled: false,
+  isWebhookEnabled: false,
+  version: 0
+};
+
+const aRetrievedProfile: RetrievedProfile = {
+  _etag: "xyz",
+  _rid: "xyz",
+  _self: "xyz",
+  _ts: 123,
+  acceptedTosVersion: 1,
+  fiscalCode: aFiscalCode,
+  id: "xyz-0" as NonEmptyString,
   isEmailValidated: false,
   isInboxEnabled: false,
   isWebhookEnabled: false,
@@ -41,22 +49,23 @@ const aRetrievedProfile: RetrievedProfile = {
 };
 
 describe("findOneProfileByFiscalCode", () => {
-  it("should resolve a promise to an existing profile", async () => {
-    const iteratorMock = {
-      executeNext: jest.fn(cb => cb(undefined, [aRetrievedProfile], undefined)),
-      hasMoreResults: jest.fn().mockReturnValue(false)
-    };
+  it("should resolve to an existing profile", async () => {
+    const containerMock = ({
+      items: {
+        create: jest.fn(),
+        query: jest.fn(_ => ({
+          fetchAll: jest.fn(_ =>
+            Promise.resolve({
+              resources: [aStoredProfile]
+            })
+          )
+        }))
+      }
+    } as unknown) as Container;
 
-    const clientMock = {
-      queryDocuments: jest.fn((__, ___) => iteratorMock)
-    };
+    const model = new ProfileModel(containerMock);
 
-    const model = new ProfileModel(
-      (clientMock as any) as DocumentDb.DocumentClient,
-      profilesCollectionUrl
-    );
-
-    const result = await model.findOneProfileByFiscalCode(aFiscalCode);
+    const result = await model.findLastVersionByModelId(aFiscalCode).run();
 
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
@@ -69,30 +78,56 @@ describe("findOneProfileByFiscalCode", () => {
     }
   });
 
-  it("should resolve a promise to undefined if no profile is found", async () => {
-    const iteratorMock = {
-      executeNext: jest.fn(cb => cb(undefined, [], undefined)),
-      hasMoreResults: jest.fn().mockReturnValue(false)
-    };
+  it("should resolve to empty if no profile is found", async () => {
+    const containerMock = ({
+      items: {
+        create: jest.fn(),
+        query: jest.fn(_ => ({
+          fetchAll: jest.fn(_ =>
+            Promise.resolve({
+              resources: []
+            })
+          )
+        }))
+      }
+    } as unknown) as Container;
 
-    const clientMock = {
-      queryDocuments: jest.fn((__, ___) => iteratorMock)
-    };
+    const model = new ProfileModel(containerMock);
 
-    const model = new ProfileModel(
-      (clientMock as any) as DocumentDb.DocumentClient,
-      profilesCollectionUrl
-    );
-
-    const result = await model.findOneProfileByFiscalCode(aFiscalCode);
+    const result = await model.findLastVersionByModelId(aFiscalCode).run();
 
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
       expect(result.value.isNone()).toBeTruthy();
     }
   });
+
+  it("should validate the retrieved object agains the model type", async () => {
+    const containerMock = ({
+      items: {
+        create: jest.fn(),
+        query: jest.fn(_ => ({
+          fetchAll: jest.fn(_ =>
+            Promise.resolve({
+              resources: [{}]
+            })
+          )
+        }))
+      }
+    } as unknown) as Container;
+
+    const model = new ProfileModel(containerMock);
+
+    const result = await model.findLastVersionByModelId(aFiscalCode).run();
+
+    expect(isLeft(result)).toBeTruthy();
+    if (isLeft(result)) {
+      expect(result.value.kind).toBe("COSMOS_DECODING_ERROR");
+    }
+  });
 });
 
+/*
 describe("createProfile", () => {
   it("should create a new profile", async () => {
     const clientMock: any = {
@@ -235,3 +270,4 @@ describe("update", () => {
     }
   });
 });
+*/

@@ -15,10 +15,10 @@ import { Timestamp } from "../../generated/definitions/Timestamp";
 
 import { nonEmptyStringToModelId } from "../utils/conversions";
 import {
-  DocumentDbModelVersioned,
+  CosmosdbModelVersioned,
   ModelId,
   VersionedModel
-} from "../utils/documentdb_model_versioned";
+} from "../utils/cosmosdb_model_versioned";
 import { RuntimeError, TransientError } from "../utils/errors";
 
 export const MESSAGE_STATUS_COLLECTION_NAME = "message-status";
@@ -131,7 +131,7 @@ export const getMessageStatusUpdater = (
 /**
  * A model for handling MessageStatus
  */
-export class MessageStatusModel extends DocumentDbModelVersioned<
+export class MessageStatusModel extends CosmosdbModelVersioned<
   MessageStatus,
   NewMessageStatus,
   RetrievedMessageStatus
