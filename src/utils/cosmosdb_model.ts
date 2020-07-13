@@ -128,22 +128,32 @@ export abstract class CosmosdbModel<
    * For an explanation on how the data store gets partitioned, see
    * https://docs.microsoft.com/en-us/azure/cosmos-db/partition-data
    */
-  public create = wrapCreate<TN, TR>(
-    this.newItemT,
-    this.retrievedItemT,
-    this.container.items.create
-  );
+  public create(
+    newDocument: TN,
+    options?: RequestOptions
+  ): TaskEither<CosmosErrors, TR> {
+    return wrapCreate<TN, TR>(
+      this.newItemT,
+      this.retrievedItemT,
+      this.container.items.create
+    )(newDocument, options);
+  }
 
   /**
    * Creates a new document or update an existing one
    * with the provided id.
    *
    */
-  public upsert = wrapCreate(
-    this.newItemT,
-    this.retrievedItemT,
-    this.container.items.upsert
-  );
+  public upsert(
+    newDocument: TN,
+    options?: RequestOptions
+  ): TaskEither<CosmosErrors, TR> {
+    return wrapCreate(
+      this.newItemT,
+      this.retrievedItemT,
+      this.container.items.upsert
+    )(newDocument, options);
+  }
 
   /**
    * Retrieves a document from the document ID.

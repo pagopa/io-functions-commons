@@ -5,6 +5,11 @@ import { isLeft, isRight } from "fp-ts/lib/Either";
 import { Container, ResourceResponse } from "@azure/cosmos";
 
 import { BaseModel, CosmosdbModel, ResourceT } from "../cosmosdb_model";
+import { some } from "fp-ts/lib/Option";
+
+beforeEach(() => {
+  jest.resetAllMocks();
+});
 
 const MyDocument = t.interface({
   test: t.string
@@ -37,35 +42,50 @@ const containerMock = {
 };
 const container = (containerMock as unknown) as Container;
 
+const aDocument = {
+  id: "test-id-1",
+  test: "test"
+};
+
+const someMetadata = {
+  _etag: "_etag",
+  _rid: "_rid",
+  _self: "_self",
+  _ts: 1
+};
+
 describe("create", () => {
   it("should create a document", async () => {
-    containerMock.items.create.mockResolvedValueOnce({});
-    const model = new MyModel(container);
-    await model
-      .create({
-        id: "test-id-1",
-        test: "test"
-      })
-      .run();
-    expect(containerMock.items.create).toHaveBeenCalledWith(
-      {
-        id: "test-id-1",
-        test: "test"
-      },
-      { disableAutomaticIdGeneration: true }
+    containerMock.items.create.mockResolvedValueOnce(
+      new ResourceResponse(
+        {
+          ...aDocument,
+          ...someMetadata
+        },
+        {},
+        200,
+        200
+      )
     );
+    const model = new MyModel(container);
+    const result = await model.create(aDocument).run();
+    expect(containerMock.items.create).toHaveBeenCalledWith(aDocument, {
+      disableAutomaticIdGeneration: true
+    });
+    expect(isRight(result));
+    if (isRight(result)) {
+      expect(result.value).toEqual({
+        ...aDocument,
+        ...someMetadata
+      });
+    }
   });
 
   it("should fail on query error", async () => {
     containerMock.items.create.mockRejectedValueOnce({ code: 500 });
     const model = new MyModel(container);
 
-    const result = await model
-      .create({
-        id: "test-id-1",
-        test: "test"
-      })
-      .run();
+    const result = await model.create(aDocument).run();
     expect(isLeft(result));
     if (isLeft(result)) {
       expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");
@@ -79,50 +99,10 @@ describe("create", () => {
     containerMock.items.create.mockResolvedValueOnce({});
     const model = new MyModel(container);
 
-    const result = await model
-      .create({
-        id: "test-id-1",
-        test: "test"
-      })
-      .run();
+    const result = await model.create(aDocument).run();
     expect(isLeft(result));
     if (isLeft(result)) {
       expect(result.value).toEqual({ kind: "COSMOS_EMPTY_RESPONSE" });
-    }
-  });
-
-  it("should return the created document as retrieved type", async () => {
-    containerMock.items.create.mockResolvedValueOnce(
-      new ResourceResponse(
-        {
-          _etag: "_etag",
-          _rid: "_rid",
-          _self: "_self",
-          _ts: 1,
-          id: "test-id-1",
-          test: "test"
-        },
-        {},
-        200,
-        200
-      )
-    );
-    const model = new MyModel(container);
-
-    const doc = {
-      id: "test-id-1",
-      test: "test"
-    };
-    const result = await model.create(doc).run();
-    expect(isRight(result));
-    if (isRight(result)) {
-      expect(result.value).toEqual({
-        ...doc,
-        _etag: "_etag",
-        _rid: "_rid",
-        _self: "_self",
-        _ts: 1
-      });
     }
   });
 });
@@ -131,31 +111,17 @@ describe("upsert", () => {
   it("should create a document", async () => {
     containerMock.items.upsert.mockResolvedValueOnce({});
     const model = new MyModel(container);
-    await model
-      .upsert({
-        id: "test-id-1",
-        test: "test"
-      })
-      .run();
-    expect(containerMock.items.upsert).toHaveBeenCalledWith(
-      {
-        id: "test-id-1",
-        test: "test"
-      },
-      { disableAutomaticIdGeneration: true }
-    );
+    await model.upsert(aDocument).run();
+    expect(containerMock.items.upsert).toHaveBeenCalledWith(aDocument, {
+      disableAutomaticIdGeneration: true
+    });
   });
 
   it("should fail on query error", async () => {
     containerMock.items.upsert.mockRejectedValueOnce({ code: 500 });
     const model = new MyModel(container);
 
-    const result = await model
-      .upsert({
-        id: "test-id-1",
-        test: "test"
-      })
-      .run();
+    const result = await model.upsert(aDocument).run();
     expect(isLeft(result));
     if (isLeft(result)) {
       expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");
@@ -169,12 +135,7 @@ describe("upsert", () => {
     containerMock.items.upsert.mockResolvedValueOnce({});
     const model = new MyModel(container);
 
-    const result = await model
-      .upsert({
-        id: "test-id-1",
-        test: "test"
-      })
-      .run();
+    const result = await model.upsert(aDocument).run();
     expect(isLeft(result));
     if (isLeft(result)) {
       expect(result.value).toEqual({ kind: "COSMOS_EMPTY_RESPONSE" });
@@ -185,12 +146,8 @@ describe("upsert", () => {
     containerMock.items.upsert.mockResolvedValueOnce(
       new ResourceResponse(
         {
-          _etag: "_etag",
-          _rid: "_rid",
-          _self: "_self",
-          _ts: 1,
-          id: "test-id-1",
-          test: "test"
+          ...aDocument,
+          ...someMetadata
         },
         {},
         200,
@@ -199,19 +156,12 @@ describe("upsert", () => {
     );
     const model = new MyModel(container);
 
-    const doc = {
-      id: "test-id-1",
-      test: "test"
-    };
-    const result = await model.upsert(doc).run();
+    const result = await model.upsert(aDocument).run();
     expect(isRight(result));
     if (isRight(result)) {
       expect(result.value).toEqual({
-        ...doc,
-        _etag: "_etag",
-        _rid: "_rid",
-        _self: "_self",
-        _ts: 1
+        ...aDocument,
+        ...someMetadata
       });
     }
   });
@@ -222,12 +172,8 @@ describe("find", () => {
     readMock.mockResolvedValueOnce(
       new ResourceResponse(
         {
-          _etag: "_etag",
-          _rid: "_rid",
-          _self: "_self",
-          _ts: 1,
-          id: "test-id-1",
-          test: "test"
+          ...aDocument,
+          ...someMetadata
         },
         {},
         200,
@@ -245,12 +191,8 @@ describe("find", () => {
     if (isRight(result)) {
       expect(result.value.isSome()).toBeTruthy();
       expect(result.value.toUndefined()).toEqual({
-        _etag: "_etag",
-        _rid: "_rid",
-        _self: "_self",
-        _ts: 1,
-        id: "test-id-1",
-        test: "test"
+        ...aDocument,
+        ...someMetadata
       });
     }
   });

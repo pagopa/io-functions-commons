@@ -25,7 +25,7 @@ import {
 } from "@azure/cosmos";
 import { wrapWithKind } from "./types";
 
-export const ModelId = wrapWithKind(t.string, "IModelIdTag" as const);
+export const ModelId = t.string; // FIXME: make it branded
 
 export type ModelId = t.TypeOf<typeof ModelId>;
 
@@ -115,7 +115,6 @@ export abstract class CosmosdbModelVersioned<
     // if we get an explicit version number from the new document we use that,
     // or else we get the last version by querying the database
     const currentVersion: NonNegativeInteger | undefined = o.version;
-
     const modelId = this.getModelId(o);
     return (currentVersion === undefined
       ? this.getNextVersion(modelId)
