@@ -127,7 +127,10 @@ export class UserDataProcessingModel extends CosmosdbModelVersioned<
     );
 
     const toUpdate: UserDataProcessing = {
-      ...userDataProcessing,
+      choice: userDataProcessing.choice,
+      createdAt: userDataProcessing.createdAt,
+      fiscalCode: userDataProcessing.fiscalCode,
+      status: userDataProcessing.status,
       updatedAt: userDataProcessing.createdAt,
       userDataProcessingId: newId
     };
