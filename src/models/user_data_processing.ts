@@ -7,20 +7,19 @@ import {
   VersionedModel
 } from "../utils/cosmosdb_model_versioned";
 
+import { Container } from "@azure/cosmos";
 import { Option } from "fp-ts/lib/Option";
+import { TaskEither } from "fp-ts/lib/TaskEither";
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { Timestamp } from "../../generated/definitions/Timestamp";
 import { UserDataProcessingChoice } from "../../generated/definitions/UserDataProcessingChoice";
 import { UserDataProcessingStatus } from "../../generated/definitions/UserDataProcessingStatus";
-import { TaskEither } from "fp-ts/lib/TaskEither";
-import { CosmosErrors, BaseModel } from "../utils/cosmosdb_model";
-import { Container } from "@azure/cosmos";
+import { BaseModel, CosmosErrors } from "../utils/cosmosdb_model";
 import { wrapWithKind } from "../utils/types";
-import { NonNegativeNumber, NonNegativeInteger } from "italia-ts-commons/lib/numbers";
 
 export const USER_DATA_PROCESSING_COLLECTION_NAME = "user-data-processing";
 export const USER_DATA_PROCESSING_MODEL_PK_FIELD = "fiscalCode";
-export const USER_DATA_PROCESSING_MODEL_ID_FIELD = "userDataProcessingId";
+export const USER_DATA_PROCESSING_MODEL_ID_FIELD = "userDataProcessingId" as const;
 
 interface IUserDataProcessingIdTag {
   readonly kind: "IUserDataProcessingIdTag";
@@ -28,6 +27,7 @@ interface IUserDataProcessingIdTag {
 
 export const UserDataProcessingId = tag<IUserDataProcessingIdTag>()(t.string);
 export type UserDataProcessingId = t.TypeOf<typeof UserDataProcessingId>;
+
 /**
  * Base interface for User Data Processing objects
  */
@@ -35,7 +35,7 @@ export const UserDataProcessing = t.intersection([
   t.interface({
     // the unique identifier of a user data processing request identified by concatenation of
     // fiscalCode - choice
-    userDataProcessingId: UserDataProcessingId,
+    [USER_DATA_PROCESSING_MODEL_ID_FIELD]: UserDataProcessingId,
 
     // the fiscal code of the citized associated to this user data processing request
     fiscalCode: FiscalCode,
@@ -58,7 +58,7 @@ export const UserDataProcessing = t.intersection([
 export type UserDataProcessing = t.TypeOf<typeof UserDataProcessing>;
 
 export const NewUserDataProcessing = wrapWithKind(
-  t.intersection([UserDataProcessing, VersionedModel]),
+  UserDataProcessing,
   "INewUserDataProcessing" as const
 );
 
@@ -84,7 +84,6 @@ export function makeUserDataProcessingId(
   );
 }
 
-
 /**
  * A model for handling UserDataProcessing
  */
@@ -100,42 +99,49 @@ export class UserDataProcessingModel extends CosmosdbModelVersioned<
    * @param collectionUrl the collection URL
    */
   constructor(container: Container) {
-    super(container, NewUserDataProcessing, RetrievedUserDataProcessing, "userDataProcessingId");
+    super(
+      container,
+      NewUserDataProcessing,
+      RetrievedUserDataProcessing,
+      USER_DATA_PROCESSING_MODEL_ID_FIELD
+    );
   }
 
   /**
    * Searches for one user data processing request to the provided id
    *
    * @param id
+   * @deprecated Use findLastVersionByModelId
    */
   public findOneUserDataProcessingById(
     fiscalCode: FiscalCode,
     userDataProcessingId: UserDataProcessingId
   ): TaskEither<CosmosErrors, Option<RetrievedUserDataProcessing>> {
-    return super.findLastVersionByModelId(
-      userDataProcessingId,
-      fiscalCode
-    );
+    return super.findLastVersionByModelId(userDataProcessingId, fiscalCode);
   }
 
   public createOrUpdateByNewOne(
-    userDataProcessing: UserDataProcessing
+    // omit userDataProcessingId from new documents as we create it from the
+    // provided object
+    userDataProcessing: Omit<
+      UserDataProcessing,
+      typeof USER_DATA_PROCESSING_MODEL_ID_FIELD
+    >
   ): TaskEither<CosmosErrors, RetrievedUserDataProcessing> {
     const newId = makeUserDataProcessingId(
       userDataProcessing.choice,
       userDataProcessing.fiscalCode
     );
 
-    const toUpdate: UserDataProcessing = {
+    const toUpdate: NewUserDataProcessing = {
       choice: userDataProcessing.choice,
       createdAt: userDataProcessing.createdAt,
       fiscalCode: userDataProcessing.fiscalCode,
+      kind: "INewUserDataProcessing",
       status: userDataProcessing.status,
       updatedAt: userDataProcessing.createdAt,
-      userDataProcessingId: newId
+      [USER_DATA_PROCESSING_MODEL_ID_FIELD]: newId
     };
-    return super.upsert(
-      toUpdate
-    );
+    return this.upsert(toUpdate);
   }
 }
