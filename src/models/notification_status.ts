@@ -1,18 +1,13 @@
 import * as t from "io-ts";
 
-import { pick, tag } from "italia-ts-commons/lib/types";
+import { tag } from "italia-ts-commons/lib/types";
 
-import * as DocumentDb from "documentdb";
-import * as DocumentDbUtils from "../utils/documentdb";
 import {
   CosmosdbModelVersioned,
-  ModelId,
   VersionedModel
 } from "../utils/cosmosdb_model_versioned";
 
-import { Either } from "fp-ts/lib/Either";
 import { Option } from "fp-ts/lib/Option";
-import { NonNegativeNumber } from "italia-ts-commons/lib/numbers";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import {
   NotificationChannel,
@@ -23,8 +18,10 @@ import {
   NotificationChannelStatusValueEnum
 } from "../../generated/definitions/NotificationChannelStatusValue";
 import { Timestamp } from "../../generated/definitions/Timestamp";
-import { notificationStatusIdToModelId } from "../utils/conversions";
-import { RuntimeError, TransientError } from "../utils/errors";
+import { wrapWithKind } from "../utils/types";
+import { BaseModel, CosmosErrors } from "../utils/cosmosdb_model";
+import { Container } from "@azure/cosmos";
+import { TaskEither } from "fp-ts/lib/TaskEither";
 
 export const NOTIFICATION_STATUS_COLLECTION_NAME = "notification-status";
 export const NOTIFICATION_STATUS_MODEL_ID_FIELD = "statusId";
@@ -52,54 +49,21 @@ export const NotificationStatus = t.interface({
 
 export type NotificationStatus = t.TypeOf<typeof NotificationStatus>;
 
-/**
- * Interface for new NotificationStatus objects
- */
-
-interface INewNotificationStatusTag {
-  readonly kind: "INewNotificationStatus";
-}
-
-export const NewNotificationStatus = tag<INewNotificationStatusTag>()(
-  t.intersection([
-    NotificationStatus,
-    DocumentDbUtils.NewDocument,
-    VersionedModel
-  ])
+export const NewNotificationStatus = wrapWithKind(
+  t.intersection([NotificationStatus, VersionedModel]),
+  "INewNotificationStatus" as const
 );
 
 export type NewNotificationStatus = t.TypeOf<typeof NewNotificationStatus>;
 
-/**
- * Interface for retrieved NotificationStatus objects
- *
- * Existing NotificationStatus records have a version number.
- */
-interface IRetrievedNotificationStatusTag {
-  readonly kind: "IRetrievedNotificationStatus";
-}
-
-export const RetrievedNotificationStatus = tag<
-  IRetrievedNotificationStatusTag
->()(
-  t.intersection([
-    NotificationStatus,
-    DocumentDbUtils.RetrievedDocument,
-    VersionedModel
-  ])
+export const RetrievedNotificationStatus = wrapWithKind(
+  t.intersection([NotificationStatus, VersionedModel, BaseModel]),
+  "IRetrievedNotificationStatus" as const
 );
 
 export type RetrievedNotificationStatus = t.TypeOf<
   typeof RetrievedNotificationStatus
 >;
-
-function toRetrieved(
-  result: DocumentDb.RetrievedDocument
-): RetrievedNotificationStatus {
-  return RetrievedNotificationStatus.decode(result).getOrElseL(_ => {
-    throw new Error("Fatal, result is not a valid RetrievedNotificationStatus");
-  });
-}
 
 export function makeStatusId(
   notificationId: NonEmptyString,
@@ -112,42 +76,9 @@ export function makeStatusId(
   );
 }
 
-function getModelId(o: NotificationStatus): ModelId {
-  return notificationStatusIdToModelId(
-    makeStatusId(o.notificationId, o.channel)
-  );
-}
-
-function updateModelId(
-  o: NotificationStatus,
-  id: NonEmptyString,
-  version: NonNegativeNumber
-): NewNotificationStatus {
-  return {
-    ...o,
-    id,
-    kind: "INewNotificationStatus",
-    version
-  };
-}
-
-function toBaseType(o: RetrievedNotificationStatus): NotificationStatus {
-  return pick(
-    [
-      "channel",
-      "messageId",
-      "notificationId",
-      "status",
-      "statusId",
-      "updatedAt"
-    ],
-    o
-  );
-}
-
 export type NotificationStatusUpdater = (
   status: NotificationChannelStatusValueEnum
-) => Promise<Either<RuntimeError, RetrievedNotificationStatus>>;
+) => TaskEither<CosmosErrors, RetrievedNotificationStatus>;
 
 /**
  * Convenience method that returns a function to update the notification status
@@ -159,9 +90,9 @@ export const getNotificationStatusUpdater = (
   messageId: NonEmptyString,
   notificationId: NonEmptyString
 ): NotificationStatusUpdater => {
-  return async status => {
+  return status => {
     const statusId = makeStatusId(notificationId, channel);
-    return await notificationStatusModel
+    return notificationStatusModel
       .upsert(
         {
           channel,
@@ -170,14 +101,7 @@ export const getNotificationStatusUpdater = (
           status,
           statusId,
           updatedAt: new Date()
-        },
-        NOTIFICATION_STATUS_MODEL_ID_FIELD,
-        statusId,
-        NOTIFICATION_STATUS_MODEL_PK_FIELD,
-        notificationId
-      )
-      .then(errorOrResult =>
-        errorOrResult.mapLeft(err => TransientError(err.body))
+        }
       );
   };
 };
@@ -193,21 +117,10 @@ export class NotificationStatusModel extends CosmosdbModelVersioned<
   /**
    * Creates a new NotificationStatus model
    *
-   * @param dbClient the DocumentDB client
-   * @param collectionUrl the collection URL
+   * @param container the Cosmos container client
    */
-  constructor(
-    dbClient: DocumentDb.DocumentClient,
-    collectionUrl: DocumentDbUtils.IDocumentDbCollectionUri
-  ) {
-    super(
-      dbClient,
-      collectionUrl,
-      toBaseType,
-      toRetrieved,
-      getModelId,
-      updateModelId
-    );
+  constructor(container: Container) {
+    super(container, NewNotificationStatus, RetrievedNotificationStatus, "statusId");
   }
 
   /**
@@ -222,9 +135,7 @@ export class NotificationStatusModel extends CosmosdbModelVersioned<
   public findOneNotificationStatusByNotificationChannel(
     notificationId: NonEmptyString,
     channel: NotificationChannel
-  ): Promise<
-    Either<DocumentDb.QueryError, Option<RetrievedNotificationStatus>>
-  > {
+  ): TaskEither<CosmosErrors, Option<RetrievedNotificationStatus>> {
     const statusId = makeStatusId(notificationId, channel);
     return this.findOneNotificationStatusById(statusId, notificationId);
   }
@@ -244,13 +155,9 @@ export class NotificationStatusModel extends CosmosdbModelVersioned<
   private findOneNotificationStatusById(
     statusId: NotificationStatusId,
     notificationId: NonEmptyString
-  ): Promise<
-    Either<DocumentDb.QueryError, Option<RetrievedNotificationStatus>>
-  > {
+  ): TaskEither<CosmosErrors, Option<RetrievedNotificationStatus>> {
     return super.findLastVersionByModelId(
-      NOTIFICATION_STATUS_MODEL_ID_FIELD,
       statusId,
-      NOTIFICATION_STATUS_MODEL_PK_FIELD,
       notificationId
     );
   }
