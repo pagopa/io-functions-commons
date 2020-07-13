@@ -14,10 +14,7 @@ import { fromEither, TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 
 import { PromiseType } from "italia-ts-commons/lib/types";
 
-import {
-  NonNegativeNumber,
-  NonNegativeInteger
-} from "italia-ts-commons/lib/numbers";
+import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
 
 import {
   Container,
@@ -121,7 +118,7 @@ export abstract class CosmosdbModelVersioned<
 
     const modelId = this.getModelId(o);
     return (currentVersion === undefined
-      ? this.getLastVersion(modelId)
+      ? this.getNextVersion(modelId)
       : fromEither<CosmosErrors, NonNegativeInteger>(right(currentVersion))
     ).chain(nextVersion =>
       super.create({
@@ -180,10 +177,12 @@ export abstract class CosmosdbModelVersioned<
     ModelId.decode(String(o[this.modelIdKey])).value as ModelId;
 
   /**
-   * Returns the most recent version of the model from the database or 0 if
-   * no previous version is found.
+   * Returns the next version for the model which `id` is `modelId`.
+   *
+   * The next version will be the last one from the database incremented by 1 or
+   * 0 if no previous version exists in the database.
    */
-  private getLastVersion = (modelId: ModelId) =>
+  private getNextVersion = (modelId: ModelId) =>
     this.findLastVersionByModelId(modelId).map(maybeLastVersion =>
       maybeLastVersion
         .map(_ => incVersion(_.version))
