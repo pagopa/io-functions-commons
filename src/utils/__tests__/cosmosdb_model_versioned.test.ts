@@ -1,19 +1,15 @@
 import * as t from "io-ts";
 
-import { isRight, left, right, isLeft } from "fp-ts/lib/Either";
-import { none, some } from "fp-ts/lib/Option";
+import { isLeft, isRight } from "fp-ts/lib/Either";
+import { isNone } from "fp-ts/lib/Option";
 
-import {
-  NonNegativeNumber,
-  NonNegativeInteger
-} from "italia-ts-commons/lib/numbers";
+import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
 
-import { Container, ResourceResponse, FeedResponse } from "@azure/cosmos";
+import { Container, FeedResponse, ResourceResponse } from "@azure/cosmos";
 
-import { ResourceT, BaseModel } from "../cosmosdb_model";
+import { BaseModel } from "../cosmosdb_model";
 import {
   CosmosdbModelVersioned,
-  ModelId,
   VersionedModel
 } from "../cosmosdb_model_versioned";
 
@@ -23,8 +19,6 @@ beforeEach(() => {
 
 const aModelIdField = "aModelIdField" as const;
 const aModelIdValue = "aModelIdValue";
-const aPartitionKeyField = "aPartitionKeyField";
-const aPartitionKeyValue = "aPartitionKeyValue";
 
 const MyDocument = t.interface({
   [aModelIdField]: t.string,
@@ -64,13 +58,6 @@ const aNewMyDocument: NewMyDocument = {
   test: "aNewMyDocument"
 };
 
-const aCreatedMyDocument = {
-  id: aMyDocumentId + "1",
-  [aModelIdField]: aModelIdValue,
-  test: "aNewMyDocument",
-  version: 1
-};
-
 const anExistingDocument = {
   id: aMyDocumentId + "1",
   [aModelIdField]: aModelIdValue,
@@ -85,7 +72,6 @@ const someMetadata = {
   _ts: 1
 };
 
-const readMock = jest.fn();
 const containerMock = {
   item: jest.fn(),
   items: {
@@ -221,10 +207,25 @@ describe("upsert", () => {
     }
   });
 
-  it("should fail on query error", async () => {
+  it("should fail on query error when retrieving last version", async () => {
     containerMock.items.query.mockReturnValueOnce({
-      fetchAll: () =>
-        Promise.resolve(new FeedResponse([anExistingDocument], {}, false))
+      fetchAll: () => Promise.reject({ code: 500 })
+    });
+    const model = new MyModel(container);
+
+    const result = await model.upsert(aNewMyDocument).run();
+    expect(isLeft(result));
+    if (isLeft(result)) {
+      expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");
+      if (result.value.kind === "COSMOS_ERROR_RESPONSE") {
+        expect(result.value.error.code).toBe(500);
+      }
+    }
+  });
+
+  it("should fail on query error when creating next version", async () => {
+    containerMock.items.query.mockReturnValueOnce({
+      fetchAll: () => Promise.resolve(new FeedResponse([], {}, false))
     });
     containerMock.items.create.mockRejectedValueOnce({ code: 500 });
     const model = new MyModel(container);
@@ -240,28 +241,35 @@ describe("upsert", () => {
   });
 });
 
-/*
-describe("update", () => {
-  it("should return on error", async () => {
-    const model = new MyModel(aDbClient, aCollectionUri);
-    (DocumentDbUtils.readDocument as any).mockReturnValueOnce(
-      Promise.resolve(left(new Error()))
-    );
-    await model.update(aModelIdValue, aPartitionKeyValue, curr => curr);
-    expect(DocumentDbUtils.createDocument).not.toHaveBeenCalledWith();
-  });
-});
-
 describe("findLastVersionByModelId", () => {
   it("should return none when the document is not found", async () => {
-    const model = new MyModel(aDbClient, aCollectionUri);
-    (DocumentDbUtils.queryOneDocument as any).mockReturnValueOnce(
-      Promise.resolve(right(none))
-    );
-    // @ts-ignore (ignore "protected" modifier)
-    await model.findLastVersionByModelId(aModelIdField, aModelIdValue);
-    expect(DocumentDbUtils.createDocument).not.toHaveBeenCalledWith();
+    containerMock.items.query.mockReturnValueOnce({
+      fetchAll: () => Promise.resolve(new FeedResponse([], {}, false))
+    });
+    const model = new MyModel(container);
+    const result = await model
+      .findLastVersionByModelId(aModelIdField, aModelIdValue)
+      .run();
+    expect(isRight(result)).toBeTruthy();
+    if (isRight(result)) {
+      expect(isNone(result.value)).toBeTruthy();
+    }
+  });
+
+  it("should fail on query error", async () => {
+    containerMock.items.query.mockReturnValueOnce({
+      fetchAll: () => Promise.reject({ code: 500 })
+    });
+    const model = new MyModel(container);
+    const result = await model
+      .findLastVersionByModelId(aModelIdField, aModelIdValue)
+      .run();
+    expect(isLeft(result));
+    if (isLeft(result)) {
+      expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");
+      if (result.value.kind === "COSMOS_ERROR_RESPONSE") {
+        expect(result.value.error.code).toBe(500);
+      }
+    }
   });
 });
-
-*/
