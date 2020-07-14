@@ -7,7 +7,9 @@ import {
   VersionedModel
 } from "../utils/cosmosdb_model_versioned";
 
+import { Container } from "@azure/cosmos";
 import { Option } from "fp-ts/lib/Option";
+import { TaskEither } from "fp-ts/lib/TaskEither";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import {
   NotificationChannel,
@@ -18,10 +20,8 @@ import {
   NotificationChannelStatusValueEnum
 } from "../../generated/definitions/NotificationChannelStatusValue";
 import { Timestamp } from "../../generated/definitions/Timestamp";
-import { wrapWithKind } from "../utils/types";
 import { BaseModel, CosmosErrors } from "../utils/cosmosdb_model";
-import { Container } from "@azure/cosmos";
-import { TaskEither } from "fp-ts/lib/TaskEither";
+import { wrapWithKind } from "../utils/types";
 
 export const NOTIFICATION_STATUS_COLLECTION_NAME = "notification-status";
 export const NOTIFICATION_STATUS_MODEL_ID_FIELD = "statusId";
@@ -50,7 +50,7 @@ export const NotificationStatus = t.interface({
 export type NotificationStatus = t.TypeOf<typeof NotificationStatus>;
 
 export const NewNotificationStatus = wrapWithKind(
-  t.intersection([NotificationStatus, VersionedModel]),
+  NotificationStatus,
   "INewNotificationStatus" as const
 );
 
@@ -92,17 +92,15 @@ export const getNotificationStatusUpdater = (
 ): NotificationStatusUpdater => {
   return status => {
     const statusId = makeStatusId(notificationId, channel);
-    return notificationStatusModel
-      .upsert(
-        {
-          channel,
-          messageId,
-          notificationId,
-          status,
-          statusId,
-          updatedAt: new Date()
-        }
-      );
+    return notificationStatusModel.upsert({
+      channel,
+      kind: "INewNotificationStatus",
+      messageId,
+      notificationId,
+      status,
+      statusId,
+      updatedAt: new Date()
+    });
   };
 };
 
@@ -120,7 +118,12 @@ export class NotificationStatusModel extends CosmosdbModelVersioned<
    * @param container the Cosmos container client
    */
   constructor(container: Container) {
-    super(container, NewNotificationStatus, RetrievedNotificationStatus, "statusId");
+    super(
+      container,
+      NewNotificationStatus,
+      RetrievedNotificationStatus,
+      "statusId"
+    );
   }
 
   /**
@@ -156,9 +159,6 @@ export class NotificationStatusModel extends CosmosdbModelVersioned<
     statusId: NotificationStatusId,
     notificationId: NonEmptyString
   ): TaskEither<CosmosErrors, Option<RetrievedNotificationStatus>> {
-    return super.findLastVersionByModelId(
-      statusId,
-      notificationId
-    );
+    return super.findLastVersionByModelId(statusId, notificationId);
   }
 }

@@ -17,16 +17,13 @@ import {
   OrganizationFiscalCode
 } from "italia-ts-commons/lib/strings";
 
-import {
-  readonlySetType,
-  withDefault
-} from "italia-ts-commons/lib/types";
-import { MaxAllowedPaymentAmount } from "../../generated/definitions/MaxAllowedPaymentAmount";
-import { ServiceScope } from "../../generated/definitions/ServiceScope";
-import { wrapWithKind } from "../utils/types";
-import { BaseModel, CosmosErrors } from "../utils/cosmosdb_model";
 import { Container } from "@azure/cosmos";
 import { TaskEither } from "fp-ts/lib/TaskEither";
+import { readonlySetType, withDefault } from "italia-ts-commons/lib/types";
+import { MaxAllowedPaymentAmount } from "../../generated/definitions/MaxAllowedPaymentAmount";
+import { ServiceScope } from "../../generated/definitions/ServiceScope";
+import { BaseModel, CosmosErrors } from "../utils/cosmosdb_model";
+import { wrapWithKind } from "../utils/types";
 
 export const SERVICE_COLLECTION_NAME = "services";
 export const SERVICE_MODEL_PK_FIELD = "serviceId";
@@ -103,9 +100,9 @@ export const Service = t.intersection([ServiceR, ServiceO], "Service");
 export type Service = t.TypeOf<typeof Service>;
 
 export const NewService = wrapWithKind(
-  t.intersection([Service, VersionedModel, BaseModel]),
+  t.intersection([Service, BaseModel]),
   "INewService" as const
-); 
+);
 
 export type NewService = t.TypeOf<typeof NewService>;
 
@@ -159,21 +156,15 @@ export class ServiceModel extends CosmosdbModelVersioned<
   /**
    * Creates a new Service model
    *
-   * @param dbClient the DocumentDB client
-   * @param collectionUrl the collection URL
+   * @param container the Cosmos container client
    */
-  constructor(
-    container: Container
-  ) {
+  constructor(container: Container) {
     super(container, NewService, RetrievedService, "serviceId");
   }
 
   public findOneByServiceId(
     serviceId: NonEmptyString
   ): TaskEither<CosmosErrors, Option<RetrievedService>> {
-    return super.findLastVersionByModelId(
-      serviceId,
-      serviceId
-    );
+    return super.findLastVersionByModelId(serviceId, serviceId);
   }
 }

@@ -3,25 +3,40 @@
  * a Message. A notification can be sent on multiple channels, based on the
  * User's preference.
  */
-import { enumType, pick } from "italia-ts-commons/lib/types";
+import { enumType, PromiseType } from "italia-ts-commons/lib/types";
 
-import * as DocumentDb from "documentdb";
 import * as t from "io-ts";
 
-import { tag } from "italia-ts-commons/lib/types";
-
-import * as DocumentDbUtils from "../utils/documentdb";
-import { CosmosdbModel } from "../utils/cosmosdb_model";
+import {
+  BaseModel,
+  CosmosdbModel,
+  CosmosDecodingError,
+  CosmosErrorResponse,
+  CosmosErrors
+} from "../utils/cosmosdb_model";
 
 import { EmailAddress } from "../../generated/definitions/EmailAddress";
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 
-import { Either } from "fp-ts/lib/Either";
-import { Option } from "fp-ts/lib/Option";
+import {
+  Container,
+  ErrorResponse,
+  FeedOptions,
+  SqlQuerySpec
+} from "@azure/cosmos";
+import { right as rightE } from "fp-ts/lib/Either";
+import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
+import {
+  fromEither as fromEitherT,
+  right,
+  TaskEither,
+  tryCatch as tryCatchT
+} from "fp-ts/lib/TaskEither";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { HttpsUrl } from "../../generated/definitions/HttpsUrl";
 import { NotificationChannelEnum } from "../../generated/definitions/NotificationChannel";
 import { ObjectIdGenerator } from "../utils/strings";
+import { wrapWithKind } from "../utils/types";
 
 export const NOTIFICATION_COLLECTION_NAME = "notifications";
 export const NOTIFICATION_MODEL_PK_FIELD = "messageId";
@@ -107,15 +122,9 @@ export const Notification = t.intersection([
 ]);
 export type Notification = t.TypeOf<typeof Notification>;
 
-/**
- * Interface for new Notification objects
- */
-interface INewNotificationTag {
-  readonly kind: "INewNotification";
-}
-
-export const NewNotification = tag<INewNotificationTag>()(
-  t.intersection([Notification, DocumentDbUtils.NewDocument])
+export const NewNotification = wrapWithKind(
+  t.intersection([Notification, BaseModel]),
+  "INewNotification" as const
 );
 
 export type NewNotification = t.TypeOf<typeof NewNotification>;
@@ -137,33 +146,14 @@ export function createNewNotification(
   };
 }
 
-/**
- * Interface for retrieved Notification objects
- */
-
-interface IRetrievedNotificationTag {
-  readonly kind: "IRetrievedNotification";
-}
-
-export const RetrievedNotification = tag<IRetrievedNotificationTag>()(
-  t.intersection([Notification, DocumentDbUtils.RetrievedDocument])
+export const RetrievedNotification = wrapWithKind(
+  t.intersection([Notification, BaseModel]),
+  "IRetrievedNotification" as const
 );
 
 export type RetrievedNotification = t.TypeOf<typeof RetrievedNotification>;
 
 /* istanbul ignore next */
-function toBaseType(o: RetrievedNotification): Notification {
-  return pick(["fiscalCode", "messageId", "channels"], o);
-}
-
-function toRetrieved(
-  result: DocumentDb.RetrievedDocument
-): RetrievedNotification {
-  return {
-    ...result,
-    kind: "IRetrievedNotification"
-  } as RetrievedNotification;
-}
 
 /**
  * A model for handling Notifications
@@ -176,14 +166,10 @@ export class NotificationModel extends CosmosdbModel<
   /**
    * Creates a new Notification model
    *
-   * @param dbClient the DocumentDB client
-   * @param collectionUrl the collection URL
+   * @param container the Cosmos container client
    */
-  constructor(
-    dbClient: DocumentDb.DocumentClient,
-    collectionUrl: DocumentDbUtils.IDocumentDbCollectionUri
-  ) {
-    super(dbClient, collectionUrl, toBaseType, toRetrieved);
+  constructor(container: Container) {
+    super(container, NewNotification, RetrievedNotification);
   }
 
   /**
@@ -194,20 +180,42 @@ export class NotificationModel extends CosmosdbModel<
   /* istanbul ignore next */
   public findNotificationForMessage(
     messageId: string
-  ): Promise<Either<DocumentDb.QueryError, Option<RetrievedNotification>>> {
-    return DocumentDbUtils.queryOneDocument(
-      this.container,
-      this.collectionUri,
-      {
-        parameters: [
-          {
-            name: "@messageId",
-            value: messageId
-          }
-        ],
-        query: `SELECT * FROM n WHERE (n.${NOTIFICATION_MODEL_PK_FIELD} = @messageId)`
-      },
-      messageId
-    );
+  ): TaskEither<CosmosErrors, Option<RetrievedNotification>> {
+    return this.findOneByQuery({
+      parameters: [
+        {
+          name: "@messageId",
+          value: messageId
+        }
+      ],
+      query: `SELECT * FROM n WHERE (n.${NOTIFICATION_MODEL_PK_FIELD} = @messageId)`
+    });
+  }
+
+  public findOneByQuery(
+    query: string | SqlQuerySpec,
+    options?: FeedOptions
+  ): TaskEither<CosmosErrors, Option<RetrievedNotification>> {
+    const queryIterator = this.container.items.query<RetrievedNotification>(
+      query,
+      options
+    ).fetchAll;
+    return tryCatchT<
+      CosmosErrors,
+      PromiseType<ReturnType<typeof queryIterator>>
+    >(
+      () => queryIterator(),
+      _ => CosmosErrorResponse(_ as ErrorResponse)
+    )
+      .map(_ => fromNullable(_.resources))
+      .chain(_ =>
+        _.isSome()
+          ? fromEitherT(
+              RetrievedNotification.decode(_.value[0])
+                .map(some)
+                .mapLeft(CosmosDecodingError)
+            )
+          : fromEitherT(rightE(none))
+      );
   }
 }
