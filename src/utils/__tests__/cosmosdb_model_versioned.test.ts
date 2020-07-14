@@ -1,9 +1,12 @@
 import * as t from "io-ts";
 
-import { isRight, left, right } from "fp-ts/lib/Either";
+import { isRight, left, right, isLeft } from "fp-ts/lib/Either";
 import { none, some } from "fp-ts/lib/Option";
 
-import { NonNegativeNumber } from "italia-ts-commons/lib/numbers";
+import {
+  NonNegativeNumber,
+  NonNegativeInteger
+} from "italia-ts-commons/lib/numbers";
 
 import { Container, ResourceResponse, FeedResponse } from "@azure/cosmos";
 
@@ -32,7 +35,7 @@ type MyDocument = t.TypeOf<typeof MyDocument>;
 const NewMyDocument = t.intersection([
   MyDocument,
   t.partial({
-    version: NonNegativeNumber
+    version: NonNegativeInteger
   })
 ]);
 type NewMyDocument = t.TypeOf<typeof NewMyDocument>;
@@ -72,7 +75,7 @@ const anExistingDocument = {
   id: aMyDocumentId + "1",
   [aModelIdField]: aModelIdValue,
   test: "anExistingDocument",
-  version: 1
+  version: 1 as NonNegativeInteger
 };
 
 const someMetadata = {
@@ -133,69 +136,108 @@ describe("upsert", () => {
     }
   });
 
-  /*
-  it("should update an existing document", async () => {
-    const model = new MyModel(aDbClient, aCollectionUri);
-    (DocumentDbUtils.queryOneDocument as any).mockReturnValueOnce(
-      Promise.resolve(right(some(anExistingDocument)))
-    );
-    (DocumentDbUtils.createDocument as any).mockReturnValueOnce(
-      Promise.resolve(
-        right({
-          ...anExistingDocument,
+  it("should create a new document with explicit version", async () => {
+    containerMock.items.query.mockReturnValueOnce({
+      fetchAll: () => Promise.resolve(new FeedResponse([], {}, false))
+    });
+    containerMock.items.create.mockResolvedValueOnce(
+      new ResourceResponse(
+        {
+          ...aNewMyDocument,
+          ...someMetadata,
           id: aMyDocumentId + "2",
           version: 2
-        })
+        },
+        {},
+        200,
+        200
       )
     );
-    const documentUri = DocumentDbUtils.getDocumentUri(
-      aCollectionUri,
-      "test-id-1"
-    );
-    const result = await model.upsert(
-      anExistingDocument,
-      aModelIdField,
-      aModelIdValue,
-      aPartitionKeyField,
-      aPartitionKeyValue
-    );
-    expect(DocumentDbUtils.createDocument).toHaveBeenCalledWith(
-      aDbClient,
-      documentUri,
+    const model = new MyModel(container);
+
+    const result = await model
+      .upsert({ ...aNewMyDocument, version: 2 as NonNegativeInteger })
+      .run();
+    expect(containerMock.items.create).toHaveBeenCalledWith(
       {
-        ...anExistingDocument,
+        ...aNewMyDocument,
         id: aMyDocumentId + "2",
-        kind: undefined,
         version: 2
       },
-      aPartitionKeyValue
+      { disableAutomaticIdGeneration: true }
     );
     expect(isRight(result));
     if (isRight(result)) {
       expect(result.value).toEqual({
-        ...anExistingDocument,
+        ...aNewMyDocument,
+        ...someMetadata,
         id: aMyDocumentId + "2",
-        kind: "IRetrievedMyDocument",
         version: 2
       });
     }
   });
 
-  it("should return on error", async () => {
-    const model = new MyModel(aDbClient, aCollectionUri);
-    (DocumentDbUtils.queryOneDocument as any).mockReturnValueOnce(
-      Promise.resolve(left(new Error()))
+  it("should update an existing document", async () => {
+    containerMock.items.query.mockReturnValueOnce({
+      fetchAll: () =>
+        Promise.resolve(new FeedResponse([anExistingDocument], {}, false))
+    });
+    containerMock.items.create.mockResolvedValueOnce(
+      new ResourceResponse(
+        {
+          ...aNewMyDocument,
+          ...someMetadata,
+          id: aMyDocumentId + "2",
+          test: "anUpdatedDocument",
+          version: 2
+        },
+        {},
+        200,
+        200
+      )
     );
-    await model.upsert(
-      aNewMyDocument,
-      aModelIdField,
-      aModelIdValue,
-      aPartitionKeyField,
-      aPartitionKeyValue
+    const model = new MyModel(container);
+    const result = await model
+      .upsert({ ...aNewMyDocument, test: "anUpdatedDocument" })
+      .run();
+    expect(containerMock.items.create).toHaveBeenCalledWith(
+      {
+        ...anExistingDocument,
+        id: aMyDocumentId + "2",
+        test: "anUpdatedDocument",
+        version: 2
+      },
+      { disableAutomaticIdGeneration: true }
     );
-    expect(DocumentDbUtils.createDocument).not.toHaveBeenCalledWith();
+    expect(isRight(result));
+    if (isRight(result)) {
+      expect(result.value).toEqual({
+        ...anExistingDocument,
+        ...someMetadata,
+        id: aMyDocumentId + "2",
+        test: "anUpdatedDocument",
+        version: 2
+      });
+    }
   });
-  */
+
+  it("should fail on query error", async () => {
+    containerMock.items.query.mockReturnValueOnce({
+      fetchAll: () =>
+        Promise.resolve(new FeedResponse([anExistingDocument], {}, false))
+    });
+    containerMock.items.create.mockRejectedValueOnce({ code: 500 });
+    const model = new MyModel(container);
+
+    const result = await model.upsert(aNewMyDocument).run();
+    expect(isLeft(result));
+    if (isLeft(result)) {
+      expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");
+      if (result.value.kind === "COSMOS_ERROR_RESPONSE") {
+        expect(result.value.error.code).toBe(500);
+      }
+    }
+  });
 });
 
 /*
