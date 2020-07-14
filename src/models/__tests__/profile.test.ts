@@ -1,29 +1,17 @@
-/* tslint:disable:no-any */
-/* tslint:disable:no-identical-functions */
-
 import { isLeft, isRight } from "fp-ts/lib/Either";
 import { isSome } from "fp-ts/lib/Option";
 
-import { NonNegativeNumber } from "italia-ts-commons/lib/numbers";
+import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
 import { EmailString, NonEmptyString } from "italia-ts-commons/lib/strings";
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 
-import {
-  Profile,
-  PROFILE_COLLECTION_NAME,
-  ProfileModel,
-  RetrievedProfile
-} from "../profile";
+import { Profile, ProfileModel, RetrievedProfile } from "../profile";
 
 import { Container } from "@azure/cosmos";
 
 const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
 
 const aStoredProfile = {
-  _etag: "xyz",
-  _rid: "xyz",
-  _self: "xyz",
-  _ts: 123,
   acceptedTosVersion: 1,
   fiscalCode: aFiscalCode,
   id: "xyz-0",
@@ -34,10 +22,6 @@ const aStoredProfile = {
 };
 
 const aRetrievedProfile: RetrievedProfile = {
-  _etag: "xyz",
-  _rid: "xyz",
-  _self: "xyz",
-  _ts: 123,
   acceptedTosVersion: 1,
   fiscalCode: aFiscalCode,
   id: "xyz-0" as NonEmptyString,
@@ -45,7 +29,7 @@ const aRetrievedProfile: RetrievedProfile = {
   isInboxEnabled: false,
   isWebhookEnabled: false,
   kind: "IRetrievedProfile",
-  version: 0 as NonNegativeNumber
+  version: 0 as NonNegativeInteger
 };
 
 describe("findOneProfileByFiscalCode", () => {

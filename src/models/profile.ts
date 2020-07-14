@@ -1,19 +1,12 @@
 import * as t from "io-ts";
 
-import { tag, withDefault } from "italia-ts-commons/lib/types";
+import { withDefault } from "italia-ts-commons/lib/types";
 
 import {
   CosmosdbModelVersioned,
-  ModelId,
   VersionedModel
 } from "../utils/cosmosdb_model_versioned";
 
-import { Either } from "fp-ts/lib/Either";
-import { Option } from "fp-ts/lib/Option";
-import { TaskEither } from "fp-ts/lib/TaskEither";
-
-import { NonNegativeNumber } from "italia-ts-commons/lib/numbers";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { AcceptedTosVersion } from "../../generated/definitions/AcceptedTosVersion";
 import { BlockedInboxOrChannels } from "../../generated/definitions/BlockedInboxOrChannels";
 import { EmailAddress } from "../../generated/definitions/EmailAddress";
@@ -24,8 +17,7 @@ import { IsInboxEnabled } from "../../generated/definitions/IsInboxEnabled";
 import { IsTestProfile } from "../../generated/definitions/IsTestProfile";
 import { IsWebhookEnabled } from "../../generated/definitions/IsWebhookEnabled";
 import { PreferredLanguages } from "../../generated/definitions/PreferredLanguages";
-import { fiscalCodeToModelId } from "../utils/conversions";
-import { CosmosErrors, ResourceT, BaseModel } from "../utils/cosmosdb_model";
+import { BaseModel } from "../utils/cosmosdb_model";
 
 import { Container } from "@azure/cosmos";
 import { wrapWithKind } from "../utils/types";
@@ -110,6 +102,6 @@ export class ProfileModel extends CosmosdbModelVersioned<
    * @param collectionUrl the collection URL
    */
   constructor(container: Container) {
-    super(container, NewProfile, RetrievedProfile, "fiscalCode");
+    super(container, NewProfile, RetrievedProfile, "fiscalCode" as const);
   }
 }
