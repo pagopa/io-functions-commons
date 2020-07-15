@@ -162,6 +162,9 @@ export class ServiceModel extends CosmosdbModelVersioned<
     super(container, NewService, RetrievedService, "serviceId");
   }
 
+  /**
+   * @deprecated use findLastVersionByModelId(serviceId, serviceId)
+   */
   public findOneByServiceId(
     serviceId: NonEmptyString
   ): TaskEither<CosmosErrors, Option<RetrievedService>> {
