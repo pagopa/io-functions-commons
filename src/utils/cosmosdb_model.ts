@@ -195,4 +195,20 @@ export abstract class CosmosdbModel<
       feedResponse.resources.map(this.retrievedItemT.decode)
     );
   }
+
+  /**
+   * Fetch all documents of the collection.
+   * Note that this method loads all items in memory at once, it should be used
+   * only when it's not feasible to process the items incrementally with
+   * getCollectionIterator()
+   */
+  public getCollection(
+    options?: FeedOptions
+  ): TaskEither<CosmosErrors, ReadonlyArray<t.Validation<TR>>> {
+    const fetchAll = this.container.items.readAll(options).fetchAll;
+    return tryCatch<CosmosErrors, PromiseType<ReturnType<typeof fetchAll>>>(
+      fetchAll,
+      _ => CosmosErrorResponse(_ as ErrorResponse)
+    ).map(_ => _.resources.map(this.retrievedItemT.decode));
+  }
 }
