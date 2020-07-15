@@ -2,12 +2,15 @@ import { isLeft, isRight } from "fp-ts/lib/Either";
 import { isSome } from "fp-ts/lib/Option";
 
 import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
-import { EmailString, NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 
-import { Profile, ProfileModel, RetrievedProfile } from "../profile";
+import { ProfileModel, RetrievedProfile } from "../profile";
 
-import { Container } from "@azure/cosmos";
+import {
+  containerMock,
+  mockContainerQueryFetchAll
+} from "../../__mocks__/@azure/cosmos";
 
 const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
 
@@ -34,18 +37,9 @@ const aRetrievedProfile: RetrievedProfile = {
 
 describe("findOneProfileByFiscalCode", () => {
   it("should resolve to an existing profile", async () => {
-    const containerMock = ({
-      items: {
-        create: jest.fn(),
-        query: jest.fn(_ => ({
-          fetchAll: jest.fn(_ =>
-            Promise.resolve({
-              resources: [aStoredProfile]
-            })
-          )
-        }))
-      }
-    } as unknown) as Container;
+    mockContainerQueryFetchAll.mockImplementationOnce(async () => ({
+      resources: [aStoredProfile]
+    }));
 
     const model = new ProfileModel(containerMock);
 
@@ -63,18 +57,9 @@ describe("findOneProfileByFiscalCode", () => {
   });
 
   it("should resolve to empty if no profile is found", async () => {
-    const containerMock = ({
-      items: {
-        create: jest.fn(),
-        query: jest.fn(_ => ({
-          fetchAll: jest.fn(_ =>
-            Promise.resolve({
-              resources: []
-            })
-          )
-        }))
-      }
-    } as unknown) as Container;
+    mockContainerQueryFetchAll.mockImplementationOnce(async () => ({
+      resources: []
+    }));
 
     const model = new ProfileModel(containerMock);
 
@@ -87,18 +72,9 @@ describe("findOneProfileByFiscalCode", () => {
   });
 
   it("should validate the retrieved object agains the model type", async () => {
-    const containerMock = ({
-      items: {
-        create: jest.fn(),
-        query: jest.fn(_ => ({
-          fetchAll: jest.fn(_ =>
-            Promise.resolve({
-              resources: [{}]
-            })
-          )
-        }))
-      }
-    } as unknown) as Container;
+    mockContainerQueryFetchAll.mockImplementationOnce(async () => ({
+      resources: [{}]
+    }));
 
     const model = new ProfileModel(containerMock);
 
