@@ -27,6 +27,7 @@ import { wrapWithKind } from "../utils/types";
 
 export const SERVICE_COLLECTION_NAME = "services";
 export const SERVICE_MODEL_PK_FIELD = "serviceId";
+export const SERVICE_MODEL_ID_FIELD = "serviceId";
 
 // required attributes
 const ServiceMetadataR = t.interface({
@@ -159,7 +160,7 @@ export class ServiceModel extends CosmosdbModelVersioned<
    * @param container the Cosmos container client
    */
   constructor(container: Container) {
-    super(container, NewService, RetrievedService, "serviceId");
+    super(container, NewService, RetrievedService, SERVICE_MODEL_ID_FIELD);
   }
 
   /**

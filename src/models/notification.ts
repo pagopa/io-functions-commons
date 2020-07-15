@@ -28,7 +28,6 @@ import { right as rightE } from "fp-ts/lib/Either";
 import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
 import {
   fromEither as fromEitherT,
-  right,
   TaskEither,
   tryCatch as tryCatchT
 } from "fp-ts/lib/TaskEither";

@@ -122,7 +122,7 @@ export class NotificationStatusModel extends CosmosdbModelVersioned<
       container,
       NewNotificationStatus,
       RetrievedNotificationStatus,
-      "statusId"
+      NOTIFICATION_STATUS_MODEL_ID_FIELD
     );
   }
 
@@ -140,25 +140,6 @@ export class NotificationStatusModel extends CosmosdbModelVersioned<
     channel: NotificationChannel
   ): TaskEither<CosmosErrors, Option<RetrievedNotificationStatus>> {
     const statusId = makeStatusId(notificationId, channel);
-    return this.findOneNotificationStatusById(statusId, notificationId);
-  }
-
-  /**
-   * Find the latest status for this notification.
-   *
-   * There is one notification for each channel and
-   * one versioned status model for each notification.
-   *
-   * We need to pass both statusId and notificationId
-   * to avoid multi-partition queries.
-   *
-   * @param statusId of the NotificationStatus object
-   * @param notificationId id of the NotificationStatus object
-   */
-  private findOneNotificationStatusById(
-    statusId: NotificationStatusId,
-    notificationId: NonEmptyString
-  ): TaskEither<CosmosErrors, Option<RetrievedNotificationStatus>> {
-    return super.findLastVersionByModelId(statusId, notificationId);
+    return this.findLastVersionByModelId(statusId, notificationId);
   }
 }
