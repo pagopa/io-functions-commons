@@ -133,8 +133,8 @@ describe("AzureUserAttributesMiddleware", () => {
 
     const result = await middleware(mockRequest as any);
 
-    expect(mockRequest.header.mock.calls[1][0]).toBe("x-user-email");
-    expect(mockRequest.header.mock.calls[0][0]).toBe("x-subscription-id");
+    expect(mockRequest.header.mock.calls[0][0]).toBe("x-user-email");
+    expect(mockRequest.header.mock.calls[1][0]).toBe("x-subscription-id");
     expect(serviceModel.findLastVersionByModelId).toHaveBeenCalledWith(
       mockRequest.header("x-subscription-id"),
       mockRequest.header("x-subscription-id")
