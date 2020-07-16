@@ -3,6 +3,7 @@
 import * as azureStorage from "azure-storage";
 import { isLeft, isRight, left, right } from "fp-ts/lib/Either";
 import { isSome } from "fp-ts/lib/Option";
+import * as asyncI from "../../utils/async";
 
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 import { MessageBodyMarkdown } from "../../../generated/definitions/MessageBodyMarkdown";
@@ -15,7 +16,6 @@ import { fromNullable, none, some } from "fp-ts/lib/Option";
 import {
   MessageModel,
   NewMessageWithContent,
-  RetrievedMessage,
   RetrievedMessageWithContent
 } from "../message";
 
@@ -24,7 +24,6 @@ import { Container, ResourceResponse } from "@azure/cosmos";
 import { MessageSubject } from "../../../generated/definitions/MessageSubject";
 import { ServiceId } from "../../../generated/definitions/ServiceId";
 import { TimeToLiveSeconds } from "../../../generated/definitions/TimeToLiveSeconds";
-import { someMetadata } from "../../utils/__tests__/cosmosdb_model.test";
 import * as azureStorageUtils from "../../utils/azure_storage";
 
 const MESSAGE_CONTAINER_NAME = "message-content" as NonEmptyString;
@@ -63,8 +62,18 @@ const aRetrievedMessageWithContent: RetrievedMessageWithContent = {
 describe("findMessages", () => {
   it("should return the messages for a fiscal code", async () => {
     const iteratorMock = {
-      next: jest.fn(cb => cb(undefined, ["result"], undefined))
+      next: jest.fn(() =>
+        Promise.resolve(right([right(aRetrievedMessageWithContent)]))
+      )
     };
+
+    const asyncIteratorSpy = jest
+      .spyOn(asyncI, "mapAsyncIterable")
+      .mockImplementation(() => {
+        return {
+          [Symbol.asyncIterator]: () => iteratorMock
+        };
+      });
 
     const containerMock = ({
       items: {
@@ -80,16 +89,53 @@ describe("findMessages", () => {
       .findMessages(aRetrievedMessageWithContent.fiscalCode)
       .run();
 
+    expect(asyncIteratorSpy).toHaveBeenCalledTimes(1);
     expect(containerMock.items.query).toHaveBeenCalledTimes(1);
     expect(isRight(errorsOrResultIterator)).toBeTruthy();
     if (isRight(errorsOrResultIterator)) {
-      const result = await (await errorsOrResultIterator.value.next()).value;
-
-      expect(isRight(result.value)).toBeTruthy();
-      if (isRight(result.value)) {
-        expect(result.value.isSome()).toBeTruthy();
-        expect(result.value.toUndefined()).toEqual(["result"]);
+      const result = await errorsOrResultIterator.value.next();
+      expect(isRight(result.value[0])).toBeTruthy();
+      if (isRight(result.value[0])) {
+        const item = result.value[0].value;
+        expect(item).toEqual(aRetrievedMessageWithContent);
       }
+    }
+  });
+
+  it("should return an empty iterator if fiscalCode doesn't match", async () => {
+    const iteratorMock = {
+      next: jest.fn(() => Promise.resolve(right([])))
+    };
+
+    const asyncIteratorSpy = jest
+      .spyOn(asyncI, "mapAsyncIterable")
+      // tslint:disable-next-line: no-identical-functions
+      .mockImplementation(() => {
+        return {
+          [Symbol.asyncIterator]: () => iteratorMock
+        };
+      });
+
+    const containerMock = ({
+      items: {
+        query: jest.fn(() => ({
+          getAsyncIterator: jest.fn(() => iteratorMock)
+        }))
+      }
+    } as unknown) as Container;
+
+    const model = new MessageModel(containerMock, MESSAGE_CONTAINER_NAME);
+
+    const errorsOrResultIterator = await model
+      .findMessages(aRetrievedMessageWithContent.fiscalCode)
+      .run();
+
+    expect(asyncIteratorSpy).toHaveBeenCalledTimes(2);
+    expect(containerMock.items.query).toHaveBeenCalledTimes(1);
+    expect(isRight(errorsOrResultIterator)).toBeTruthy();
+    if (isRight(errorsOrResultIterator)) {
+      const result = await errorsOrResultIterator.value.next();
+      expect(result.value).toMatchObject([]);
     }
   });
 });

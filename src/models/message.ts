@@ -233,7 +233,7 @@ export class MessageModel extends CosmosdbModel<
     CosmosErrors,
     AsyncIterator<ReadonlyArray<t.Validation<RetrievedMessage>>>
   > {
-    const iterator = this.getCollectionQueryIterator({
+    const iterator = this.getQueryIterator({
       parameters: [
         {
           name: "@fiscalCode",

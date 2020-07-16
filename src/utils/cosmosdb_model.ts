@@ -198,9 +198,9 @@ export abstract class CosmosdbModel<
   }
 
   /**
-   * Get an iterator to process all documents of the collection returned by a specific query.
+   * Get an iterator to process all documents returned by a specific query.
    */
-  public getCollectionQueryIterator(
+  public getQueryIterator(
     query: string | SqlQuerySpec,
     options?: FeedOptions
   ): AsyncIterable<ReadonlyArray<t.Validation<TR>>> {
