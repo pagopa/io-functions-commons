@@ -47,7 +47,7 @@ const aDocument = {
   test: "test"
 };
 
-const someMetadata = {
+export const someMetadata = {
   _etag: "_etag",
   _rid: "_rid",
   _self: "_self",
