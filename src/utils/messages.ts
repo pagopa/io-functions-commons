@@ -32,10 +32,9 @@ export async function getChannelStatus(
   notificationId: NonEmptyString,
   channel: NotificationChannelEnum
 ): Promise<NotificationChannelStatusValueEnum | undefined> {
-  const errorOrMaybeStatus = await notificationStatusModel.findOneNotificationStatusByNotificationChannel(
-    notificationId,
-    channel
-  ).run();
+  const errorOrMaybeStatus = await notificationStatusModel
+    .findOneNotificationStatusByNotificationChannel(notificationId, channel)
+    .run();
   return fromEither(errorOrMaybeStatus)
     .chain(t.identity)
     .map(o => o.status)
@@ -57,9 +56,9 @@ export async function getMessageNotificationStatuses(
   notificationStatusModel: NotificationStatusModel,
   messageId: NonEmptyString
 ): Promise<Either<Error, Option<NotificationStatusHolder>>> {
-  const errorOrMaybeNotification = await notificationModel.findNotificationForMessage(
-    messageId
-  ).run();
+  const errorOrMaybeNotification = await notificationModel
+    .findNotificationForMessage(messageId)
+    .run();
   if (isRight(errorOrMaybeNotification)) {
     // It may happen that the notification object is not yet created in the database
     // due to some latency, so it's better to not fail here but return an empty object
