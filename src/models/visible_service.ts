@@ -12,9 +12,9 @@ import {
 import { ServicePublic } from "../../generated/definitions/ServicePublic";
 import { ServiceScopeEnum } from "../../generated/definitions/ServiceScope";
 import { ServiceTuple } from "../../generated/definitions/ServiceTuple";
-import * as DocumentDbUtils from "../utils/documentdb";
 import { VersionedModel } from "../utils/cosmosdb_model_versioned";
 import { Service, ServiceMetadata } from "./service";
+import { BaseModel } from "../utils/cosmosdb_model";
 
 // This is not a CosmosDB model, but entities are stored into blob storage
 export const VISIBLE_SERVICE_CONTAINER = "cached";
@@ -31,8 +31,11 @@ const {
 
 // Public view of RetrivedService type
 const VisibleServiceR = t.intersection([
-  DocumentDbUtils.NewDocument,
+  BaseModel,
   VersionedModel,
+  t.partial({
+    ttl: t.number
+  }),
   t.type({
     departmentName,
     organizationFiscalCode,

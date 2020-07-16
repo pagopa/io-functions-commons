@@ -1,5 +1,4 @@
 import * as express from "express";
-import { isLeft } from "fp-ts/lib/Either";
 import {
   HttpStatusCodeEnum,
   IResponse,

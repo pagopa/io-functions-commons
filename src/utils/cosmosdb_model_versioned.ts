@@ -23,7 +23,6 @@ import {
   RequestOptions,
   SqlQuerySpec
 } from "@azure/cosmos";
-import { wrapWithKind } from "./types";
 
 export const ModelId = t.string; // FIXME: make it branded
 
