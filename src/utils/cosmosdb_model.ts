@@ -15,7 +15,8 @@ import {
   ItemDefinition,
   ItemResponse,
   RequestOptions,
-  Resource
+  Resource,
+  SqlQuerySpec
 } from "@azure/cosmos";
 
 import { mapAsyncIterable } from "./async";
@@ -191,6 +192,21 @@ export abstract class CosmosdbModel<
     options?: FeedOptions
   ): AsyncIterable<ReadonlyArray<t.Validation<TR>>> {
     const iterator = this.container.items.readAll(options).getAsyncIterator();
+    return mapAsyncIterable(iterator, feedResponse =>
+      feedResponse.resources.map(this.retrievedItemT.decode)
+    );
+  }
+
+  /**
+   * Get an iterator to process all documents of the collection returned by a specific query.
+   */
+  public getCollectionQueryIterator(
+    query: string | SqlQuerySpec,
+    options?: FeedOptions
+  ): AsyncIterable<ReadonlyArray<t.Validation<TR>>> {
+    const iterator = this.container.items
+      .query(query, options)
+      .getAsyncIterator();
     return mapAsyncIterable(iterator, feedResponse =>
       feedResponse.resources.map(this.retrievedItemT.decode)
     );
