@@ -78,7 +78,7 @@ export async function getMessageNotificationStatuses(
         channel,
         status: await getChannelStatus(
           notificationStatusModel,
-          notification.id,
+          notification.id as NonEmptyString,
           channel
         )
       }));
@@ -97,8 +97,9 @@ export async function getMessageNotificationStatuses(
     );
     return right<Error, Option<NotificationStatusHolder>>(some(response));
   } else {
+    // temporary log COSMOS_ERROR_RESPONSE kind due to body unavailability
     winston.error(
-      `getMessageNotificationStatuses|Query error|${errorOrMaybeNotification.value.body}`
+      `getMessageNotificationStatuses|Query error|${errorOrMaybeNotification.value.kind}`
     );
     return left<Error, Option<NotificationStatusHolder>>(
       new Error(`Error querying for NotificationStatus`)
