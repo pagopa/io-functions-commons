@@ -6,6 +6,8 @@ jest.mock("winston");
 
 import { none, some } from "fp-ts/lib/Option";
 
+import { fromEither, fromLeft } from "fp-ts/lib/TaskEither";
+
 import { isLeft, isRight, left, right } from "fp-ts/lib/Either";
 
 import { Service, toAuthorizedCIDRs } from "../../../models/service";
@@ -18,6 +20,7 @@ import {
 
 import { Set } from "json-set-map";
 import { MaxAllowedPaymentAmount } from "../../../../generated/definitions/MaxAllowedPaymentAmount";
+import { CosmosErrorResponse } from "../../cosmosdb_model";
 import { AzureUserAttributesMiddleware } from "../azure_user_attributes";
 
 interface IHeaders {
@@ -114,7 +117,7 @@ describe("AzureUserAttributesMiddleware", () => {
 
   it("should fail if the user service does not exist", async () => {
     const serviceModel = {
-      findOneByServiceId: jest.fn(() => Promise.resolve(right(none)))
+      findLastVersionByModelId: jest.fn(() => fromEither(right(none)))
     };
 
     const headers: IHeaders = {
@@ -130,10 +133,11 @@ describe("AzureUserAttributesMiddleware", () => {
 
     const result = await middleware(mockRequest as any);
 
-    expect(mockRequest.header.mock.calls[0][0]).toBe("x-user-email");
-    expect(mockRequest.header.mock.calls[1][0]).toBe("x-subscription-id");
-    expect(serviceModel.findOneByServiceId).toHaveBeenCalledWith(
-      headers["x-subscription-id"]
+    expect(mockRequest.header.mock.calls[1][0]).toBe("x-user-email");
+    expect(mockRequest.header.mock.calls[0][0]).toBe("x-subscription-id");
+    expect(serviceModel.findLastVersionByModelId).toHaveBeenCalledWith(
+      mockRequest.header("x-subscription-id"),
+      mockRequest.header("x-subscription-id")
     );
     expect(isLeft(result)).toBeTruthy();
     if (isLeft(result)) {
@@ -143,7 +147,7 @@ describe("AzureUserAttributesMiddleware", () => {
 
   it("should fetch and return the user service from the custom attributes", async () => {
     const serviceModel = {
-      findOneByServiceId: jest.fn(() => Promise.resolve(right(some(aService))))
+      findLastVersionByModelId: jest.fn(() => fromEither(right(some(aService))))
     };
 
     const headers: IHeaders = {
@@ -160,8 +164,9 @@ describe("AzureUserAttributesMiddleware", () => {
     const result = await middleware(mockRequest as any);
     expect(mockRequest.header.mock.calls[0][0]).toBe("x-user-email");
     expect(mockRequest.header.mock.calls[1][0]).toBe("x-subscription-id");
-    expect(serviceModel.findOneByServiceId).toHaveBeenCalledWith(
-      headers["x-subscription-id"]
+    expect(serviceModel.findLastVersionByModelId).toHaveBeenCalledWith(
+      mockRequest.header("x-subscription-id"),
+      mockRequest.header("x-subscription-id")
     );
     expect(isRight(result));
     if (isRight(result)) {
@@ -175,7 +180,7 @@ describe("AzureUserAttributesMiddleware", () => {
 
   it("should fail in case of error when fetching the user service", async () => {
     const serviceModel = {
-      findOneByServiceId: jest.fn(() => Promise.resolve(left("error")))
+      findLastVersionByModelId: jest.fn(() => fromLeft(new Error("error")))
     };
 
     const headers: IHeaders = {
@@ -192,8 +197,9 @@ describe("AzureUserAttributesMiddleware", () => {
     const result = await middleware(mockRequest as any);
     expect(mockRequest.header.mock.calls[0][0]).toBe("x-user-email");
     expect(mockRequest.header.mock.calls[1][0]).toBe("x-subscription-id");
-    expect(serviceModel.findOneByServiceId).toHaveBeenCalledWith(
-      headers["x-subscription-id"]
+    expect(serviceModel.findLastVersionByModelId).toHaveBeenCalledWith(
+      mockRequest.header("x-subscription-id"),
+      mockRequest.header("x-subscription-id")
     );
     expect(isLeft(result));
     if (isLeft(result)) {
