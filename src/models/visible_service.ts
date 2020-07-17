@@ -12,9 +12,9 @@ import {
 import { ServicePublic } from "../../generated/definitions/ServicePublic";
 import { ServiceScopeEnum } from "../../generated/definitions/ServiceScope";
 import { ServiceTuple } from "../../generated/definitions/ServiceTuple";
+import { BaseModel } from "../utils/cosmosdb_model";
 import { VersionedModel } from "../utils/cosmosdb_model_versioned";
 import { Service, ServiceMetadata } from "./service";
-import { BaseModel } from "../utils/cosmosdb_model";
 
 // This is not a CosmosDB model, but entities are stored into blob storage
 export const VISIBLE_SERVICE_CONTAINER = "cached";

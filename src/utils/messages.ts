@@ -78,6 +78,7 @@ export async function getMessageNotificationStatuses(
         channel,
         status: await getChannelStatus(
           notificationStatusModel,
+          // tslint:disable-next-line: no-useless-cast
           notification.id as NonEmptyString,
           channel
         )

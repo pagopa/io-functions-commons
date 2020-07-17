@@ -172,6 +172,7 @@ export abstract class CosmosdbModelVersioned<
    * Returns the value of the model ID for the provided item
    */
   protected getModelId = (o: T) =>
+    // tslint:disable-next-line: no-useless-cast
     ModelId.decode(String(o[this.modelIdKey])).value as ModelId;
 
   /**

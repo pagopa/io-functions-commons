@@ -31,6 +31,7 @@ export const wrapWithKind = <C extends t.Any, K extends string>(
         kind
       })),
     (a: t.TypeOf<C>) => {
+      // tslint:disable-next-line: no-useless-cast
       const { kind: _, ...o } = codec.encode(a) as t.OutputOf<C>;
       return o;
     },
