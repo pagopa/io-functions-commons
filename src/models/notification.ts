@@ -191,6 +191,9 @@ export class NotificationModel extends CosmosdbModel<
     });
   }
 
+  /**
+   * @deprecated use getQueryIterator + asyncIterableToArray
+   */
   public findOneByQuery(
     query: string | SqlQuerySpec,
     options?: FeedOptions

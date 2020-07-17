@@ -111,7 +111,7 @@ export class UserDataProcessingModel extends CosmosdbModelVersioned<
    * Searches for one user data processing request to the provided id
    *
    * @param id
-   * @deprecated Use findLastVersionByModelId
+   * @deprecated Use findLastVersionByModelId(userDataProcessingId, fiscalCode)
    */
   public findOneUserDataProcessingById(
     fiscalCode: FiscalCode,

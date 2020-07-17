@@ -84,6 +84,9 @@ export class MessageStatusModel extends CosmosdbModelVersioned<
     );
   }
 
+  /**
+   * @deprecated use findLastVersionByModelId(messageId, messageId)
+   */
   public findOneByMessageId(
     messageId: NonEmptyString
   ): TaskEither<CosmosErrors, Option<RetrievedMessageStatus>> {

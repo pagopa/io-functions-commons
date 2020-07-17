@@ -251,6 +251,9 @@ export class MessageModel extends CosmosdbModel<
     );
   }
 
+  /**
+   * @deprecated use getQueryIterator + asyncIterableToArray
+   */
   public findAllByQuery(
     query: string | SqlQuerySpec,
     options?: FeedOptions
