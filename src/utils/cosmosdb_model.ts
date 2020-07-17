@@ -235,4 +235,33 @@ export abstract class CosmosdbModel<
       toCosmosErrorResponse
     ).map(_ => _.resources.map(this.retrievedItemT.decode));
   }
+
+  /** Fetch the first document returned by a given query
+   * @deprecated use getQueryIterator + asyncIterableToArray
+   */
+  public findOneByQuery(
+    query: string | SqlQuerySpec,
+    options?: FeedOptions
+  ): TaskEither<CosmosErrors, Option<TR>> {
+    const queryIterator = this.container.items.query<TR>(query, options)
+      .fetchAll;
+    return tryCatch<
+      CosmosErrors,
+      PromiseType<ReturnType<typeof queryIterator>>
+    >(
+      () => queryIterator(),
+      _ => CosmosErrorResponse(_ as ErrorResponse)
+    )
+      .map(_ => fromNullable(_.resources))
+      .chain(_ =>
+        _.isSome()
+          ? fromEither(
+              this.retrievedItemT
+                .decode(_.value[0])
+                .map(some)
+                .mapLeft(CosmosDecodingError)
+            )
+          : fromEither(right(none))
+      );
+  }
 }

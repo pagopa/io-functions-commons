@@ -3,34 +3,22 @@
  * a Message. A notification can be sent on multiple channels, based on the
  * User's preference.
  */
-import { enumType, PromiseType } from "italia-ts-commons/lib/types";
+import { enumType } from "italia-ts-commons/lib/types";
 
 import * as t from "io-ts";
 
 import {
   BaseModel,
   CosmosdbModel,
-  CosmosDecodingError,
-  CosmosErrorResponse,
   CosmosErrors
 } from "../utils/cosmosdb_model";
 
 import { EmailAddress } from "../../generated/definitions/EmailAddress";
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 
-import {
-  Container,
-  ErrorResponse,
-  FeedOptions,
-  SqlQuerySpec
-} from "@azure/cosmos";
-import { right as rightE } from "fp-ts/lib/Either";
-import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
-import {
-  fromEither as fromEitherT,
-  TaskEither,
-  tryCatch as tryCatchT
-} from "fp-ts/lib/TaskEither";
+import { Container } from "@azure/cosmos";
+import { Option } from "fp-ts/lib/Option";
+import { TaskEither } from "fp-ts/lib/TaskEither";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { HttpsUrl } from "../../generated/definitions/HttpsUrl";
 import { NotificationChannelEnum } from "../../generated/definitions/NotificationChannel";
@@ -189,35 +177,5 @@ export class NotificationModel extends CosmosdbModel<
       ],
       query: `SELECT * FROM n WHERE (n.${NOTIFICATION_MODEL_PK_FIELD} = @messageId)`
     });
-  }
-
-  /**
-   * @deprecated use getQueryIterator + asyncIterableToArray
-   */
-  public findOneByQuery(
-    query: string | SqlQuerySpec,
-    options?: FeedOptions
-  ): TaskEither<CosmosErrors, Option<RetrievedNotification>> {
-    const queryIterator = this.container.items.query<RetrievedNotification>(
-      query,
-      options
-    ).fetchAll;
-    return tryCatchT<
-      CosmosErrors,
-      PromiseType<ReturnType<typeof queryIterator>>
-    >(
-      () => queryIterator(),
-      _ => CosmosErrorResponse(_ as ErrorResponse)
-    )
-      .map(_ => fromNullable(_.resources))
-      .chain(_ =>
-        _.isSome()
-          ? fromEitherT(
-              RetrievedNotification.decode(_.value[0])
-                .map(some)
-                .mapLeft(CosmosDecodingError)
-            )
-          : fromEitherT(rightE(none))
-      );
   }
 }

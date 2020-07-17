@@ -4,6 +4,7 @@ import { isLeft, isRight } from "fp-ts/lib/Either";
 
 import { Container, ResourceResponse } from "@azure/cosmos";
 
+import { fromNullable, isNone } from "fp-ts/lib/Option";
 import { BaseModel, CosmosdbModel, ResourceT } from "../cosmosdb_model";
 
 beforeEach(() => {
@@ -81,14 +82,17 @@ describe("create", () => {
   });
 
   it("should fail on query error", async () => {
-    containerMock.items.create.mockRejectedValueOnce({ code: 500 });
+    containerMock.items.create.mockRejectedValueOnce({ statusCode: 500 });
     const model = new MyModel(container);
 
     const result = await model.create(aDocument).run();
     expect(isLeft(result));
     if (isLeft(result)) {
       expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");
-      if (result.value.kind === "COSMOS_ERROR_RESPONSE") {
+      if (
+        result.value.kind === "COSMOS_ERROR_RESPONSE" &&
+        fromNullable(result.value.error.code).isSome()
+      ) {
         expect(result.value.error.code).toBe(500);
       }
     }
@@ -124,7 +128,10 @@ describe("upsert", () => {
     expect(isLeft(result));
     if (isLeft(result)) {
       expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");
-      if (result.value.kind === "COSMOS_ERROR_RESPONSE") {
+      if (
+        result.value.kind === "COSMOS_ERROR_RESPONSE" &&
+        fromNullable(result.value.error.code).isSome()
+      ) {
         expect(result.value.error.code).toBe(500);
       }
     }
@@ -221,7 +228,10 @@ describe("find", () => {
     expect(isLeft(result));
     if (isLeft(result)) {
       expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");
-      if (result.value.kind === "COSMOS_ERROR_RESPONSE") {
+      if (
+        result.value.kind === "COSMOS_ERROR_RESPONSE" &&
+        fromNullable(result.value.error.code).isSome()
+      ) {
         expect(result.value.error.code).toBe(500);
       }
     }
