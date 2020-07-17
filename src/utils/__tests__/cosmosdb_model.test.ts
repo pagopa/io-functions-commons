@@ -5,7 +5,6 @@ import { isLeft, isRight } from "fp-ts/lib/Either";
 import { Container, ResourceResponse } from "@azure/cosmos";
 
 import { BaseModel, CosmosdbModel, ResourceT } from "../cosmosdb_model";
-import { some } from "fp-ts/lib/Option";
 
 beforeEach(() => {
   jest.resetAllMocks();

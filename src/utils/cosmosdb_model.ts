@@ -65,6 +65,13 @@ export type CosmosErrors =
   | ReturnType<typeof CosmosDecodingError>
   | ReturnType<typeof CosmosErrorResponse>;
 
+const toCosmosErrorResponse = (
+  e: unknown
+): ReturnType<typeof CosmosErrorResponse> =>
+  CosmosErrorResponse(
+    (e instanceof Error ? e : new Error(String(e))) as ErrorResponse
+  );
+
 const wrapCreate = <TN, TR>(
   newItemT: t.Type<TN, ItemDefinition, unknown>,
   retrievedItemT: t.Type<TR, unknown, unknown>,
@@ -86,7 +93,7 @@ const wrapCreate = <TN, TR>(
           disableAutomaticIdGeneration: true,
           ...options
         }),
-      _ => CosmosErrorResponse(_ as ErrorResponse)
+      toCosmosErrorResponse
     )
       .map(_ => _.resource)
       // FIXME: not sure whether an undefined resource should be an error
@@ -171,7 +178,7 @@ export abstract class CosmosdbModel<
     const readItem = this.container.item(documentId, partitionKey).read;
     return tryCatch<CosmosErrors, PromiseType<ReturnType<typeof readItem>>>(
       () => readItem(options),
-      _ => CosmosErrorResponse(_ as ErrorResponse)
+      toCosmosErrorResponse
     )
       .map(_ => fromNullable(_.resource))
       .chain(_ =>
@@ -225,7 +232,7 @@ export abstract class CosmosdbModel<
     const fetchAll = this.container.items.readAll(options).fetchAll;
     return tryCatch<CosmosErrors, PromiseType<ReturnType<typeof fetchAll>>>(
       fetchAll,
-      _ => CosmosErrorResponse(_ as ErrorResponse)
+      toCosmosErrorResponse
     ).map(_ => _.resources.map(this.retrievedItemT.decode));
   }
 }
