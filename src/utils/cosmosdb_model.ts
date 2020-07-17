@@ -26,6 +26,11 @@ export const BaseModel = t.interface({
   id: t.string // FIXME: should this be a NonEmptyString?
 });
 
+export type BaseModel = t.TypeOf<typeof BaseModel>;
+
+// tslint:disable-next-line: no-useless-cast
+const x: string = "AString" as string;
+
 // An io-ts definition of Cosmos Resource runtime type
 // tslint:disable-next-line: no-useless-cast
 export const ResourceT = t.intersection([
