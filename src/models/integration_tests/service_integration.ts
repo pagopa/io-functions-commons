@@ -63,8 +63,6 @@ export const upsertTest = createDatabase(cosmosDatabaseName)
   );
 
 createTest
-  .chain(_ => upsertTest)
-  .chain(_ => retrieveTest)
   .run()
   .then(_ => {
     console.log("Service-CreateTest| running...");
