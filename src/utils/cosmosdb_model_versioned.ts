@@ -147,25 +147,10 @@ export abstract class CosmosdbModelVersioned<
       // Note: do not use ${collectionName} here as it may contain special characters
       query: `SELECT TOP 1 * FROM m WHERE m.${this.modelIdKey} = @modelId ORDER BY m.version DESC`
     };
-    const queryItems = this.container.items.query(q, {
+    return super.findOneByQuery(q, {
       maxItemCount: 1,
       partitionKey: partitionKey !== undefined ? partitionKey : modelId
-    }).fetchAll;
-    return tryCatch<CosmosErrors, PromiseType<ReturnType<typeof queryItems>>>(
-      queryItems,
-      _ => CosmosErrorResponse(_ as ErrorResponse)
-    )
-      .map(_ => fromNullable(_.resources[0]))
-      .chain(_ =>
-        _.isSome()
-          ? fromEither(
-              this.retrievedItemT
-                .decode(_.value)
-                .map(some)
-                .mapLeft(CosmosDecodingError)
-            )
-          : fromEither(right(none))
-      );
+    });
   }
 
   /**

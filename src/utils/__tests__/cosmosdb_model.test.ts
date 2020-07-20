@@ -82,7 +82,7 @@ describe("create", () => {
   });
 
   it("should fail on query error", async () => {
-    containerMock.items.create.mockRejectedValueOnce({ statusCode: 500 });
+    containerMock.items.create.mockRejectedValueOnce({ code: 500 });
     const model = new MyModel(container);
 
     const result = await model.create(aDocument).run();

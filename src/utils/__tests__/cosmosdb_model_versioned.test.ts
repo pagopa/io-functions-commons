@@ -1,7 +1,7 @@
 import * as t from "io-ts";
 
 import { isLeft, isRight } from "fp-ts/lib/Either";
-import { isNone, fromNullable } from "fp-ts/lib/Option";
+import { fromNullable, isNone } from "fp-ts/lib/Option";
 
 import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
 

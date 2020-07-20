@@ -248,10 +248,7 @@ export abstract class CosmosdbModel<
     return tryCatch<
       CosmosErrors,
       PromiseType<ReturnType<typeof queryIterator>>
-    >(
-      () => queryIterator(),
-      _ => CosmosErrorResponse(_ as ErrorResponse)
-    )
+    >(() => queryIterator(), toCosmosErrorResponse)
       .map(_ => fromNullable(_.resources))
       .chain(_ =>
         _.isSome()
