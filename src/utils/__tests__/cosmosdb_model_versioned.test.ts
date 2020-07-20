@@ -1,7 +1,7 @@
 import * as t from "io-ts";
 
 import { isLeft, isRight } from "fp-ts/lib/Either";
-import { fromNullable, isNone } from "fp-ts/lib/Option";
+import { fromNullable, isNone, isSome } from "fp-ts/lib/Option";
 
 import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
 
@@ -217,7 +217,10 @@ describe("upsert", () => {
     expect(isLeft(result));
     if (isLeft(result)) {
       expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");
-      if (result.value.kind === "COSMOS_ERROR_RESPONSE") {
+      if (
+        result.value.kind === "COSMOS_ERROR_RESPONSE" &&
+        fromNullable(result.value.error.code).isSome()
+      ) {
         expect(result.value.error.code).toBe(500);
       }
     }
@@ -249,6 +252,7 @@ describe("findLastVersionByModelId", () => {
     containerMock.items.query.mockReturnValueOnce({
       fetchAll: () => Promise.resolve(new FeedResponse([], {}, false))
     });
+
     const model = new MyModel(container);
     const result = await model
       .findLastVersionByModelId(aModelIdField, aModelIdValue)
@@ -270,7 +274,10 @@ describe("findLastVersionByModelId", () => {
     expect(isLeft(result));
     if (isLeft(result)) {
       expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");
-      if (result.value.kind === "COSMOS_ERROR_RESPONSE") {
+      if (
+        result.value.kind === "COSMOS_ERROR_RESPONSE" &&
+        isSome(fromNullable(result.value.error.code))
+      ) {
         expect(result.value.error.code).toBe(500);
       }
     }

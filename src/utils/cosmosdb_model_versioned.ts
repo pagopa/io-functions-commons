@@ -1,24 +1,15 @@
-import {
-  BaseModel,
-  CosmosdbModel,
-  CosmosDecodingError,
-  CosmosErrorResponse,
-  CosmosErrors
-} from "./cosmosdb_model";
+import { BaseModel, CosmosdbModel, CosmosErrors } from "./cosmosdb_model";
 
 import * as t from "io-ts";
 
 import { right } from "fp-ts/lib/Either";
-import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
-import { fromEither, TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
-
-import { PromiseType } from "italia-ts-commons/lib/types";
+import { Option } from "fp-ts/lib/Option";
+import { fromEither, TaskEither } from "fp-ts/lib/TaskEither";
 
 import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
 
 import {
   Container,
-  ErrorResponse,
   ItemDefinition,
   RequestOptions,
   SqlQuerySpec

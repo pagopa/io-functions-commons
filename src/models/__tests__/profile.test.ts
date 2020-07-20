@@ -37,8 +37,8 @@ describe("findOneProfileByFiscalCode", () => {
     const containerMock = ({
       items: {
         create: jest.fn(),
-        query: jest.fn(_ => ({
-          fetchAll: jest.fn(_ =>
+        query: jest.fn(() => ({
+          fetchAll: jest.fn(() =>
             Promise.resolve({
               resources: [aStoredProfile]
             })
@@ -67,9 +67,9 @@ describe("findOneProfileByFiscalCode", () => {
       items: {
         create: jest.fn(),
         query: jest.fn(_ => ({
-          fetchAll: jest.fn(_ =>
+          fetchAll: jest.fn(() =>
             Promise.resolve({
-              resources: []
+              resources: undefined
             })
           )
         }))
@@ -90,8 +90,8 @@ describe("findOneProfileByFiscalCode", () => {
     const containerMock = ({
       items: {
         create: jest.fn(),
-        query: jest.fn(_ => ({
-          fetchAll: jest.fn(_ =>
+        query: jest.fn(() => ({
+          fetchAll: jest.fn(() =>
             Promise.resolve({
               resources: [{}]
             })

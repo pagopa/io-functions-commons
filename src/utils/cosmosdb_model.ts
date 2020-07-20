@@ -65,7 +65,7 @@ export type CosmosErrors =
   | ReturnType<typeof CosmosDecodingError>
   | ReturnType<typeof CosmosErrorResponse>;
 
-const toCosmosErrorResponse = (
+export const toCosmosErrorResponse = (
   e: unknown
 ): ReturnType<typeof CosmosErrorResponse> =>
   CosmosErrorResponse(
@@ -252,12 +252,14 @@ export abstract class CosmosdbModel<
       .map(_ => fromNullable(_.resources))
       .chain(_ =>
         _.isSome()
-          ? fromEither(
-              this.retrievedItemT
-                .decode(_.value[0])
-                .map(some)
-                .mapLeft(CosmosDecodingError)
-            )
+          ? _.value.length > 0
+            ? fromEither(
+                this.retrievedItemT
+                  .decode(_.value[0])
+                  .map(some)
+                  .mapLeft(CosmosDecodingError)
+              )
+            : fromEither(right(none))
           : fromEither(right(none))
       );
   }

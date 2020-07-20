@@ -41,8 +41,8 @@ describe("findOneServiceById", () => {
     const containerMock = ({
       items: {
         create: jest.fn(),
-        query: jest.fn(_ => ({
-          fetchAll: jest.fn(_ =>
+        query: jest.fn(() => ({
+          fetchAll: jest.fn(() =>
             Promise.resolve({
               resources: [aRetrievedService]
             })
@@ -66,10 +66,10 @@ describe("findOneServiceById", () => {
     const containerMock = ({
       items: {
         create: jest.fn(),
-        query: jest.fn(_ => ({
-          fetchAll: jest.fn(_ =>
+        query: jest.fn(() => ({
+          fetchAll: jest.fn(() =>
             Promise.resolve({
-              resources: []
+              resources: undefined
             })
           )
         }))
@@ -90,8 +90,8 @@ describe("findOneServiceById", () => {
     const containerMock = ({
       items: {
         create: jest.fn(),
-        query: jest.fn(_ => ({
-          fetchAll: jest.fn(_ =>
+        query: jest.fn(() => ({
+          fetchAll: jest.fn(() =>
             Promise.resolve({
               resources: [{}]
             })

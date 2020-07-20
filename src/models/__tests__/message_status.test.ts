@@ -1,18 +1,13 @@
 // tslint:disable:no-any
 
 import { isLeft, isRight } from "fp-ts/lib/Either";
-import { isSome } from "fp-ts/lib/Option";
 import { NonNegativeNumber } from "italia-ts-commons/lib/numbers";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 
+import { Container } from "@azure/cosmos";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 import { MessageStatusValueEnum } from "../../../generated/definitions/MessageStatusValue";
-import {
-  MessageStatus,
-  MessageStatusModel,
-  RetrievedMessageStatus
-} from "../message_status";
-import { Container } from "@azure/cosmos";
+import { MessageStatusModel, RetrievedMessageStatus } from "../message_status";
 
 const aMessageId = "A_MESSAGE_ID" as NonEmptyString;
 
@@ -21,13 +16,6 @@ const aSerializedMessageStatus = {
   status: MessageStatusValueEnum.ACCEPTED,
   updatedAt: new Date().toISOString()
 };
-
-const aMessageStatus = MessageStatus.decode(
-  aSerializedMessageStatus
-).getOrElseL(errs => {
-  const error = readableReport(errs);
-  throw new Error("Fix MessageStatus mock: " + error);
-});
 
 const aSerializedRetrievedMessageStatus = {
   _self: "_self",
@@ -46,13 +34,12 @@ const aRetrievedMessageStatus = RetrievedMessageStatus.decode(
 });
 
 describe("findOneMessageStatusById", () => {
-
   it("should return an existing message status", async () => {
     const containerMock = ({
       items: {
         create: jest.fn(),
-        query: jest.fn(_ => ({
-          fetchAll: jest.fn(_ =>
+        query: jest.fn(() => ({
+          fetchAll: jest.fn(() =>
             Promise.resolve({
               resources: [aRetrievedMessageStatus]
             })
@@ -76,10 +63,10 @@ describe("findOneMessageStatusById", () => {
     const containerMock = ({
       items: {
         create: jest.fn(),
-        query: jest.fn(_ => ({
-          fetchAll: jest.fn(_ =>
+        query: jest.fn(() => ({
+          fetchAll: jest.fn(() =>
             Promise.resolve({
-              resources: []
+              resources: undefined
             })
           )
         }))
@@ -100,8 +87,8 @@ describe("findOneMessageStatusById", () => {
     const containerMock = ({
       items: {
         create: jest.fn(),
-        query: jest.fn(_ => ({
-          fetchAll: jest.fn(_ =>
+        query: jest.fn(() => ({
+          fetchAll: jest.fn(() =>
             Promise.resolve({
               resources: [{}]
             })
