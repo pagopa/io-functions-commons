@@ -1,48 +1,18 @@
-// tslint:disable: no-console
-import { Container, CosmosClient, Database } from "@azure/cosmos";
+// tslint:disable: no-console no-identical-functions
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 
-import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
-import { PromiseType } from "italia-ts-commons/lib/types";
-import { getRequiredStringEnv } from "../../../src/utils/env";
-import {
-  CosmosErrors,
-  toCosmosErrorResponse
-} from "../../utils/cosmosdb_model";
+import { isLeft, isRight } from "fp-ts/lib/Either";
 import {
   Service,
   SERVICE_COLLECTION_NAME,
   SERVICE_MODEL_PK_FIELD,
   ServiceModel
 } from "../service";
-
-const endpoint = getRequiredStringEnv("COSMOSDB_URI");
-const key = getRequiredStringEnv("COSMOSDB_KEY");
-const cosmosDatabaseName = getRequiredStringEnv("COSMOSDB_DATABASE_NAME");
-const client = new CosmosClient({ endpoint, key });
-
-export const createDatabase = (
-  dbName: string
-): TaskEither<CosmosErrors, Database> =>
-  tryCatch<
-    CosmosErrors,
-    PromiseType<ReturnType<typeof client.databases.createIfNotExists>>
-  >(
-    () => client.databases.createIfNotExists({ id: dbName }),
-    toCosmosErrorResponse
-  ).map(databaseResponse => databaseResponse.database);
-
-export const createContainer = (
-  db: Database,
-  containerName: string
-): TaskEither<CosmosErrors, Container> =>
-  tryCatch<
-    CosmosErrors,
-    PromiseType<ReturnType<typeof db.containers.createIfNotExists>>
-  >(
-    () => db.containers.createIfNotExists({ id: containerName }),
-    toCosmosErrorResponse
-  ).map(containerResponse => containerResponse.container);
+import {
+  cosmosDatabaseName,
+  createContainer,
+  createDatabase
+} from "./integration_init";
 
 const aService: Service = Service.decode({
   authorizedCIDRs: [],
@@ -60,7 +30,9 @@ const aService: Service = Service.decode({
 });
 
 export const createTest = createDatabase(cosmosDatabaseName)
-  .chain(db => createContainer(db, SERVICE_COLLECTION_NAME))
+  .chain(db =>
+    createContainer(db, SERVICE_COLLECTION_NAME, SERVICE_MODEL_PK_FIELD)
+  )
   .chain(container =>
     new ServiceModel(container).create({
       id: "1",
@@ -70,13 +42,17 @@ export const createTest = createDatabase(cosmosDatabaseName)
   );
 
 export const retrieveTest = createDatabase(cosmosDatabaseName)
-  .chain(db => createContainer(db, SERVICE_COLLECTION_NAME))
+  .chain(db =>
+    createContainer(db, SERVICE_COLLECTION_NAME, SERVICE_MODEL_PK_FIELD)
+  )
   .chain(container =>
     new ServiceModel(container).find("1", SERVICE_MODEL_PK_FIELD)
   );
 
 export const upsertTest = createDatabase(cosmosDatabaseName)
-  .chain(db => createContainer(db, SERVICE_COLLECTION_NAME))
+  .chain(db =>
+    createContainer(db, SERVICE_COLLECTION_NAME, SERVICE_MODEL_PK_FIELD)
+  )
   .chain(container =>
     new ServiceModel(container).upsert({
       id: "1",
@@ -87,6 +63,46 @@ export const upsertTest = createDatabase(cosmosDatabaseName)
   );
 
 createTest
+  .chain(_ => upsertTest)
+  .chain(_ => retrieveTest)
   .run()
-  .then(_ => console.log(_.value))
+  .then(_ => {
+    console.log("Service-CreateTest| running...");
+    if (
+      isLeft(_) &&
+      _.value.kind === "COSMOS_ERROR_RESPONSE" &&
+      _.value.error.code === 409
+    ) {
+      console.log(
+        "Service-CreateTest| A document with the same id already exists"
+      );
+    } else {
+      console.log("Service-CreateTest| success!");
+      console.log(_.value);
+    }
+  })
+  .catch(console.error);
+
+upsertTest
+  .run()
+  .then(_ => {
+    console.log("Service-UpsertTest| running...");
+    if (isRight(_)) {
+      console.log("Service-UpsertTest| success!");
+    } else {
+      console.log(_.value);
+    }
+  })
+  .catch(console.error);
+
+retrieveTest
+  .run()
+  .then(_ => {
+    console.log("Service-RetrieveTest| running...");
+    if (isRight(_)) {
+      console.log("Service-RetrieveTest| success!");
+    } else {
+      console.log(_.value);
+    }
+  })
   .catch(console.error);

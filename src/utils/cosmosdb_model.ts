@@ -144,7 +144,7 @@ export abstract class CosmosdbModel<
     return wrapCreate<TN, TR>(
       this.newItemT,
       this.retrievedItemT,
-      this.container.items.create
+      this.container.items.create.bind(this.container.items)
     )(newDocument, options);
   }
 
@@ -160,7 +160,7 @@ export abstract class CosmosdbModel<
     return wrapCreate(
       this.newItemT,
       this.retrievedItemT,
-      this.container.items.upsert
+      this.container.items.upsert.bind(this.container.items)
     )(newDocument, options);
   }
 
@@ -177,7 +177,7 @@ export abstract class CosmosdbModel<
   ): TaskEither<CosmosErrors, Option<TR>> {
     const readItem = this.container.item(documentId, partitionKey).read;
     return tryCatch<CosmosErrors, PromiseType<ReturnType<typeof readItem>>>(
-      () => readItem(options),
+      () => this.container.item(documentId, partitionKey).read(options),
       toCosmosErrorResponse
     )
       .map(_ => fromNullable(_.resource))
@@ -243,12 +243,16 @@ export abstract class CosmosdbModel<
     query: string | SqlQuerySpec,
     options?: FeedOptions
   ): TaskEither<CosmosErrors, Option<TR>> {
+    this.container.items.query.bind(this.container.items);
     const queryIterator = this.container.items.query<TR>(query, options)
       .fetchAll;
     return tryCatch<
       CosmosErrors,
       PromiseType<ReturnType<typeof queryIterator>>
-    >(() => queryIterator(), toCosmosErrorResponse)
+    >(
+      () => this.container.items.query<TR>(query, options).fetchAll(),
+      toCosmosErrorResponse
+    )
       .map(_ => fromNullable(_.resources))
       .chain(_ =>
         _.isSome()
