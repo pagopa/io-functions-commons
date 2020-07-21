@@ -4,18 +4,17 @@
 import { isLeft, isRight } from "fp-ts/lib/Either";
 
 import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 
-import { Container, ResourceResponse, FeedResponse } from "@azure/cosmos";
+import { Container, FeedResponse, ResourceResponse } from "@azure/cosmos";
 import { UserDataProcessingChoiceEnum } from "../../../generated/definitions/UserDataProcessingChoice";
 import { UserDataProcessingStatusEnum } from "../../../generated/definitions/UserDataProcessingStatus";
 import {
   makeUserDataProcessingId,
+  NewUserDataProcessing,
   RetrievedUserDataProcessing,
   UserDataProcessing,
-  UserDataProcessingModel,
-  NewUserDataProcessing
+  UserDataProcessingModel
 } from "../user_data_processing";
 
 const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;

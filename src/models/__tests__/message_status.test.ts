@@ -50,7 +50,9 @@ describe("findOneMessageStatusById", () => {
 
     const model = new MessageStatusModel(containerMock);
 
-    const result = await model.findOneByMessageId(aMessageId).run();
+    const result = await model
+      .findLastVersionByModelId(aMessageId, aMessageId)
+      .run();
 
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
@@ -75,7 +77,9 @@ describe("findOneMessageStatusById", () => {
 
     const model = new MessageStatusModel(containerMock);
 
-    const result = await model.findOneByMessageId(aMessageId).run();
+    const result = await model
+      .findLastVersionByModelId(aMessageId, aMessageId)
+      .run();
 
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
@@ -99,7 +103,9 @@ describe("findOneMessageStatusById", () => {
 
     const model = new MessageStatusModel(containerMock);
 
-    const result = await model.findOneByMessageId(aMessageId).run();
+    const result = await model
+      .findLastVersionByModelId(aMessageId, aMessageId)
+      .run();
 
     expect(isLeft(result)).toBeTruthy();
     if (isLeft(result)) {
