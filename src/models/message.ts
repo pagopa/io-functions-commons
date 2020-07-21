@@ -17,20 +17,15 @@ import {
   BaseModel,
   CosmosdbModel,
   CosmosDecodingError,
-  CosmosErrorResponse,
-  CosmosErrors
+  CosmosErrors,
+  toCosmosErrorResponse
 } from "../utils/cosmosdb_model";
 
 import { MessageContent } from "../../generated/definitions/MessageContent";
 
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 
-import {
-  Container,
-  ErrorResponse,
-  FeedOptions,
-  SqlQuerySpec
-} from "@azure/cosmos";
+import { Container, FeedOptions, SqlQuerySpec } from "@azure/cosmos";
 import {
   fromEither as fromEitherT,
   TaskEither,
@@ -243,12 +238,7 @@ export class MessageModel extends CosmosdbModel<
       query: `SELECT * FROM m WHERE m.${MESSAGE_MODEL_PK_FIELD} = @fiscalCode`
     })[Symbol.asyncIterator]();
 
-    return fromEitherT(
-      tryCatch2v(
-        () => iterator,
-        _ => CosmosErrorResponse(_ as ErrorResponse)
-      )
-    );
+    return fromEitherT(tryCatch2v(() => iterator, toCosmosErrorResponse));
   }
 
   /**
@@ -267,7 +257,7 @@ export class MessageModel extends CosmosdbModel<
     ).fetchAll;
     return tryCatchT<CosmosErrors, PromiseType<ReturnType<typeof fetchAll>>>(
       () => fetchAll(),
-      _ => CosmosErrorResponse(_ as ErrorResponse)
+      toCosmosErrorResponse
     )
       .map(_ => fromNullable(_.resources))
       .chain(_ =>

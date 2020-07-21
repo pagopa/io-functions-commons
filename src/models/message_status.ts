@@ -1,4 +1,3 @@
-import { Option } from "fp-ts/lib/Option";
 import * as t from "io-ts";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 
@@ -82,14 +81,5 @@ export class MessageStatusModel extends CosmosdbModelVersioned<
       RetrievedMessageStatus,
       MESSAGE_STATUS_MODEL_ID_FIELD
     );
-  }
-
-  /**
-   * @deprecated use findLastVersionByModelId(messageId, messageId)
-   */
-  public findOneByMessageId(
-    messageId: NonEmptyString
-  ): TaskEither<CosmosErrors, Option<RetrievedMessageStatus>> {
-    return super.findLastVersionByModelId(messageId, messageId);
   }
 }

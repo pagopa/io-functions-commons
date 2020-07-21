@@ -8,7 +8,6 @@ import {
 } from "../utils/cosmosdb_model_versioned";
 
 import { Container } from "@azure/cosmos";
-import { Option } from "fp-ts/lib/Option";
 import { TaskEither } from "fp-ts/lib/TaskEither";
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { Timestamp } from "../../generated/definitions/Timestamp";
@@ -105,19 +104,6 @@ export class UserDataProcessingModel extends CosmosdbModelVersioned<
       RetrievedUserDataProcessing,
       USER_DATA_PROCESSING_MODEL_ID_FIELD
     );
-  }
-
-  /**
-   * Searches for one user data processing request to the provided id
-   *
-   * @param id
-   * @deprecated Use findLastVersionByModelId(userDataProcessingId, fiscalCode)
-   */
-  public findOneUserDataProcessingById(
-    fiscalCode: FiscalCode,
-    userDataProcessingId: UserDataProcessingId
-  ): TaskEither<CosmosErrors, Option<RetrievedUserDataProcessing>> {
-    return super.findLastVersionByModelId(userDataProcessingId, fiscalCode);
   }
 
   public createOrUpdateByNewOne(
