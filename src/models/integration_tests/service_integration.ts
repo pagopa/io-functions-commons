@@ -1,12 +1,21 @@
 // tslint:disable: no-console no-identical-functions
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
-
-import { isLeft, isRight } from "fp-ts/lib/Either";
 import {
+  NonEmptyString,
+  OrganizationFiscalCode
+} from "italia-ts-commons/lib/strings";
+
+import { isLeft, right } from "fp-ts/lib/Either";
+import { fromEither, fromLeft, taskEither } from "fp-ts/lib/TaskEither";
+import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
+import { MaxAllowedPaymentAmount } from "../../../generated/definitions/MaxAllowedPaymentAmount";
+import {
+  RetrievedService,
   Service,
   SERVICE_COLLECTION_NAME,
   SERVICE_MODEL_PK_FIELD,
-  ServiceModel
+  ServiceModel,
+  toAuthorizedCIDRs,
+  toAuthorizedRecipients
 } from "../service";
 import {
   cosmosDatabaseName,
@@ -29,7 +38,26 @@ const aService: Service = Service.decode({
   throw new Error("Cannot decode service payload.");
 });
 
-export const createTest = createDatabase(cosmosDatabaseName)
+const aServiceId = "xyz" as NonEmptyString;
+const anOrganizationFiscalCode = "01234567890" as OrganizationFiscalCode;
+
+const aRetrievedService: RetrievedService = {
+  authorizedCIDRs: toAuthorizedCIDRs([]),
+  authorizedRecipients: toAuthorizedRecipients([]),
+  departmentName: "MyDept" as NonEmptyString,
+  id: "xyz" as NonEmptyString,
+  isVisible: true,
+  kind: "IRetrievedService",
+  maxAllowedPaymentAmount: 0 as MaxAllowedPaymentAmount,
+  organizationFiscalCode: anOrganizationFiscalCode,
+  organizationName: "MyOrg" as NonEmptyString,
+  requireSecureChannels: false,
+  serviceId: aServiceId,
+  serviceName: "MyService" as NonEmptyString,
+  version: 0 as NonNegativeInteger
+};
+
+const createTest = createDatabase(cosmosDatabaseName)
   .chain(db =>
     createContainer(db, SERVICE_COLLECTION_NAME, SERVICE_MODEL_PK_FIELD)
   )
@@ -41,15 +69,16 @@ export const createTest = createDatabase(cosmosDatabaseName)
     })
   );
 
-export const retrieveTest = createDatabase(cosmosDatabaseName)
-  .chain(db =>
-    createContainer(db, SERVICE_COLLECTION_NAME, SERVICE_MODEL_PK_FIELD)
-  )
-  .chain(container =>
-    new ServiceModel(container).find("1", SERVICE_MODEL_PK_FIELD)
-  );
+const retrieveTest = (modelId: string) =>
+  createDatabase(cosmosDatabaseName)
+    .chain(db =>
+      createContainer(db, SERVICE_COLLECTION_NAME, SERVICE_MODEL_PK_FIELD)
+    )
+    .chain(container =>
+      new ServiceModel(container).findLastVersionByModelId(modelId)
+    );
 
-export const upsertTest = createDatabase(cosmosDatabaseName)
+const upsertTest = createDatabase(cosmosDatabaseName)
   .chain(db =>
     createContainer(db, SERVICE_COLLECTION_NAME, SERVICE_MODEL_PK_FIELD)
   )
@@ -62,45 +91,30 @@ export const upsertTest = createDatabase(cosmosDatabaseName)
     })
   );
 
-createTest
-  .run()
-  .then(_ => {
-    console.log("Service-CreateTest| running...");
-    if (
-      isLeft(_) &&
-      _.value.kind === "COSMOS_ERROR_RESPONSE" &&
-      _.value.error.code === 409
-    ) {
-      console.log(
-        "Service-CreateTest| A document with the same id already exists"
-      );
-    } else {
-      console.log("Service-CreateTest| success!");
-      console.log(_.value);
-    }
-  })
-  .catch(console.error);
-
-upsertTest
-  .run()
-  .then(_ => {
-    console.log("Service-UpsertTest| running...");
-    if (isRight(_)) {
-      console.log("Service-UpsertTest| success!");
-    } else {
-      console.log(_.value);
-    }
-  })
-  .catch(console.error);
-
-retrieveTest
-  .run()
-  .then(_ => {
-    console.log("Service-RetrieveTest| running...");
-    if (isRight(_)) {
-      console.log("Service-RetrieveTest| success!");
-    } else {
-      console.log(_.value);
-    }
-  })
-  .catch(console.error);
+export const test = () =>
+  createTest
+    .foldTaskEither(
+      err => {
+        if (err.kind === "COSMOS_ERROR_RESPONSE" && err.error.code === 409) {
+          console.log(
+            "Service-CreateTest| A document with the same id already exists"
+          );
+          return taskEither.of(aRetrievedService);
+        } else {
+          return fromLeft(err);
+        }
+      },
+      _ => fromEither(right(_))
+    )
+    .chain(_ => upsertTest)
+    .chain(_ => retrieveTest(_.serviceId))
+    .run()
+    .then(_ => {
+      if (isLeft(_)) {
+        console.log(`Service-Test| Error = ${_.value}`);
+      } else {
+        console.log("Service-Test| success!");
+        console.log(_.value);
+      }
+    })
+    .catch(console.error);
