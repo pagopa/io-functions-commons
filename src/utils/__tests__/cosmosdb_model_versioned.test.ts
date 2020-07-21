@@ -10,7 +10,8 @@ import { Container, FeedResponse, ResourceResponse } from "@azure/cosmos";
 import { BaseModel } from "../cosmosdb_model";
 import {
   CosmosdbModelVersioned,
-  VersionedModel
+  NewVersionedModel,
+  RetrievedVersionedModel
 } from "../cosmosdb_model_versioned";
 
 beforeEach(() => {
@@ -26,17 +27,12 @@ const MyDocument = t.interface({
 });
 type MyDocument = t.TypeOf<typeof MyDocument>;
 
-const NewMyDocument = t.intersection([
-  MyDocument,
-  t.partial({
-    version: NonNegativeInteger
-  })
-]);
+const NewMyDocument = t.intersection([MyDocument, NewVersionedModel]);
 type NewMyDocument = t.TypeOf<typeof NewMyDocument>;
 
 const RetrievedMyDocument = t.intersection([
   MyDocument,
-  VersionedModel,
+  RetrievedVersionedModel,
   BaseModel
 ]);
 type RetrievedMyDocument = t.TypeOf<typeof RetrievedMyDocument>;

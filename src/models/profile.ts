@@ -4,7 +4,8 @@ import { withDefault } from "italia-ts-commons/lib/types";
 
 import {
   CosmosdbModelVersioned,
-  VersionedModel
+  NewVersionedModel,
+  RetrievedVersionedModel
 } from "../utils/cosmosdb_model_versioned";
 
 import { AcceptedTosVersion } from "../../generated/definitions/AcceptedTosVersion";
@@ -74,14 +75,14 @@ export const Profile = t.intersection([
 export type Profile = t.TypeOf<typeof Profile>;
 
 export const NewProfile = wrapWithKind(
-  t.intersection([Profile, VersionedModel]),
+  t.intersection([Profile, NewVersionedModel]),
   "INewProfile" as const
 );
 
 export type NewProfile = t.TypeOf<typeof NewProfile>;
 
 export const RetrievedProfile = wrapWithKind(
-  t.intersection([Profile, VersionedModel, BaseModel]),
+  t.intersection([Profile, RetrievedVersionedModel, BaseModel]),
   "IRetrievedProfile" as const
 );
 
