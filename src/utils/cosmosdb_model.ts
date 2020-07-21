@@ -175,6 +175,7 @@ export abstract class CosmosdbModel<
     partitionKey: string,
     options?: RequestOptions
   ): TaskEither<CosmosErrors, Option<TR>> {
+    // tslint:disable-next-line: no-dead-store
     const readItem = this.container.item(documentId, partitionKey).read;
     return tryCatch<CosmosErrors, PromiseType<ReturnType<typeof readItem>>>(
       () => this.container.item(documentId, partitionKey).read(options),
@@ -244,6 +245,7 @@ export abstract class CosmosdbModel<
     options?: FeedOptions
   ): TaskEither<CosmosErrors, Option<TR>> {
     this.container.items.query.bind(this.container.items);
+    // tslint:disable-next-line: no-dead-store
     const queryIterator = this.container.items.query<TR>(query, options)
       .fetchAll;
     return tryCatch<
