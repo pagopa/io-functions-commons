@@ -63,7 +63,6 @@ const createTest = createDatabase(cosmosDatabaseName)
   )
   .chain(container =>
     new ServiceModel(container).create({
-      id: "1",
       kind: "INewService",
       ...aService
     })
@@ -84,7 +83,6 @@ const upsertTest = createDatabase(cosmosDatabaseName)
   )
   .chain(container =>
     new ServiceModel(container).upsert({
-      id: "1",
       kind: "INewService",
       ...aService,
       serviceName: "anUpdatedServiceName" as NonEmptyString
