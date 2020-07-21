@@ -2,7 +2,8 @@ import * as t from "io-ts";
 
 import {
   CosmosdbModelVersioned,
-  VersionedModel
+  NewVersionedModel,
+  RetrievedVersionedModel
 } from "../utils/cosmosdb_model_versioned";
 
 import { Option } from "fp-ts/lib/Option";
@@ -101,14 +102,14 @@ export const Service = t.intersection([ServiceR, ServiceO], "Service");
 export type Service = t.TypeOf<typeof Service>;
 
 export const NewService = wrapWithKind(
-  t.intersection([Service, BaseModel]),
+  t.intersection([Service, NewVersionedModel]),
   "INewService" as const
 );
 
 export type NewService = t.TypeOf<typeof NewService>;
 
 export const RetrievedService = wrapWithKind(
-  t.intersection([Service, VersionedModel, BaseModel]),
+  t.intersection([Service, RetrievedVersionedModel, BaseModel]),
   "IRetrievedService" as const
 );
 

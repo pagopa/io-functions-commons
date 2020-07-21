@@ -4,7 +4,8 @@ import { tag } from "italia-ts-commons/lib/types";
 
 import {
   CosmosdbModelVersioned,
-  VersionedModel
+  NewVersionedModel,
+  RetrievedVersionedModel
 } from "../utils/cosmosdb_model_versioned";
 
 import { Container } from "@azure/cosmos";
@@ -57,14 +58,14 @@ export const UserDataProcessing = t.intersection([
 export type UserDataProcessing = t.TypeOf<typeof UserDataProcessing>;
 
 export const NewUserDataProcessing = wrapWithKind(
-  UserDataProcessing,
+  t.intersection([UserDataProcessing, NewVersionedModel]),
   "INewUserDataProcessing" as const
 );
 
 export type NewUserDataProcessing = t.TypeOf<typeof NewUserDataProcessing>;
 
 export const RetrievedUserDataProcessing = wrapWithKind(
-  t.intersection([UserDataProcessing, VersionedModel, BaseModel]),
+  t.intersection([UserDataProcessing, RetrievedVersionedModel, BaseModel]),
   "IRetrievedUserDataProcessing" as const
 );
 

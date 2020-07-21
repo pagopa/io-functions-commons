@@ -20,13 +20,22 @@ export const ModelId = t.string; // FIXME: make it branded
 export type ModelId = t.TypeOf<typeof ModelId>;
 
 /**
- * A VersionedModel should track the version of the model
+ * A NewVersionedModel may provide an optional version for new items
  */
-export const VersionedModel = t.interface({
+export const NewVersionedModel = t.partial({
   version: NonNegativeInteger
 });
 
-export type VersionedModel = t.TypeOf<typeof VersionedModel>;
+export type NewVersionedModel = t.TypeOf<typeof NewVersionedModel>;
+
+/**
+ * A RetrievedVersionedModel should track the version of the model
+ */
+export const RetrievedVersionedModel = t.interface({
+  version: NonNegativeInteger
+});
+
+export type RetrievedVersionedModel = t.TypeOf<typeof RetrievedVersionedModel>;
 
 /**
  * Returns a string with a composite id that has the format:
@@ -57,8 +66,8 @@ const incVersion = (version: NonNegativeInteger) =>
  */
 export abstract class CosmosdbModelVersioned<
   T,
-  TN extends Readonly<T & Partial<VersionedModel>>,
-  TR extends Readonly<T & VersionedModel & BaseModel>
+  TN extends Readonly<T & Partial<NewVersionedModel>>,
+  TR extends Readonly<T & RetrievedVersionedModel & BaseModel>
 > extends CosmosdbModel<T, TN & BaseModel, TR> {
   constructor(
     container: Container,
@@ -93,7 +102,7 @@ export abstract class CosmosdbModelVersioned<
       ...o,
       id: versionedModelId,
       version
-    } as TN & VersionedModel & BaseModel;
+    } as TN & RetrievedVersionedModel & BaseModel;
 
     return super.create(newDocument, options);
   };
@@ -114,7 +123,7 @@ export abstract class CosmosdbModelVersioned<
         ...o,
         id: generateVersionedModelId(modelId, nextVersion),
         version: nextVersion
-      } as TN & VersionedModel & BaseModel)
+      } as TN & RetrievedVersionedModel & BaseModel)
     );
   };
 

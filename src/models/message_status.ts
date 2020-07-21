@@ -12,7 +12,8 @@ import { TaskEither } from "fp-ts/lib/TaskEither";
 import { BaseModel, CosmosErrors } from "../utils/cosmosdb_model";
 import {
   CosmosdbModelVersioned,
-  VersionedModel
+  NewVersionedModel,
+  RetrievedVersionedModel
 } from "../utils/cosmosdb_model_versioned";
 import { wrapWithKind } from "../utils/types";
 
@@ -31,14 +32,14 @@ export const MessageStatus = t.interface({
 export type MessageStatus = t.TypeOf<typeof MessageStatus>;
 
 export const NewMessageStatus = wrapWithKind(
-  MessageStatus,
+  t.intersection([MessageStatus, NewVersionedModel]),
   "INewMessageStatus" as const
 );
 
 export type NewMessageStatus = t.TypeOf<typeof NewMessageStatus>;
 
 export const RetrievedMessageStatus = wrapWithKind(
-  t.intersection([MessageStatus, VersionedModel, BaseModel]),
+  t.intersection([MessageStatus, RetrievedVersionedModel, BaseModel]),
   "IRetrievedMessageStatus" as const
 );
 
