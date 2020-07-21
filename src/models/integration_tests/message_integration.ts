@@ -87,6 +87,18 @@ const retrieveOneByQueryTest = (modelId: string) =>
       })
     );
 
+const findTest = (modelId: string, fiscalCode: FiscalCode) =>
+  createDatabase(cosmosDatabaseName)
+    .chain(db =>
+      createContainer(db, MESSAGE_COLLECTION_NAME, MESSAGE_MODEL_PK_FIELD)
+    )
+    .chain(container =>
+      new MessageModel(container, MESSAGE_CONTAINER_NAME).find(
+        modelId,
+        fiscalCode
+      )
+    );
+
 const upsertTest = createDatabase(cosmosDatabaseName)
   .chain(db =>
     createContainer(db, MESSAGE_COLLECTION_NAME, MESSAGE_MODEL_PK_FIELD)
@@ -113,8 +125,12 @@ export const test = () =>
       },
       _ => fromEither(right(_))
     )
+    .chain(_ => {
+      const retrieved = _ as RetrievedMessageWithoutContent;
+      return retrieveOneByQueryTest(retrieved.id);
+    })
     .chain(_ => upsertTest)
-    .chain(_ => retrieveOneByQueryTest(_.id))
+    .chain(_ => findTest(_.id, _.fiscalCode))
     .foldTaskEither<
       CosmosErrors,
       AsyncIterator<ReadonlyArray<t.Validation<RetrievedMessage>>>
