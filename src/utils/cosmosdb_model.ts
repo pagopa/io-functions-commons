@@ -12,6 +12,7 @@ import {
   Container,
   ErrorResponse,
   FeedOptions,
+  FeedResponse,
   ItemDefinition,
   ItemResponse,
   RequestOptions,
@@ -144,7 +145,7 @@ export abstract class CosmosdbModel<
     return wrapCreate<TN, TR>(
       this.newItemT,
       this.retrievedItemT,
-      this.container.items.create
+      this.container.items.create.bind(this.container.items)
     )(newDocument, options);
   }
 
@@ -160,7 +161,7 @@ export abstract class CosmosdbModel<
     return wrapCreate(
       this.newItemT,
       this.retrievedItemT,
-      this.container.items.upsert
+      this.container.items.upsert.bind(this.container.items)
     )(newDocument, options);
   }
 
@@ -175,9 +176,8 @@ export abstract class CosmosdbModel<
     partitionKey: string,
     options?: RequestOptions
   ): TaskEither<CosmosErrors, Option<TR>> {
-    const readItem = this.container.item(documentId, partitionKey).read;
-    return tryCatch<CosmosErrors, PromiseType<ReturnType<typeof readItem>>>(
-      () => readItem(options),
+    return tryCatch<CosmosErrors, ItemResponse<TR>>(
+      () => this.container.item(documentId, partitionKey).read(options),
       toCosmosErrorResponse
     )
       .map(_ => fromNullable(_.resource))
@@ -229,9 +229,8 @@ export abstract class CosmosdbModel<
   public getCollection(
     options?: FeedOptions
   ): TaskEither<CosmosErrors, ReadonlyArray<t.Validation<TR>>> {
-    const fetchAll = this.container.items.readAll(options).fetchAll;
-    return tryCatch<CosmosErrors, PromiseType<ReturnType<typeof fetchAll>>>(
-      fetchAll,
+    return tryCatch<CosmosErrors, FeedResponse<ItemDefinition>>(
+      () => this.container.items.readAll(options).fetchAll(),
       toCosmosErrorResponse
     ).map(_ => _.resources.map(this.retrievedItemT.decode));
   }
@@ -243,12 +242,10 @@ export abstract class CosmosdbModel<
     query: string | SqlQuerySpec,
     options?: FeedOptions
   ): TaskEither<CosmosErrors, Option<TR>> {
-    const queryIterator = this.container.items.query<TR>(query, options)
-      .fetchAll;
-    return tryCatch<
-      CosmosErrors,
-      PromiseType<ReturnType<typeof queryIterator>>
-    >(() => queryIterator(), toCosmosErrorResponse)
+    return tryCatch<CosmosErrors, FeedResponse<TR>>(
+      () => this.container.items.query<TR>(query, options).fetchAll(),
+      toCosmosErrorResponse
+    )
       .map(_ => fromNullable(_.resources))
       .chain(_ =>
         _.isSome()
