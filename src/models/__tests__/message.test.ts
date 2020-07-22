@@ -26,6 +26,10 @@ import { ServiceId } from "../../../generated/definitions/ServiceId";
 import { TimeToLiveSeconds } from "../../../generated/definitions/TimeToLiveSeconds";
 import * as azureStorageUtils from "../../utils/azure_storage";
 
+beforeEach(() => {
+  jest.resetAllMocks();
+});
+
 const MESSAGE_CONTAINER_NAME = "message-content" as NonEmptyString;
 
 const aMessageBodyMarkdown = "test".repeat(80) as MessageBodyMarkdown;
@@ -130,7 +134,7 @@ describe("findMessages", () => {
       .findMessages(aRetrievedMessageWithContent.fiscalCode)
       .run();
 
-    expect(asyncIteratorSpy).toHaveBeenCalledTimes(2);
+    expect(asyncIteratorSpy).toHaveBeenCalledTimes(1);
     expect(containerMock.items.query).toHaveBeenCalledTimes(1);
     expect(isRight(errorsOrResultIterator)).toBeTruthy();
     if (isRight(errorsOrResultIterator)) {

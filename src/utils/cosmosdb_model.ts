@@ -2,7 +2,12 @@
 
 import { right } from "fp-ts/lib/Either";
 import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
-import { fromEither, TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
+import {
+  fromEither,
+  fromLeft,
+  TaskEither,
+  tryCatch
+} from "fp-ts/lib/TaskEither";
 
 import * as t from "io-ts";
 
@@ -12,6 +17,7 @@ import {
   Container,
   ErrorResponse,
   FeedOptions,
+  FeedResponse,
   ItemDefinition,
   ItemResponse,
   RequestOptions,
@@ -175,22 +181,22 @@ export abstract class CosmosdbModel<
     partitionKey: string,
     options?: RequestOptions
   ): TaskEither<CosmosErrors, Option<TR>> {
-    // tslint:disable-next-line: no-dead-store
-    const readItem = this.container.item(documentId, partitionKey).read;
-    return tryCatch<CosmosErrors, PromiseType<ReturnType<typeof readItem>>>(
+    return tryCatch(
       () => this.container.item(documentId, partitionKey).read(options),
       toCosmosErrorResponse
     )
       .map(_ => fromNullable(_.resource))
-      .chain(_ =>
-        _.isSome()
-          ? fromEither(
-              this.retrievedItemT
-                .decode(_.value)
-                .map(some)
-                .mapLeft(CosmosDecodingError)
-            )
-          : fromEither(right(none))
+      .foldTaskEither<CosmosErrors, Option<TR>>(
+        err => fromLeft(err),
+        _ =>
+          _.isSome()
+            ? fromEither(
+                this.retrievedItemT
+                  .decode(_.value)
+                  .map(some)
+                  .mapLeft(CosmosDecodingError)
+              )
+            : fromEither(right(none))
       );
   }
 
@@ -244,29 +250,24 @@ export abstract class CosmosdbModel<
     query: string | SqlQuerySpec,
     options?: FeedOptions
   ): TaskEither<CosmosErrors, Option<TR>> {
-    this.container.items.query.bind(this.container.items);
-    // tslint:disable-next-line: no-dead-store
-    const queryIterator = this.container.items.query<TR>(query, options)
-      .fetchAll;
-    return tryCatch<
-      CosmosErrors,
-      PromiseType<ReturnType<typeof queryIterator>>
-    >(
+    return tryCatch(
       () => this.container.items.query<TR>(query, options).fetchAll(),
       toCosmosErrorResponse
     )
       .map(_ => fromNullable(_.resources))
-      .chain(_ =>
-        _.isSome()
-          ? _.value.length > 0
-            ? fromEither(
-                this.retrievedItemT
-                  .decode(_.value[0])
-                  .map(some)
-                  .mapLeft(CosmosDecodingError)
-              )
+      .foldTaskEither<CosmosErrors, Option<TR>>(
+        err => fromLeft(err),
+        _ =>
+          _.isSome()
+            ? _.value.length > 0
+              ? fromEither(
+                  this.retrievedItemT
+                    .decode(_.value[0])
+                    .map(some)
+                    .mapLeft(CosmosDecodingError)
+                )
+              : fromEither(right(none))
             : fromEither(right(none))
-          : fromEither(right(none))
       );
   }
 }
