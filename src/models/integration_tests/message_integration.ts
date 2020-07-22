@@ -57,6 +57,10 @@ const createTest = createDatabase(cosmosDatabaseName)
     new MessageModel(container, MESSAGE_CONTAINER_NAME).create(
       aNewMessageWithoutContent
     )
+  )
+  .foldTaskEither<CosmosErrors, RetrievedMessageWithoutContent>(
+    err => fromLeft(err),
+    _ => taskEither.of({ ..._ } as RetrievedMessageWithoutContent)
   );
 
 const findMessagesTest = (fiscalCode: FiscalCode) =>
@@ -112,7 +116,7 @@ const upsertTest = createDatabase(cosmosDatabaseName)
 
 export const test = () =>
   createTest
-    .foldTaskEither(
+    .foldTaskEither<CosmosErrors, RetrievedMessageWithoutContent>(
       err => {
         if (err.kind === "COSMOS_ERROR_RESPONSE" && err.error.code === 409) {
           console.log(
@@ -125,10 +129,7 @@ export const test = () =>
       },
       _ => fromEither(right(_))
     )
-    .chain(_ => {
-      const retrieved = _ as RetrievedMessageWithoutContent;
-      return retrieveOneByQueryTest(retrieved.id);
-    })
+    .chain(_ => retrieveOneByQueryTest(_.id))
     .chain(_ => upsertTest)
     .chain(_ => findTest(_.id, _.fiscalCode))
     .foldTaskEither<
