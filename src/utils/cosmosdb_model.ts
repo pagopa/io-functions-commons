@@ -2,12 +2,7 @@
 
 import { right } from "fp-ts/lib/Either";
 import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
-import {
-  fromEither,
-  fromLeft,
-  TaskEither,
-  tryCatch
-} from "fp-ts/lib/TaskEither";
+import { fromEither, TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 
 import * as t from "io-ts";
 
@@ -181,22 +176,20 @@ export abstract class CosmosdbModel<
     partitionKey: string,
     options?: RequestOptions
   ): TaskEither<CosmosErrors, Option<TR>> {
-    return tryCatch(
+    return tryCatch<CosmosErrors, ItemResponse<TR>>(
       () => this.container.item(documentId, partitionKey).read(options),
       toCosmosErrorResponse
     )
       .map(_ => fromNullable(_.resource))
-      .foldTaskEither<CosmosErrors, Option<TR>>(
-        err => fromLeft(err),
-        _ =>
-          _.isSome()
-            ? fromEither(
-                this.retrievedItemT
-                  .decode(_.value)
-                  .map(some)
-                  .mapLeft(CosmosDecodingError)
-              )
-            : fromEither(right(none))
+      .chain(_ =>
+        _.isSome()
+          ? fromEither(
+              this.retrievedItemT
+                .decode(_.value)
+                .map(some)
+                .mapLeft(CosmosDecodingError)
+            )
+          : fromEither(right(none))
       );
   }
 
@@ -236,9 +229,8 @@ export abstract class CosmosdbModel<
   public getCollection(
     options?: FeedOptions
   ): TaskEither<CosmosErrors, ReadonlyArray<t.Validation<TR>>> {
-    const fetchAll = this.container.items.readAll(options).fetchAll;
-    return tryCatch<CosmosErrors, PromiseType<ReturnType<typeof fetchAll>>>(
-      fetchAll,
+    return tryCatch<CosmosErrors, FeedResponse<ItemDefinition>>(
+      () => this.container.items.readAll(options).fetchAll(),
       toCosmosErrorResponse
     ).map(_ => _.resources.map(this.retrievedItemT.decode));
   }
@@ -250,24 +242,22 @@ export abstract class CosmosdbModel<
     query: string | SqlQuerySpec,
     options?: FeedOptions
   ): TaskEither<CosmosErrors, Option<TR>> {
-    return tryCatch(
+    return tryCatch<CosmosErrors, FeedResponse<TR>>(
       () => this.container.items.query<TR>(query, options).fetchAll(),
       toCosmosErrorResponse
     )
       .map(_ => fromNullable(_.resources))
-      .foldTaskEither<CosmosErrors, Option<TR>>(
-        err => fromLeft(err),
-        _ =>
-          _.isSome()
-            ? _.value.length > 0
-              ? fromEither(
-                  this.retrievedItemT
-                    .decode(_.value[0])
-                    .map(some)
-                    .mapLeft(CosmosDecodingError)
-                )
-              : fromEither(right(none))
+      .chain(_ =>
+        _.isSome()
+          ? _.value.length > 0
+            ? fromEither(
+                this.retrievedItemT
+                  .decode(_.value[0])
+                  .map(some)
+                  .mapLeft(CosmosDecodingError)
+              )
             : fromEither(right(none))
+          : fromEither(right(none))
       );
   }
 }
