@@ -2,9 +2,8 @@ import * as t from "io-ts";
 
 import { isLeft, isRight } from "fp-ts/lib/Either";
 
-import { Container, ResourceResponse } from "@azure/cosmos";
+import { Container, ErrorResponse, ResourceResponse } from "@azure/cosmos";
 
-import { fromNullable, isNone } from "fp-ts/lib/Option";
 import { BaseModel, CosmosdbModel, ResourceT } from "../cosmosdb_model";
 
 beforeEach(() => {
@@ -54,6 +53,10 @@ export const someMetadata = {
   _ts: 1
 };
 
+const errorResponse: ErrorResponse = new Error();
+// tslint:disable-next-line: no-object-mutation
+errorResponse.code = 500;
+
 describe("create", () => {
   it("should create a document", async () => {
     containerMock.items.create.mockResolvedValueOnce(
@@ -82,17 +85,14 @@ describe("create", () => {
   });
 
   it("should fail on query error", async () => {
-    containerMock.items.create.mockRejectedValueOnce({ code: 500 });
+    containerMock.items.create.mockRejectedValueOnce(errorResponse);
     const model = new MyModel(container);
 
     const result = await model.create(aDocument).run();
     expect(isLeft(result));
     if (isLeft(result)) {
       expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");
-      if (
-        result.value.kind === "COSMOS_ERROR_RESPONSE" &&
-        fromNullable(result.value.error.code).isSome()
-      ) {
+      if (result.value.kind === "COSMOS_ERROR_RESPONSE") {
         expect(result.value.error.code).toBe(500);
       }
     }
@@ -121,17 +121,14 @@ describe("upsert", () => {
   });
 
   it("should fail on query error", async () => {
-    containerMock.items.upsert.mockRejectedValueOnce({ code: 500 });
+    containerMock.items.upsert.mockRejectedValueOnce(errorResponse);
     const model = new MyModel(container);
 
     const result = await model.upsert(aDocument).run();
     expect(isLeft(result));
     if (isLeft(result)) {
       expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");
-      if (
-        result.value.kind === "COSMOS_ERROR_RESPONSE" &&
-        fromNullable(result.value.error.code).isSome()
-      ) {
+      if (result.value.kind === "COSMOS_ERROR_RESPONSE") {
         expect(result.value.error.code).toBe(500);
       }
     }
@@ -220,7 +217,7 @@ describe("find", () => {
   it("should return the query error", async () => {
     readMock.mockRejectedValueOnce(
       // TODO: check whether this is what the client actually returns
-      { code: 500 }
+      errorResponse
     );
     containerMock.item.mockReturnValue({ read: readMock });
     const model = new MyModel(container);
@@ -228,10 +225,7 @@ describe("find", () => {
     expect(isLeft(result));
     if (isLeft(result)) {
       expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");
-      if (
-        result.value.kind === "COSMOS_ERROR_RESPONSE" &&
-        fromNullable(result.value.error.code).isSome()
-      ) {
+      if (result.value.kind === "COSMOS_ERROR_RESPONSE") {
         expect(result.value.error.code).toBe(500);
       }
     }
