@@ -53,6 +53,8 @@ export const someMetadata = {
   _ts: 1
 };
 
+const testPartition = "test-partition";
+
 const errorResponse: ErrorResponse = new Error();
 // tslint:disable-next-line: no-object-mutation
 errorResponse.code = 500;
@@ -185,11 +187,8 @@ describe("find", () => {
     );
     containerMock.item.mockReturnValue({ read: readMock });
     const model = new MyModel(container);
-    const result = await model.find("test-id-1", "test-partition").run();
-    expect(containerMock.item).toHaveBeenCalledWith(
-      "test-id-1",
-      "test-partition"
-    );
+    const result = await model.find("test-id-1", testPartition).run();
+    expect(containerMock.item).toHaveBeenCalledWith("test-id-1", testPartition);
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
       expect(result.value.isSome()).toBeTruthy();
@@ -207,7 +206,7 @@ describe("find", () => {
     );
     containerMock.item.mockReturnValue({ read: readMock });
     const model = new MyModel(container);
-    const result = await model.find("test-id-1", "test-partition").run();
+    const result = await model.find("test-id-1", testPartition).run();
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
       expect(result.value.isNone()).toBeTruthy();
@@ -221,7 +220,7 @@ describe("find", () => {
     );
     containerMock.item.mockReturnValue({ read: readMock });
     const model = new MyModel(container);
-    const result = await model.find("test-id-1", "test-partition").run();
+    const result = await model.find("test-id-1", testPartition).run();
     expect(isLeft(result));
     if (isLeft(result)) {
       expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");

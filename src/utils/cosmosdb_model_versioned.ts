@@ -145,7 +145,7 @@ export abstract class CosmosdbModelVersioned<
         }
       ],
       // Note: do not use ${collectionName} here as it may contain special characters
-      query: `SELECT TOP 1 * FROM m WHERE m.${this.modelIdKey} = @modelId ORDER BY m.version DESC`
+      query: `SELECT * FROM m WHERE m.${this.modelIdKey} = @modelId ORDER BY m.version DESC`
     };
     return super.findOneByQuery(q, {
       maxItemCount: 1,
