@@ -1,14 +1,14 @@
 import { BlobService } from "azure-storage";
 import { array } from "fp-ts/lib/Array";
 import {
-  Either,
   either,
-  isLeft,
-  left,
+  fromOption,
+  parseJSON,
   right,
+  toError,
   tryCatch2v
 } from "fp-ts/lib/Either";
-import { fromNullable, isNone, none, Option, some } from "fp-ts/lib/Option";
+import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
 import * as t from "io-ts";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
@@ -28,7 +28,9 @@ import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { Container, FeedOptions, SqlQuerySpec } from "@azure/cosmos";
 import {
   fromEither as fromEitherT,
+  fromLeft,
   TaskEither,
+  taskEither,
   tryCatch as tryCatchT
 } from "fp-ts/lib/TaskEither";
 import { ServiceId } from "../../generated/definitions/ServiceId";
@@ -210,9 +212,7 @@ export class MessageModel extends CosmosdbModel<
     fiscalCode: FiscalCode,
     messageId: string
   ): TaskEither<CosmosErrors, Option<RetrievedMessage>> {
-    const errorOrMaybeMessage = super.find(messageId, fiscalCode);
-
-    return errorOrMaybeMessage.map(maybeMessage =>
+    return this.find(messageId, fiscalCode).map(maybeMessage =>
       maybeMessage.filter(m => m.fiscalCode === fiscalCode)
     );
   }
@@ -280,21 +280,25 @@ export class MessageModel extends CosmosdbModel<
    * @param messageId The id of the message used to set the blob name
    * @param messageContent The content to store in the blob
    */
-  public async storeContentAsBlob(
+  public storeContentAsBlob(
     blobService: BlobService,
     messageId: string,
     messageContent: MessageContent
-  ): Promise<Either<Error, Option<BlobService.BlobResult>>> {
+  ): TaskEither<Error, Option<BlobService.BlobResult>> {
     // Set the blob name
     const blobName = blobIdFromMessageId(messageId);
 
     // Store message content in blob storage
-    return await upsertBlobFromObject<MessageContent>(
-      blobService,
-      this.containerName,
-      blobName,
-      messageContent
-    );
+    return tryCatchT(
+      () =>
+        upsertBlobFromObject<MessageContent>(
+          blobService,
+          this.containerName,
+          blobName,
+          messageContent
+        ),
+      toError
+    ).chain(fromEitherT);
   }
 
   /**
@@ -303,46 +307,47 @@ export class MessageModel extends CosmosdbModel<
    * @param blobService The azure.BlobService used to store the media
    * @param messageId The id of the message used to set the blob name
    */
-  public async getContentFromBlob(
+  public getContentFromBlob(
     blobService: BlobService,
     messageId: string
-  ): Promise<Either<Error, Option<MessageContent>>> {
+  ): TaskEither<Error, Option<MessageContent>> {
     const blobId = blobIdFromMessageId(messageId);
 
     // Retrieve blob content and deserialize
-    const maybeContentAsTextOrError = await getBlobAsText(
-      blobService,
-      this.containerName,
-      blobId
+    return (
+      tryCatchT(
+        () => getBlobAsText(blobService, this.containerName, blobId),
+        toError
+      )
+        .chain(fromEitherT)
+        .chain(maybeContentAsText =>
+          fromEitherT(
+            fromOption(
+              // Blob exists but the content is empty
+              new Error("Cannot get stored message content from blob")
+            )(maybeContentAsText)
+          )
+        )
+        // Try to decode the MessageContent
+        .chain(contentAsText =>
+          parseJSON(contentAsText, toError).fold(
+            _ => fromLeft(new Error(`Cannot parse content text into object`)),
+            _ => taskEither.of(_)
+          )
+        )
+        .chain(undecodedContent =>
+          MessageContent.decode(undecodedContent).fold(
+            errors =>
+              fromLeft(
+                new Error(
+                  `Cannot deserialize stored message content: ${readableReport(
+                    errors
+                  )}`
+                )
+              ),
+            (content: MessageContent) => taskEither.of(some(content))
+          )
+        )
     );
-
-    if (isLeft(maybeContentAsTextOrError)) {
-      return left<Error, Option<MessageContent>>(
-        maybeContentAsTextOrError.value
-      );
-    }
-
-    // Blob exists but the content is empty
-    const maybeContentAsText = maybeContentAsTextOrError.value;
-    if (isNone(maybeContentAsText)) {
-      return left<Error, Option<MessageContent>>(
-        new Error("Cannot get stored message content from blob")
-      );
-    }
-
-    const contentAsText = maybeContentAsText.value;
-
-    // Try to decode the MessageContent
-    const contentOrError = MessageContent.decode(JSON.parse(contentAsText));
-
-    if (isLeft(contentOrError)) {
-      const errors: string = readableReport(contentOrError.value);
-      return left<Error, Option<MessageContent>>(
-        new Error(`Cannot deserialize stored message content: ${errors}`)
-      );
-    }
-
-    const content = contentOrError.value;
-    return right<Error, Option<MessageContent>>(some(content));
   }
 }

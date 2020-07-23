@@ -241,11 +241,9 @@ describe("storeContentAsBlob", () => {
       .spyOn(azureStorageUtils, "upsertBlobFromObject")
       .mockReturnValueOnce(Promise.resolve(right(fromNullable(aBlobResult))));
 
-    const blob = await model.storeContentAsBlob(
-      blobServiceMock as any,
-      aMessageId,
-      aMessageContent
-    );
+    const blob = await model
+      .storeContentAsBlob(blobServiceMock as any, aMessageId, aMessageContent)
+      .run();
 
     expect(upsertBlobFromObjectSpy).toBeCalledWith(
       blobServiceMock,
@@ -275,10 +273,9 @@ describe("getContentFromBlob", () => {
         Promise.resolve(right(some(JSON.stringify(aMessageContent))))
       );
 
-    const errorOrMaybeMessageContent = await model.getContentFromBlob(
-      blobServiceMock as any,
-      aMessageId
-    );
+    const errorOrMaybeMessageContent = await model
+      .getContentFromBlob(blobServiceMock as any, aMessageId)
+      .run();
 
     expect(getBlobAsTextSpy).toBeCalledWith(
       blobServiceMock,
@@ -303,10 +300,9 @@ describe("getContentFromBlob", () => {
       .spyOn(azureStorageUtils, "getBlobAsText")
       .mockReturnValueOnce(Promise.resolve(left(err)));
 
-    const errorOrMaybeMessageContent = await model.getContentFromBlob(
-      blobServiceMock as any,
-      aMessageId
-    );
+    const errorOrMaybeMessageContent = await model
+      .getContentFromBlob(blobServiceMock as any, aMessageId)
+      .run();
 
     expect(isLeft(errorOrMaybeMessageContent)).toBeTruthy();
     expect(errorOrMaybeMessageContent.value).toEqual(err);
@@ -319,10 +315,9 @@ describe("getContentFromBlob", () => {
       .spyOn(azureStorageUtils, "getBlobAsText")
       .mockResolvedValueOnce(right(none));
 
-    const errorOrMaybeMessageContent = await model.getContentFromBlob(
-      blobServiceMock as any,
-      aMessageId
-    );
+    const errorOrMaybeMessageContent = await model
+      .getContentFromBlob(blobServiceMock as any, aMessageId)
+      .run();
 
     expect(isLeft(errorOrMaybeMessageContent)).toBeTruthy();
     expect(errorOrMaybeMessageContent.value).toBeInstanceOf(Error);
@@ -338,10 +333,9 @@ describe("getContentFromBlob", () => {
         right(some(JSON.stringify(invalidMessageContent)))
       );
 
-    const errorOrMaybeMessageContent = await model.getContentFromBlob(
-      blobServiceMock as any,
-      aMessageId
-    );
+    const errorOrMaybeMessageContent = await model
+      .getContentFromBlob(blobServiceMock as any, aMessageId)
+      .run();
 
     expect(isLeft(errorOrMaybeMessageContent)).toBeTruthy();
     expect(errorOrMaybeMessageContent.value).toBeInstanceOf(Error);
