@@ -2,8 +2,8 @@ import * as t from "io-ts";
 
 import winston = require("winston");
 
-import { Either, isRight, left, right } from "fp-ts/lib/Either";
-import { fromEither, isNone, none, Option, some } from "fp-ts/lib/Option";
+import { toError } from "fp-ts/lib/Either";
+import { fromEither, none, Option, some } from "fp-ts/lib/Option";
 
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 
@@ -11,6 +11,8 @@ import { RetrievedMessage } from "../models/message";
 import { NotificationModel } from "../models/notification";
 import { NotificationStatusModel } from "../models/notification_status";
 
+import { array } from "fp-ts/lib/Array";
+import { taskEither, TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 import { CreatedMessageWithoutContent } from "../../generated/definitions/CreatedMessageWithoutContent";
 import { NotificationChannelEnum } from "../../generated/definitions/NotificationChannel";
 import { NotificationChannelStatusValueEnum } from "../../generated/definitions/NotificationChannelStatusValue";
@@ -51,61 +53,64 @@ export async function getChannelStatus(
  * @returns an object with channels as keys and statuses as values
  *          ie. { email: "SENT" }
  */
-export async function getMessageNotificationStatuses(
+export function getMessageNotificationStatuses(
   notificationModel: NotificationModel,
   notificationStatusModel: NotificationStatusModel,
   messageId: NonEmptyString
-): Promise<Either<Error, Option<NotificationStatusHolder>>> {
-  const errorOrMaybeNotification = await notificationModel
+): TaskEither<Error, Option<NotificationStatusHolder>> {
+  return notificationModel
     .findNotificationForMessage(messageId)
-    .run();
-  if (isRight(errorOrMaybeNotification)) {
-    // It may happen that the notification object is not yet created in the database
-    // due to some latency, so it's better to not fail here but return an empty object
-    const maybeNotification = errorOrMaybeNotification.value;
-    if (isNone(maybeNotification)) {
-      winston.debug(
-        `getMessageNotificationStatuses|Notification not found|messageId=${messageId}`
+    .mapLeft(error => {
+      // temporary log COSMOS_ERROR_RESPONSE kind due to body unavailability
+      winston.error(`getMessageNotificationStatuses|Query error|${error.kind}`);
+      return new Error(`Error querying for NotificationStatus`);
+    })
+    .chain(maybeNotification => {
+      // It may happen that the notification object is not yet created in the database
+      // due to some latency, so it's better to not fail here but return an empty object
+      return maybeNotification.foldL(
+        () => {
+          winston.debug(
+            `getMessageNotificationStatuses|Notification not found|messageId=${messageId}`
+          );
+          return taskEither.of<Error, Option<NotificationStatusHolder>>(none);
+        },
+        notification => {
+          return array
+            .sequence(taskEither)(
+              // collect the statuses of all channels
+              Object.keys(NotificationChannelEnum)
+                .map(k => NotificationChannelEnum[k as NotificationChannelEnum])
+                .map(channel =>
+                  tryCatch(
+                    () =>
+                      getChannelStatus(
+                        notificationStatusModel,
+                        // tslint:disable-next-line: no-useless-cast
+                        notification.id as NonEmptyString,
+                        channel
+                      ),
+                    toError
+                  ).map(status => ({ channel, status }))
+                )
+            )
+            .map(channelStatuses =>
+              // reduce the statuses in one response
+              channelStatuses.reduce<NotificationStatusHolder>(
+                (a, s) =>
+                  s.status
+                    ? {
+                        ...a,
+                        [s.channel.toLowerCase()]: s.status
+                      }
+                    : a,
+                {}
+              )
+            )
+            .map(response => some(response));
+        }
       );
-      return right<Error, Option<NotificationStatusHolder>>(none);
-    }
-    const notification = maybeNotification.value;
-
-    // collect the statuses of all channels
-    const channelStatusesPromises = Object.keys(NotificationChannelEnum)
-      .map(k => NotificationChannelEnum[k as NotificationChannelEnum])
-      .map(async channel => ({
-        channel,
-        status: await getChannelStatus(
-          notificationStatusModel,
-          // tslint:disable-next-line: no-useless-cast
-          notification.id as NonEmptyString,
-          channel
-        )
-      }));
-    const channelStatuses = await Promise.all(channelStatusesPromises);
-
-    // reduce the statuses in one response
-    const response = channelStatuses.reduce<NotificationStatusHolder>(
-      (a, s) =>
-        s.status
-          ? {
-              ...a,
-              [s.channel.toLowerCase()]: s.status
-            }
-          : a,
-      {}
-    );
-    return right<Error, Option<NotificationStatusHolder>>(some(response));
-  } else {
-    // temporary log COSMOS_ERROR_RESPONSE kind due to body unavailability
-    winston.error(
-      `getMessageNotificationStatuses|Query error|${errorOrMaybeNotification.value.kind}`
-    );
-    return left<Error, Option<NotificationStatusHolder>>(
-      new Error(`Error querying for NotificationStatus`)
-    );
-  }
+    });
 }
 
 /**
