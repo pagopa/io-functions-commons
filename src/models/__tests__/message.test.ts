@@ -1,11 +1,9 @@
 /* tslint:disable:no-any */
 
 import * as azureStorage from "azure-storage";
-import * as DocumentDb from "documentdb";
 import { isLeft, isRight, left, right } from "fp-ts/lib/Either";
 import { isSome } from "fp-ts/lib/Option";
-
-import * as DocumentDbUtils from "../../utils/documentdb";
+import * as asyncI from "../../utils/async";
 
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 import { MessageBodyMarkdown } from "../../../generated/definitions/MessageBodyMarkdown";
@@ -16,25 +14,23 @@ import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { fromNullable, none, some } from "fp-ts/lib/Option";
 
 import {
-  MESSAGE_COLLECTION_NAME,
   MessageModel,
   NewMessageWithContent,
   RetrievedMessageWithContent
 } from "../message";
 
 jest.mock("../../utils/azure_storage");
+import { Container, ResourceResponse } from "@azure/cosmos";
 import { MessageSubject } from "../../../generated/definitions/MessageSubject";
 import { ServiceId } from "../../../generated/definitions/ServiceId";
 import { TimeToLiveSeconds } from "../../../generated/definitions/TimeToLiveSeconds";
 import * as azureStorageUtils from "../../utils/azure_storage";
 
-const MESSAGE_CONTAINER_NAME = "message-content" as NonEmptyString;
+beforeEach(() => {
+  jest.resetAllMocks();
+});
 
-const aDatabaseUri = DocumentDbUtils.getDatabaseUri("mockdb" as NonEmptyString);
-const aMessagesCollectionUrl = DocumentDbUtils.getCollectionUri(
-  aDatabaseUri,
-  MESSAGE_COLLECTION_NAME
-);
+const MESSAGE_CONTAINER_NAME = "message-content" as NonEmptyString;
 
 const aMessageBodyMarkdown = "test".repeat(80) as MessageBodyMarkdown;
 
@@ -62,252 +58,145 @@ const aNewMessageWithContent: NewMessageWithContent = {
   kind: "INewMessageWithContent"
 };
 
-const aSerializedRetrievedMessageWithContent = {
-  ...aSerializedNewMessageWithContent,
-  _self: "xyz",
-  _ts: 123,
-  kind: "IRetrievedMessageWithContent"
-};
-
 const aRetrievedMessageWithContent: RetrievedMessageWithContent = {
   ...aNewMessageWithContent,
-  _self: "xyz",
-  _ts: 123,
   kind: "IRetrievedMessageWithContent"
 };
-
-describe("createMessage", () => {
-  it("should create a new Message", async () => {
-    const clientMock = {
-      createDocument: jest.fn((_, __, ___, cb) =>
-        cb(undefined, aSerializedRetrievedMessageWithContent)
-      )
-    };
-
-    const model = new MessageModel(
-      (clientMock as any) as DocumentDb.DocumentClient,
-      aMessagesCollectionUrl,
-      MESSAGE_CONTAINER_NAME
-    );
-
-    const result = await model.create(
-      aNewMessageWithContent,
-      aNewMessageWithContent.fiscalCode
-    );
-
-    expect(clientMock.createDocument.mock.calls[0][1].kind).toBeUndefined();
-
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value).toEqual({
-        ...aRetrievedMessageWithContent,
-        createdAt: expect.any(Date)
-      });
-    }
-  });
-
-  it("should return the error if creation fails", async () => {
-    const clientMock = {
-      createDocument: jest.fn((_, __, ___, cb) => cb("error"))
-    };
-
-    const model = new MessageModel(
-      (clientMock as any) as DocumentDb.DocumentClient,
-      aMessagesCollectionUrl,
-      MESSAGE_CONTAINER_NAME
-    );
-
-    const result = await model.create(
-      aNewMessageWithContent,
-      aNewMessageWithContent.fiscalCode
-    );
-
-    expect(clientMock.createDocument).toHaveBeenCalledTimes(1);
-    expect(clientMock.createDocument.mock.calls[0][0]).toEqual(
-      "dbs/mockdb/colls/messages"
-    );
-    expect(clientMock.createDocument.mock.calls[0][1]).toEqual({
-      ...aNewMessageWithContent,
-      kind: undefined
-    });
-    expect(clientMock.createDocument.mock.calls[0][2]).toEqual({
-      partitionKey: aNewMessageWithContent.fiscalCode
-    });
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value).toEqual("error");
-    }
-  });
-});
-
-describe("find", () => {
-  it("should return an existing message", async () => {
-    const clientMock = {
-      readDocument: jest.fn((_, __, cb) =>
-        cb(undefined, aSerializedRetrievedMessageWithContent)
-      )
-    };
-
-    const model = new MessageModel(
-      (clientMock as any) as DocumentDb.DocumentClient,
-      aMessagesCollectionUrl,
-      MESSAGE_CONTAINER_NAME
-    );
-
-    const result = await model.find(
-      aRetrievedMessageWithContent.id,
-      aRetrievedMessageWithContent.fiscalCode
-    );
-
-    expect(clientMock.readDocument).toHaveBeenCalledTimes(1);
-    expect(clientMock.readDocument.mock.calls[0][0]).toEqual(
-      "dbs/mockdb/colls/messages/docs/A_MESSAGE_ID"
-    );
-    expect(clientMock.readDocument.mock.calls[0][1]).toEqual({
-      partitionKey: aRetrievedMessageWithContent.fiscalCode
-    });
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isSome()).toBeTruthy();
-      expect(result.value.toUndefined()).toEqual({
-        ...aRetrievedMessageWithContent,
-        createdAt: expect.any(Date)
-      });
-    }
-  });
-
-  it("should return the error", async () => {
-    const clientMock = {
-      readDocument: jest.fn((_, __, cb) => cb({ code: 500 }))
-    };
-
-    const model = new MessageModel(
-      (clientMock as any) as DocumentDb.DocumentClient,
-      aMessagesCollectionUrl,
-      MESSAGE_CONTAINER_NAME
-    );
-
-    const result = await model.find(
-      aRetrievedMessageWithContent.id,
-      aRetrievedMessageWithContent.fiscalCode
-    );
-
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value).toEqual({ code: 500 });
-    }
-  });
-
-  it("should return an empty value on 404 error", async () => {
-    const clientMock = {
-      readDocument: jest.fn((_, __, cb) => cb({ code: 404 }))
-    };
-
-    const model = new MessageModel(
-      (clientMock as any) as DocumentDb.DocumentClient,
-      aMessagesCollectionUrl,
-      MESSAGE_CONTAINER_NAME
-    );
-
-    const result = await model.find(
-      aRetrievedMessageWithContent.id,
-      aRetrievedMessageWithContent.fiscalCode
-    );
-
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isNone()).toBeTruthy();
-    }
-  });
-});
 
 describe("findMessages", () => {
   it("should return the messages for a fiscal code", async () => {
     const iteratorMock = {
-      executeNext: jest.fn(cb => cb(undefined, ["result"], undefined))
+      next: jest.fn(() =>
+        Promise.resolve(right([right(aRetrievedMessageWithContent)]))
+      )
     };
 
-    const clientMock = {
-      queryDocuments: jest.fn(() => iteratorMock)
+    const asyncIteratorSpy = jest
+      .spyOn(asyncI, "mapAsyncIterable")
+      .mockImplementation(() => {
+        return {
+          [Symbol.asyncIterator]: () => iteratorMock
+        };
+      });
+
+    const containerMock = ({
+      items: {
+        query: jest.fn(() => ({
+          getAsyncIterator: jest.fn(() => iteratorMock)
+        }))
+      }
+    } as unknown) as Container;
+
+    const model = new MessageModel(containerMock, MESSAGE_CONTAINER_NAME);
+
+    const errorsOrResultIterator = await model
+      .findMessages(aRetrievedMessageWithContent.fiscalCode)
+      .run();
+
+    expect(asyncIteratorSpy).toHaveBeenCalledTimes(1);
+    expect(containerMock.items.query).toHaveBeenCalledTimes(1);
+    expect(isRight(errorsOrResultIterator)).toBeTruthy();
+    if (isRight(errorsOrResultIterator)) {
+      const result = await errorsOrResultIterator.value.next();
+      expect(isRight(result.value[0])).toBeTruthy();
+      if (isRight(result.value[0])) {
+        const item = result.value[0].value;
+        expect(item).toEqual(aRetrievedMessageWithContent);
+      }
+    }
+  });
+
+  it("should return an empty iterator if fiscalCode doesn't match", async () => {
+    const iteratorMock = {
+      next: jest.fn(() => Promise.resolve(right([])))
     };
 
-    const model = new MessageModel(
-      (clientMock as any) as DocumentDb.DocumentClient,
-      aMessagesCollectionUrl,
-      MESSAGE_CONTAINER_NAME
-    );
+    const asyncIteratorSpy = jest
+      .spyOn(asyncI, "mapAsyncIterable")
+      // tslint:disable-next-line: no-identical-functions
+      .mockImplementation(() => {
+        return {
+          [Symbol.asyncIterator]: () => iteratorMock
+        };
+      });
 
-    const resultIterator = model.findMessages(
-      aRetrievedMessageWithContent.fiscalCode
-    );
+    const containerMock = ({
+      items: {
+        query: jest.fn(() => ({
+          getAsyncIterator: jest.fn(() => iteratorMock)
+        }))
+      }
+    } as unknown) as Container;
 
-    expect(clientMock.queryDocuments).toHaveBeenCalledTimes(1);
+    const model = new MessageModel(containerMock, MESSAGE_CONTAINER_NAME);
 
-    const result = await resultIterator.executeNext();
+    const errorsOrResultIterator = await model
+      .findMessages(aRetrievedMessageWithContent.fiscalCode)
+      .run();
 
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isSome()).toBeTruthy();
-      expect(result.value.toUndefined()).toEqual(["result"]);
+    expect(asyncIteratorSpy).toHaveBeenCalledTimes(1);
+    expect(containerMock.items.query).toHaveBeenCalledTimes(1);
+    expect(isRight(errorsOrResultIterator)).toBeTruthy();
+    if (isRight(errorsOrResultIterator)) {
+      const result = await errorsOrResultIterator.value.next();
+      expect(result.value).toMatchObject([]);
     }
   });
 });
 
 describe("findMessageForRecipient", () => {
   it("should return the messages if the recipient matches", async () => {
-    const clientMock = {
-      readDocument: jest.fn((_, __, cb) =>
-        cb(undefined, aSerializedRetrievedMessageWithContent)
+    const readMock = jest.fn().mockResolvedValueOnce(
+      new ResourceResponse(
+        {
+          ...aRetrievedMessageWithContent
+        },
+        {},
+        200,
+        200
       )
-    };
-
-    const model = new MessageModel(
-      (clientMock as any) as DocumentDb.DocumentClient,
-      aMessagesCollectionUrl,
-      MESSAGE_CONTAINER_NAME
     );
+    const containerMock = ({
+      item: jest.fn().mockReturnValue({ read: readMock })
+    } as unknown) as Container;
 
-    const result = await model.findMessageForRecipient(
-      aRetrievedMessageWithContent.fiscalCode,
-      aRetrievedMessageWithContent.id
-    );
+    const model = new MessageModel(containerMock, MESSAGE_CONTAINER_NAME);
 
-    expect(clientMock.readDocument).toHaveBeenCalledTimes(1);
-    expect(clientMock.readDocument.mock.calls[0][0]).toEqual(
-      "dbs/mockdb/colls/messages/docs/A_MESSAGE_ID"
-    );
-    expect(clientMock.readDocument.mock.calls[0][1]).toEqual({
-      partitionKey: aRetrievedMessageWithContent.fiscalCode
-    });
+    const result = await model
+      .findMessageForRecipient(
+        aRetrievedMessageWithContent.fiscalCode,
+        aRetrievedMessageWithContent.id
+      )
+      .run();
+
+    expect(containerMock.item).toHaveBeenCalledTimes(1);
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
       expect(result.value.isSome()).toBeTruthy();
       expect(result.value.toUndefined()).toEqual({
-        ...aRetrievedMessageWithContent,
-        createdAt: expect.any(Date)
+        ...aRetrievedMessageWithContent
       });
     }
   });
 
   it("should return an empty value if the recipient doesn't match", async () => {
-    const clientMock = {
-      readDocument: jest.fn((_, __, cb) =>
-        cb(undefined, aSerializedRetrievedMessageWithContent)
+    const readMock = jest
+      .fn()
+      .mockResolvedValueOnce(new ResourceResponse(undefined, {}, 200, 200));
+    const containerMock = ({
+      item: jest.fn().mockReturnValue({ read: readMock })
+    } as unknown) as Container;
+
+    const model = new MessageModel(containerMock, MESSAGE_CONTAINER_NAME);
+
+    const result = await model
+      .findMessageForRecipient(
+        "FRLFRC73E04B157I" as FiscalCode,
+        aRetrievedMessageWithContent.id
       )
-    };
+      .run();
 
-    const model = new MessageModel(
-      (clientMock as any) as DocumentDb.DocumentClient,
-      aMessagesCollectionUrl,
-      MESSAGE_CONTAINER_NAME
-    );
-
-    const result = await model.findMessageForRecipient(
-      "FRLFRC73E04B157I" as FiscalCode,
-      aRetrievedMessageWithContent.id
-    );
-
-    expect(clientMock.readDocument).toHaveBeenCalledTimes(1);
+    expect(containerMock.item).toHaveBeenCalledTimes(1);
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
       expect(result.value.isNone()).toBeTruthy();
@@ -315,25 +204,24 @@ describe("findMessageForRecipient", () => {
   });
 
   it("should return an error", async () => {
-    const clientMock = {
-      readDocument: jest.fn((_, __, cb) => cb("error"))
-    };
+    const readMock = jest.fn().mockRejectedValueOnce({ code: 500 });
+    const containerMock = ({
+      item: jest.fn().mockReturnValue({ read: readMock })
+    } as unknown) as Container;
 
-    const model = new MessageModel(
-      (clientMock as any) as DocumentDb.DocumentClient,
-      aMessagesCollectionUrl,
-      MESSAGE_CONTAINER_NAME
-    );
+    const model = new MessageModel(containerMock, MESSAGE_CONTAINER_NAME);
 
-    const result = await model.findMessageForRecipient(
-      "FRLFRC73E04B157I" as FiscalCode,
-      aRetrievedMessageWithContent.id
-    );
+    const result = await model
+      .findMessageForRecipient(
+        "FRLFRC73E04B157I" as FiscalCode,
+        aRetrievedMessageWithContent.id
+      )
+      .run();
 
-    expect(clientMock.readDocument).toHaveBeenCalledTimes(1);
+    expect(containerMock.item).toHaveBeenCalledTimes(1);
     expect(isLeft(result)).toBeTruthy();
     if (isLeft(result)) {
-      expect(result.value).toBe("error");
+      expect(result.value.kind).toEqual("COSMOS_ERROR_RESPONSE");
     }
   });
 });
@@ -346,22 +234,16 @@ describe("storeContentAsBlob", () => {
   it("should save the message content in a blob", async () => {
     const blobServiceMock = {};
 
-    const clientMock = {};
-    const model = new MessageModel(
-      (clientMock as any) as DocumentDb.DocumentClient,
-      aMessagesCollectionUrl,
-      MESSAGE_CONTAINER_NAME
-    );
+    const containerMock = ({} as unknown) as Container;
+    const model = new MessageModel(containerMock, MESSAGE_CONTAINER_NAME);
 
     const upsertBlobFromObjectSpy = jest
       .spyOn(azureStorageUtils, "upsertBlobFromObject")
       .mockReturnValueOnce(Promise.resolve(right(fromNullable(aBlobResult))));
 
-    const blob = await model.storeContentAsBlob(
-      blobServiceMock as any,
-      aMessageId,
-      aMessageContent
-    );
+    const blob = await model
+      .storeContentAsBlob(blobServiceMock as any, aMessageId, aMessageContent)
+      .run();
 
     expect(upsertBlobFromObjectSpy).toBeCalledWith(
       blobServiceMock,
@@ -381,11 +263,8 @@ describe("storeContentAsBlob", () => {
 describe("getContentFromBlob", () => {
   const aMessageId = "MESSAGE_ID";
   const blobServiceMock = {};
-  const model = new MessageModel(
-    ({} as any) as DocumentDb.DocumentClient,
-    aMessagesCollectionUrl,
-    MESSAGE_CONTAINER_NAME
-  );
+  const containerMock = ({} as unknown) as Container;
+  const model = new MessageModel(containerMock, MESSAGE_CONTAINER_NAME);
 
   it("should get message content from stored blob", async () => {
     const getBlobAsTextSpy = jest
@@ -394,10 +273,9 @@ describe("getContentFromBlob", () => {
         Promise.resolve(right(some(JSON.stringify(aMessageContent))))
       );
 
-    const errorOrMaybeMessageContent = await model.getContentFromBlob(
-      blobServiceMock as any,
-      aMessageId
-    );
+    const errorOrMaybeMessageContent = await model
+      .getContentFromBlob(blobServiceMock as any, aMessageId)
+      .run();
 
     expect(getBlobAsTextSpy).toBeCalledWith(
       blobServiceMock,
@@ -422,10 +300,9 @@ describe("getContentFromBlob", () => {
       .spyOn(azureStorageUtils, "getBlobAsText")
       .mockReturnValueOnce(Promise.resolve(left(err)));
 
-    const errorOrMaybeMessageContent = await model.getContentFromBlob(
-      blobServiceMock as any,
-      aMessageId
-    );
+    const errorOrMaybeMessageContent = await model
+      .getContentFromBlob(blobServiceMock as any, aMessageId)
+      .run();
 
     expect(isLeft(errorOrMaybeMessageContent)).toBeTruthy();
     expect(errorOrMaybeMessageContent.value).toEqual(err);
@@ -438,10 +315,9 @@ describe("getContentFromBlob", () => {
       .spyOn(azureStorageUtils, "getBlobAsText")
       .mockResolvedValueOnce(right(none));
 
-    const errorOrMaybeMessageContent = await model.getContentFromBlob(
-      blobServiceMock as any,
-      aMessageId
-    );
+    const errorOrMaybeMessageContent = await model
+      .getContentFromBlob(blobServiceMock as any, aMessageId)
+      .run();
 
     expect(isLeft(errorOrMaybeMessageContent)).toBeTruthy();
     expect(errorOrMaybeMessageContent.value).toBeInstanceOf(Error);
@@ -457,10 +333,9 @@ describe("getContentFromBlob", () => {
         right(some(JSON.stringify(invalidMessageContent)))
       );
 
-    const errorOrMaybeMessageContent = await model.getContentFromBlob(
-      blobServiceMock as any,
-      aMessageId
-    );
+    const errorOrMaybeMessageContent = await model
+      .getContentFromBlob(blobServiceMock as any, aMessageId)
+      .run();
 
     expect(isLeft(errorOrMaybeMessageContent)).toBeTruthy();
     expect(errorOrMaybeMessageContent.value).toBeInstanceOf(Error);

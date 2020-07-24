@@ -3,7 +3,7 @@ import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { NotificationStatusId } from "../models/notification_status";
 import { UserDataProcessingId } from "../models/user_data_processing";
-import { ModelId } from "./documentdb_model_versioned";
+import { ModelId } from "./cosmosdb_model_versioned";
 
 /**
  * Converts a FiscalCode to a ModelId.
