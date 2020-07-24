@@ -1,23 +1,43 @@
 import { BlobService } from "azure-storage";
-import * as DocumentDb from "documentdb";
-import { Either, isLeft, left, right } from "fp-ts/lib/Either";
-import { isNone, Option, some } from "fp-ts/lib/Option";
+import { array } from "fp-ts/lib/Array";
+import {
+  either,
+  fromOption,
+  parseJSON,
+  right,
+  toError,
+  tryCatch2v
+} from "fp-ts/lib/Either";
+import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
 import * as t from "io-ts";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
-import { pick, tag } from "italia-ts-commons/lib/types";
-
-import * as DocumentDbUtils from "../utils/documentdb";
-import { DocumentDbModel } from "../utils/documentdb_model";
+import { PromiseType } from "italia-ts-commons/lib/types";
+import {
+  BaseModel,
+  CosmosdbModel,
+  CosmosDecodingError,
+  CosmosErrors,
+  toCosmosErrorResponse
+} from "../utils/cosmosdb_model";
 
 import { MessageContent } from "../../generated/definitions/MessageContent";
 
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 
+import { Container, FeedOptions, SqlQuerySpec } from "@azure/cosmos";
+import {
+  fromEither as fromEitherT,
+  fromLeft,
+  TaskEither,
+  taskEither,
+  tryCatch as tryCatchT
+} from "fp-ts/lib/TaskEither";
 import { ServiceId } from "../../generated/definitions/ServiceId";
 import { Timestamp } from "../../generated/definitions/Timestamp";
 import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds";
 import { getBlobAsText, upsertBlobFromObject } from "../utils/azure_storage";
+import { wrapWithKind } from "../utils/types";
 
 export const MESSAGE_COLLECTION_NAME = "messages";
 export const MESSAGE_MODEL_PK_FIELD = "fiscalCode";
@@ -93,29 +113,16 @@ export const Message = t.union([MessageWithoutContent, MessageWithContent]);
 
 export type Message = t.TypeOf<typeof Message>;
 
-/**
- * A (yet to be saved) Message with content
- */
-
-export interface INewMessageWithContentTag {
-  readonly kind: "INewMessageWithContent";
-}
-
-export const NewMessageWithContent = tag<INewMessageWithContentTag>()(
-  t.intersection([MessageWithContent, DocumentDbUtils.NewDocument])
+export const NewMessageWithContent = wrapWithKind(
+  t.intersection([MessageWithContent, BaseModel]),
+  "INewMessageWithContent" as const
 );
 
 export type NewMessageWithContent = t.TypeOf<typeof NewMessageWithContent>;
 
-/**
- * A (yet to be saved) Message without content
- */
-export interface INewMessageWithoutContentTag {
-  readonly kind: "INewMessageWithoutContent";
-}
-
-export const NewMessageWithoutContent = tag<INewMessageWithoutContentTag>()(
-  t.intersection([MessageWithoutContent, DocumentDbUtils.NewDocument])
+export const NewMessageWithoutContent = wrapWithKind(
+  t.intersection([MessageWithoutContent, BaseModel]),
+  "INewMessageWithoutContent" as const
 );
 
 export type NewMessageWithoutContent = t.TypeOf<
@@ -132,33 +139,19 @@ export const NewMessage = t.union([
 
 export type NewMessage = t.TypeOf<typeof NewMessage>;
 
-/**
- * A (previously saved) retrieved Message with content
- */
-
-export interface IRetrievedMessageWithContentTag {
-  readonly kind: "IRetrievedMessageWithContent";
-}
-
-export const RetrievedMessageWithContent = tag<
-  IRetrievedMessageWithContentTag
->()(t.intersection([MessageWithContent, DocumentDbUtils.RetrievedDocument]));
+export const RetrievedMessageWithContent = wrapWithKind(
+  t.intersection([MessageWithContent, BaseModel]),
+  "IRetrievedMessageWithContent" as const
+);
 
 export type RetrievedMessageWithContent = t.TypeOf<
   typeof RetrievedMessageWithContent
 >;
 
-/**
- * A (previously saved) retrieved Message without content
- */
-
-export interface IRetrievedMessageWithoutContentTag {
-  readonly kind: "IRetrievedMessageWithoutContent";
-}
-
-export const RetrievedMessageWithoutContent = tag<
-  IRetrievedMessageWithoutContentTag
->()(t.intersection([MessageWithoutContent, DocumentDbUtils.RetrievedDocument]));
+export const RetrievedMessageWithoutContent = wrapWithKind(
+  t.intersection([MessageWithoutContent, BaseModel]),
+  "IRetrievedMessageWithoutContent" as const
+);
 
 export type RetrievedMessageWithoutContent = t.TypeOf<
   typeof RetrievedMessageWithoutContent
@@ -185,27 +178,6 @@ export const RetrievedMessage = t.union([
 
 export type RetrievedMessage = t.TypeOf<typeof RetrievedMessage>;
 
-function toBaseType(o: RetrievedMessage): Message {
-  const props: ReadonlyArray<keyof Message> = [
-    "fiscalCode",
-    "senderServiceId",
-    "senderUserId",
-    "timeToLiveSeconds",
-    "createdAt"
-  ];
-  return RetrievedMessageWithContent.is(o)
-    ? pick(["content", ...props], o)
-    : pick(props, o);
-}
-
-function toRetrieved(result: DocumentDb.RetrievedDocument): RetrievedMessage {
-  return RetrievedMessage.decode(result).getOrElseL(errs => {
-    throw new Error(
-      "Retrieved result wasn't a RetrievedMessage: " + readableReport(errs)
-    );
-  });
-}
-
 function blobIdFromMessageId(messageId: string): string {
   return `${messageId}${MESSAGE_BLOB_STORAGE_SUFFIX}`;
 }
@@ -213,7 +185,7 @@ function blobIdFromMessageId(messageId: string): string {
 /**
  * A model for handling Messages
  */
-export class MessageModel extends DocumentDbModel<
+export class MessageModel extends CosmosdbModel<
   Message,
   NewMessage,
   RetrievedMessage
@@ -221,16 +193,13 @@ export class MessageModel extends DocumentDbModel<
   /**
    * Creates a new Message model
    *
-   * @param dbClient the DocumentDB client
-   * @param collectionUrl the collection URL
-   * @param containerName the name of the blob storage container to store message content in
+   * @param container the Cosmos container client
    */
   constructor(
-    dbClient: DocumentDb.DocumentClient,
-    collectionUrl: DocumentDbUtils.IDocumentDbCollectionUri,
+    container: Container,
     protected readonly containerName: NonEmptyString
   ) {
-    super(dbClient, collectionUrl, toBaseType, toRetrieved);
+    super(container, NewMessage, RetrievedMessage);
   }
 
   /**
@@ -239,13 +208,11 @@ export class MessageModel extends DocumentDbModel<
    * @param fiscalCode The fiscal code of the recipient
    * @param messageId The ID of the message
    */
-  public async findMessageForRecipient(
+  public findMessageForRecipient(
     fiscalCode: FiscalCode,
     messageId: string
-  ): Promise<Either<DocumentDb.QueryError, Option<RetrievedMessage>>> {
-    const errorOrMaybeMessage = await this.find(messageId, fiscalCode);
-
-    return errorOrMaybeMessage.map(maybeMessage =>
+  ): TaskEither<CosmosErrors, Option<RetrievedMessage>> {
+    return this.find(messageId, fiscalCode).map(maybeMessage =>
       maybeMessage.filter(m => m.fiscalCode === fiscalCode)
     );
   }
@@ -257,21 +224,53 @@ export class MessageModel extends DocumentDbModel<
    */
   public findMessages(
     fiscalCode: FiscalCode
-  ): DocumentDbUtils.IResultIterator<RetrievedMessageWithContent> {
-    return DocumentDbUtils.queryDocuments(
-      this.dbClient,
-      this.collectionUri,
-      {
-        parameters: [
-          {
-            name: "@fiscalCode",
-            value: fiscalCode
-          }
-        ],
-        query: `SELECT * FROM m WHERE m.${MESSAGE_MODEL_PK_FIELD} = @fiscalCode`
-      },
-      fiscalCode
-    );
+  ): TaskEither<
+    CosmosErrors,
+    AsyncIterator<ReadonlyArray<t.Validation<RetrievedMessage>>>
+  > {
+    const iterator = this.getQueryIterator({
+      parameters: [
+        {
+          name: "@fiscalCode",
+          value: fiscalCode
+        }
+      ],
+      query: `SELECT * FROM m WHERE m.${MESSAGE_MODEL_PK_FIELD} = @fiscalCode`
+    })[Symbol.asyncIterator]();
+
+    return fromEitherT(tryCatch2v(() => iterator, toCosmosErrorResponse));
+  }
+
+  /**
+   * @deprecated use getQueryIterator + asyncIterableToArray
+   */
+  public findAllByQuery(
+    query: string | SqlQuerySpec,
+    options?: FeedOptions
+  ): TaskEither<
+    CosmosErrors,
+    Option<ReadonlyArray<RetrievedMessageWithoutContent>>
+  > {
+    const fetchAll = this.container.items.query<RetrievedMessageWithoutContent>(
+      query,
+      options
+    ).fetchAll;
+    return tryCatchT<CosmosErrors, PromiseType<ReturnType<typeof fetchAll>>>(
+      () => fetchAll(),
+      toCosmosErrorResponse
+    )
+      .map(_ => fromNullable(_.resources))
+      .chain(_ =>
+        _.isSome()
+          ? fromEitherT(
+              array.sequence(either)(
+                _.value.map(RetrievedMessageWithoutContent.decode)
+              )
+            )
+              .map(some)
+              .mapLeft(CosmosDecodingError)
+          : fromEitherT(right(none))
+      );
   }
 
   /**
@@ -281,23 +280,25 @@ export class MessageModel extends DocumentDbModel<
    * @param messageId The id of the message used to set the blob name
    * @param messageContent The content to store in the blob
    */
-  public async storeContentAsBlob(
+  public storeContentAsBlob(
     blobService: BlobService,
     messageId: string,
     messageContent: MessageContent
-  ): Promise<
-    Either<Error | DocumentDb.QueryError, Option<BlobService.BlobResult>>
-  > {
+  ): TaskEither<Error, Option<BlobService.BlobResult>> {
     // Set the blob name
     const blobName = blobIdFromMessageId(messageId);
 
     // Store message content in blob storage
-    return await upsertBlobFromObject<MessageContent>(
-      blobService,
-      this.containerName,
-      blobName,
-      messageContent
-    );
+    return tryCatchT(
+      () =>
+        upsertBlobFromObject<MessageContent>(
+          blobService,
+          this.containerName,
+          blobName,
+          messageContent
+        ),
+      toError
+    ).chain(fromEitherT);
   }
 
   /**
@@ -306,46 +307,47 @@ export class MessageModel extends DocumentDbModel<
    * @param blobService The azure.BlobService used to store the media
    * @param messageId The id of the message used to set the blob name
    */
-  public async getContentFromBlob(
+  public getContentFromBlob(
     blobService: BlobService,
     messageId: string
-  ): Promise<Either<Error, Option<MessageContent>>> {
+  ): TaskEither<Error, Option<MessageContent>> {
     const blobId = blobIdFromMessageId(messageId);
 
     // Retrieve blob content and deserialize
-    const maybeContentAsTextOrError = await getBlobAsText(
-      blobService,
-      this.containerName,
-      blobId
+    return (
+      tryCatchT(
+        () => getBlobAsText(blobService, this.containerName, blobId),
+        toError
+      )
+        .chain(fromEitherT)
+        .chain(maybeContentAsText =>
+          fromEitherT(
+            fromOption(
+              // Blob exists but the content is empty
+              new Error("Cannot get stored message content from blob")
+            )(maybeContentAsText)
+          )
+        )
+        // Try to decode the MessageContent
+        .chain(contentAsText =>
+          parseJSON(contentAsText, toError).fold(
+            _ => fromLeft(new Error(`Cannot parse content text into object`)),
+            _ => taskEither.of(_)
+          )
+        )
+        .chain(undecodedContent =>
+          MessageContent.decode(undecodedContent).fold(
+            errors =>
+              fromLeft(
+                new Error(
+                  `Cannot deserialize stored message content: ${readableReport(
+                    errors
+                  )}`
+                )
+              ),
+            (content: MessageContent) => taskEither.of(some(content))
+          )
+        )
     );
-
-    if (isLeft(maybeContentAsTextOrError)) {
-      return left<Error, Option<MessageContent>>(
-        maybeContentAsTextOrError.value
-      );
-    }
-
-    // Blob exists but the content is empty
-    const maybeContentAsText = maybeContentAsTextOrError.value;
-    if (isNone(maybeContentAsText)) {
-      return left<Error, Option<MessageContent>>(
-        new Error("Cannot get stored message content from blob")
-      );
-    }
-
-    const contentAsText = maybeContentAsText.value;
-
-    // Try to decode the MessageContent
-    const contentOrError = MessageContent.decode(JSON.parse(contentAsText));
-
-    if (isLeft(contentOrError)) {
-      const errors: string = readableReport(contentOrError.value);
-      return left<Error, Option<MessageContent>>(
-        new Error(`Cannot deserialize stored message content: ${errors}`)
-      );
-    }
-
-    const content = contentOrError.value;
-    return right<Error, Option<MessageContent>>(some(content));
   }
 }
