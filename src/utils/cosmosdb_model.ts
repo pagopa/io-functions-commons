@@ -16,6 +16,7 @@ import {
   ItemDefinition,
   ItemResponse,
   RequestOptions,
+  Resource,
   SqlQuerySpec
 } from "@azure/cosmos";
 
@@ -31,6 +32,7 @@ export type BaseModel = t.TypeOf<typeof BaseModel>;
 
 // An io-ts definition of Cosmos Resource runtime type
 // IDs are enforced to be non-empty string, as we're sure they are alway valued when coming from db.
+// tslint:disable-next-line: no-unnecessary-cast
 export type ResourceT = t.TypeOf<typeof ResourceT>;
 export const ResourceT = t.intersection([
   t.interface({
@@ -40,7 +42,7 @@ export const ResourceT = t.intersection([
     _ts: t.number
   }),
   BaseModel
-]);
+]) as t.Type<Resource & { id: NonEmptyString }>; // this cast is needed to keep ResourceT in sync with Resource (try to remove a field from the decoder definition and you'll face an error)
 
 // An empty response from a Cosmos operation
 export const CosmosEmptyResponse = {
