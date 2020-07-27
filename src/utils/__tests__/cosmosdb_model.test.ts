@@ -4,6 +4,7 @@ import { isLeft, isRight } from "fp-ts/lib/Either";
 
 import { Container, ErrorResponse, ResourceResponse } from "@azure/cosmos";
 
+import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { BaseModel, CosmosdbModel, ResourceT } from "../cosmosdb_model";
 
 beforeEach(() => {
@@ -42,7 +43,7 @@ const containerMock = {
 const container = (containerMock as unknown) as Container;
 
 const aDocument = {
-  id: "test-id-1",
+  id: "test-id-1" as NonEmptyString,
   test: "test"
 };
 

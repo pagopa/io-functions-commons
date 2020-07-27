@@ -16,21 +16,22 @@ import {
   ItemDefinition,
   ItemResponse,
   RequestOptions,
-  Resource,
   SqlQuerySpec
 } from "@azure/cosmos";
 
+import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { mapAsyncIterable } from "./async";
 import { isDefined } from "./types";
 
 export const BaseModel = t.interface({
-  id: t.string // FIXME: should this be a NonEmptyString?
+  id: NonEmptyString
 });
 
 export type BaseModel = t.TypeOf<typeof BaseModel>;
 
 // An io-ts definition of Cosmos Resource runtime type
-// tslint:disable-next-line: no-useless-cast
+// IDs are enforced to be non-empty string, as we're sure they are alway valued when coming from db.
+export type ResourceT = t.TypeOf<typeof ResourceT>;
 export const ResourceT = t.intersection([
   t.interface({
     _etag: t.string,
@@ -39,7 +40,7 @@ export const ResourceT = t.intersection([
     _ts: t.number
   }),
   BaseModel
-]) as t.Type<Resource>;
+]);
 
 // An empty response from a Cosmos operation
 export const CosmosEmptyResponse = {
