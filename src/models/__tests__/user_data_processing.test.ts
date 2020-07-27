@@ -7,6 +7,7 @@ import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 
 import { Container, FeedResponse, ResourceResponse } from "@azure/cosmos";
+import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { UserDataProcessingChoiceEnum } from "../../../generated/definitions/UserDataProcessingChoice";
 import { UserDataProcessingStatusEnum } from "../../../generated/definitions/UserDataProcessingStatus";
 import {
@@ -30,7 +31,7 @@ const aRetrievedUserDataProcessing: RetrievedUserDataProcessing = {
   choice: aUserDataProcessingChoice,
   createdAt: aDate,
   fiscalCode: aFiscalCode,
-  id: aModelId,
+  id: (aModelId as unknown) as NonEmptyString,
   kind: "IRetrievedUserDataProcessing",
   status: aUserDataProcessingStatus,
   userDataProcessingId: aModelId,
