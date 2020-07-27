@@ -31,7 +31,7 @@ export const BaseModel = t.interface({
 export type BaseModel = t.TypeOf<typeof BaseModel>;
 
 // An io-ts definition of Cosmos Resource runtime type
-// IDs are enforced to be non-empty string, as we're sure they are alway valued when coming from db.
+// IDs are enforced to be non-empty string, as we're sure they are always valued when coming from db.
 export type ResourceT = t.TypeOf<typeof ResourceT>;
 // tslint:disable-next-line: no-useless-cast
 export const ResourceT = t.intersection([
