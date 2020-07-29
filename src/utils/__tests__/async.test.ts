@@ -1,5 +1,5 @@
-import { left, right } from "fp-ts/lib/Either";
-import { flattenAsyncIterator, mapEitherAsyncIterator } from "../async";
+import { left, right, isRight, Right } from "fp-ts/lib/Either";
+import { flattenAsyncIterator, filterAsyncIterator } from "../async";
 
 const mockNext = jest.fn();
 const mockAsyncIterator = {
@@ -48,7 +48,7 @@ describe("mapEitherAsyncIterator utils", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
-  it("should skip left values", async () => {
+  it("should filter values that match the predicate", async () => {
     const expectedRightValue = right(1);
     mockNext.mockImplementationOnce(async () => ({
       done: false,
@@ -62,19 +62,19 @@ describe("mapEitherAsyncIterator utils", () => {
       done: true,
       value: undefined
     }));
-    const mockMap = jest.fn().mockImplementation(_ => _);
-    const iter = mapEitherAsyncIterator(mockAsyncIterator, mockMap);
+    const iter = filterAsyncIterator<Right<Error, number>>(
+      mockAsyncIterator,
+      isRight
+    );
     expect(await iter.next()).toEqual({
       done: false,
-      value: expectedRightValue.value
+      value: expectedRightValue
     });
     expect(await iter.next()).toEqual({ done: true, value: undefined });
     expect(mockNext).toBeCalledTimes(3);
-    expect(mockMap).toBeCalledTimes(1);
-    expect(mockMap).toBeCalledWith(expectedRightValue.value);
   });
 
-  it("should skip all values if are all left", async () => {
+  it("should skip all values if don't match the predicate", async () => {
     const leftValue = left(new Error("Left value error"));
     mockNext.mockImplementationOnce(async () => ({
       done: false,
@@ -88,10 +88,11 @@ describe("mapEitherAsyncIterator utils", () => {
       done: true,
       value: undefined
     }));
-    const mockMap = jest.fn().mockImplementation(_ => _);
-    const iter = mapEitherAsyncIterator(mockAsyncIterator, mockMap);
+    const iter = filterAsyncIterator<Right<Error, number>>(
+      mockAsyncIterator,
+      isRight
+    );
     expect(await iter.next()).toEqual({ done: true, value: undefined });
     expect(mockNext).toBeCalledTimes(3);
-    expect(mockMap).toBeCalledTimes(0);
   });
 });

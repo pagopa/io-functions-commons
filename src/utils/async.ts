@@ -51,10 +51,10 @@ export async function asyncIterableToArray<T>(
   return asyncIteratorToArray(iter);
 }
 
-export function mapEitherAsyncIterator<E, T, V>(
-  iter: AsyncIterator<Either<E, T>, Either<E, T>>,
-  f: (t: T) => V
-): AsyncIterator<V> {
+export function filterAsyncIterator<T>(
+  iter: AsyncIterator<T>,
+  predicate: (t: T) => boolean
+): AsyncIterator<T> {
   return {
     next: async () => {
       while (true) {
@@ -62,8 +62,8 @@ export function mapEitherAsyncIterator<E, T, V>(
         if (done) {
           return { done, value: undefined };
         }
-        if (isRight(value)) {
-          return { done, value: f(value.value) };
+        if (predicate(value)) {
+          return { done, value };
         }
       }
     }
