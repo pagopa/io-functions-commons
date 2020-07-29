@@ -1,5 +1,3 @@
-import { Either, isRight } from "fp-ts/lib/Either";
-
 /**
  * Maps over an AsyncIterator
  */
