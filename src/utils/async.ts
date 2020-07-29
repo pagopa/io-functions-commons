@@ -79,14 +79,18 @@ export function flattenAsyncIterator<T>(
   let flattenArray: ReadonlyArray<T> = [];
   return {
     next: async () => {
-      if (flattenArray.length === index) {
-        const { done, value } = await iter.next();
-        if (done) {
-          return { done, value: undefined };
+      while (true) {
+        if (flattenArray.length === index) {
+          const { done, value } = await iter.next();
+          if (done) {
+            return { done, value: undefined };
+          }
+          flattenArray = value;
+          index = 0;
+          continue;
         }
-        flattenArray = [...flattenArray, ...value];
+        return { done: false, value: flattenArray[index++] };
       }
-      return { done: false, value: flattenArray[index++] };
     }
   };
 }

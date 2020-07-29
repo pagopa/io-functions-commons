@@ -1,5 +1,5 @@
-import { left, right, isRight, Right } from "fp-ts/lib/Either";
-import { flattenAsyncIterator, filterAsyncIterator } from "../async";
+import { isRight, left, right, Right } from "fp-ts/lib/Either";
+import { filterAsyncIterator, flattenAsyncIterator } from "../async";
 
 const mockNext = jest.fn();
 const mockAsyncIterator = {
@@ -41,6 +41,26 @@ describe("flattenAsyncIterator utils", () => {
     const iter = flattenAsyncIterator<number>(mockAsyncIterator);
     expect(await iter.next()).toEqual({ done: true, value: undefined });
     expect(mockNext).toBeCalledTimes(1);
+  });
+  it("should skip empty arrays", async () => {
+    mockNext.mockImplementationOnce(async () => ({
+      done: false,
+      value: firstArray
+    }));
+    mockNext.mockImplementationOnce(async () => ({
+      done: false,
+      value: []
+    }));
+    mockNext.mockImplementationOnce(async () => ({
+      done: true,
+      value: undefined
+    }));
+    const iter = flattenAsyncIterator<number>(mockAsyncIterator);
+    for (const item of firstArray) {
+      expect(await iter.next()).toEqual({ done: false, value: item });
+    }
+    expect(await iter.next()).toEqual({ done: true, value: undefined });
+    expect(mockNext).toBeCalledTimes(3);
   });
 });
 
