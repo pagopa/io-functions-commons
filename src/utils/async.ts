@@ -70,22 +70,23 @@ export function mapEitherAsyncIterator<E, T, V>(
   };
 }
 
-export async function flattenAsyncIterator<T>(
+export function flattenAsyncIterator<T>(
   iter: AsyncIterator<ReadonlyArray<T>>
-): Promise<AsyncIterator<T>> {
-  const array = await asyncIteratorToArray(iter);
-  const flattenArray = array.reduce((acc, item) => {
-    return acc.concat(item);
-  }, []);
+): AsyncIterator<T> {
   // tslint:disable-next-line: no-let
   let index = 0;
+  // tslint:disable-next-line: no-let
+  let flattenArray: ReadonlyArray<T> = [];
   return {
     next: async () => {
-      if (flattenArray.length !== index) {
-        return { done: false, value: flattenArray[index++] };
-      } else {
-        return { done: true, value: undefined };
+      if (flattenArray.length === index) {
+        const { done, value } = await iter.next();
+        if (done) {
+          return { done, value: undefined };
+        }
+        flattenArray = [...flattenArray, ...value];
       }
+      return { done: false, value: flattenArray[index++] };
     }
   };
 }
