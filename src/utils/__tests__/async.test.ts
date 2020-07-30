@@ -1,5 +1,9 @@
 import { isRight, left, right, Right } from "fp-ts/lib/Either";
-import { filterAsyncIterator, flattenAsyncIterator } from "../async";
+import {
+  filterAsyncIterator,
+  flattenAsyncIterator,
+  reduceAsyncIterator
+} from "../async";
 
 const mockNext = jest.fn();
 const mockAsyncIterator = {
@@ -114,5 +118,37 @@ describe("mapEitherAsyncIterator utils", () => {
     );
     expect(await iter.next()).toEqual({ done: true, value: undefined });
     expect(mockNext).toBeCalledTimes(3);
+  });
+});
+
+describe("reduceAsyncIterator", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should reduce the documents of the wrapped iterator", async () => {
+    mockNext.mockImplementationOnce(async () => ({
+      done: false,
+      value: ["1", "2"]
+    }));
+    mockNext.mockImplementationOnce(async () => ({
+      done: false,
+      value: ["3", "4"]
+    }));
+    mockNext.mockImplementationOnce(async () => ({
+      done: true,
+      value: undefined
+    }));
+
+    const iter = reduceAsyncIterator(
+      mockAsyncIterator,
+      (prev: string, cur: string) => prev + cur,
+      ""
+    );
+
+    const result1 = await iter.next();
+    expect(result1).toEqual({ done: false, value: "12" });
+    const result2 = await iter.next();
+    expect(result2).toEqual({ done: false, value: "34" });
+    expect(await iter.next()).toEqual({ done: true, value: undefined });
   });
 });

@@ -94,3 +94,29 @@ export function flattenAsyncIterator<T>(
   };
   return flattenAsyncIterable(iterable)[Symbol.asyncIterator]();
 }
+
+export function reduceAsyncIterable<A, B>(
+  iterable: AsyncIterable<ReadonlyArray<A>>,
+  reducer: (previousValue: B, currentValue: A) => B,
+  init: B
+): AsyncIterable<B> {
+  return {
+    async *[Symbol.asyncIterator](): AsyncIterator<B> {
+      // tslint:disable-next-line: await-promise
+      for await (const value of iterable) {
+        yield value.reduce<B>(reducer, init);
+      }
+    }
+  };
+}
+
+export function reduceAsyncIterator<A, B>(
+  i: AsyncIterator<ReadonlyArray<A>>,
+  reducer: (previousValue: B, currentValue: A) => B,
+  init: B
+): AsyncIterator<B> {
+  const iterable = {
+    [Symbol.asyncIterator]: () => i
+  };
+  return reduceAsyncIterable(iterable, reducer, init)[Symbol.asyncIterator]();
+}
