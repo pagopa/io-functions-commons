@@ -124,7 +124,9 @@ describe("createOrUpdateByNewOne", () => {
 
     const model = new UserDataProcessingModel(containerMock);
 
-    const result = await model.upsert(aNewUserDataProcessing).run();
+    const result = await model
+      .createOrUpdateByNewOne(aNewUserDataProcessing)
+      .run();
 
     expect(containerMock.items.create).toHaveBeenCalledTimes(1);
 

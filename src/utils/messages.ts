@@ -37,10 +37,10 @@ export async function getChannelStatus(
   const errorOrMaybeStatus = await notificationStatusModel
     .findOneNotificationStatusByNotificationChannel(notificationId, channel)
     .run();
-  const c = fromEither(errorOrMaybeStatus)
+  return fromEither(errorOrMaybeStatus)
     .chain(t.identity)
-    .map(o => o.status);
-  return c.toUndefined();
+    .map(o => o.status)
+    .toUndefined();
 }
 
 /**
