@@ -49,6 +49,13 @@ export async function asyncIterableToArray<T>(
   return asyncIteratorToArray(iter);
 }
 
+/**
+ * Create a new AsyncIterable providing only the values that satisfy the predicate function.
+ * The predicate function is also an optional Type Guard function if types T and K are different.
+ *
+ * @param iterable Original AsyncIterable
+ * @param predicate Predicate function
+ */
 export const filterAsyncIterable = <T, K = T>(
   iterable: AsyncIterable<T | K>,
   predicate: (value: T | K) => value is K
@@ -63,6 +70,13 @@ export const filterAsyncIterable = <T, K = T>(
   }
 });
 
+/**
+ * Create a new AsyncIterator providing only the values that satisfy the predicate function.
+ * The predicate function is also an optional Type Guard function if types T and K are different.
+ *
+ * @param iter Original AsyncIterator
+ * @param predicate Predicate function
+ */
 export function filterAsyncIterator<T, K = T>(
   iter: AsyncIterator<T | K>,
   predicate: (value: T | K) => value is K
@@ -73,6 +87,11 @@ export function filterAsyncIterator<T, K = T>(
   return filterAsyncIterable(iterable, predicate)[Symbol.asyncIterator]();
 }
 
+/**
+ * Create a new AsyncIterable which provide one by one the values ​​contained into the input AsyncIterable
+ *
+ * @param iterable Original AsyncIterable
+ */
 export const flattenAsyncIterable = <T>(
   iterable: AsyncIterable<ReadonlyArray<T>>
 ): AsyncIterable<T> => ({
@@ -86,6 +105,11 @@ export const flattenAsyncIterable = <T>(
   }
 });
 
+/**
+ * Create a new AsyncIterator which provide one by one the values ​​contained into the input AsyncIterator
+ *
+ * @param iter Original AsyncIterator
+ */
 export function flattenAsyncIterator<T>(
   iter: AsyncIterator<ReadonlyArray<T>>
 ): AsyncIterator<T> {
