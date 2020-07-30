@@ -53,6 +53,11 @@ export async function asyncIterableToArray<T>(
  * Create a new AsyncIterable providing only the values that satisfy the predicate function.
  * The predicate function is also an optional Type Guard function if types T and K are different.
  *
+ * Example:
+ * ```
+ * const i: AsyncIterable<Either<E, A>> = {} as AsyncIterable<Either<E, A>>;
+ * const f: AsyncIterable<Right<E, A>> = filterAsyncIterable<Either<E, A>, Right<E, A>>(i, isRight);
+ * ```
  * @param iterable Original AsyncIterable
  * @param predicate Predicate function
  */
@@ -74,6 +79,11 @@ export const filterAsyncIterable = <T, K = T>(
  * Create a new AsyncIterator providing only the values that satisfy the predicate function.
  * The predicate function is also an optional Type Guard function if types T and K are different.
  *
+ * Example:
+ * ```
+ * const i: AsyncIterator<Either<E, A>> = {} as AsyncIterator<Either<E, A>>;
+ * const newI: AsyncIterator<Right<E, A>> = filterAsyncIterator<Either<E, A>, Right<E, A>>(iterable, isRight);
+ * ```
  * @param iter Original AsyncIterator
  * @param predicate Predicate function
  */
