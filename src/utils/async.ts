@@ -88,7 +88,7 @@ export const flattenAsyncIterable = <T>(
 
 export function flattenAsyncIterator<T>(
   iter: AsyncIterator<ReadonlyArray<T>>
-): AsyncIterator<T, undefined> {
+): AsyncIterator<T> {
   const iterable = {
     [Symbol.asyncIterator]: () => iter
   };
