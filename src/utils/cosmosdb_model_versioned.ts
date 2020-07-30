@@ -1,4 +1,9 @@
-import { BaseModel, CosmosdbModel, CosmosErrors } from "./cosmosdb_model";
+import {
+  BaseModel,
+  CosmosdbModel,
+  CosmosErrors,
+  CosmosResource
+} from "./cosmosdb_model";
 
 import * as t from "io-ts";
 
@@ -31,9 +36,12 @@ export type NewVersionedModel = t.TypeOf<typeof NewVersionedModel>;
 /**
  * A RetrievedVersionedModel should track the version of the model
  */
-export const RetrievedVersionedModel = t.interface({
-  version: NonNegativeInteger
-});
+export const RetrievedVersionedModel = t.intersection([
+  CosmosResource,
+  t.interface({
+    version: NonNegativeInteger
+  })
+]);
 
 export type RetrievedVersionedModel = t.TypeOf<typeof RetrievedVersionedModel>;
 
@@ -67,7 +75,7 @@ const incVersion = (version: NonNegativeInteger) =>
 export abstract class CosmosdbModelVersioned<
   T,
   TN extends Readonly<T & Partial<NewVersionedModel>>,
-  TR extends Readonly<T & RetrievedVersionedModel & BaseModel>
+  TR extends Readonly<T & RetrievedVersionedModel>
 > extends CosmosdbModel<T, TN & BaseModel, TR> {
   constructor(
     container: Container,
@@ -102,7 +110,7 @@ export abstract class CosmosdbModelVersioned<
       ...o,
       id: versionedModelId,
       version
-    } as TN & RetrievedVersionedModel & BaseModel;
+    } as TN & RetrievedVersionedModel;
 
     return super.create(newDocument, options);
   };
@@ -123,7 +131,7 @@ export abstract class CosmosdbModelVersioned<
         ...o,
         id: generateVersionedModelId(modelId, nextVersion),
         version: nextVersion
-      } as TN & RetrievedVersionedModel & BaseModel)
+      } as TN & RetrievedVersionedModel)
     );
   };
 

@@ -59,6 +59,10 @@ const aNewMessageWithContent: NewMessageWithContent = {
 };
 
 const aRetrievedMessageWithContent: RetrievedMessageWithContent = {
+  _etag: "_etag",
+  _rid: "_rid",
+  _self: "_self",
+  _ts: 1,
   ...aNewMessageWithContent,
   kind: "IRetrievedMessageWithContent"
 };

@@ -28,6 +28,10 @@ const aModelId = makeUserDataProcessingId(
 const aDate = new Date();
 
 const aRetrievedUserDataProcessing: RetrievedUserDataProcessing = {
+  _etag: "_etag",
+  _rid: "_rid",
+  _self: "_self",
+  _ts: 1,
   choice: aUserDataProcessingChoice,
   createdAt: aDate,
   fiscalCode: aFiscalCode,
@@ -120,9 +124,7 @@ describe("createOrUpdateByNewOne", () => {
 
     const model = new UserDataProcessingModel(containerMock);
 
-    const result = await model
-      .createOrUpdateByNewOne(aUserDataProcessing)
-      .run();
+    const result = await model.upsert(aNewUserDataProcessing).run();
 
     expect(containerMock.items.create).toHaveBeenCalledTimes(1);
 

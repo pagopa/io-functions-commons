@@ -10,7 +10,8 @@ import * as t from "io-ts";
 import {
   BaseModel,
   CosmosdbModel,
-  CosmosErrors
+  CosmosErrors,
+  CosmosResource
 } from "../utils/cosmosdb_model";
 
 import { EmailAddress } from "../../generated/definitions/EmailAddress";
@@ -134,7 +135,7 @@ export function createNewNotification(
 }
 
 export const RetrievedNotification = wrapWithKind(
-  t.intersection([Notification, BaseModel]),
+  t.intersection([Notification, CosmosResource]),
   "IRetrievedNotification" as const
 );
 

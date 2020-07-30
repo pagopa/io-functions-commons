@@ -5,7 +5,7 @@ import { isLeft, isRight } from "fp-ts/lib/Either";
 import { Container, ErrorResponse, ResourceResponse } from "@azure/cosmos";
 
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
-import { BaseModel, CosmosdbModel, ResourceT } from "../cosmosdb_model";
+import { BaseModel, CosmosdbModel, CosmosResource } from "../cosmosdb_model";
 
 beforeEach(() => {
   jest.resetAllMocks();
@@ -19,7 +19,7 @@ type MyDocument = t.TypeOf<typeof MyDocument>;
 const NewMyDocument = t.intersection([MyDocument, BaseModel]);
 type NewMyDocument = t.TypeOf<typeof NewMyDocument>;
 
-const RetrievedMyDocument = t.intersection([MyDocument, ResourceT]);
+const RetrievedMyDocument = t.intersection([MyDocument, CosmosResource]);
 type RetrievedMyDocument = t.TypeOf<typeof RetrievedMyDocument>;
 
 class MyModel extends CosmosdbModel<

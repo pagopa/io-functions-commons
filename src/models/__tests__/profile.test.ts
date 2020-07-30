@@ -5,34 +5,32 @@ import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
 import { EmailString, NonEmptyString } from "italia-ts-commons/lib/strings";
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 
-import { Profile, ProfileModel, RetrievedProfile } from "../profile";
+import { NewProfile, Profile, ProfileModel, RetrievedProfile } from "../profile";
 
 import { Container } from "@azure/cosmos";
 
 const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
 
-const aStoredProfile = {
+const aStoredProfile: Profile = {
   acceptedTosVersion: 1,
   fiscalCode: aFiscalCode,
-  id: "xyz-0",
   isEmailValidated: false,
   isInboxEnabled: false,
-  isWebhookEnabled: false,
-  version: 0
+  isWebhookEnabled: false
 };
 
 const aRetrievedProfile: RetrievedProfile = {
-  acceptedTosVersion: 1,
-  fiscalCode: aFiscalCode,
-  id: "xyz-0" as NonEmptyString,
-  isEmailValidated: false,
-  isInboxEnabled: false,
-  isWebhookEnabled: false,
+  _etag: "_etag",
+  _rid: "_rid",
+  _self: "_self",
+  _ts: 1,
+  id: (aFiscalCode as unknown) as NonEmptyString,
   kind: "IRetrievedProfile",
-  version: 0 as NonNegativeInteger
+  version: 0 as NonNegativeInteger,
+  ...aStoredProfile
 };
 
-describe("findOneProfileByFiscalCode", () => {
+describe("findLastVersionByModelId", () => {
   it("should resolve to an existing profile", async () => {
     const containerMock = ({
       items: {
@@ -40,7 +38,7 @@ describe("findOneProfileByFiscalCode", () => {
         query: jest.fn(() => ({
           fetchAll: jest.fn(() =>
             Promise.resolve({
-              resources: [aStoredProfile]
+              resources: [aRetrievedProfile]
             })
           )
         }))

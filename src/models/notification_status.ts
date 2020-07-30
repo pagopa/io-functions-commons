@@ -21,7 +21,7 @@ import {
   NotificationChannelStatusValueEnum
 } from "../../generated/definitions/NotificationChannelStatusValue";
 import { Timestamp } from "../../generated/definitions/Timestamp";
-import { BaseModel, CosmosErrors } from "../utils/cosmosdb_model";
+import { CosmosErrors } from "../utils/cosmosdb_model";
 import { wrapWithKind } from "../utils/types";
 
 export const NOTIFICATION_STATUS_COLLECTION_NAME = "notification-status";
@@ -58,7 +58,7 @@ export const NewNotificationStatus = wrapWithKind(
 export type NewNotificationStatus = t.TypeOf<typeof NewNotificationStatus>;
 
 export const RetrievedNotificationStatus = wrapWithKind(
-  t.intersection([NotificationStatus, RetrievedVersionedModel, BaseModel]),
+  t.intersection([NotificationStatus, RetrievedVersionedModel]),
   "IRetrievedNotificationStatus" as const
 );
 
