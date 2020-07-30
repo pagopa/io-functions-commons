@@ -49,46 +49,48 @@ export async function asyncIterableToArray<T>(
   return asyncIteratorToArray(iter);
 }
 
-export function filterAsyncIterator<T>(
-  iter: AsyncIterator<T>,
-  predicate: (t: T) => boolean
-): AsyncIterator<T> {
-  return {
-    next: async () => {
-      while (true) {
-        const { done, value } = await iter.next();
-        if (done) {
-          return { done, value: undefined };
-        }
-        if (predicate(value)) {
-          return { done, value };
-        }
+export const filterAsyncIterable = <T, K = T>(
+  iterable: AsyncIterable<T | K>,
+  predicate: (value: T | K) => value is K
+): AsyncIterable<K> => ({
+  async *[Symbol.asyncIterator](): AsyncIterator<K> {
+    // tslint:disable-next-line: await-promise
+    for await (const value of iterable) {
+      if (predicate(value)) {
+        yield value;
       }
     }
+  }
+});
+
+export function filterAsyncIterator<T, K = T>(
+  iter: AsyncIterator<T | K>,
+  predicate: (value: T | K) => value is K
+): AsyncIterator<K> {
+  const iterable = {
+    [Symbol.asyncIterator]: () => iter
   };
+  return filterAsyncIterable(iterable, predicate)[Symbol.asyncIterator]();
 }
+
+export const flattenAsyncIterable = <T>(
+  iterable: AsyncIterable<ReadonlyArray<T>>
+): AsyncIterable<T> => ({
+  async *[Symbol.asyncIterator](): AsyncIterator<T> {
+    // tslint:disable-next-line: await-promise
+    for await (const value of iterable) {
+      for (const item of value) {
+        yield item;
+      }
+    }
+  }
+});
 
 export function flattenAsyncIterator<T>(
   iter: AsyncIterator<ReadonlyArray<T>>
-): AsyncIterator<T> {
-  // tslint:disable-next-line: no-let
-  let index = 0;
-  // tslint:disable-next-line: no-let
-  let flattenArray: ReadonlyArray<T> = [];
-  return {
-    next: async () => {
-      while (true) {
-        if (flattenArray.length === index) {
-          const { done, value } = await iter.next();
-          if (done) {
-            return { done, value: undefined };
-          }
-          flattenArray = value;
-          index = 0;
-          continue;
-        }
-        return { done: false, value: flattenArray[index++] };
-      }
-    }
+): AsyncIterator<T, undefined> {
+  const iterable = {
+    [Symbol.asyncIterator]: () => iter
   };
+  return flattenAsyncIterable(iterable)[Symbol.asyncIterator]();
 }
