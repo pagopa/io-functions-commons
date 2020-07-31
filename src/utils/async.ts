@@ -50,6 +50,42 @@ export async function asyncIterableToArray<T>(
 }
 
 /**
+ * Create a new AsyncIterator providing only the values that satisfy the predicate function.
+ * The predicate function is also an optional Type Guard function if types T and K are different.
+ *
+ * Example:
+ * ```
+ * const i: AsyncIterator<Either<E, A>> = {} as AsyncIterator<Either<E, A>>;
+ * const newI: AsyncIterator<Right<E, A>> = filterAsyncIterator<Either<E, A>, Right<E, A>>(i, isRight);
+ * ```
+ * @param iter Original AsyncIterator
+ * @param predicate Predicate function
+ */
+export function filterAsyncIterator<T, K = T>(
+  iter: AsyncIterator<T | K>,
+  predicate: (value: T | K) => value is K
+  // tslint:disable-next-line: no-any
+): AsyncIterator<K, any> {
+  // tslint:disable-next-line: no-any
+  async function* getValues(): AsyncGenerator<K, any, unknown> {
+    while (true) {
+      const { done, value } = await iter.next();
+      if (done) {
+        return value;
+      }
+      if (predicate(value)) {
+        yield value;
+      }
+    }
+  }
+  return {
+    next: async () => {
+      return await getValues().next();
+    }
+  };
+}
+
+/**
  * Create a new AsyncIterable providing only the values that satisfy the predicate function.
  * The predicate function is also an optional Type Guard function if types T and K are different.
  *
@@ -62,58 +98,14 @@ export async function asyncIterableToArray<T>(
  * @param predicate Predicate function
  */
 export const filterAsyncIterable = <T, K = T>(
-  iterable: AsyncIterable<T | K>,
+  source: AsyncIterable<T | K>,
   predicate: (value: T | K) => value is K
-): AsyncIterable<K> => ({
-  async *[Symbol.asyncIterator](): AsyncIterator<K> {
-    // tslint:disable-next-line: await-promise
-    for await (const value of iterable) {
-      if (predicate(value)) {
-        yield value;
-      }
-    }
-  }
-});
-
-/**
- * Create a new AsyncIterator providing only the values that satisfy the predicate function.
- * The predicate function is also an optional Type Guard function if types T and K are different.
- *
- * Example:
- * ```
- * const i: AsyncIterator<Either<E, A>> = {} as AsyncIterator<Either<E, A>>;
- * const newI: AsyncIterator<Right<E, A>> = filterAsyncIterator<Either<E, A>, Right<E, A>>(iterable, isRight);
- * ```
- * @param iter Original AsyncIterator
- * @param predicate Predicate function
- */
-export function filterAsyncIterator<T, K = T>(
-  iter: AsyncIterator<T | K>,
-  predicate: (value: T | K) => value is K
-): AsyncIterator<K> {
-  const iterable = {
-    [Symbol.asyncIterator]: () => iter
+): AsyncIterable<K> => {
+  const iter = source[Symbol.asyncIterator]();
+  return {
+    [Symbol.asyncIterator]: () => filterAsyncIterator(iter, predicate)
   };
-  return filterAsyncIterable(iterable, predicate)[Symbol.asyncIterator]();
-}
-
-/**
- * Create a new AsyncIterable which provide one by one the values ​​contained into the input AsyncIterable
- *
- * @param iterable Original AsyncIterable
- */
-export const flattenAsyncIterable = <T>(
-  iterable: AsyncIterable<ReadonlyArray<T>>
-): AsyncIterable<T> => ({
-  async *[Symbol.asyncIterator](): AsyncIterator<T> {
-    // tslint:disable-next-line: await-promise
-    for await (const value of iterable) {
-      for (const item of value) {
-        yield item;
-      }
-    }
-  }
-});
+};
 
 /**
  * Create a new AsyncIterator which provide one by one the values ​​contained into the input AsyncIterator
@@ -122,35 +114,38 @@ export const flattenAsyncIterable = <T>(
  */
 export function flattenAsyncIterator<T>(
   iter: AsyncIterator<ReadonlyArray<T>>
-): AsyncIterator<T> {
-  const iterable = {
-    [Symbol.asyncIterator]: () => iter
-  };
-  return flattenAsyncIterable(iterable)[Symbol.asyncIterator]();
-}
-
-export function reduceAsyncIterable<A, B>(
-  iterable: AsyncIterable<ReadonlyArray<A>>,
-  reducer: (previousValue: B, currentValue: A) => B,
-  init: B
-): AsyncIterable<B> {
-  return {
-    async *[Symbol.asyncIterator](): AsyncIterator<B> {
-      // tslint:disable-next-line: await-promise
-      for await (const value of iterable) {
-        yield value.reduce<B>(reducer, init);
+  // tslint:disable-next-line: no-any
+): AsyncIterator<T, any> {
+  // tslint:disable-next-line: no-let readonly-array
+  let array: T[] = [];
+  // tslint:disable-next-line: no-any
+  async function* getValues(): AsyncGenerator<T, any, unknown> {
+    while (array.length === 0) {
+      const { done, value } = await iter.next();
+      if (done) {
+        return value;
       }
+      array = Array.from(value);
+    }
+    yield array.shift() as T;
+  }
+  return {
+    next: async () => {
+      return await getValues().next();
     }
   };
 }
 
-export function reduceAsyncIterator<A, B>(
-  i: AsyncIterator<ReadonlyArray<A>>,
-  reducer: (previousValue: B, currentValue: A) => B,
-  init: B
-): AsyncIterator<B> {
-  const iterable = {
-    [Symbol.asyncIterator]: () => i
+/**
+ * Create a new AsyncIterable which provide one by one the values ​​contained into the input AsyncIterable
+ *
+ * @param source Original AsyncIterable
+ */
+export const flattenAsyncIterable = <T>(
+  source: AsyncIterable<ReadonlyArray<T>>
+): AsyncIterable<T> => {
+  const iter = source[Symbol.asyncIterator]();
+  return {
+    [Symbol.asyncIterator]: () => flattenAsyncIterator(iter)
   };
-  return reduceAsyncIterable(iterable, reducer, init)[Symbol.asyncIterator]();
-}
+};
