@@ -3,8 +3,7 @@ import * as t from "io-ts";
 import {
   filterAsyncIterator,
   flattenAsyncIterator,
-  mapAsyncIterator,
-  reduceAsyncIterator
+  mapAsyncIterator
 } from "../async";
 
 const mockNext = jest.fn();
@@ -96,6 +95,7 @@ describe("filterAsyncIterator utils", () => {
   });
   it("should filter values that match the predicate", async () => {
     const expectedRightValue = right(1);
+    const expectedReturnValue = true;
     mockNext.mockImplementationOnce(async () => ({
       done: false,
       value: left(new Error("Left value error"))
@@ -106,7 +106,7 @@ describe("filterAsyncIterator utils", () => {
     }));
     mockNext.mockImplementationOnce(async () => ({
       done: true,
-      value: undefined
+      value: expectedReturnValue
     }));
     const iter: AsyncIterator<Right<Error, number>> = filterAsyncIterator(
       mockAsyncIterator as AsyncIterator<Either<Error, number>>,
@@ -116,12 +116,16 @@ describe("filterAsyncIterator utils", () => {
       done: false,
       value: expectedRightValue
     });
-    expect(await iter.next()).toEqual({ done: true, value: undefined });
+    expect(await iter.next()).toEqual({
+      done: true,
+      value: expectedReturnValue
+    });
     expect(mockNext).toBeCalledTimes(3);
   });
 
   it("should skip all values if don't match the predicate", async () => {
     const leftValue = left(new Error("Left value error"));
+    const expectedReturnValue = true;
     mockNext.mockImplementationOnce(async () => ({
       done: false,
       value: leftValue
@@ -132,46 +136,17 @@ describe("filterAsyncIterator utils", () => {
     }));
     mockNext.mockImplementationOnce(async () => ({
       done: true,
-      value: undefined
+      value: expectedReturnValue
     }));
     const iter: AsyncIterator<Right<Error, number>> = filterAsyncIterator(
       mockAsyncIterator as AsyncIterator<Either<Error, number>>,
       isRight
     );
-    expect(await iter.next()).toEqual({ done: true, value: undefined });
-    expect(mockNext).toBeCalledTimes(3);
-  });
-});
-
-describe("reduceAsyncIterator", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-  it("should reduce the documents of the wrapped iterator", async () => {
-    mockNext.mockImplementationOnce(async () => ({
-      done: false,
-      value: ["1", "2"]
-    }));
-    mockNext.mockImplementationOnce(async () => ({
-      done: false,
-      value: ["3", "4"]
-    }));
-    mockNext.mockImplementationOnce(async () => ({
+    expect(await iter.next()).toEqual({
       done: true,
-      value: undefined
-    }));
-
-    const iter = reduceAsyncIterator(
-      mockAsyncIterator,
-      (prev: string, cur: string) => prev + cur,
-      ""
-    );
-
-    const result1 = await iter.next();
-    expect(result1).toEqual({ done: false, value: "12" });
-    const result2 = await iter.next();
-    expect(result2).toEqual({ done: false, value: "34" });
-    expect(await iter.next()).toEqual({ done: true, value: undefined });
+      value: expectedReturnValue
+    });
+    expect(mockNext).toBeCalledTimes(3);
   });
 });
 
