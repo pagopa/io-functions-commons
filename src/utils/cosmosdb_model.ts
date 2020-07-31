@@ -17,17 +17,12 @@ import {
   ItemResponse,
   RequestOptions,
   Resource,
-  SqlParameter
+  SqlQuerySpec
 } from "@azure/cosmos";
 
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { mapAsyncIterable } from "./async";
 import { isDefined } from "./types";
-
-export interface ISqlQuerySpecWithParameter {
-  query: string;
-  parameters: SqlParameter[];
-}
 
 export const BaseModel = t.interface({
   id: NonEmptyString
@@ -217,7 +212,7 @@ export abstract class CosmosdbModel<
    * Get an iterator to process all documents returned by a specific query.
    */
   public getQueryIterator(
-    query: ISqlQuerySpecWithParameter,
+    query: Required<SqlQuerySpec>,
     options?: FeedOptions
   ): AsyncIterable<ReadonlyArray<t.Validation<TR>>> {
     const iterator = this.container.items
@@ -247,7 +242,7 @@ export abstract class CosmosdbModel<
    * @deprecated use getQueryIterator + asyncIterableToArray
    */
   public findOneByQuery(
-    query: ISqlQuerySpecWithParameter,
+    query: Required<SqlQuerySpec>,
     options?: FeedOptions
   ): TaskEither<CosmosErrors, Option<TR>> {
     return tryCatch<CosmosErrors, FeedResponse<TR>>(
