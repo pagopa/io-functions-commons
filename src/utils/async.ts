@@ -7,10 +7,11 @@ export function mapAsyncIterator<T, V>(
 ): AsyncIterator<V> {
   return {
     next: () =>
-      iter.next().then(({ done, value }) => ({
-        done,
-        value: f(value)
-      }))
+      iter.next().then((result: IteratorResult<T>) =>
+        // IteratorResult defines that when done=true, then value=undefined
+        // that is, when the iterator is done there is no value to be procesed
+        result.done ? result : { done: false, value: f(result.value) }
+      )
   };
 }
 
@@ -87,9 +88,9 @@ export const filterAsyncIterable = <T, K = T>(
  * @param iter Original AsyncIterator
  * @param predicate Predicate function
  */
-export function filterAsyncIterator<T, K = T>(
-  iter: AsyncIterator<T | K>,
-  predicate: (value: T | K) => value is K
+export function filterAsyncIterator<T, K extends T>(
+  iter: AsyncIterator<T>,
+  predicate: (value: T) => value is K
 ): AsyncIterator<K> {
   const iterable = {
     [Symbol.asyncIterator]: () => iter
