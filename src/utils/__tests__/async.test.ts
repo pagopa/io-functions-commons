@@ -1,9 +1,34 @@
-import { isRight, left, right, Right } from "fp-ts/lib/Either";
-import { filterAsyncIterator, flattenAsyncIterator } from "../async";
+import { Either, isRight, left, right, Right } from "fp-ts/lib/Either";
+import * as t from "io-ts";
+import {
+  filterAsyncIterator,
+  flattenAsyncIterator,
+  mapAsyncIterator
+} from "../async";
 
 const mockNext = jest.fn();
 const mockAsyncIterator = {
   next: mockNext
+};
+
+// tslint:disable-next-line: typedef
+const createMockIterator = <T>(items: readonly T[]): AsyncIterator<T> => {
+  // tslint:disable-next-line: readonly-array
+  const data: T[] = [...items];
+  const result = (value: T): IteratorYieldResult<T> => ({
+    done: false,
+    value
+  });
+  const finish = (): IteratorReturnResult<undefined> => ({
+    done: true,
+    value: undefined
+  });
+  return {
+    next: async () => {
+      const item = data.shift();
+      return data.length + 1 && item ? result(item) : finish();
+    }
+  };
 };
 
 describe("flattenAsyncIterator utils", () => {
@@ -83,8 +108,8 @@ describe("filterAsyncIterator utils", () => {
       done: true,
       value: expectedReturnValue
     }));
-    const iter = filterAsyncIterator<Right<Error, number>>(
-      mockAsyncIterator,
+    const iter: AsyncIterator<Right<Error, number>> = filterAsyncIterator(
+      mockAsyncIterator as AsyncIterator<Either<Error, number>>,
       isRight
     );
     expect(await iter.next()).toEqual({
@@ -113,8 +138,8 @@ describe("filterAsyncIterator utils", () => {
       done: true,
       value: expectedReturnValue
     }));
-    const iter = filterAsyncIterator<Right<Error, number>>(
-      mockAsyncIterator,
+    const iter: AsyncIterator<Right<Error, number>> = filterAsyncIterator(
+      mockAsyncIterator as AsyncIterator<Either<Error, number>>,
       isRight
     );
     expect(await iter.next()).toEqual({
@@ -122,5 +147,101 @@ describe("filterAsyncIterator utils", () => {
       value: expectedReturnValue
     });
     expect(mockNext).toBeCalledTimes(3);
+  });
+});
+
+describe("Scenarios", () => {
+  type ModelType = t.TypeOf<typeof ModelType>;
+  // tslint:disable-next-line: no-dead-store
+  const ModelType = t.interface({
+    fieldA: t.string,
+    fieldB: t.number
+  });
+
+  const aModel: ModelType = {
+    fieldA: "foo",
+    fieldB: 123
+  };
+  const anotherModel: ModelType = {
+    fieldA: "bar",
+    fieldB: 789
+  };
+  it("should filter Right on Either", async () => {
+    const iterator: AsyncIterator<Either<
+      string,
+      ModelType
+    >> = createMockIterator([
+      right(aModel),
+      left("error"),
+      right(anotherModel)
+    ]);
+
+    const filteredIterator: AsyncIterator<Right<
+      string,
+      ModelType
+    >> = filterAsyncIterator(iterator, isRight);
+
+    const result1 = await filteredIterator.next();
+    const result2 = await filteredIterator.next();
+    const result3 = await filteredIterator.next();
+
+    expect(result1).toEqual({
+      done: false,
+      value: right(aModel)
+    });
+    expect(result2).toEqual({
+      done: false,
+      value: right(anotherModel)
+    });
+    expect(result3).toEqual({
+      done: true,
+      value: undefined
+    });
+  });
+
+  it("should extract right values from array of either", async () => {
+    const iterator: AsyncIterator<ReadonlyArray<
+      Either<string, ModelType>
+    >> = createMockIterator([
+      [right(aModel), right(aModel)],
+      [left("error")],
+      [],
+      [right(anotherModel), left("error")]
+    ]);
+
+    const flattenIterator: AsyncIterator<Either<
+      string,
+      ModelType
+    >> = flattenAsyncIterator(iterator);
+    const fiteredIterator: AsyncIterator<Right<
+      string,
+      ModelType
+    >> = filterAsyncIterator(flattenIterator, isRight);
+    const mappedIterator: AsyncIterator<ModelType> = mapAsyncIterator(
+      fiteredIterator,
+      e => e.value
+    );
+
+    const result1 = await mappedIterator.next();
+    const result2 = await mappedIterator.next();
+    const result3 = await mappedIterator.next();
+    const result4 = await mappedIterator.next();
+
+    expect(result1).toEqual({
+      done: false,
+      value: aModel
+    });
+    expect(result2).toEqual({
+      done: false,
+      value: aModel
+    });
+    expect(result3).toEqual({
+      done: false,
+      value: anotherModel
+    });
+    expect(result4).toEqual({
+      done: true,
+      value: undefined
+    });
   });
 });

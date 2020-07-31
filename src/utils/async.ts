@@ -7,10 +7,11 @@ export function mapAsyncIterator<T, V>(
 ): AsyncIterator<V> {
   return {
     next: () =>
-      iter.next().then(({ done, value }) => ({
-        done,
-        value: f(value)
-      }))
+      iter.next().then((result: IteratorResult<T>) =>
+        // IteratorResult defines that when done=true, then value=undefined
+        // that is, when the iterator is done there is no value to be procesed
+        result.done ? result : { done: false, value: f(result.value) }
+      )
   };
 }
 
@@ -61,11 +62,10 @@ export async function asyncIterableToArray<T>(
  * @param iter Original AsyncIterator
  * @param predicate Predicate function
  */
-export function filterAsyncIterator<T, K = T>(
-  iter: AsyncIterator<T | K>,
-  predicate: (value: T | K) => value is K
-  // tslint:disable-next-line: no-any
-): AsyncIterator<K, any> {
+export function filterAsyncIterator<T, K extends T>(
+  iter: AsyncIterator<T>,
+  predicate: (value: T) => value is K
+): AsyncIterator<K> {
   // tslint:disable-next-line: no-any
   async function* getValues(): AsyncGenerator<K, any, unknown> {
     while (true) {
@@ -84,28 +84,6 @@ export function filterAsyncIterator<T, K = T>(
     }
   };
 }
-
-/**
- * Create a new AsyncIterable providing only the values that satisfy the predicate function.
- * The predicate function is also an optional Type Guard function if types T and K are different.
- *
- * Example:
- * ```
- * const i: AsyncIterable<Either<E, A>> = {} as AsyncIterable<Either<E, A>>;
- * const f: AsyncIterable<Right<E, A>> = filterAsyncIterable<Either<E, A>, Right<E, A>>(i, isRight);
- * ```
- * @param iterable Original AsyncIterable
- * @param predicate Predicate function
- */
-export const filterAsyncIterable = <T, K = T>(
-  source: AsyncIterable<T | K>,
-  predicate: (value: T | K) => value is K
-): AsyncIterable<K> => {
-  const iter = source[Symbol.asyncIterator]();
-  return {
-    [Symbol.asyncIterator]: () => filterAsyncIterator(iter, predicate)
-  };
-};
 
 /**
  * Create a new AsyncIterator which provide one by one the values ​​contained into the input AsyncIterator
