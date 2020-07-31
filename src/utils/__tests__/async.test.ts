@@ -6,11 +6,6 @@ import {
   mapAsyncIterator
 } from "../async";
 
-const mockNext = jest.fn();
-const mockAsyncIterator = {
-  next: mockNext
-};
-
 // tslint:disable-next-line: typedef no-any
 const createMockIterator = <T, TReturn = any>(
   items: readonly T[],
@@ -80,6 +75,73 @@ describe("flattenAsyncIterator utils", () => {
       value: undefined
     });
     expect(inputIterator.next).toBeCalledTimes(3);
+  });
+});
+
+describe("mapAsyncIterator utils", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should map each element", async () => {
+    const inputIterator = createMockIterator([1, 2, 3]);
+
+    const outputIterator = mapAsyncIterator(inputIterator, n => n * 2);
+
+    expect(await outputIterator.next()).toEqual({
+      done: false,
+      value: 2
+    });
+    expect(await outputIterator.next()).toEqual({
+      done: false,
+      value: 4
+    });
+    expect(await outputIterator.next()).toEqual({
+      done: false,
+      value: 6
+    });
+    expect(await outputIterator.next()).toEqual({
+      done: true
+    });
+    expect(inputIterator.next).toBeCalledTimes(4);
+  });
+
+  it("should map the return value if requested", async () => {
+    const inputIterator = createMockIterator([1], "bar");
+
+    const outputIterator = mapAsyncIterator<number, string, string>(
+      inputIterator,
+      n => `foo-${n}`,
+      true
+    );
+
+    expect(await outputIterator.next()).toEqual({
+      done: false,
+      value: "foo-1"
+    });
+    expect(await outputIterator.next()).toEqual({
+      done: true,
+      value: "foo-bar"
+    });
+    expect(inputIterator.next).toBeCalledTimes(2);
+  });
+
+  it("should map the return value if not requested", async () => {
+    const inputIterator = createMockIterator([1], "bar");
+
+    const outputIterator = mapAsyncIterator<number, string>(
+      inputIterator,
+      n => `foo-${n}`
+    );
+
+    expect(await outputIterator.next()).toEqual({
+      done: false,
+      value: "foo-1"
+    });
+    expect(await outputIterator.next()).toEqual({
+      done: true,
+      value: "bar"
+    });
+    expect(inputIterator.next).toBeCalledTimes(2);
   });
 });
 

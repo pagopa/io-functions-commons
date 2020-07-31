@@ -1,17 +1,39 @@
 /**
- * Maps over an AsyncIterator
+ * Maps results from an iterator and returns an iterator with new values
+ * @param iter the provided iterator
+ * @param f the functor
+ * @param mapReturn true if the return value must be mapped. Default: false
+ *
+ * @returns an aync iterator which values are mapped
  */
 export function mapAsyncIterator<T, V>(
   iter: AsyncIterator<T>,
   f: (t: T) => V,
-  
+  mapReturn?: false
+): AsyncIterator<V>;
+// tslint:disable-next-line: no-any
+export function mapAsyncIterator<T, V, TReturn = any>(
+  iter: AsyncIterator<T>,
+  f: (t: T | TReturn) => V,
+  mapReturn: true
+): AsyncIterator<V>;
+// tslint:disable-next-line: no-any
+export function mapAsyncIterator<T, V, TReturn = any>(
+  iter: AsyncIterator<T>,
+  f: (t: T | TReturn) => V,
+  // tslint:disable-next-line: bool-param-default
+  mapReturn: boolean | undefined
 ): AsyncIterator<V> {
   return {
     next: () =>
-      iter.next().then((result: IteratorResult<T>) =>
-        // IteratorResult defines that when done=true, then value=undefined
-        // that is, when the iterator is done there is no value to be procesed
-        result.done ? result : { done: false, value: f(result.value) }
+      iter.next().then((result: IteratorResult<T, TReturn>) =>
+        // IteratorResult defines that when done=true, then value is of a different kinf (TReturn instead of T)
+        // In some cases it is not desiderable to have the return value to be mapped
+        !result.done
+          ? { done: false, value: f(result.value) }
+          : mapReturn
+          ? { done: true, value: f(result.value) }
+          : result
       )
   };
 }
