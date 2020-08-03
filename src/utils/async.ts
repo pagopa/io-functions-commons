@@ -3,8 +3,7 @@
  */
 export function mapAsyncIterator<T, V>(
   iter: AsyncIterator<T>,
-  f: (t: T) => V,
-  
+  f: (t: T) => V
 ): AsyncIterator<V> {
   return {
     next: () =>
