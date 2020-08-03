@@ -18,6 +18,7 @@ import {
   CosmosdbModel,
   CosmosDecodingError,
   CosmosErrors,
+  CosmosResource,
   toCosmosErrorResponse
 } from "../utils/cosmosdb_model";
 
@@ -140,7 +141,7 @@ export const NewMessage = t.union([
 export type NewMessage = t.TypeOf<typeof NewMessage>;
 
 export const RetrievedMessageWithContent = wrapWithKind(
-  t.intersection([MessageWithContent, BaseModel]),
+  t.intersection([MessageWithContent, CosmosResource]),
   "IRetrievedMessageWithContent" as const
 );
 
@@ -149,7 +150,7 @@ export type RetrievedMessageWithContent = t.TypeOf<
 >;
 
 export const RetrievedMessageWithoutContent = wrapWithKind(
-  t.intersection([MessageWithoutContent, BaseModel]),
+  t.intersection([MessageWithoutContent, CosmosResource]),
   "IRetrievedMessageWithoutContent" as const
 );
 

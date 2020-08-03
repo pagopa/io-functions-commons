@@ -23,7 +23,7 @@ import { TaskEither } from "fp-ts/lib/TaskEither";
 import { readonlySetType, withDefault } from "italia-ts-commons/lib/types";
 import { MaxAllowedPaymentAmount } from "../../generated/definitions/MaxAllowedPaymentAmount";
 import { ServiceScope } from "../../generated/definitions/ServiceScope";
-import { BaseModel, CosmosErrors } from "../utils/cosmosdb_model";
+import { CosmosErrors } from "../utils/cosmosdb_model";
 import { wrapWithKind } from "../utils/types";
 
 export const SERVICE_COLLECTION_NAME = "services";
@@ -109,7 +109,7 @@ export const NewService = wrapWithKind(
 export type NewService = t.TypeOf<typeof NewService>;
 
 export const RetrievedService = wrapWithKind(
-  t.intersection([Service, RetrievedVersionedModel, BaseModel]),
+  t.intersection([Service, RetrievedVersionedModel]),
   "IRetrievedService" as const
 );
 
