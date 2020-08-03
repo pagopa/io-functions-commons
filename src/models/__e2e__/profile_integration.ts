@@ -36,6 +36,10 @@ const aProfile: Profile = Profile.decode({
 });
 
 const aRetrievedProfile: RetrievedProfile = {
+  _etag: "_etag",
+  _rid: "_rid",
+  _self: "_self",
+  _ts: 1,
   acceptedTosVersion: 1,
   fiscalCode: "FRLFRC74E04B157I" as FiscalCode,
   id: "xyz-0" as NonEmptyString,

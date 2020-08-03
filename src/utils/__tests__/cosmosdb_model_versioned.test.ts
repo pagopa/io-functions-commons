@@ -12,6 +12,7 @@ import {
   ResourceResponse
 } from "@azure/cosmos";
 
+import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { BaseModel } from "../cosmosdb_model";
 import {
   CosmosdbModelVersioned,
@@ -54,16 +55,13 @@ class MyModel extends CosmosdbModelVersioned<
 
 const aMyDocumentId = aModelIdValue + "-000000000000000";
 
-const aNewMyDocument: NewMyDocument = {
+const aMyDocument = {
   [aModelIdField]: aModelIdValue,
   test: "aNewMyDocument"
 };
 
-const anExistingDocument = {
-  id: aMyDocumentId + "1",
-  [aModelIdField]: aModelIdValue,
-  test: "anExistingDocument",
-  version: 1 as NonNegativeInteger
+const aNewMyDocument: NewMyDocument = {
+  ...aMyDocument
 };
 
 const someMetadata = {
@@ -73,6 +71,12 @@ const someMetadata = {
   _ts: 1
 };
 
+const aRetrievedExistingDocument: RetrievedMyDocument = {
+  ...someMetadata,
+  ...aMyDocument,
+  id: (aMyDocumentId + "1") as NonEmptyString,
+  version: 1 as NonNegativeInteger
+};
 const containerMock = {
   item: jest.fn(),
   items: {
@@ -171,7 +175,9 @@ describe("upsert", () => {
   it("should update an existing document", async () => {
     containerMock.items.query.mockReturnValueOnce({
       fetchAll: () =>
-        Promise.resolve(new FeedResponse([anExistingDocument], {}, false))
+        Promise.resolve(
+          new FeedResponse([aRetrievedExistingDocument], {}, false)
+        )
     });
     containerMock.items.create.mockResolvedValueOnce(
       new ResourceResponse(
@@ -187,23 +193,26 @@ describe("upsert", () => {
         200
       )
     );
+
+    const anUpdatedDocument = {
+      ...aMyDocument,
+      id: aMyDocumentId + "2",
+      test: "anUpdatedDocument",
+      version: 2
+    };
+
     const model = new MyModel(container);
     const result = await model
       .upsert({ ...aNewMyDocument, test: "anUpdatedDocument" })
       .run();
-    expect(containerMock.items.create).toHaveBeenCalledWith(
-      {
-        ...anExistingDocument,
-        id: aMyDocumentId + "2",
-        test: "anUpdatedDocument",
-        version: 2
-      },
-      { disableAutomaticIdGeneration: true }
-    );
+
+    expect(containerMock.items.create).toHaveBeenCalledWith(anUpdatedDocument, {
+      disableAutomaticIdGeneration: true
+    });
     expect(isRight(result));
     if (isRight(result)) {
       expect(result.value).toEqual({
-        ...anExistingDocument,
+        ...aRetrievedExistingDocument,
         ...someMetadata,
         id: aMyDocumentId + "2",
         test: "anUpdatedDocument",

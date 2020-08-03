@@ -9,7 +9,7 @@ import { Timestamp } from "../../generated/definitions/Timestamp";
 
 import { Container } from "@azure/cosmos";
 import { TaskEither } from "fp-ts/lib/TaskEither";
-import { BaseModel, CosmosErrors } from "../utils/cosmosdb_model";
+import { CosmosErrors } from "../utils/cosmosdb_model";
 import {
   CosmosdbModelVersioned,
   NewVersionedModel,
@@ -39,7 +39,7 @@ export const NewMessageStatus = wrapWithKind(
 export type NewMessageStatus = t.TypeOf<typeof NewMessageStatus>;
 
 export const RetrievedMessageStatus = wrapWithKind(
-  t.intersection([MessageStatus, RetrievedVersionedModel, BaseModel]),
+  t.intersection([MessageStatus, RetrievedVersionedModel]),
   "IRetrievedMessageStatus" as const
 );
 

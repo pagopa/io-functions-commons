@@ -14,7 +14,7 @@ import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { Timestamp } from "../../generated/definitions/Timestamp";
 import { UserDataProcessingChoice } from "../../generated/definitions/UserDataProcessingChoice";
 import { UserDataProcessingStatus } from "../../generated/definitions/UserDataProcessingStatus";
-import { BaseModel, CosmosErrors } from "../utils/cosmosdb_model";
+import { CosmosErrors } from "../utils/cosmosdb_model";
 import { wrapWithKind } from "../utils/types";
 
 export const USER_DATA_PROCESSING_COLLECTION_NAME = "user-data-processing";
@@ -65,7 +65,7 @@ export const NewUserDataProcessing = wrapWithKind(
 export type NewUserDataProcessing = t.TypeOf<typeof NewUserDataProcessing>;
 
 export const RetrievedUserDataProcessing = wrapWithKind(
-  t.intersection([UserDataProcessing, RetrievedVersionedModel, BaseModel]),
+  t.intersection([UserDataProcessing, RetrievedVersionedModel]),
   "IRetrievedUserDataProcessing" as const
 );
 

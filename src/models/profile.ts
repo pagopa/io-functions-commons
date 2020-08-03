@@ -18,7 +18,6 @@ import { IsInboxEnabled } from "../../generated/definitions/IsInboxEnabled";
 import { IsTestProfile } from "../../generated/definitions/IsTestProfile";
 import { IsWebhookEnabled } from "../../generated/definitions/IsWebhookEnabled";
 import { PreferredLanguages } from "../../generated/definitions/PreferredLanguages";
-import { BaseModel } from "../utils/cosmosdb_model";
 
 import { Container } from "@azure/cosmos";
 import { wrapWithKind } from "../utils/types";
@@ -82,7 +81,7 @@ export const NewProfile = wrapWithKind(
 export type NewProfile = t.TypeOf<typeof NewProfile>;
 
 export const RetrievedProfile = wrapWithKind(
-  t.intersection([Profile, RetrievedVersionedModel, BaseModel]),
+  t.intersection([Profile, RetrievedVersionedModel]),
   "IRetrievedProfile" as const
 );
 
