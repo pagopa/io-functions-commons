@@ -42,7 +42,9 @@ export const CosmosResource = t.intersection([
     _self: t.string,
     _ts: t.number
   })
-]) as t.Type<Resource & { id: NonEmptyString }>; // this cast is needed to keep CosmosResource in sync with Resource (try to remove a field from the decoder definition and you'll face an error)
+  // this cast is used to keep CosmosResource aligned
+  // with @azure/cosmos/Resource type definition
+]) as t.Type<Resource & { id: NonEmptyString }>;
 
 // An empty response from a Cosmos operation
 export const CosmosEmptyResponse = {
