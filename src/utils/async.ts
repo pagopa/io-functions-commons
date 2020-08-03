@@ -27,7 +27,7 @@ export function mapAsyncIterator<T, V, TReturn = any>(
   return {
     next: () =>
       iter.next().then((result: IteratorResult<T, TReturn>) =>
-        // IteratorResult defines that when done=true, then value is of a different kinf (TReturn instead of T)
+        // IteratorResult defines that when done=true, then value is of a different kind (TReturn instead of T)
         // In some cases it is not desiderable to have the return value to be mapped
         !result.done
           ? { done: false, value: f(result.value) }
