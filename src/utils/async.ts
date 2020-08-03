@@ -65,9 +65,16 @@ export async function asyncIterableToArray<T>(
 export function filterAsyncIterator<T, K extends T>(
   iter: AsyncIterator<T>,
   predicate: (value: T) => value is K
+): AsyncIterator<K>;
+export function filterAsyncIterator<T>(
+  iter: AsyncIterator<T>,
+  predicate: (value: T) => boolean
+): AsyncIterator<T>;
+export function filterAsyncIterator<T, K extends T = T>(
+  iter: AsyncIterator<T>,
+  predicate: (value: T) => boolean
 ): AsyncIterator<K> {
-  // tslint:disable-next-line: no-any
-  async function* getValues(): AsyncGenerator<K, any, unknown> {
+  async function* getValues(): AsyncGenerator<K> {
     while (true) {
       const { done, value } = await iter.next();
       if (done) {
