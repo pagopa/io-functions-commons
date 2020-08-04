@@ -12,7 +12,6 @@ import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
 import * as t from "io-ts";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
-import { PromiseType } from "italia-ts-commons/lib/types";
 import {
   BaseModel,
   CosmosdbModel,
