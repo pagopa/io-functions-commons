@@ -126,11 +126,7 @@ export abstract class CosmosdbModelVersioned<
     // if we get an explicit version number from the new document we use that,
     // or else we get the last version by querying the database
     const currentVersion: NonNegativeInteger | undefined = o.version;
-    // tslint:disable-next-line: no-console
-    console.log(`currentVersion => ${currentVersion}`);
     const modelId = this.getModelId(o);
-    // tslint:disable-next-line: no-console
-    console.log(`modelId => ${modelId}`);
     return (currentVersion === undefined
       ? this.getNextVersion(modelId, partitionKey)
       : fromEither<CosmosErrors, NonNegativeInteger>(right(currentVersion))
