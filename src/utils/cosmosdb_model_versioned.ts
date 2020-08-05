@@ -66,7 +66,7 @@ export function generateVersionedModelId(
   return `${modelId}-${paddedVersion}`;
 }
 
-const incVersion = (version: NonNegativeInteger) =>
+export const incVersion = (version: NonNegativeInteger) =>
   (Number(version) + 1) as NonNegativeInteger;
 
 /**
@@ -118,20 +118,27 @@ export abstract class CosmosdbModelVersioned<
   /**
    * Creates a new version from a full item definition
    */
-  public upsert = (o: TN): TaskEither<CosmosErrors, TR> => {
+  public upsert = (
+    o: TN,
+    requestOptions?: RequestOptions,
+    partitionKey?: string
+  ): TaskEither<CosmosErrors, TR> => {
     // if we get an explicit version number from the new document we use that,
     // or else we get the last version by querying the database
     const currentVersion: NonNegativeInteger | undefined = o.version;
     const modelId = this.getModelId(o);
     return (currentVersion === undefined
-      ? this.getNextVersion(modelId)
+      ? this.getNextVersion(modelId, partitionKey)
       : fromEither<CosmosErrors, NonNegativeInteger>(right(currentVersion))
     ).chain(nextVersion =>
-      super.create({
-        ...o,
-        id: generateVersionedModelId(modelId, nextVersion),
-        version: nextVersion
-      } as TN & RetrievedVersionedModel)
+      super.create(
+        {
+          ...o,
+          id: generateVersionedModelId(modelId, nextVersion),
+          version: nextVersion
+        } as TN & RetrievedVersionedModel,
+        requestOptions
+      )
     );
   };
 
@@ -174,8 +181,8 @@ export abstract class CosmosdbModelVersioned<
    * The next version will be the last one from the database incremented by 1 or
    * 0 if no previous version exists in the database.
    */
-  private getNextVersion = (modelId: ModelId) =>
-    this.findLastVersionByModelId(modelId).map(maybeLastVersion =>
+  private getNextVersion = (modelId: ModelId, partitionKey?: string) =>
+    this.findLastVersionByModelId(modelId, partitionKey).map(maybeLastVersion =>
       maybeLastVersion
         .map(_ => incVersion(_.version))
         .getOrElse(0 as NonNegativeInteger)

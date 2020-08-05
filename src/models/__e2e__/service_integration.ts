@@ -89,7 +89,8 @@ const upsertTest = createDatabase(cosmosDatabaseName)
     new ServiceModel(container).upsert({
       kind: "INewService",
       ...aService,
-      serviceName: "anUpdatedServiceName" as NonEmptyString
+      serviceName: "anUpdatedServiceName" as NonEmptyString,
+      version: undefined
     })
   );
 

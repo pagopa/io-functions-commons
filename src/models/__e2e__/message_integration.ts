@@ -2,10 +2,16 @@
 import { FiscalCode, NonEmptyString } from "italia-ts-commons/lib/strings";
 
 import { isLeft, right } from "fp-ts/lib/Either";
-import { fromEither, fromLeft, taskEither } from "fp-ts/lib/TaskEither";
+import {
+  fromEither,
+  fromLeft,
+  taskEither,
+  tryCatch
+} from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 import { ServiceId } from "../../../generated/definitions/ServiceId";
 import { TimeToLiveSeconds } from "../../../generated/definitions/TimeToLiveSeconds";
+import { asyncIterableToArray, flattenAsyncIterable } from "../../utils/async";
 import {
   CosmosErrors,
   toCosmosErrorResponse
@@ -30,7 +36,7 @@ const MESSAGE_CONTAINER_NAME = "message-content" as NonEmptyString;
 
 const aSerializedNewMessageWithoutContent = {
   createdAt: new Date().toISOString(),
-  fiscalCode: "FRLFRC74E04B157I" as FiscalCode,
+  fiscalCode: "RLDBSV36A78Y792X" as FiscalCode,
   id: "A_MESSAGE_ID" as NonEmptyString,
   indexedId: "A_MESSAGE_ID" as NonEmptyString,
   senderServiceId: "agid" as ServiceId,
@@ -118,6 +124,34 @@ const upsertTest = createDatabase(cosmosDatabaseName)
     })
   );
 
+const findAllTest = (fiscalCode: FiscalCode) =>
+  createDatabase(cosmosDatabaseName)
+    .chain(db =>
+      createContainer(db, MESSAGE_COLLECTION_NAME, MESSAGE_MODEL_PK_FIELD)
+    )
+    .chain(container =>
+      tryCatch(
+        () =>
+          asyncIterableToArray(
+            flattenAsyncIterable(
+              new MessageModel(
+                container,
+                MESSAGE_CONTAINER_NAME
+              ).getQueryIterator({
+                parameters: [
+                  {
+                    name: "@fiscalCode",
+                    value: fiscalCode
+                  }
+                ],
+                query: `SELECT * FROM m WHERE m.fiscalCode = @fiscalCode`
+              })
+            )
+          ),
+        toCosmosErrorResponse
+      )
+    );
+
 export const test = () =>
   createTest
     .foldTaskEither<CosmosErrors, RetrievedMessageWithoutContent>(
@@ -157,6 +191,20 @@ export const test = () =>
           result => findMessagesTest(result.fiscalCode)
         )
     )
+    .run()
+    .then(_ => {
+      if (isLeft(_)) {
+        console.log(`${logPrefix}-Test| Error = `);
+        console.log(_.value);
+      } else {
+        console.log(`${logPrefix}-Test| success!`);
+        console.log(_.value);
+      }
+    })
+    .catch(console.error);
+
+export const findAllByQueryTest = () =>
+  findAllTest(aSerializedNewMessageWithoutContent.fiscalCode)
     .run()
     .then(_ => {
       if (isLeft(_)) {

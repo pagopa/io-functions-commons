@@ -2,6 +2,7 @@
 import * as messageIntegration from "./message_integration";
 import * as profileIntegration from "./profile_integration";
 import * as serviceIntegration from "./service_integration";
+import * as udpIntegration from "./user_data_processing_integration";
 
 serviceIntegration
   .test()
@@ -12,6 +13,10 @@ profileIntegration
   .then()
   .catch(console.error);
 messageIntegration
+  .test()
+  .then()
+  .catch(console.error);
+udpIntegration
   .test()
   .then()
   .catch(console.error);
