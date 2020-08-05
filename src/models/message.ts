@@ -12,7 +12,6 @@ import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
 import * as t from "io-ts";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
-import { PromiseType } from "italia-ts-commons/lib/types";
 import {
   BaseModel,
   CosmosdbModel,
@@ -26,7 +25,12 @@ import { MessageContent } from "../../generated/definitions/MessageContent";
 
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 
-import { Container, FeedOptions, SqlQuerySpec } from "@azure/cosmos";
+import {
+  Container,
+  FeedOptions,
+  FeedResponse,
+  SqlQuerySpec
+} from "@azure/cosmos";
 import {
   fromEither as fromEitherT,
   fromLeft,
@@ -252,12 +256,14 @@ export class MessageModel extends CosmosdbModel<
     CosmosErrors,
     Option<ReadonlyArray<RetrievedMessageWithoutContent>>
   > {
-    const fetchAll = this.container.items.query<RetrievedMessageWithoutContent>(
-      query,
-      options
-    ).fetchAll;
-    return tryCatchT<CosmosErrors, PromiseType<ReturnType<typeof fetchAll>>>(
-      () => fetchAll(),
+    return tryCatchT<
+      CosmosErrors,
+      FeedResponse<readonly RetrievedMessageWithoutContent[]>
+    >(
+      () =>
+        this.container.items
+          .query<readonly RetrievedMessageWithoutContent[]>(query, options)
+          .fetchAll(),
       toCosmosErrorResponse
     )
       .map(_ => fromNullable(_.resources))

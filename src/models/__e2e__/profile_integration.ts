@@ -80,7 +80,7 @@ const upsertTest = createDatabase(cosmosDatabaseName)
       kind: "INewProfile",
       ...aProfile,
       email: "emailUpdated@example.com" as EmailString,
-      version: (undefined as unknown) as NonNegativeInteger
+      version: undefined
     })
   );
 
