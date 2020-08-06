@@ -13,6 +13,7 @@ import {
   USER_DATA_PROCESSING_MODEL_ID_FIELD,
   USER_DATA_PROCESSING_MODEL_PK_FIELD,
   UserDataProcessing,
+  UserDataProcessingId,
   UserDataProcessingModel
 } from "../user_data_processing";
 import {
@@ -69,7 +70,7 @@ const createTest = createDatabase(cosmosDatabaseName)
     })
   );
 
-const retrieveTest = (modelId: string) =>
+const retrieveTest = (modelId: UserDataProcessingId, partition: FiscalCode) =>
   createDatabase(cosmosDatabaseName)
     .chain(db =>
       createContainer(
@@ -79,7 +80,10 @@ const retrieveTest = (modelId: string) =>
       )
     )
     .chain(container =>
-      new UserDataProcessingModel(container).findLastVersionByModelId(modelId)
+      new UserDataProcessingModel(container).findLastVersionByModelId([
+        modelId,
+        partition
+      ])
     );
 
 const upsertTest = createDatabase(cosmosDatabaseName)
@@ -114,7 +118,12 @@ export const test = () =>
       _ => fromEither(right(_))
     )
     .chain(_ => upsertTest)
-    .chain(_ => retrieveTest(_[USER_DATA_PROCESSING_MODEL_ID_FIELD]))
+    .chain(_ =>
+      retrieveTest(
+        _[USER_DATA_PROCESSING_MODEL_ID_FIELD],
+        _[USER_DATA_PROCESSING_MODEL_PK_FIELD]
+      )
+    )
     .run()
     .then(_ => {
       if (isLeft(_)) {
