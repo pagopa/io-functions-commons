@@ -2,7 +2,8 @@ import {
   BaseModel,
   CosmosdbModel,
   CosmosErrors,
-  CosmosResource
+  CosmosResource,
+  DocumentSearchKey
 } from "./cosmosdb_model";
 
 import * as t from "io-ts";
@@ -75,13 +76,16 @@ export const incVersion = (version: NonNegativeInteger) =>
 export abstract class CosmosdbModelVersioned<
   T,
   TN extends Readonly<T & Partial<NewVersionedModel>>,
-  TR extends Readonly<T & RetrievedVersionedModel>
-> extends CosmosdbModel<T, TN & BaseModel, TR> {
+  TR extends Readonly<T & RetrievedVersionedModel>,
+  IDENTITY extends keyof T,
+  PK extends keyof T | undefined = undefined
+> extends CosmosdbModel<T, TN & BaseModel, TR, PK> {
   constructor(
     container: Container,
     protected readonly newVersionedItemT: t.Type<TN, ItemDefinition, unknown>,
     protected readonly retrievedItemT: t.Type<TR, unknown, unknown>,
-    protected readonly modelIdKey: keyof T
+    protected readonly modelIdKey: IDENTITY,
+    protected readonly partitionKey?: PK
   ) {
     super(
       container,
@@ -120,15 +124,14 @@ export abstract class CosmosdbModelVersioned<
    */
   public upsert = (
     o: TN,
-    requestOptions?: RequestOptions,
-    partitionKey?: string
+    requestOptions?: RequestOptions
   ): TaskEither<CosmosErrors, TR> => {
     // if we get an explicit version number from the new document we use that,
     // or else we get the last version by querying the database
     const currentVersion: NonNegativeInteger | undefined = o.version;
     const modelId = this.getModelId(o);
     return (currentVersion === undefined
-      ? this.getNextVersion(modelId, partitionKey)
+      ? this.getNextVersion(this.getSearchKey(o))
       : fromEither<CosmosErrors, NonNegativeInteger>(right(currentVersion))
     ).chain(nextVersion =>
       super.create(
@@ -149,9 +152,9 @@ export abstract class CosmosdbModelVersioned<
    *  to avoid multi-partition queries.
    */
   public findLastVersionByModelId(
-    modelId: string,
-    partitionKey?: string
+    searchKey: DocumentSearchKey<T, IDENTITY, PK>
   ): TaskEither<CosmosErrors, Option<TR>> {
+    const [modelId, partitionKey] = searchKey;
     const q: SqlQuerySpec = {
       parameters: [
         {
@@ -169,6 +172,21 @@ export abstract class CosmosdbModelVersioned<
   }
 
   /**
+   * Given a document, extract the tuple that define the search key for it
+   * @param document
+   */
+  protected getSearchKey(document: T): DocumentSearchKey<T, IDENTITY, PK> {
+    const pk: PK | undefined = this.partitionKey;
+    const id: IDENTITY = this.modelIdKey;
+    const searchKey =
+      typeof pk === "undefined"
+        ? [document[id]]
+        : [document[id], document[(pk as unknown) as keyof T]]; // why is this cast necessary? Shouldn't pk be narrowed to typeof TR already?
+
+    return (searchKey as unknown) as DocumentSearchKey<T, IDENTITY, PK>;
+  }
+
+  /**
    * Returns the value of the model ID for the provided item
    */
   protected getModelId = (o: T) =>
@@ -181,8 +199,8 @@ export abstract class CosmosdbModelVersioned<
    * The next version will be the last one from the database incremented by 1 or
    * 0 if no previous version exists in the database.
    */
-  private getNextVersion = (modelId: ModelId, partitionKey?: string) =>
-    this.findLastVersionByModelId(modelId, partitionKey).map(maybeLastVersion =>
+  private getNextVersion = (searchKey: DocumentSearchKey<T, IDENTITY, PK>) =>
+    this.findLastVersionByModelId(searchKey).map(maybeLastVersion =>
       maybeLastVersion
         .map(_ => incVersion(_.version))
         .getOrElse(0 as NonNegativeInteger)

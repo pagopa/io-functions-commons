@@ -25,10 +25,13 @@ beforeEach(() => {
 });
 
 const aModelIdField = "aModelIdField" as const;
+const aModelPartitionField = "aModelPartitionField" as const;
 const aModelIdValue = "aModelIdValue";
+const aModelPartitionValue = 123;
 
 const MyDocument = t.interface({
   [aModelIdField]: t.string,
+  [aModelPartitionField]: t.number,
   test: t.string
 });
 type MyDocument = t.TypeOf<typeof MyDocument>;
@@ -46,10 +49,29 @@ type RetrievedMyDocument = t.TypeOf<typeof RetrievedMyDocument>;
 class MyModel extends CosmosdbModelVersioned<
   MyDocument,
   NewMyDocument,
-  RetrievedMyDocument
+  RetrievedMyDocument,
+  typeof aModelIdField
 > {
   constructor(c: Container) {
     super(c, NewMyDocument, RetrievedMyDocument, aModelIdField);
+  }
+}
+
+class MyPartitionedModel extends CosmosdbModelVersioned<
+  MyDocument,
+  NewMyDocument,
+  RetrievedMyDocument,
+  typeof aModelIdField,
+  typeof aModelPartitionField
+> {
+  constructor(c: Container) {
+    super(
+      c,
+      NewMyDocument,
+      RetrievedMyDocument,
+      aModelIdField,
+      aModelPartitionField
+    );
   }
 }
 
@@ -57,6 +79,7 @@ const aMyDocumentId = aModelIdValue + "-000000000000000";
 
 const aMyDocument = {
   [aModelIdField]: aModelIdValue,
+  [aModelPartitionField]: aModelPartitionValue,
   test: "aNewMyDocument"
 };
 
@@ -262,8 +285,21 @@ describe("findLastVersionByModelId", () => {
     });
 
     const model = new MyModel(container);
+    const result = await model.findLastVersionByModelId([aModelIdValue]).run();
+    expect(isRight(result)).toBeTruthy();
+    if (isRight(result)) {
+      expect(isNone(result.value)).toBeTruthy();
+    }
+  });
+
+  it("should return none when the document is not found on partitioned model", async () => {
+    containerMock.items.query.mockReturnValueOnce({
+      fetchAll: () => Promise.resolve(new FeedResponse([], {}, false))
+    });
+
+    const model = new MyPartitionedModel(container);
     const result = await model
-      .findLastVersionByModelId(aModelIdField, aModelIdValue)
+      .findLastVersionByModelId([aModelIdValue, aModelPartitionValue])
       .run();
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
@@ -276,9 +312,7 @@ describe("findLastVersionByModelId", () => {
       fetchAll: () => Promise.reject(errorResponse)
     });
     const model = new MyModel(container);
-    const result = await model
-      .findLastVersionByModelId(aModelIdField, aModelIdValue)
-      .run();
+    const result = await model.findLastVersionByModelId([aModelIdValue]).run();
     expect(isLeft(result));
     if (isLeft(result)) {
       expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");

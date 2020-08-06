@@ -3,7 +3,6 @@
 import { right } from "fp-ts/lib/Either";
 import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
 import { fromEither, TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
-
 import * as t from "io-ts";
 
 import { PromiseType } from "italia-ts-commons/lib/types";
@@ -29,6 +28,30 @@ export const BaseModel = t.interface({
 });
 
 export type BaseModel = t.TypeOf<typeof BaseModel>;
+
+/**
+ * Model a tuple which defines the references to search for a document.
+ * A Cosmodb document must be looked-up by its Identity alongside its PartitionKey. If PartitionKey field is the same of Identity field, it can be omitted.
+ * Hence this type models both cases: (ID) or (ID,PK) respectively if PK literal type is omitted or provided.
+ * @param T the type of the document mapped by the model
+ * @param ID the literal type defining the ID field for the document.
+ * @param PK (optional) the literal type defining the eventual partition key for the document. Default: undefined
+ */
+export type DocumentSearchKey<
+  // T might not include base model fields ("id"), but we know they are mandatory in cosmos documents
+  // Quick win would be to narrow T to extend BaseModel, but that way we'd lose usage flexibility
+  // Hence we omit "extends BaseModel", but we check keys to be part of "T & BaseModel"
+  T,
+  ID extends keyof (T & BaseModel),
+  PK extends undefined | keyof (T & BaseModel) = undefined
+> = (T & BaseModel)[ID] extends string | number // narrow type to the ones that might be an identity
+  ? PK extends keyof T
+    ? readonly [(T & BaseModel)[ID], (T & BaseModel)[PK]]
+    : readonly [(T & BaseModel)[ID]]
+  : never;
+
+// For basic models, the identity field is always "id"
+type IDENTITY = "id";
 
 // An io-ts definition of Cosmos Resource runtime type
 // IDs are enforced to be non-empty string, as we're sure they are always valued when coming from db.
@@ -123,7 +146,8 @@ const wrapCreate = <TN, TR>(
 export abstract class CosmosdbModel<
   T,
   TN extends Readonly<T & BaseModel>,
-  TR extends Readonly<T & CosmosResource>
+  TR extends Readonly<T & CosmosResource>,
+  PK extends undefined | keyof TR = undefined
 > {
   /**
    * Creates a new instance of the document model on the provided CosmosDB
@@ -173,14 +197,16 @@ export abstract class CosmosdbModel<
   /**
    * Retrieves a document from the document ID.
    *
-   * @param documentId    The ID of the document to retrieve.
+   * @param searchKey    The tuple of values used to look-up a document. It can be [documentId] or [documentId, partitionKey] depending on the definition of the model instance.
    * @param partitionKey  The partitionKey associated to this model.
    */
   public find(
-    documentId: string,
-    partitionKey: string,
+    searchKey: DocumentSearchKey<TR, IDENTITY, PK>,
     options?: RequestOptions
   ): TaskEither<CosmosErrors, Option<TR>> {
+    // documentId must be always valued,
+    // meanwhile partitionKey might be undefined
+    const [documentId, partitionKey] = searchKey;
     return tryCatch<CosmosErrors, ItemResponse<TR>>(
       () => this.container.item(documentId, partitionKey).read(options),
       toCosmosErrorResponse
