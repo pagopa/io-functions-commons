@@ -18,8 +18,7 @@ import {
   CosmosDecodingError,
   CosmosErrors,
   CosmosResource,
-  toCosmosErrorResponse,
-  DocumentSearchKey
+  toCosmosErrorResponse
 } from "../utils/cosmosdb_model";
 
 import { MessageContent } from "../../generated/definitions/MessageContent";

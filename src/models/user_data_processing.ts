@@ -14,7 +14,7 @@ import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { Timestamp } from "../../generated/definitions/Timestamp";
 import { UserDataProcessingChoice } from "../../generated/definitions/UserDataProcessingChoice";
 import { UserDataProcessingStatus } from "../../generated/definitions/UserDataProcessingStatus";
-import { CosmosErrors, DocumentSearchKey } from "../utils/cosmosdb_model";
+import { CosmosErrors } from "../utils/cosmosdb_model";
 import { wrapWithKind } from "../utils/types";
 
 export const USER_DATA_PROCESSING_COLLECTION_NAME = "user-data-processing";
@@ -92,9 +92,6 @@ export function makeUserDataProcessingId(
     }
   );
 }
-
-type M = typeof USER_DATA_PROCESSING_MODEL_ID_FIELD;
-type PK = typeof USER_DATA_PROCESSING_MODEL_PK_FIELD;
 
 /**
  * A model for handling UserDataProcessing
