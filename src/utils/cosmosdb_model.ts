@@ -35,7 +35,7 @@ export type BaseModel = t.TypeOf<typeof BaseModel>;
  * Hence this type models both cases: (ID) or (ID,PK) respectively if PK literal type is omitted or provided.
  * @param T the type of the document mapped by the model
  * @param ID the literal type defining the name of the ID field for the document.
- * @param PK (optional) the literal type defining the eventual partition key for the document. Default: undefined
+ * @param PK (optional) the literal type defining the name of the partition key field. Default: undefined
  */
 export type DocumentSearchKey<
   // T might not include base model fields ("id"), but we know they are mandatory in cosmos documents
