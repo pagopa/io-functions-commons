@@ -15,6 +15,7 @@ import {
   NewUserDataProcessing,
   RetrievedUserDataProcessing,
   UserDataProcessing,
+  UserDataProcessingId,
   UserDataProcessingModel
 } from "../user_data_processing";
 
@@ -136,3 +137,48 @@ describe("createOrUpdateByNewOne", () => {
     }
   });
 });
+
+describe("UserDataProcessingId", () => {
+  it("should decode a valid id", () => {
+    const id = `${aFiscalCode}-${UserDataProcessingChoiceEnum.DELETE}`;
+    const result = UserDataProcessingId.decode(id);
+
+    expect(result.isRight()).toBeTruthy();
+  });
+
+  // tslint:disable: no-nested-template-literals
+  it.each`
+    name                        | value
+    ${"with wrong separator"}   | ${aFiscalCode + "--" + UserDataProcessingChoiceEnum.DELETE}
+    ${"with wrong fiscal code"} | ${"wrong-" + UserDataProcessingChoiceEnum.DELETE}
+    ${"with wrong choice"}      | ${aFiscalCode + "-wrong"}
+  `("should not decode an invalid id $name", ({ value }) => {
+    const result = UserDataProcessingId.decode(value);
+
+    expect(result.isRight()).toBeFalsy();
+  });
+});
+
+describe("makeUserDataProcessingId", () => {
+  it("should create an id with valid values", () => {
+    const result = makeUserDataProcessingId(
+      UserDataProcessingChoiceEnum.DOWNLOAD,
+      aFiscalCode
+    );
+
+    expect(UserDataProcessingId.is(result)).toBeTruthy();
+  });
+
+  it("should not create an id with invalid values", () => {
+    const lazy = () =>
+      makeUserDataProcessingId(
+        // @ts-ignore
+        "wrong choice",
+        // @ts-ignore
+        "wrong fiscal code"
+      );
+
+    expect(lazy).toThrow();
+  });
+});
+

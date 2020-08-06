@@ -18,7 +18,8 @@ import {
   CosmosDecodingError,
   CosmosErrors,
   CosmosResource,
-  toCosmosErrorResponse
+  toCosmosErrorResponse,
+  DocumentSearchKey
 } from "../utils/cosmosdb_model";
 
 import { MessageContent } from "../../generated/definitions/MessageContent";
@@ -45,7 +46,7 @@ import { getBlobAsText, upsertBlobFromObject } from "../utils/azure_storage";
 import { wrapWithKind } from "../utils/types";
 
 export const MESSAGE_COLLECTION_NAME = "messages";
-export const MESSAGE_MODEL_PK_FIELD = "fiscalCode";
+export const MESSAGE_MODEL_PK_FIELD = "fiscalCode" as const;
 
 const MESSAGE_BLOB_STORAGE_SUFFIX = ".json";
 
@@ -187,13 +188,17 @@ function blobIdFromMessageId(messageId: string): string {
   return `${messageId}${MESSAGE_BLOB_STORAGE_SUFFIX}`;
 }
 
+// PartitionKey type (literal of the field name)
+type PartitionKey = typeof MESSAGE_MODEL_PK_FIELD;
+
 /**
  * A model for handling Messages
  */
 export class MessageModel extends CosmosdbModel<
   Message,
   NewMessage,
-  RetrievedMessage
+  RetrievedMessage,
+  PartitionKey
 > {
   /**
    * Creates a new Message model
@@ -215,9 +220,9 @@ export class MessageModel extends CosmosdbModel<
    */
   public findMessageForRecipient(
     fiscalCode: FiscalCode,
-    messageId: string
+    messageId: NonEmptyString
   ): TaskEither<CosmosErrors, Option<RetrievedMessage>> {
-    return this.find(messageId, fiscalCode).map(maybeMessage =>
+    return this.find([messageId, fiscalCode]).map(maybeMessage =>
       maybeMessage.filter(m => m.fiscalCode === fiscalCode)
     );
   }
