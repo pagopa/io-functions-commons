@@ -34,7 +34,7 @@ export type BaseModel = t.TypeOf<typeof BaseModel>;
  * A Cosmodb document must be looked-up by its Identity alongside its PartitionKey. If PartitionKey field is the same of Identity field, it can be omitted.
  * Hence this type models both cases: (ID) or (ID,PK) respectively if PK literal type is omitted or provided.
  * @param T the type of the document mapped by the model
- * @param ID the literal type defining the ID field for the document.
+ * @param ID the literal type defining the name of the ID field for the document.
  * @param PK (optional) the literal type defining the eventual partition key for the document. Default: undefined
  */
 export type DocumentSearchKey<
