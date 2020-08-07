@@ -44,7 +44,7 @@ export type DocumentSearchKey<
   T,
   ID extends keyof (T & BaseModel),
   PK extends undefined | keyof (T & BaseModel) = undefined
-> = (T & BaseModel)[ID] extends string | number // narrow type to the ones that might be an identity
+> = (T & BaseModel)[ID] extends string // narrow type to the ones that might be an identity
   ? PK extends keyof T
     ? readonly [(T & BaseModel)[ID], (T & BaseModel)[PK]]
     : readonly [(T & BaseModel)[ID]]

@@ -187,9 +187,6 @@ function blobIdFromMessageId(messageId: string): string {
   return `${messageId}${MESSAGE_BLOB_STORAGE_SUFFIX}`;
 }
 
-// PartitionKey type (literal of the field name)
-type PartitionKey = typeof MESSAGE_MODEL_PK_FIELD;
-
 /**
  * A model for handling Messages
  */
@@ -197,7 +194,7 @@ export class MessageModel extends CosmosdbModel<
   Message,
   NewMessage,
   RetrievedMessage,
-  PartitionKey
+  typeof MESSAGE_MODEL_PK_FIELD
 > {
   /**
    * Creates a new Message model
