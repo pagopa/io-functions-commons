@@ -31,8 +31,7 @@ type RetrievedMyDocument = t.TypeOf<typeof RetrievedMyDocument>;
 class MyModel extends CosmosdbModel<
   MyDocument,
   NewMyDocument,
-  RetrievedMyDocument,
-  undefined
+  RetrievedMyDocument
 > {
   constructor(c: Container) {
     super(c, NewMyDocument, RetrievedMyDocument);

@@ -74,7 +74,7 @@ export abstract class CosmosdbModelVersioned<
   TN extends Readonly<T & Partial<NewVersionedModel>>,
   TR extends Readonly<T & RetrievedVersionedModel>,
   ModelIdKey extends keyof T,
-  PartitionKey extends keyof T | undefined = undefined
+  PartitionKey extends keyof T = ModelIdKey
 > extends CosmosdbModel<T, TN & BaseModel, TR, PartitionKey> {
   constructor(
     container: Container,
