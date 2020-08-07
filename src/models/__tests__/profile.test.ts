@@ -47,7 +47,7 @@ describe("findLastVersionByModelId", () => {
 
     const model = new ProfileModel(containerMock);
 
-    const result = await model.findLastVersionByModelId(aFiscalCode).run();
+    const result = await model.findLastVersionByModelId([aFiscalCode]).run();
 
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
@@ -76,7 +76,7 @@ describe("findLastVersionByModelId", () => {
 
     const model = new ProfileModel(containerMock);
 
-    const result = await model.findLastVersionByModelId(aFiscalCode).run();
+    const result = await model.findLastVersionByModelId([aFiscalCode]).run();
 
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
@@ -100,7 +100,7 @@ describe("findLastVersionByModelId", () => {
 
     const model = new ProfileModel(containerMock);
 
-    const result = await model.findLastVersionByModelId(aFiscalCode).run();
+    const result = await model.findLastVersionByModelId([aFiscalCode]).run();
 
     expect(isLeft(result)).toBeTruthy();
     if (isLeft(result)) {

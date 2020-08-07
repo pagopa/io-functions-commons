@@ -72,13 +72,13 @@ const createTest = createDatabase(cosmosDatabaseName)
     })
   );
 
-const retrieveTest = (modelId: string) =>
+const retrieveTest = (modelId: NonEmptyString) =>
   createDatabase(cosmosDatabaseName)
     .chain(db =>
       createContainer(db, SERVICE_COLLECTION_NAME, SERVICE_MODEL_PK_FIELD)
     )
     .chain(container =>
-      new ServiceModel(container).findLastVersionByModelId(modelId)
+      new ServiceModel(container).findLastVersionByModelId([modelId])
     );
 
 const upsertTest = createDatabase(cosmosDatabaseName)

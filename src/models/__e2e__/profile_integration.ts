@@ -62,13 +62,13 @@ const createTest = createDatabase(cosmosDatabaseName)
     })
   );
 
-const retrieveTest = (modelId: string) =>
+const retrieveTest = (modelId: FiscalCode) =>
   createDatabase(cosmosDatabaseName)
     .chain(db =>
       createContainer(db, PROFILE_COLLECTION_NAME, PROFILE_MODEL_PK_FIELD)
     )
     .chain(container =>
-      new ProfileModel(container).findLastVersionByModelId(modelId)
+      new ProfileModel(container).findLastVersionByModelId([modelId])
     );
 
 const upsertTest = createDatabase(cosmosDatabaseName)

@@ -45,7 +45,7 @@ import { getBlobAsText, upsertBlobFromObject } from "../utils/azure_storage";
 import { wrapWithKind } from "../utils/types";
 
 export const MESSAGE_COLLECTION_NAME = "messages";
-export const MESSAGE_MODEL_PK_FIELD = "fiscalCode";
+export const MESSAGE_MODEL_PK_FIELD = "fiscalCode" as const;
 
 const MESSAGE_BLOB_STORAGE_SUFFIX = ".json";
 
@@ -193,7 +193,8 @@ function blobIdFromMessageId(messageId: string): string {
 export class MessageModel extends CosmosdbModel<
   Message,
   NewMessage,
-  RetrievedMessage
+  RetrievedMessage,
+  typeof MESSAGE_MODEL_PK_FIELD
 > {
   /**
    * Creates a new Message model
@@ -215,9 +216,9 @@ export class MessageModel extends CosmosdbModel<
    */
   public findMessageForRecipient(
     fiscalCode: FiscalCode,
-    messageId: string
+    messageId: NonEmptyString
   ): TaskEither<CosmosErrors, Option<RetrievedMessage>> {
-    return this.find(messageId, fiscalCode).map(maybeMessage =>
+    return this.find([messageId, fiscalCode]).map(maybeMessage =>
       maybeMessage.filter(m => m.fiscalCode === fiscalCode)
     );
   }
