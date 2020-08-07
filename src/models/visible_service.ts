@@ -5,6 +5,7 @@
 import * as t from "io-ts";
 
 import { collect, StrMap } from "fp-ts/lib/StrMap";
+import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
 import {
   NotificationChannel,
   NotificationChannelEnum
@@ -13,7 +14,6 @@ import { ServicePublic } from "../../generated/definitions/ServicePublic";
 import { ServiceScopeEnum } from "../../generated/definitions/ServiceScope";
 import { ServiceTuple } from "../../generated/definitions/ServiceTuple";
 import { BaseModel } from "../utils/cosmosdb_model";
-import { RetrievedVersionedModel } from "../utils/cosmosdb_model_versioned";
 import { Service, ServiceMetadata } from "./service";
 
 // This is not a CosmosDB model, but entities are stored into blob storage
@@ -32,7 +32,9 @@ const {
 // Public view of RetrivedService type
 const VisibleServiceR = t.intersection([
   BaseModel,
-  RetrievedVersionedModel,
+  t.interface({
+    version: NonNegativeInteger
+  }),
   t.partial({
     ttl: t.number
   }),
