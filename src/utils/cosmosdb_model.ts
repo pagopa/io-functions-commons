@@ -34,8 +34,8 @@ export type BaseModel = t.TypeOf<typeof BaseModel>;
  * A Cosmodb document must be looked-up by its Identity alongside its PartitionKey. If PartitionKey field is the same of Identity field, it can be omitted.
  * Hence this type models both cases: (ID) or (ID,PK) respectively if PK literal type is omitted or provided.
  * @param T the type of the document mapped by the model
- * @param ID the literal type defining the name of the ID field for the document.
- * @param PK (optional) the literal type defining the name of the partition key field. Default: undefined
+ * @param ModelIdKey the literal type defining the name of the ID field for the document.
+ * @param PartitionKey (optional) the literal type defining the name of the partition key field. Default: undefined
  */
 export type DocumentSearchKey<
   // T might not include base model fields ("id"), but we know they are mandatory in cosmos documents
@@ -49,9 +49,6 @@ export type DocumentSearchKey<
     ? readonly [(T & BaseModel)[ModelIdKey], (T & BaseModel)[PartitionKey]]
     : readonly [(T & BaseModel)[ModelIdKey]]
   : never;
-
-// For basic models, the identity field is always "id"
-type IDENTITY = "id";
 
 // An io-ts definition of Cosmos Resource runtime type
 // IDs are enforced to be non-empty string, as we're sure they are always valued when coming from db.
@@ -201,7 +198,7 @@ export abstract class CosmosdbModel<
    * @param partitionKey  The partitionKey associated to this model.
    */
   public find(
-    searchKey: DocumentSearchKey<TR, IDENTITY, PartitionKey>,
+    searchKey: DocumentSearchKey<TR, "id", PartitionKey>, // For basic models, the identity field is always "id"
     options?: RequestOptions
   ): TaskEither<CosmosErrors, Option<TR>> {
     // documentId must be always valued,
