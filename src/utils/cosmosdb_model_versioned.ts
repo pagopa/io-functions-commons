@@ -182,7 +182,9 @@ export abstract class CosmosdbModelVersioned<
     const searchKey =
       typeof pk === "undefined"
         ? [document[id]]
-        : [document[id], document[(pk as unknown) as keyof T]]; // why is this cast necessary? Shouldn't pk be narrowed to typeof TR already?
+        : // this cast is needed as "Generics extending unions cannot be narrowed"
+          // @see https://github.com/microsoft/TypeScript/issues/13995
+          [document[id], document[(pk as unknown) as keyof T]];
 
     return (searchKey as unknown) as DocumentSearchKey<
       T,
