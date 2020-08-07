@@ -23,11 +23,19 @@ import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { mapAsyncIterable } from "./async";
 import { isDefined } from "./types";
 
+export const CosmosDocumentIdKey = "id" as const;
+export type CosmosDocumentIdKey = typeof CosmosDocumentIdKey;
+
+// For basic models, the identity field is always the id of cosmos
+export type BaseModel = t.TypeOf<typeof BaseModel>;
 export const BaseModel = t.interface({
   id: NonEmptyString
 });
 
-export type BaseModel = t.TypeOf<typeof BaseModel>;
+// The set of keys for a model
+// T might not include base model fields ("id"), but we know they are mandatory in cosmos documents
+// Quick win would be to narrow T to extend BaseModel, but that way we'd lose usage flexibility
+// Hence we omit "extends BaseModel", but we check keys to be part of "T & BaseModel"
 
 /**
  * Model a tuple which defines the references to search for a document.
@@ -38,16 +46,18 @@ export type BaseModel = t.TypeOf<typeof BaseModel>;
  * @param PartitionKey (optional) the literal type defining the name of the partition key field. Default: undefined
  */
 export type DocumentSearchKey<
+  T,
   // T might not include base model fields ("id"), but we know they are mandatory in cosmos documents
   // Quick win would be to narrow T to extend BaseModel, but that way we'd lose usage flexibility
   // Hence we omit "extends BaseModel", but we check keys to be part of "T & BaseModel"
-  T,
   ModelIdKey extends keyof (T & BaseModel),
-  PartitionKey extends undefined | keyof (T & BaseModel) = undefined
+  PartitionKey extends keyof (T & BaseModel) = ModelIdKey
 > = (T & BaseModel)[ModelIdKey] extends string // narrow type to the ones that might be an identity
-  ? PartitionKey extends keyof T
-    ? readonly [(T & BaseModel)[ModelIdKey], (T & BaseModel)[PartitionKey]]
-    : readonly [(T & BaseModel)[ModelIdKey]]
+  ? PartitionKey extends ModelIdKey // tslint:disable-next-line: readonly-array
+    ? [(T & BaseModel)[ModelIdKey]] // tslint:disable-next-line: readonly-array
+    : PartitionKey extends keyof (T & BaseModel) // tslint:disable-next-line: readonly-array
+    ? [(T & BaseModel)[ModelIdKey], (T & BaseModel)[PartitionKey]]
+    : never
   : never;
 
 // An io-ts definition of Cosmos Resource runtime type
@@ -144,7 +154,7 @@ export abstract class CosmosdbModel<
   T,
   TN extends Readonly<T & BaseModel>,
   TR extends Readonly<T & CosmosResource>,
-  PartitionKey extends undefined | keyof TR = undefined
+  PartitionKey extends keyof (T & BaseModel) = CosmosDocumentIdKey
 > {
   /**
    * Creates a new instance of the document model on the provided CosmosDB
@@ -198,7 +208,7 @@ export abstract class CosmosdbModel<
    * @param partitionKey  The partitionKey associated to this model.
    */
   public find(
-    searchKey: DocumentSearchKey<TR, "id", PartitionKey>, // For basic models, the identity field is always "id"
+    searchKey: DocumentSearchKey<TR, CosmosDocumentIdKey, PartitionKey>,
     options?: RequestOptions
   ): TaskEither<CosmosErrors, Option<TR>> {
     // documentId must be always valued,
