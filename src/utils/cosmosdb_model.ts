@@ -42,12 +42,12 @@ export type DocumentSearchKey<
   // Quick win would be to narrow T to extend BaseModel, but that way we'd lose usage flexibility
   // Hence we omit "extends BaseModel", but we check keys to be part of "T & BaseModel"
   T,
-  ID extends keyof (T & BaseModel),
-  PK extends undefined | keyof (T & BaseModel) = undefined
-> = (T & BaseModel)[ID] extends string // narrow type to the ones that might be an identity
-  ? PK extends keyof T
-    ? readonly [(T & BaseModel)[ID], (T & BaseModel)[PK]]
-    : readonly [(T & BaseModel)[ID]]
+  ModelIdKey extends keyof (T & BaseModel),
+  PartitionKey extends undefined | keyof (T & BaseModel) = undefined
+> = (T & BaseModel)[ModelIdKey] extends string // narrow type to the ones that might be an identity
+  ? PartitionKey extends keyof T
+    ? readonly [(T & BaseModel)[ModelIdKey], (T & BaseModel)[PartitionKey]]
+    : readonly [(T & BaseModel)[ModelIdKey]]
   : never;
 
 // For basic models, the identity field is always "id"
@@ -147,7 +147,7 @@ export abstract class CosmosdbModel<
   T,
   TN extends Readonly<T & BaseModel>,
   TR extends Readonly<T & CosmosResource>,
-  PARTITION_KEY extends undefined | keyof TR = undefined
+  PartitionKey extends undefined | keyof TR = undefined
 > {
   /**
    * Creates a new instance of the document model on the provided CosmosDB
@@ -201,7 +201,7 @@ export abstract class CosmosdbModel<
    * @param partitionKey  The partitionKey associated to this model.
    */
   public find(
-    searchKey: DocumentSearchKey<TR, IDENTITY, PARTITION_KEY>,
+    searchKey: DocumentSearchKey<TR, IDENTITY, PartitionKey>,
     options?: RequestOptions
   ): TaskEither<CosmosErrors, Option<TR>> {
     // documentId must be always valued,

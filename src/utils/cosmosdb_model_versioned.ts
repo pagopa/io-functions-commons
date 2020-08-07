@@ -52,8 +52,8 @@ export type RetrievedVersionedModel = t.TypeOf<typeof RetrievedVersionedModel>;
  * @param modelId The base model ID
  * @param version The version of the model
  */
-export function generateVersionedModelId<T, MODEL_ID_KEY extends keyof T>(
-  modelId: T[MODEL_ID_KEY],
+export function generateVersionedModelId<T, ModelIdKey extends keyof T>(
+  modelId: T[ModelIdKey],
   version: NonNegativeInteger
 ): string {
   const paddingLength = 16; // length of Number.MAX_SAFE_INTEGER == 9007199254740991
@@ -73,15 +73,15 @@ export abstract class CosmosdbModelVersioned<
   T,
   TN extends Readonly<T & Partial<NewVersionedModel>>,
   TR extends Readonly<T & RetrievedVersionedModel>,
-  MODEL_ID_KEY extends keyof T,
-  PARTITION_KEY extends keyof T | undefined = undefined
-> extends CosmosdbModel<T, TN & BaseModel, TR, PARTITION_KEY> {
+  ModelIdKey extends keyof T,
+  PartitionKey extends keyof T | undefined = undefined
+> extends CosmosdbModel<T, TN & BaseModel, TR, PartitionKey> {
   constructor(
     container: Container,
     protected readonly newVersionedItemT: t.Type<TN, ItemDefinition, unknown>,
     protected readonly retrievedItemT: t.Type<TR, unknown, unknown>,
-    protected readonly modelIdKey: MODEL_ID_KEY,
-    protected readonly partitionKey?: PARTITION_KEY
+    protected readonly modelIdKey: ModelIdKey,
+    protected readonly partitionKey?: PartitionKey
   ) {
     super(
       container,
@@ -104,7 +104,7 @@ export abstract class CosmosdbModelVersioned<
     // this makes it possible to detect conflicting updates (concurrent creation of
     // profiles with the same profile ID and version)
     const modelId = this.getModelId(o);
-    const versionedModelId = generateVersionedModelId<T, MODEL_ID_KEY>(
+    const versionedModelId = generateVersionedModelId<T, ModelIdKey>(
       modelId,
       version
     );
@@ -151,7 +151,7 @@ export abstract class CosmosdbModelVersioned<
    *  to avoid multi-partition queries.
    */
   public findLastVersionByModelId(
-    searchKey: DocumentSearchKey<T, MODEL_ID_KEY, PARTITION_KEY>
+    searchKey: DocumentSearchKey<T, ModelIdKey, PartitionKey>
   ): TaskEither<CosmosErrors, Option<TR>> {
     const [modelId, partitionKey] = searchKey;
     const q: SqlQuerySpec = {
@@ -176,9 +176,9 @@ export abstract class CosmosdbModelVersioned<
    */
   protected getSearchKey(
     document: T
-  ): DocumentSearchKey<T, MODEL_ID_KEY, PARTITION_KEY> {
-    const pk: PARTITION_KEY | undefined = this.partitionKey;
-    const id: MODEL_ID_KEY = this.modelIdKey;
+  ): DocumentSearchKey<T, ModelIdKey, PartitionKey> {
+    const pk: PartitionKey | undefined = this.partitionKey;
+    const id: ModelIdKey = this.modelIdKey;
     const searchKey =
       typeof pk === "undefined"
         ? [document[id]]
@@ -186,15 +186,15 @@ export abstract class CosmosdbModelVersioned<
 
     return (searchKey as unknown) as DocumentSearchKey<
       T,
-      MODEL_ID_KEY,
-      PARTITION_KEY
+      ModelIdKey,
+      PartitionKey
     >;
   }
 
   /**
    * Returns the value of the model ID for the provided item
    */
-  protected getModelId = (o: T): T[MODEL_ID_KEY] => o[this.modelIdKey];
+  protected getModelId = (o: T): T[ModelIdKey] => o[this.modelIdKey];
 
   /**
    * Returns the next version for the model which `id` is `modelId`.
@@ -203,7 +203,7 @@ export abstract class CosmosdbModelVersioned<
    * 0 if no previous version exists in the database.
    */
   private getNextVersion = (
-    searchKey: DocumentSearchKey<T, MODEL_ID_KEY, PARTITION_KEY>
+    searchKey: DocumentSearchKey<T, ModelIdKey, PartitionKey>
   ) =>
     this.findLastVersionByModelId(searchKey).map(maybeLastVersion =>
       maybeLastVersion
