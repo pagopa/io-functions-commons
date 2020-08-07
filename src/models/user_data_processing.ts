@@ -27,7 +27,7 @@ interface IUserDataProcessingIdTag {
 
 export const UserDataProcessingId = tag<IUserDataProcessingIdTag>()(
   t.refinement(t.string, s => {
-    // enforce patter {fiscalCode-Choice}
+    // enforce pattern {fiscalCode-Choice}
     const [fiscalCode, choice] = s.split("-");
     return (
       FiscalCode.decode(fiscalCode).isRight() &&
