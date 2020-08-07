@@ -25,8 +25,8 @@ import { CosmosErrors } from "../utils/cosmosdb_model";
 import { wrapWithKind } from "../utils/types";
 
 export const NOTIFICATION_STATUS_COLLECTION_NAME = "notification-status";
-export const NOTIFICATION_STATUS_MODEL_ID_FIELD = "statusId";
-export const NOTIFICATION_STATUS_MODEL_PK_FIELD = "notificationId";
+export const NOTIFICATION_STATUS_MODEL_ID_FIELD = "statusId" as const;
+export const NOTIFICATION_STATUS_MODEL_PK_FIELD = "notificationId" as const;
 
 interface INotificationStatusIdTag {
   readonly kind: "INotificationStatusIdTag";
@@ -111,7 +111,9 @@ export const getNotificationStatusUpdater = (
 export class NotificationStatusModel extends CosmosdbModelVersioned<
   NotificationStatus,
   NewNotificationStatus,
-  RetrievedNotificationStatus
+  RetrievedNotificationStatus,
+  typeof NOTIFICATION_STATUS_MODEL_ID_FIELD,
+  typeof NOTIFICATION_STATUS_MODEL_PK_FIELD
 > {
   /**
    * Creates a new NotificationStatus model
@@ -123,7 +125,8 @@ export class NotificationStatusModel extends CosmosdbModelVersioned<
       container,
       NewNotificationStatus,
       RetrievedNotificationStatus,
-      NOTIFICATION_STATUS_MODEL_ID_FIELD
+      NOTIFICATION_STATUS_MODEL_ID_FIELD,
+      NOTIFICATION_STATUS_MODEL_PK_FIELD
     );
   }
 
@@ -141,6 +144,6 @@ export class NotificationStatusModel extends CosmosdbModelVersioned<
     channel: NotificationChannel
   ): TaskEither<CosmosErrors, Option<RetrievedNotificationStatus>> {
     const statusId = makeStatusId(notificationId, channel);
-    return this.findLastVersionByModelId(statusId, notificationId);
+    return this.findLastVersionByModelId([statusId, notificationId]);
   }
 }

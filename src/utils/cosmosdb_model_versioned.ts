@@ -2,7 +2,8 @@ import {
   BaseModel,
   CosmosdbModel,
   CosmosErrors,
-  CosmosResource
+  CosmosResource,
+  DocumentSearchKey
 } from "./cosmosdb_model";
 
 import * as t from "io-ts";
@@ -19,10 +20,6 @@ import {
   RequestOptions,
   SqlQuerySpec
 } from "@azure/cosmos";
-
-export const ModelId = t.string; // FIXME: make it branded
-
-export type ModelId = t.TypeOf<typeof ModelId>;
 
 /**
  * A NewVersionedModel may provide an optional version for new items
@@ -55,15 +52,15 @@ export type RetrievedVersionedModel = t.TypeOf<typeof RetrievedVersionedModel>;
  * @param modelId The base model ID
  * @param version The version of the model
  */
-export function generateVersionedModelId(
-  modelId: ModelId,
+export function generateVersionedModelId<T, ModelIdKey extends keyof T>(
+  modelId: T[ModelIdKey],
   version: NonNegativeInteger
 ): string {
   const paddingLength = 16; // length of Number.MAX_SAFE_INTEGER == 9007199254740991
   const paddedVersion = ("0".repeat(paddingLength) + String(version)).slice(
     -paddingLength
   );
-  return `${modelId}-${paddedVersion}`;
+  return `${String(modelId)}-${paddedVersion}`;
 }
 
 export const incVersion = (version: NonNegativeInteger) =>
@@ -75,13 +72,16 @@ export const incVersion = (version: NonNegativeInteger) =>
 export abstract class CosmosdbModelVersioned<
   T,
   TN extends Readonly<T & Partial<NewVersionedModel>>,
-  TR extends Readonly<T & RetrievedVersionedModel>
-> extends CosmosdbModel<T, TN & BaseModel, TR> {
+  TR extends Readonly<T & RetrievedVersionedModel>,
+  ModelIdKey extends keyof T,
+  PartitionKey extends keyof T | undefined = undefined
+> extends CosmosdbModel<T, TN & BaseModel, TR, PartitionKey> {
   constructor(
     container: Container,
     protected readonly newVersionedItemT: t.Type<TN, ItemDefinition, unknown>,
     protected readonly retrievedItemT: t.Type<TR, unknown, unknown>,
-    protected readonly modelIdKey: keyof T
+    protected readonly modelIdKey: ModelIdKey,
+    protected readonly partitionKey?: PartitionKey
   ) {
     super(
       container,
@@ -104,7 +104,10 @@ export abstract class CosmosdbModelVersioned<
     // this makes it possible to detect conflicting updates (concurrent creation of
     // profiles with the same profile ID and version)
     const modelId = this.getModelId(o);
-    const versionedModelId = generateVersionedModelId(modelId, version);
+    const versionedModelId = generateVersionedModelId<T, ModelIdKey>(
+      modelId,
+      version
+    );
 
     const newDocument = {
       ...o,
@@ -120,15 +123,14 @@ export abstract class CosmosdbModelVersioned<
    */
   public upsert = (
     o: TN,
-    requestOptions?: RequestOptions,
-    partitionKey?: string
+    requestOptions?: RequestOptions
   ): TaskEither<CosmosErrors, TR> => {
     // if we get an explicit version number from the new document we use that,
     // or else we get the last version by querying the database
     const currentVersion: NonNegativeInteger | undefined = o.version;
     const modelId = this.getModelId(o);
     return (currentVersion === undefined
-      ? this.getNextVersion(modelId, partitionKey)
+      ? this.getNextVersion(this.getSearchKey(o))
       : fromEither<CosmosErrors, NonNegativeInteger>(right(currentVersion))
     ).chain(nextVersion =>
       super.create(
@@ -149,9 +151,9 @@ export abstract class CosmosdbModelVersioned<
    *  to avoid multi-partition queries.
    */
   public findLastVersionByModelId(
-    modelId: string,
-    partitionKey?: string
+    searchKey: DocumentSearchKey<T, ModelIdKey, PartitionKey>
   ): TaskEither<CosmosErrors, Option<TR>> {
+    const [modelId, partitionKey] = searchKey;
     const q: SqlQuerySpec = {
       parameters: [
         {
@@ -169,11 +171,30 @@ export abstract class CosmosdbModelVersioned<
   }
 
   /**
+   * Given a document, extract the tuple that define the search key for it
+   * @param document
+   */
+  protected getSearchKey(
+    document: T
+  ): DocumentSearchKey<T, ModelIdKey, PartitionKey> {
+    const pk: PartitionKey | undefined = this.partitionKey;
+    const id: ModelIdKey = this.modelIdKey;
+    const searchKey =
+      typeof pk === "undefined"
+        ? [document[id]]
+        : [document[id], document[(pk as unknown) as keyof T]]; // why is this cast necessary? Shouldn't pk be narrowed to typeof TR already?
+
+    return (searchKey as unknown) as DocumentSearchKey<
+      T,
+      ModelIdKey,
+      PartitionKey
+    >;
+  }
+
+  /**
    * Returns the value of the model ID for the provided item
    */
-  protected getModelId = (o: T) =>
-    // tslint:disable-next-line: no-useless-cast
-    ModelId.decode(String(o[this.modelIdKey])).value as ModelId;
+  protected getModelId = (o: T): T[ModelIdKey] => o[this.modelIdKey];
 
   /**
    * Returns the next version for the model which `id` is `modelId`.
@@ -181,8 +202,10 @@ export abstract class CosmosdbModelVersioned<
    * The next version will be the last one from the database incremented by 1 or
    * 0 if no previous version exists in the database.
    */
-  private getNextVersion = (modelId: ModelId, partitionKey?: string) =>
-    this.findLastVersionByModelId(modelId, partitionKey).map(maybeLastVersion =>
+  private getNextVersion = (
+    searchKey: DocumentSearchKey<T, ModelIdKey, PartitionKey>
+  ) =>
+    this.findLastVersionByModelId(searchKey).map(maybeLastVersion =>
       maybeLastVersion
         .map(_ => incVersion(_.version))
         .getOrElse(0 as NonNegativeInteger)

@@ -5,13 +5,19 @@ import { isLeft, isRight } from "fp-ts/lib/Either";
 import { Container, ErrorResponse, ResourceResponse } from "@azure/cosmos";
 
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
-import { BaseModel, CosmosdbModel, CosmosResource } from "../cosmosdb_model";
+import {
+  BaseModel,
+  CosmosdbModel,
+  CosmosResource,
+  DocumentSearchKey
+} from "../cosmosdb_model";
 
 beforeEach(() => {
   jest.resetAllMocks();
 });
 
 const MyDocument = t.interface({
+  pk: t.string,
   test: t.string
 });
 type MyDocument = t.TypeOf<typeof MyDocument>;
@@ -25,7 +31,19 @@ type RetrievedMyDocument = t.TypeOf<typeof RetrievedMyDocument>;
 class MyModel extends CosmosdbModel<
   MyDocument,
   NewMyDocument,
-  RetrievedMyDocument
+  RetrievedMyDocument,
+  undefined
+> {
+  constructor(c: Container) {
+    super(c, NewMyDocument, RetrievedMyDocument);
+  }
+}
+
+class MyPartitionedModel extends CosmosdbModel<
+  MyDocument,
+  NewMyDocument,
+  RetrievedMyDocument,
+  "pk"
 > {
   constructor(c: Container) {
     super(c, NewMyDocument, RetrievedMyDocument);
@@ -42,8 +60,12 @@ const containerMock = {
 };
 const container = (containerMock as unknown) as Container;
 
+const testId = "test-id-1" as NonEmptyString;
+const testPartition = "test-partition";
+
 const aDocument = {
-  id: "test-id-1" as NonEmptyString,
+  id: testId,
+  pk: testPartition,
   test: "test"
 };
 
@@ -53,8 +75,6 @@ export const someMetadata = {
   _self: "_self",
   _ts: 1
 };
-
-const testPartition = "test-partition";
 
 const errorResponse: ErrorResponse = new Error();
 // tslint:disable-next-line: no-object-mutation
@@ -173,6 +193,8 @@ describe("upsert", () => {
   });
 });
 
+// tslint:disable-next-line: interface-name
+
 describe("find", () => {
   it("should retrieve an existing document", async () => {
     readMock.mockResolvedValueOnce(
@@ -188,8 +210,38 @@ describe("find", () => {
     );
     containerMock.item.mockReturnValue({ read: readMock });
     const model = new MyModel(container);
-    const result = await model.find("test-id-1", testPartition).run();
-    expect(containerMock.item).toHaveBeenCalledWith("test-id-1", testPartition);
+
+    const result = await model.find([testId]).run();
+
+    expect(containerMock.item).toHaveBeenCalledWith(testId, undefined);
+    expect(isRight(result)).toBeTruthy();
+    if (isRight(result)) {
+      expect(result.value.isSome()).toBeTruthy();
+      expect(result.value.toUndefined()).toEqual({
+        ...aDocument,
+        ...someMetadata
+      });
+    }
+  });
+
+  it("should retrieve an existing document for a model with a partition", async () => {
+    readMock.mockResolvedValueOnce(
+      new ResourceResponse(
+        {
+          ...aDocument,
+          ...someMetadata
+        },
+        {},
+        200,
+        200
+      )
+    );
+    containerMock.item.mockReturnValue({ read: readMock });
+    const model = new MyPartitionedModel(container);
+
+    const result = await model.find([testId, testPartition]).run();
+
+    expect(containerMock.item).toHaveBeenCalledWith(testId, testPartition);
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
       expect(result.value.isSome()).toBeTruthy();
@@ -207,7 +259,9 @@ describe("find", () => {
     );
     containerMock.item.mockReturnValue({ read: readMock });
     const model = new MyModel(container);
-    const result = await model.find("test-id-1", testPartition).run();
+
+    const result = await model.find([testId]).run();
+
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
       expect(result.value.isNone()).toBeTruthy();
@@ -221,7 +275,9 @@ describe("find", () => {
     );
     containerMock.item.mockReturnValue({ read: readMock });
     const model = new MyModel(container);
-    const result = await model.find("test-id-1", testPartition).run();
+
+    const result = await model.find([testId]).run();
+
     expect(isLeft(result));
     if (isLeft(result)) {
       expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");

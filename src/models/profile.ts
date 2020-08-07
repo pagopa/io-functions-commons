@@ -23,7 +23,7 @@ import { Container } from "@azure/cosmos";
 import { wrapWithKind } from "../utils/types";
 
 export const PROFILE_COLLECTION_NAME = "profiles";
-export const PROFILE_MODEL_PK_FIELD = "fiscalCode";
+export const PROFILE_MODEL_PK_FIELD = "fiscalCode" as const;
 
 /**
  * Base interface for Profile objects
@@ -93,7 +93,8 @@ export type RetrievedProfile = t.TypeOf<typeof RetrievedProfile>;
 export class ProfileModel extends CosmosdbModelVersioned<
   Profile,
   NewProfile,
-  RetrievedProfile
+  RetrievedProfile,
+  typeof PROFILE_MODEL_PK_FIELD
 > {
   /**
    * Creates a new Profile model

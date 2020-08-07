@@ -101,16 +101,16 @@ const retrieveOneByQueryTest = (modelId: string) =>
       })
     );
 
-const findTest = (modelId: string, fiscalCode: FiscalCode) =>
+const findTest = (modelId: NonEmptyString, fiscalCode: FiscalCode) =>
   createDatabase(cosmosDatabaseName)
     .chain(db =>
       createContainer(db, MESSAGE_COLLECTION_NAME, MESSAGE_MODEL_PK_FIELD)
     )
     .chain(container =>
-      new MessageModel(container, MESSAGE_CONTAINER_NAME).find(
+      new MessageModel(container, MESSAGE_CONTAINER_NAME).find([
         modelId,
         fiscalCode
-      )
+      ])
     );
 
 const upsertTest = createDatabase(cosmosDatabaseName)

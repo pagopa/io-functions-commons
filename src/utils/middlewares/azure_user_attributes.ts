@@ -86,7 +86,7 @@ export function AzureUserAttributesMiddleware(
 
     // serviceId equals subscriptionId
     const errorOrMaybeService = await serviceModel
-      .findLastVersionByModelId(subscriptionId, subscriptionId)
+      .findLastVersionByModelId([subscriptionId])
       .run();
 
     if (isLeft(errorOrMaybeService)) {

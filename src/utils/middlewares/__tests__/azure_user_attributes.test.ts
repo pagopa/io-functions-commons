@@ -135,10 +135,9 @@ describe("AzureUserAttributesMiddleware", () => {
 
     expect(mockRequest.header.mock.calls[0][0]).toBe("x-user-email");
     expect(mockRequest.header.mock.calls[1][0]).toBe("x-subscription-id");
-    expect(serviceModel.findLastVersionByModelId).toHaveBeenCalledWith(
-      mockRequest.header("x-subscription-id"),
+    expect(serviceModel.findLastVersionByModelId).toHaveBeenCalledWith([
       mockRequest.header("x-subscription-id")
-    );
+    ]);
     expect(isLeft(result)).toBeTruthy();
     if (isLeft(result)) {
       expect(result.value.kind).toEqual("IResponseErrorForbiddenNotAuthorized");
@@ -164,10 +163,9 @@ describe("AzureUserAttributesMiddleware", () => {
     const result = await middleware(mockRequest as any);
     expect(mockRequest.header.mock.calls[0][0]).toBe("x-user-email");
     expect(mockRequest.header.mock.calls[1][0]).toBe("x-subscription-id");
-    expect(serviceModel.findLastVersionByModelId).toHaveBeenCalledWith(
-      mockRequest.header("x-subscription-id"),
+    expect(serviceModel.findLastVersionByModelId).toHaveBeenCalledWith([
       mockRequest.header("x-subscription-id")
-    );
+    ]);
     expect(isRight(result));
     if (isRight(result)) {
       const attributes = result.value;
@@ -197,10 +195,9 @@ describe("AzureUserAttributesMiddleware", () => {
     const result = await middleware(mockRequest as any);
     expect(mockRequest.header.mock.calls[0][0]).toBe("x-user-email");
     expect(mockRequest.header.mock.calls[1][0]).toBe("x-subscription-id");
-    expect(serviceModel.findLastVersionByModelId).toHaveBeenCalledWith(
-      mockRequest.header("x-subscription-id"),
+    expect(serviceModel.findLastVersionByModelId).toHaveBeenCalledWith([
       mockRequest.header("x-subscription-id")
-    );
+    ]);
     expect(isLeft(result));
     if (isLeft(result)) {
       expect(result.value.kind).toEqual("IResponseErrorQuery");

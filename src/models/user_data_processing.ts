@@ -18,14 +18,23 @@ import { CosmosErrors } from "../utils/cosmosdb_model";
 import { wrapWithKind } from "../utils/types";
 
 export const USER_DATA_PROCESSING_COLLECTION_NAME = "user-data-processing";
-export const USER_DATA_PROCESSING_MODEL_PK_FIELD = "fiscalCode";
+export const USER_DATA_PROCESSING_MODEL_PK_FIELD = "fiscalCode" as const;
 export const USER_DATA_PROCESSING_MODEL_ID_FIELD = "userDataProcessingId" as const;
 
 interface IUserDataProcessingIdTag {
   readonly kind: "IUserDataProcessingIdTag";
 }
 
-export const UserDataProcessingId = tag<IUserDataProcessingIdTag>()(t.string);
+export const UserDataProcessingId = tag<IUserDataProcessingIdTag>()(
+  t.refinement(t.string, s => {
+    // enforce pattern {fiscalCode-Choice}
+    const [fiscalCode, choice] = s.split("-");
+    return (
+      FiscalCode.decode(fiscalCode).isRight() &&
+      UserDataProcessingChoice.decode(choice).isRight()
+    );
+  })
+);
 export type UserDataProcessingId = t.TypeOf<typeof UserDataProcessingId>;
 
 /**
@@ -90,7 +99,9 @@ export function makeUserDataProcessingId(
 export class UserDataProcessingModel extends CosmosdbModelVersioned<
   UserDataProcessing,
   NewUserDataProcessing,
-  RetrievedUserDataProcessing
+  RetrievedUserDataProcessing,
+  typeof USER_DATA_PROCESSING_MODEL_ID_FIELD,
+  typeof USER_DATA_PROCESSING_MODEL_PK_FIELD
 > {
   /**
    * Creates a new User Data Processing model
@@ -103,7 +114,8 @@ export class UserDataProcessingModel extends CosmosdbModelVersioned<
       container,
       NewUserDataProcessing,
       RetrievedUserDataProcessing,
-      USER_DATA_PROCESSING_MODEL_ID_FIELD
+      USER_DATA_PROCESSING_MODEL_ID_FIELD,
+      USER_DATA_PROCESSING_MODEL_PK_FIELD
     );
   }
 
@@ -126,6 +138,6 @@ export class UserDataProcessingModel extends CosmosdbModelVersioned<
       [USER_DATA_PROCESSING_MODEL_ID_FIELD]: newId,
       version: undefined
     };
-    return this.upsert(toUpdate, undefined, toUpdate.fiscalCode);
+    return this.upsert(toUpdate);
   }
 }

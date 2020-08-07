@@ -18,8 +18,8 @@ import {
 import { wrapWithKind } from "../utils/types";
 
 export const MESSAGE_STATUS_COLLECTION_NAME = "message-status";
-export const MESSAGE_STATUS_MODEL_ID_FIELD = "messageId";
-export const MESSAGE_STATUS_MODEL_PK_FIELD = "messageId";
+export const MESSAGE_STATUS_MODEL_ID_FIELD = "messageId" as const;
+export const MESSAGE_STATUS_MODEL_PK_FIELD = "messageId" as const;
 
 // We cannot intersect with MessageStatus
 // as it is a *strict* interface
@@ -73,7 +73,8 @@ export const getMessageStatusUpdater = (
 export class MessageStatusModel extends CosmosdbModelVersioned<
   MessageStatus,
   NewMessageStatus,
-  RetrievedMessageStatus
+  RetrievedMessageStatus,
+  typeof MESSAGE_STATUS_MODEL_ID_FIELD
 > {
   constructor(container: Container) {
     super(
