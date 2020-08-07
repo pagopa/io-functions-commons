@@ -10,6 +10,7 @@ import {
 
 import { Container } from "@azure/cosmos";
 import { TaskEither } from "fp-ts/lib/TaskEither";
+import { readableReport } from "italia-ts-commons/lib/reporters";
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { Timestamp } from "../../generated/definitions/Timestamp";
 import { UserDataProcessingChoice } from "../../generated/definitions/UserDataProcessingChoice";
@@ -87,8 +88,10 @@ export function makeUserDataProcessingId(
   fiscalCode: FiscalCode
 ): UserDataProcessingId {
   return UserDataProcessingId.decode(`${fiscalCode}-${choice}`).getOrElseL(
-    () => {
-      throw new Error("Invalid User Data Processing id");
+    errors => {
+      throw new Error(
+        `Invalid User Data Processing id, reason: ${readableReport(errors)}`
+      );
     }
   );
 }

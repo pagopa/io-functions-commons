@@ -27,7 +27,7 @@ import { ObjectIdGenerator } from "../utils/strings";
 import { wrapWithKind } from "../utils/types";
 
 export const NOTIFICATION_COLLECTION_NAME = "notifications";
-export const NOTIFICATION_MODEL_PK_FIELD = "messageId";
+export const NOTIFICATION_MODEL_PK_FIELD = "messageId" as const;
 
 /**
  * All possible sources that can provide the address of the recipient.
@@ -149,7 +149,8 @@ export type RetrievedNotification = t.TypeOf<typeof RetrievedNotification>;
 export class NotificationModel extends CosmosdbModel<
   Notification,
   NewNotification,
-  RetrievedNotification
+  RetrievedNotification,
+  typeof NOTIFICATION_MODEL_PK_FIELD
 > {
   /**
    * Creates a new Notification model
