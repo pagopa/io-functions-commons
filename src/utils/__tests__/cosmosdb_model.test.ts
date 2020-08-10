@@ -38,6 +38,7 @@ class MyModel extends CosmosdbModel<
   }
 }
 
+// tslint:disable-next-line: max-classes-per-file
 class MyPartitionedModel extends CosmosdbModel<
   MyDocument,
   NewMyDocument,
@@ -212,7 +213,7 @@ describe("find", () => {
 
     const result = await model.find([testId]).run();
 
-    expect(containerMock.item).toHaveBeenCalledWith(testId, undefined);
+    expect(containerMock.item).toHaveBeenCalledWith(testId, testId);
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
       expect(result.value.isSome()).toBeTruthy();
