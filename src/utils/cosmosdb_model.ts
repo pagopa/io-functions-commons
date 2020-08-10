@@ -213,7 +213,7 @@ export abstract class CosmosdbModel<
   ): TaskEither<CosmosErrors, Option<TR>> {
     // documentId must be always valued,
     // meanwhile partitionKey might be undefined
-    const [documentId, partitionKey] = searchKey;
+    const [documentId, partitionKey = documentId] = searchKey;
     return tryCatch<CosmosErrors, ItemResponse<TR>>(
       () => this.container.item(documentId, partitionKey).read(options),
       toCosmosErrorResponse
