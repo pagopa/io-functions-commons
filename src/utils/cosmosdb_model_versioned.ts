@@ -8,9 +8,8 @@ import {
 
 import * as t from "io-ts";
 
-import { right } from "fp-ts/lib/Either";
 import { Option } from "fp-ts/lib/Option";
-import { fromEither, TaskEither } from "fp-ts/lib/TaskEither";
+import { TaskEither, taskEither } from "fp-ts/lib/TaskEither";
 
 import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
 
@@ -119,7 +118,17 @@ export abstract class CosmosdbModelVersioned<
   };
 
   /**
-   * Creates a new version from a full item definition
+   * Creates a new version from a full item definition.
+   *
+   * If the provided item has a version defined it is increased by one.
+   * Otherwise the version is computed retrieving the latest stored item revision.
+   *
+   * When creating the new item, it performs an optimistic lock on the pair (modelId, version).
+   * If there is already an item with such pair (which is the case that the item has been
+   * update concurrently by another workflow) it returns a conflict error (code: 409)
+   *
+   * @param o the item to be updated
+   * @param requestOptions
    */
   public upsert = (
     o: TN,
@@ -131,7 +140,9 @@ export abstract class CosmosdbModelVersioned<
     const modelId = this.getModelId(o);
     return (currentVersion === undefined
       ? this.getNextVersion(this.getSearchKey(o))
-      : fromEither<CosmosErrors, NonNegativeInteger>(right(currentVersion))
+      : taskEither.of<CosmosErrors, NonNegativeInteger>(
+          incVersion(currentVersion)
+        )
     ).chain(nextVersion =>
       super.create(
         {
