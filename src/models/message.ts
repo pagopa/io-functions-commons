@@ -234,17 +234,21 @@ export class MessageModel extends CosmosdbModel<
     CosmosErrors,
     AsyncIterator<ReadonlyArray<t.Validation<RetrievedMessage>>>
   > {
-    const iterator = this.getQueryIterator({
-      parameters: [
-        {
-          name: "@fiscalCode",
-          value: fiscalCode
-        }
-      ],
-      query: `SELECT * FROM m WHERE m.${MESSAGE_MODEL_PK_FIELD} = @fiscalCode`
-    })[Symbol.asyncIterator]();
-
-    return fromEitherT(tryCatch2v(() => iterator, toCosmosErrorResponse));
+    return fromEitherT(
+      tryCatch2v(
+        () =>
+          this.getQueryIterator({
+            parameters: [
+              {
+                name: "@fiscalCode",
+                value: fiscalCode
+              }
+            ],
+            query: `SELECT * FROM m WHERE m.${MESSAGE_MODEL_PK_FIELD} = @fiscalCode`
+          })[Symbol.asyncIterator](),
+        toCosmosErrorResponse
+      )
+    );
   }
 
   /**
