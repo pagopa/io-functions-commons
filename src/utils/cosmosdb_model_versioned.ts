@@ -138,8 +138,8 @@ export abstract class CosmosdbModelVersioned<
     const modelId = this.getModelId(o);
     return (currentVersion === undefined
       ? this.getNextVersion(this.getSearchKey(o))
-      : fromEither<CosmosErrors, NonNegativeInteger>(
-          right(incVersion(currentVersion))
+      : taskEither.of<CosmosErrors, NonNegativeInteger>(
+          incVersion(currentVersion)
         )
     ).chain(nextVersion =>
       super.create(
