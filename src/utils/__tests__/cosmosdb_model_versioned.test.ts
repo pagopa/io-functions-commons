@@ -16,6 +16,7 @@ import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { BaseModel } from "../cosmosdb_model";
 import {
   CosmosdbModelVersioned,
+  generateVersionedModelId,
   NewVersionedModel,
   RetrievedVersionedModel
 } from "../cosmosdb_model_versioned";
@@ -24,14 +25,17 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-// test stub that compose a document id from the pair (modelId, version)
-const documentId = (modelId: string, version: number): NonEmptyString =>
-  `${modelId}${version}` as NonEmptyString;
-
 const aModelIdField = "aModelIdField" as const;
 const aModelPartitionField = "aModelPartitionField" as const;
 const aModelIdValue = "aModelIdValue";
 const aModelPartitionValue = 123;
+
+// test stub that compose a document id from the pair (modelId, version)
+const documentId = (modelId: string, version: number): NonEmptyString =>
+  generateVersionedModelId<MyDocument, typeof aModelIdField>(
+    modelId,
+    version as NonNegativeInteger
+  );
 
 const MyDocument = t.interface({
   [aModelIdField]: t.string,
@@ -124,103 +128,42 @@ const errorResponse: ErrorResponse = new Error();
 errorResponse.code = 500;
 
 describe("upsert", () => {
-  it("should create a new document with implicit version", async () => {
-    const expectedVersion = 0;
-
-    const model = new MyModel(container);
-
-    const result = await model.upsert(aNewMyDocument).run();
-
-    expect(containerMock.items.create).toHaveBeenCalledWith(
-      {
-        ...aNewMyDocument,
-        id: documentId(aMyDocumentId, expectedVersion),
-        version: expectedVersion
-      },
-      { disableAutomaticIdGeneration: true }
-    );
-    expect(isRight(result));
-    if (isRight(result)) {
-      expect(result.value).toEqual({
-        ...aNewMyDocument,
-        ...someMetadata,
-        id: documentId(aMyDocumentId, expectedVersion),
-        version: expectedVersion
+  it.each`
+    document          | currentlyOnDb                 | expectedVersion
+    ${aNewMyDocument} | ${undefined}                  | ${0}
+    ${aNewMyDocument} | ${aRetrievedExistingDocument} | ${aRetrievedExistingDocument.version + 1}
+  `(
+    "should create a document with version $expectedVersion",
+    async ({ document, currentlyOnDb, expectedVersion }) => {
+      containerMock.items.query.mockReturnValueOnce({
+        fetchAll: async () =>
+          // if currentlyOnDb is undefined return empty array
+          new FeedResponse([currentlyOnDb].filter(Boolean), {}, false)
       });
-    }
-  });
 
-  it("should create a new document with explicit version", async () => {
-    const modelCurrentVersion = 2 as NonNegativeInteger;
-    const expectedNextVersion = 3;
+      const model = new MyModel(container);
 
-    const model = new MyModel(container);
+      const result = await model.upsert(document).run();
 
-    const result = await model
-      .upsert({ ...aNewMyDocument, version: modelCurrentVersion })
-      .run();
-
-    expect(containerMock.items.create).toHaveBeenCalledWith(
-      {
-        ...aNewMyDocument,
-        id: documentId(aMyDocumentId, expectedNextVersion),
-        version: expectedNextVersion
-      },
-      { disableAutomaticIdGeneration: true }
-    );
-    expect(isRight(result));
-    if (isRight(result)) {
-      expect(result.value).toEqual({
-        ...aNewMyDocument,
-        ...someMetadata,
-        id: documentId(aMyDocumentId, expectedNextVersion),
-        version: expectedNextVersion
-      });
-    }
-  });
-
-  it("should update an existing document", async () => {
-    // tslint:disable-next-line: restrict-plus-operands
-    const expectedNextVersion = aRetrievedExistingDocument.version + 1;
-
-    containerMock.items.query.mockReturnValueOnce({
-      fetchAll: async () =>
-        new FeedResponse([aRetrievedExistingDocument], {}, false)
-    });
-
-    // passing a document without explicit version
-    const anUpdatedDocument = {
-      ...aMyDocument,
-      test: "anUpdatedDocument"
-    };
-
-    const model = new MyModel(container);
-    const result = await model
-      .upsert({ ...aNewMyDocument, test: "anUpdatedDocument" })
-      .run();
-
-    expect(containerMock.items.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        ...anUpdatedDocument,
-        id: documentId(aMyDocumentId, expectedNextVersion),
-        version: expectedNextVersion
-      }),
-      {
-        disableAutomaticIdGeneration: true
+      expect(containerMock.items.create).toHaveBeenCalledWith(
+        {
+          ...document,
+          id: documentId(document[aModelIdField], expectedVersion),
+          version: expectedVersion
+        },
+        { disableAutomaticIdGeneration: true }
+      );
+      expect(isRight(result));
+      if (isRight(result)) {
+        expect(result.value).toEqual({
+          ...document,
+          ...someMetadata,
+          id: documentId(document[aModelIdField], expectedVersion),
+          version: expectedVersion
+        });
       }
-    );
-    expect(isRight(result));
-    if (isRight(result)) {
-      expect(result.value).toEqual({
-        ...aRetrievedExistingDocument,
-        ...someMetadata,
-        id: documentId(aMyDocumentId, expectedNextVersion),
-        test: "anUpdatedDocument",
-        version: expectedNextVersion
-      });
     }
-  });
-
+  );
   it("should fail on query error when retrieving last version", async () => {
     containerMock.items.query.mockReturnValueOnce({
       fetchAll: () => Promise.reject(errorResponse)
@@ -251,6 +194,62 @@ describe("upsert", () => {
       if (result.value.kind === "COSMOS_ERROR_RESPONSE") {
         expect(result.value.error.code).toBe(500);
       }
+    }
+  });
+});
+
+describe("update", () => {
+  it("should create a new document with explicit version", async () => {
+    const expectedNextVersion = 0;
+    const modelId = aNewMyDocument[aModelIdField];
+    const model = new MyModel(container);
+
+    const result = await model.create(aNewMyDocument).run();
+
+    expect(containerMock.items.create).toHaveBeenCalledWith(
+      {
+        ...aMyDocument, // base type
+        id: documentId(modelId, expectedNextVersion),
+        version: expectedNextVersion
+      },
+      { disableAutomaticIdGeneration: true }
+    );
+    expect(isRight(result));
+    if (isRight(result)) {
+      expect(result.value).toEqual({
+        ...aMyDocument,
+        ...someMetadata,
+        id: documentId(modelId, expectedNextVersion),
+        version: expectedNextVersion
+      });
+    }
+  });
+});
+
+describe("create", () => {
+  it("should create a new document with version 0", async () => {
+    const expectedNextVersion = aRetrievedExistingDocument.version + 1;
+    const modelId = aRetrievedExistingDocument[aModelIdField];
+    const model = new MyModel(container);
+
+    const result = await model.update(aRetrievedExistingDocument).run();
+
+    expect(containerMock.items.create).toHaveBeenCalledWith(
+      {
+        ...aMyDocument, // base type
+        id: documentId(modelId, expectedNextVersion),
+        version: expectedNextVersion
+      },
+      { disableAutomaticIdGeneration: true }
+    );
+    expect(isRight(result));
+    if (isRight(result)) {
+      expect(result.value).toEqual({
+        ...aMyDocument,
+        ...someMetadata,
+        id: documentId(modelId, expectedNextVersion),
+        version: expectedNextVersion
+      });
     }
   });
 });

@@ -138,8 +138,7 @@ export class UserDataProcessingModel extends CosmosdbModelVersioned<
     const toUpdate: NewUserDataProcessing = {
       ...userDataProcessing,
       kind: "INewUserDataProcessing",
-      [USER_DATA_PROCESSING_MODEL_ID_FIELD]: newId,
-      version: undefined
+      [USER_DATA_PROCESSING_MODEL_ID_FIELD]: newId
     };
     return this.upsert(toUpdate);
   }
