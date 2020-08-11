@@ -21,8 +21,12 @@ import {
 } from "../cosmosdb_model_versioned";
 
 beforeEach(() => {
-  jest.resetAllMocks();
+  jest.clearAllMocks();
 });
+
+// test stub that compose a document id from the pair (modelId, version)
+const documentId = (modelId: string, version: number): NonEmptyString =>
+  `${modelId}${version}` as NonEmptyString;
 
 const aModelIdField = "aModelIdField" as const;
 const aModelPartitionField = "aModelPartitionField" as const;
@@ -57,6 +61,7 @@ class MyModel extends CosmosdbModelVersioned<
   }
 }
 
+// tslint:disable-next-line: max-classes-per-file
 class MyPartitionedModel extends CosmosdbModelVersioned<
   MyDocument,
   NewMyDocument,
@@ -97,14 +102,18 @@ const someMetadata = {
 const aRetrievedExistingDocument: RetrievedMyDocument = {
   ...someMetadata,
   ...aMyDocument,
-  id: (aMyDocumentId + "1") as NonEmptyString,
+  id: documentId(aMyDocumentId, 1),
   version: 1 as NonNegativeInteger
 };
 const containerMock = {
   item: jest.fn(),
   items: {
-    create: jest.fn(),
-    query: jest.fn(),
+    create: jest
+      .fn()
+      .mockImplementation(async doc => new ResourceResponse(doc, {}, 200, 200)),
+    query: jest.fn().mockReturnValue({
+      fetchAll: async () => new FeedResponse([], {}, false)
+    }),
     upsert: jest.fn()
   }
 };
@@ -116,30 +125,17 @@ errorResponse.code = 500;
 
 describe("upsert", () => {
   it("should create a new document with implicit version", async () => {
-    containerMock.items.query.mockReturnValueOnce({
-      fetchAll: () => Promise.resolve(new FeedResponse([], {}, false))
-    });
-    containerMock.items.create.mockResolvedValueOnce(
-      new ResourceResponse(
-        {
-          ...aNewMyDocument,
-          ...someMetadata,
-          id: aMyDocumentId + "0",
-          version: 0
-        },
-        {},
-        200,
-        200
-      )
-    );
+    const expectedVersion = 0;
+
     const model = new MyModel(container);
 
     const result = await model.upsert(aNewMyDocument).run();
+
     expect(containerMock.items.create).toHaveBeenCalledWith(
       {
         ...aNewMyDocument,
-        id: aMyDocumentId + "0",
-        version: 0
+        id: documentId(aMyDocumentId, expectedVersion),
+        version: expectedVersion
       },
       { disableAutomaticIdGeneration: true }
     );
@@ -148,39 +144,27 @@ describe("upsert", () => {
       expect(result.value).toEqual({
         ...aNewMyDocument,
         ...someMetadata,
-        id: aMyDocumentId + "0",
-        version: 0
+        id: documentId(aMyDocumentId, expectedVersion),
+        version: expectedVersion
       });
     }
   });
 
   it("should create a new document with explicit version", async () => {
-    containerMock.items.query.mockReturnValueOnce({
-      fetchAll: () => Promise.resolve(new FeedResponse([], {}, false))
-    });
-    containerMock.items.create.mockResolvedValueOnce(
-      new ResourceResponse(
-        {
-          ...aNewMyDocument,
-          ...someMetadata,
-          id: aMyDocumentId + "2",
-          version: 2
-        },
-        {},
-        200,
-        200
-      )
-    );
+    const modelCurrentVersion = 2 as NonNegativeInteger;
+    const expectedNextVersion = 3;
+
     const model = new MyModel(container);
 
     const result = await model
-      .upsert({ ...aNewMyDocument, version: 2 as NonNegativeInteger })
+      .upsert({ ...aNewMyDocument, version: modelCurrentVersion })
       .run();
+
     expect(containerMock.items.create).toHaveBeenCalledWith(
       {
         ...aNewMyDocument,
-        id: aMyDocumentId + "2",
-        version: 2
+        id: documentId(aMyDocumentId, expectedNextVersion),
+        version: expectedNextVersion
       },
       { disableAutomaticIdGeneration: true }
     );
@@ -189,39 +173,25 @@ describe("upsert", () => {
       expect(result.value).toEqual({
         ...aNewMyDocument,
         ...someMetadata,
-        id: aMyDocumentId + "2",
-        version: 2
+        id: documentId(aMyDocumentId, expectedNextVersion),
+        version: expectedNextVersion
       });
     }
   });
 
   it("should update an existing document", async () => {
-    containerMock.items.query.mockReturnValueOnce({
-      fetchAll: () =>
-        Promise.resolve(
-          new FeedResponse([aRetrievedExistingDocument], {}, false)
-        )
-    });
-    containerMock.items.create.mockResolvedValueOnce(
-      new ResourceResponse(
-        {
-          ...aNewMyDocument,
-          ...someMetadata,
-          id: aMyDocumentId + "2",
-          test: "anUpdatedDocument",
-          version: 2
-        },
-        {},
-        200,
-        200
-      )
-    );
+    // tslint:disable-next-line: restrict-plus-operands
+    const expectedNextVersion = aRetrievedExistingDocument.version + 1;
 
+    containerMock.items.query.mockReturnValueOnce({
+      fetchAll: async () =>
+        new FeedResponse([aRetrievedExistingDocument], {}, false)
+    });
+
+    // passing a document without explicit version
     const anUpdatedDocument = {
       ...aMyDocument,
-      id: aMyDocumentId + "2",
-      test: "anUpdatedDocument",
-      version: 2
+      test: "anUpdatedDocument"
     };
 
     const model = new MyModel(container);
@@ -229,17 +199,24 @@ describe("upsert", () => {
       .upsert({ ...aNewMyDocument, test: "anUpdatedDocument" })
       .run();
 
-    expect(containerMock.items.create).toHaveBeenCalledWith(anUpdatedDocument, {
-      disableAutomaticIdGeneration: true
-    });
+    expect(containerMock.items.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ...anUpdatedDocument,
+        id: documentId(aMyDocumentId, expectedNextVersion),
+        version: expectedNextVersion
+      }),
+      {
+        disableAutomaticIdGeneration: true
+      }
+    );
     expect(isRight(result));
     if (isRight(result)) {
       expect(result.value).toEqual({
         ...aRetrievedExistingDocument,
         ...someMetadata,
-        id: aMyDocumentId + "2",
+        id: documentId(aMyDocumentId, expectedNextVersion),
         test: "anUpdatedDocument",
-        version: 2
+        version: expectedNextVersion
       });
     }
   });
@@ -280,10 +257,6 @@ describe("upsert", () => {
 
 describe("findLastVersionByModelId", () => {
   it("should return none when the document is not found", async () => {
-    containerMock.items.query.mockReturnValueOnce({
-      fetchAll: () => Promise.resolve(new FeedResponse([], {}, false))
-    });
-
     const model = new MyModel(container);
     const result = await model.findLastVersionByModelId([aModelIdValue]).run();
     expect(isRight(result)).toBeTruthy();
@@ -293,10 +266,6 @@ describe("findLastVersionByModelId", () => {
   });
 
   it("should return none when the document is not found on partitioned model", async () => {
-    containerMock.items.query.mockReturnValueOnce({
-      fetchAll: () => Promise.resolve(new FeedResponse([], {}, false))
-    });
-
     const model = new MyPartitionedModel(container);
     const result = await model
       .findLastVersionByModelId([aModelIdValue, aModelPartitionValue])
