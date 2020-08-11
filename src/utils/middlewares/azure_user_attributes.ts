@@ -13,7 +13,7 @@ import { Service, ServiceModel } from "../../models/service";
 import { IRequestMiddleware } from "../request_middleware";
 import { ResponseErrorQuery } from "../response";
 
-import { NonNegativeNumber } from "italia-ts-commons/lib/numbers";
+import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
 import {
   IResponse,
   ResponseErrorForbiddenNotAuthorized,
@@ -33,7 +33,7 @@ export interface IAzureUserAttributes {
   // the email of the registered user
   readonly email: EmailString;
   // the service associated to the user
-  readonly service: Service & { readonly version: NonNegativeNumber };
+  readonly service: Service & { readonly version: NonNegativeInteger };
 }
 
 /**
@@ -85,9 +85,9 @@ export function AzureUserAttributesMiddleware(
     const subscriptionId = errorOrUserSubscriptionId.value;
 
     // serviceId equals subscriptionId
-    const errorOrMaybeService = await serviceModel.findOneByServiceId(
-      subscriptionId
-    );
+    const errorOrMaybeService = await serviceModel
+      .findLastVersionByModelId([subscriptionId])
+      .run();
 
     if (isLeft(errorOrMaybeService)) {
       winston.error(

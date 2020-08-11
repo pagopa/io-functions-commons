@@ -1,40 +1,34 @@
 import * as t from "io-ts";
-import { PathReporter } from "io-ts/lib/PathReporter";
 
-import * as DocumentDb from "documentdb";
-import * as DocumentDbUtils from "../utils/documentdb";
 import {
-  DocumentDbModelVersioned,
-  ModelId,
-  VersionedModel
-} from "../utils/documentdb_model_versioned";
+  CosmosdbModelVersioned,
+  NewVersionedModel,
+  RetrievedVersionedModel
+} from "../utils/cosmosdb_model_versioned";
 
-import { Either } from "fp-ts/lib/Either";
 import { Option } from "fp-ts/lib/Option";
 
 import { Set } from "json-set-map";
 
 import { CIDR } from "../../generated/definitions/CIDR";
 
-import { NonNegativeNumber } from "italia-ts-commons/lib/numbers";
 import {
   FiscalCode,
   NonEmptyString,
   OrganizationFiscalCode
 } from "italia-ts-commons/lib/strings";
-import { nonEmptyStringToModelId } from "../utils/conversions";
 
-import {
-  pick,
-  readonlySetType,
-  tag,
-  withDefault
-} from "italia-ts-commons/lib/types";
+import { Container } from "@azure/cosmos";
+import { TaskEither } from "fp-ts/lib/TaskEither";
+import { readonlySetType, withDefault } from "italia-ts-commons/lib/types";
 import { MaxAllowedPaymentAmount } from "../../generated/definitions/MaxAllowedPaymentAmount";
 import { ServiceScope } from "../../generated/definitions/ServiceScope";
+import { CosmosErrors } from "../utils/cosmosdb_model";
+import { wrapWithKind } from "../utils/types";
 
 export const SERVICE_COLLECTION_NAME = "services";
-export const SERVICE_MODEL_PK_FIELD = "serviceId";
+export const SERVICE_MODEL_ID_FIELD = "serviceId" as const;
+export const SERVICE_MODEL_PK_FIELD = SERVICE_MODEL_ID_FIELD;
 
 // required attributes
 const ServiceMetadataR = t.interface({
@@ -107,31 +101,16 @@ export const Service = t.intersection([ServiceR, ServiceO], "Service");
 
 export type Service = t.TypeOf<typeof Service>;
 
-/**
- * Interface for new Service objects
- */
-
-interface INewServiceTag {
-  readonly kind: "INewService";
-}
-
-export const NewService = tag<INewServiceTag>()(
-  t.intersection([Service, DocumentDbUtils.NewDocument, VersionedModel])
+export const NewService = wrapWithKind(
+  t.intersection([Service, NewVersionedModel]),
+  "INewService" as const
 );
 
 export type NewService = t.TypeOf<typeof NewService>;
 
-/**
- * Interface for retrieved Service objects
- *
- * Existing Service records have a version number.
- */
-interface IRetrievedServiceTag {
-  readonly kind: "IRetrievedService";
-}
-
-export const RetrievedService = tag<IRetrievedServiceTag>()(
-  t.intersection([Service, DocumentDbUtils.RetrievedDocument, VersionedModel])
+export const RetrievedService = wrapWithKind(
+  t.intersection([Service, RetrievedVersionedModel]),
+  "IRetrievedService" as const
 );
 
 export type RetrievedService = t.TypeOf<typeof RetrievedService>;
@@ -168,85 +147,30 @@ export function toAuthorizedCIDRs(
   return new Set(Array.from(authorizedCIDRs || []).filter(CIDR.is));
 }
 
-function toRetrieved(result: DocumentDb.RetrievedDocument): RetrievedService {
-  const validation = RetrievedService.decode(result);
-  return validation.getOrElseL(_ => {
-    throw new Error(PathReporter.report(validation).join("\n"));
-  });
-}
-
-function getModelId(o: Service): ModelId {
-  return nonEmptyStringToModelId(o.serviceId);
-}
-
-function updateModelId(
-  o: Service,
-  id: NonEmptyString,
-  version: NonNegativeNumber
-): NewService {
-  return {
-    ...o,
-    id,
-    kind: "INewService",
-    version
-  };
-}
-
-function toBaseType(o: RetrievedService): Service {
-  return pick(
-    [
-      "authorizedCIDRs",
-      "authorizedRecipients",
-      "departmentName",
-      "isVisible",
-      "maxAllowedPaymentAmount",
-      "organizationFiscalCode",
-      "organizationName",
-      "requireSecureChannels",
-      "serviceId",
-      "serviceMetadata",
-      "serviceName"
-    ],
-    o
-  );
-}
-
 /**
  * A model for handling Services
  */
-export class ServiceModel extends DocumentDbModelVersioned<
+export class ServiceModel extends CosmosdbModelVersioned<
   Service,
   NewService,
-  RetrievedService
+  RetrievedService,
+  typeof SERVICE_MODEL_ID_FIELD
 > {
   /**
    * Creates a new Service model
    *
-   * @param dbClient the DocumentDB client
-   * @param collectionUrl the collection URL
+   * @param container the Cosmos container client
    */
-  constructor(
-    dbClient: DocumentDb.DocumentClient,
-    collectionUrl: DocumentDbUtils.IDocumentDbCollectionUri
-  ) {
-    super(
-      dbClient,
-      collectionUrl,
-      toBaseType,
-      toRetrieved,
-      getModelId,
-      updateModelId
-    );
+  constructor(container: Container) {
+    super(container, NewService, RetrievedService, SERVICE_MODEL_ID_FIELD);
   }
 
+  /**
+   * @deprecated use findLastVersionByModelId(serviceId, serviceId)
+   */
   public findOneByServiceId(
     serviceId: NonEmptyString
-  ): Promise<Either<DocumentDb.QueryError, Option<RetrievedService>>> {
-    return super.findLastVersionByModelId(
-      SERVICE_MODEL_PK_FIELD,
-      serviceId,
-      SERVICE_MODEL_PK_FIELD,
-      serviceId
-    );
+  ): TaskEither<CosmosErrors, Option<RetrievedService>> {
+    return super.findLastVersionByModelId([serviceId]);
   }
 }

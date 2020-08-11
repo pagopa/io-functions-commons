@@ -1,12 +1,11 @@
-import * as DocumentDb from "documentdb";
 import * as express from "express";
-import { isLeft } from "fp-ts/lib/Either";
 import {
   HttpStatusCodeEnum,
   IResponse,
   ResponseErrorGeneric
 } from "italia-ts-commons/lib/responses";
-import { IResultIterator, iteratorToArray } from "./documentdb";
+import { asyncIteratorToArray } from "./async";
+import { CosmosErrors } from "./cosmosdb_model";
 
 /**
  * Interface for a successful response returning a json object.
@@ -20,22 +19,18 @@ export interface IResponseSuccessJsonIterator<T>
 }
 
 /**
- * A response that consumes and return the DocumentDb iterator as a json array
+ * A response that consumes and return the Cosmosdb iterator as a json array
  * or an error in case of any failure occurs querying the database.
  *
- * @TODO: pagination
+ * TODO: pagination
+ * TODO: make it stream the iterator instead of consumind it all at once
  */
 export function ResponseJsonIterator<T>(
-  i: IResultIterator<T>
+  i: AsyncIterator<T>
 ): IResponseSuccessJsonIterator<T> {
   return {
     apply: res =>
-      iteratorToArray(i).then(errorOrDocuments => {
-        if (isLeft(errorOrDocuments)) {
-          const queryError = errorOrDocuments.value;
-          return ResponseErrorQuery(queryError.body, queryError).apply(res);
-        }
-        const documents = errorOrDocuments.value;
+      asyncIteratorToArray(i).then(documents => {
         const kindlessDocuments = documents.map(d =>
           Object.assign(Object.assign({}, d), { kind: undefined })
         );
@@ -62,12 +57,15 @@ export interface IResponseErrorQuery extends IResponse<"IResponseErrorQuery"> {}
  */
 export function ResponseErrorQuery(
   detail: string,
-  error: DocumentDb.QueryError
+  error: CosmosErrors
 ): IResponseErrorQuery {
   return {
     ...ResponseErrorGeneric(
       HttpStatusCodeEnum.HTTP_STATUS_500,
-      `Query error (${error.code})`,
+      `Query error (${error.kind})$` +
+        (error.kind === "COSMOS_ERROR_RESPONSE"
+          ? ` (${error.error.code}/${error.error.message})`
+          : ""),
       detail
     ),
     kind: "IResponseErrorQuery"

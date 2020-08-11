@@ -88,6 +88,8 @@ MessageContent:
       $ref: "#/MessageBodyMarkdown"
     payment_data:
       $ref: "#/PaymentData"
+    prescription_data:
+      $ref: "#/PrescriptionData"
     due_date:
       $ref: "#/Timestamp"
   required:
@@ -106,6 +108,29 @@ NewMessage:
       $ref: "#/FiscalCode"
   required:
     - content
+PrescriptionData:
+  type: object
+  description: |-
+    Metadata needed to process medical prescriptions.
+  properties:
+    nre:
+      $ref: "#/PrescriptionNRE"
+    iup:
+      $ref: "#/PrescriptionIUP"
+    prescriber_fiscal_code:
+      $ref: "#/PrescriberFiscalCode"
+  required:
+    - nre
+PrescriptionIUP:
+  description: The field *Identificativo Unico di Prescrizione* identifies the medical prescription at regional level.
+  type: string
+  minLength: 1
+  maxLength: 16
+PrescriptionNRE:
+  description: The field *Numero ricetta elettronica* identifies the medical prescription at national level.
+  type: string
+  minLength: 15
+  maxLength: 15
 PaymentData:
   type: object
   description: |-
@@ -246,6 +271,12 @@ FiscalCode:
   format: FiscalCode
   x-import: italia-ts-commons/lib/strings
   example: SPNDNL80R13C555X
+PrescriberFiscalCode:
+  type: string
+  description: Fiscal code of the Doctor that made the prescription.
+  format: FiscalCode
+  x-import: italia-ts-commons/lib/strings
+  example: TCNZRO80R13C555Y
 SandboxFiscalCode:
   type: string
   description: |-
@@ -332,6 +363,8 @@ NewProfile:
       $ref: "#/EmailAddress"
     is_email_validated:
       $ref: "#/IsEmailValidated"
+    is_test_profile:
+      $ref: "#/IsTestProfile"
   required:
     - is_email_validated
 Profile:
@@ -395,6 +428,8 @@ ExtendedProfile:
       $ref: "#/IsEmailEnabled"
     is_email_validated:
       $ref: "#/IsEmailValidated"
+    is_test_profile:
+      $ref: "#/IsTestProfile"
     version:
       type: integer
   required:
@@ -423,6 +458,10 @@ IsWebhookEnabled:
 IsEmailEnabled:
   type: boolean
   description: True if the recipient of a message wants to forward the notifications to his email address.
+IsTestProfile:
+  type: boolean
+  description: True if the user's profile is only for test purpose. 
+  default: false
 TimeToLiveSeconds:
   type: integer
   default: 3600
@@ -705,6 +744,8 @@ UserDataProcessingStatus:
     - PENDING
     - WIP
     - CLOSED
+    - FAILED
+    - ABORTED
   example: PENDING
 UserDataProcessingChoice:
   type: string

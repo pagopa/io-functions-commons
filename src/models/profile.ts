@@ -1,20 +1,13 @@
 import * as t from "io-ts";
 
-import { tag, withDefault } from "italia-ts-commons/lib/types";
+import { withDefault } from "italia-ts-commons/lib/types";
 
-import * as DocumentDb from "documentdb";
-import * as DocumentDbUtils from "../utils/documentdb";
 import {
-  DocumentDbModelVersioned,
-  ModelId,
-  VersionedModel
-} from "../utils/documentdb_model_versioned";
+  CosmosdbModelVersioned,
+  NewVersionedModel,
+  RetrievedVersionedModel
+} from "../utils/cosmosdb_model_versioned";
 
-import { Either } from "fp-ts/lib/Either";
-import { Option } from "fp-ts/lib/Option";
-
-import { NonNegativeNumber } from "italia-ts-commons/lib/numbers";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { AcceptedTosVersion } from "../../generated/definitions/AcceptedTosVersion";
 import { BlockedInboxOrChannels } from "../../generated/definitions/BlockedInboxOrChannels";
 import { EmailAddress } from "../../generated/definitions/EmailAddress";
@@ -22,12 +15,15 @@ import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { IsEmailEnabled } from "../../generated/definitions/IsEmailEnabled";
 import { IsEmailValidated } from "../../generated/definitions/IsEmailValidated";
 import { IsInboxEnabled } from "../../generated/definitions/IsInboxEnabled";
+import { IsTestProfile } from "../../generated/definitions/IsTestProfile";
 import { IsWebhookEnabled } from "../../generated/definitions/IsWebhookEnabled";
 import { PreferredLanguages } from "../../generated/definitions/PreferredLanguages";
-import { fiscalCodeToModelId } from "../utils/conversions";
+
+import { Container } from "@azure/cosmos";
+import { wrapWithKind } from "../utils/types";
 
 export const PROFILE_COLLECTION_NAME = "profiles";
-export const PROFILE_MODEL_PK_FIELD = "fiscalCode";
+export const PROFILE_MODEL_PK_FIELD = "fiscalCode" as const;
 
 /**
  * Base interface for Profile objects
@@ -68,75 +64,37 @@ export const Profile = t.intersection([
 
     // array of user's preferred languages in ISO-3166-1-2 format
     // https://it.wikipedia.org/wiki/ISO_3166-2
-    preferredLanguages: PreferredLanguages
+    preferredLanguages: PreferredLanguages,
+
+    // if true this profile is only for test purpose
+    isTestProfile: IsTestProfile
   })
 ]);
 
 export type Profile = t.TypeOf<typeof Profile>;
 
-/**
- * Interface for new Profile objects
- */
-
-interface INewProfileTag {
-  readonly kind: "INewProfile";
-}
-
-export const NewProfile = tag<INewProfileTag>()(
-  t.intersection([Profile, DocumentDbUtils.NewDocument, VersionedModel])
+export const NewProfile = wrapWithKind(
+  t.intersection([Profile, NewVersionedModel]),
+  "INewProfile" as const
 );
 
 export type NewProfile = t.TypeOf<typeof NewProfile>;
 
-/**
- * Interface for retrieved Profile objects
- *
- * Existing profile records have a version number.
- */
-interface IRetrievedProfileTag {
-  readonly kind: "IRetrievedProfile";
-}
-
-export const RetrievedProfile = tag<IRetrievedProfileTag>()(
-  t.intersection([Profile, DocumentDbUtils.RetrievedDocument, VersionedModel])
+export const RetrievedProfile = wrapWithKind(
+  t.intersection([Profile, RetrievedVersionedModel]),
+  "IRetrievedProfile" as const
 );
 
 export type RetrievedProfile = t.TypeOf<typeof RetrievedProfile>;
 
-function toRetrieved(result: DocumentDb.RetrievedDocument): RetrievedProfile {
-  return RetrievedProfile.decode(result).getOrElseL(_ => {
-    throw new Error("Fatal, result is not a valid RetrievedProfile");
-  });
-}
-
-function getModelId(o: Profile): ModelId {
-  return fiscalCodeToModelId(o.fiscalCode);
-}
-
-function updateModelId(
-  o: Profile,
-  id: NonEmptyString,
-  version: NonNegativeNumber
-): NewProfile {
-  return {
-    ...o,
-    id,
-    kind: "INewProfile",
-    version
-  };
-}
-
-function toBaseType(o: RetrievedProfile): Profile {
-  return t.exact(Profile).encode(o);
-}
-
 /**
  * A model for handling Profiles
  */
-export class ProfileModel extends DocumentDbModelVersioned<
+export class ProfileModel extends CosmosdbModelVersioned<
   Profile,
   NewProfile,
-  RetrievedProfile
+  RetrievedProfile,
+  typeof PROFILE_MODEL_PK_FIELD
 > {
   /**
    * Creates a new Profile model
@@ -144,33 +102,7 @@ export class ProfileModel extends DocumentDbModelVersioned<
    * @param dbClient the DocumentDB client
    * @param collectionUrl the collection URL
    */
-  constructor(
-    dbClient: DocumentDb.DocumentClient,
-    collectionUrl: DocumentDbUtils.IDocumentDbCollectionUri
-  ) {
-    super(
-      dbClient,
-      collectionUrl,
-      toBaseType,
-      toRetrieved,
-      getModelId,
-      updateModelId
-    );
-  }
-
-  /**
-   * Searches for one profile associated to the provided fiscal code
-   *
-   * @param fiscalCode
-   */
-  public findOneProfileByFiscalCode(
-    fiscalCode: FiscalCode
-  ): Promise<Either<DocumentDb.QueryError, Option<RetrievedProfile>>> {
-    return super.findLastVersionByModelId(
-      PROFILE_MODEL_PK_FIELD,
-      fiscalCode,
-      PROFILE_MODEL_PK_FIELD,
-      fiscalCode
-    );
+  constructor(container: Container) {
+    super(container, NewProfile, RetrievedProfile, "fiscalCode" as const);
   }
 }
