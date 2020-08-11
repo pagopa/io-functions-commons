@@ -120,7 +120,7 @@ export abstract class CosmosdbModelVersioned<
   /**
    * Creates a new version from a full item definition. By a caller perspective, it should behave just like a normal upsert.
    * If the item has a version defined, version is increased by one. Otherwise, the version is calculated from the latest item on db.
-   * When creating the new item, it performs an optimistic clock on the pair (modelId, version).
+   * When creating the new item, it performs an optimistic lock on the pair (modelId, version).
    * If there is already an item with such pair (which is the case that the item has been update concurrently by another workflow), it returns a conflict error (code: 409)
    *
    * @param o the item to be updated
