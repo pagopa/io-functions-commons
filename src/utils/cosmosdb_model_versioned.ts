@@ -89,10 +89,13 @@ export abstract class CosmosdbModelVersioned<
   }
 
   /**
-   * Create a new document with version 0.
-   * This method is meant to be used if we want the document to be the first of its versioning history,
-   * thus version will be set to 0 regardless of the eventual value of o.version.
-   * A 409-conflict error is meant to be raised by the db engine if we already have a document with the pair (modelId, 0).
+   * Create the first revision of a document.
+   *
+   * The version will be set to 0 regardless
+   * of the value of the provided one (if any).
+   *
+   * A 409 Conflict error will be raised by the db engine
+   * if a document with the same modelId already exists.
    *
    * @param o the document to be saved
    * @param options query options for the db operation
@@ -102,12 +105,18 @@ export abstract class CosmosdbModelVersioned<
   }
 
   /**
-   * Creates a new version from a full item definition. By a caller perspective, it should behave just like a normal upsert.
-   * The version of the new created document is always calculated from the latest item on db, regardless of the eventual value of o.version.
-   * This method is meant to be used when we want the provided document to be the latest version of the item, regardless of any concurrent modification to it.
+   * Force create a new revision of a document from a full item definition.
    *
-   * @param o the document to be saved
-   * @param options query options for the db operation
+   * The version of the new revision is always computed by getting the latest one
+   * from the database. Any eventual value of the provided version is thus ignored.
+   *
+   * Use this method to force creating the latest revision of a document,
+   * regardless of any concurrent modification already happened.
+   *
+   * This method never returns 409 Conflict.
+   *
+   * @param o the item to be updated
+   * @param requestOptions query options for the db operation
    */
   public upsert(
     o: TN,
@@ -119,14 +128,22 @@ export abstract class CosmosdbModelVersioned<
   }
 
   /**
-   * Creates a new version from a full item definition. By a caller perspective, it should behave just like a normal update.
-   * The version of the new created document is always calculated by incrementing the one on the provided document
-   * When creating the new item, it performs an optimistic lock on the pair (modelId, version).
-   * If there is already an item with such pair (which is the case that the item has been update concurrently by another workflow), it returns a conflict error (code: 409)
-   * This method is meant to be used when we want to update a model which was retrieved before, and we assume that there's no other workflow updating the same model
+   * Try to create a new revision of a document from a full item definition
+   * with a specific version provided.
+   *
+   * The version of the new created document is always computed
+   * incrementing the one passed with the input document:
+   * the caller must provide an item retrived from the database
+   * without incrementing the version itself.
+   *
+   * A 409 Conflict error will be raised by the db engine
+   * if a document with the same (modelId, version + 1) already exists.
+   *
+   * Use this method to update a model which was already retrieved
+   * when you want the update to fail in case of previous (concurrent) updates.
    *
    * @param o the document to be saved
-   * @param options query options for the db operation
+   * @param requestOptions query options for the db operation
    */
   public update(
     o: TR,
@@ -232,7 +249,6 @@ export abstract class CosmosdbModelVersioned<
 
   /**
    * Strips off meta fields which are nor part of the base model definition
-   * @param o
    */
   private toBaseType(o: TR): T {
     const { _etag, _rid, _self, _ts, id, version, ...n } = o;
