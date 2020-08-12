@@ -201,10 +201,10 @@ describe("upsert", () => {
 describe("update", () => {
   it("should create a new document with explicit version", async () => {
     const expectedNextVersion = 0;
-    const modelId = aNewMyDocument[aModelIdField];
+    const modelId = aMyDocument[aModelIdField];
     const model = new MyModel(container);
 
-    const result = await model.create(aNewMyDocument).run();
+    const result = await model.create(aMyDocument).run();
 
     expect(containerMock.items.create).toHaveBeenCalledWith(
       {
