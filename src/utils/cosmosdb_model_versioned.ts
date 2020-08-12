@@ -1,6 +1,7 @@
 import {
   BaseModel,
   CosmosdbModel,
+  CosmosDecodingError,
   CosmosErrors,
   CosmosResource,
   DocumentSearchKey
@@ -9,7 +10,7 @@ import {
 import * as t from "io-ts";
 
 import { Option } from "fp-ts/lib/Option";
-import { TaskEither, taskEither } from "fp-ts/lib/TaskEither";
+import { fromEither, TaskEither } from "fp-ts/lib/TaskEither";
 
 import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
 
@@ -19,24 +20,25 @@ import {
   RequestOptions,
   SqlQuerySpec
 } from "@azure/cosmos";
+import { NonEmptyString } from "italia-ts-commons/lib/strings";
 
 /**
- * A NewVersionedModel may provide an optional version for new items
+ * Maps the fields of a versioned
  */
-export const NewVersionedModel = t.partial({
-  version: NonNegativeInteger
-});
-
-export type NewVersionedModel = t.TypeOf<typeof NewVersionedModel>;
+export const VersionedModel = t.intersection([
+  BaseModel,
+  t.interface({
+    version: NonNegativeInteger
+  })
+]);
+export type VersionedModel = t.TypeOf<typeof VersionedModel>;
 
 /**
  * A RetrievedVersionedModel should track the version of the model
  */
 export const RetrievedVersionedModel = t.intersection([
   CosmosResource,
-  t.interface({
-    version: NonNegativeInteger
-  })
+  VersionedModel
 ]);
 
 export type RetrievedVersionedModel = t.TypeOf<typeof RetrievedVersionedModel>;
@@ -54,12 +56,12 @@ export type RetrievedVersionedModel = t.TypeOf<typeof RetrievedVersionedModel>;
 export function generateVersionedModelId<T, ModelIdKey extends keyof T>(
   modelId: T[ModelIdKey],
   version: NonNegativeInteger
-): string {
+): NonEmptyString {
   const paddingLength = 16; // length of Number.MAX_SAFE_INTEGER == 9007199254740991
   const paddedVersion = ("0".repeat(paddingLength) + String(version)).slice(
     -paddingLength
   );
-  return `${String(modelId)}-${paddedVersion}`;
+  return `${String(modelId)}-${paddedVersion}` as NonEmptyString;
 }
 
 export const incVersion = (version: NonNegativeInteger) =>
@@ -70,7 +72,7 @@ export const incVersion = (version: NonNegativeInteger) =>
  */
 export abstract class CosmosdbModelVersioned<
   T,
-  TN extends Readonly<T & Partial<NewVersionedModel>>,
+  TN extends Readonly<T>,
   TR extends Readonly<T & RetrievedVersionedModel>,
   ModelIdKey extends keyof T,
   PartitionKey extends keyof T = ModelIdKey
@@ -89,71 +91,73 @@ export abstract class CosmosdbModelVersioned<
     );
   }
 
-  public create = (
-    o: TN,
-    options?: RequestOptions
-  ): TaskEither<CosmosErrors, TR> => {
-    // if we get an explicit version number from the new document we use that,
-    // or else we set version to 0
-    const currentVersion: NonNegativeInteger | undefined = o.version;
-    const version =
-      currentVersion === undefined ? (0 as NonNegativeInteger) : currentVersion;
-
-    // the ID of each document version is composed of the document ID and its version
-    // this makes it possible to detect conflicting updates (concurrent creation of
-    // profiles with the same profile ID and version)
-    const modelId = this.getModelId(o);
-    const versionedModelId = generateVersionedModelId<T, ModelIdKey>(
-      modelId,
-      version
-    );
-
-    const newDocument = {
-      ...o,
-      id: versionedModelId,
-      version
-    } as TN & RetrievedVersionedModel;
-
-    return super.create(newDocument, options);
-  };
+  /**
+   * Create the first revision of a document.
+   *
+   * The version will be set to 0 regardless
+   * of the value of the provided one (if any).
+   *
+   * A 409 Conflict error will be raised by the db engine
+   * if a document with the same modelId already exists.
+   *
+   * @param o the document to be saved
+   * @param options query options for the db operation
+   */
+  public create(o: TN, options?: RequestOptions): TaskEither<CosmosErrors, TR> {
+    return this.createNewVersion(o, 0 as NonNegativeInteger, options);
+  }
 
   /**
-   * Creates a new version from a full item definition.
+   * Force create a new revision of a document from a full item definition.
    *
-   * If the provided item has a version defined it is increased by one.
-   * Otherwise the version is computed retrieving the latest stored item revision.
+   * The version of the new revision is always computed by getting the latest one
+   * from the database. Any eventual value of the provided version is thus ignored.
    *
-   * When creating the new item, it performs an optimistic lock on the pair (modelId, version).
-   * If there is already an item with such pair (which is the case that the item has been
-   * update concurrently by another workflow) it returns a conflict error (code: 409)
+   * Use this method to force creating the latest revision of a document,
+   * regardless of any concurrent modification already happened.
+   *
+   * This method never returns 409 Conflict.
    *
    * @param o the item to be updated
-   * @param requestOptions
+   * @param requestOptions query options for the db operation
    */
-  public upsert = (
+  public upsert(
     o: TN,
     requestOptions?: RequestOptions
-  ): TaskEither<CosmosErrors, TR> => {
-    // if we get an explicit version number from the new document we use that,
-    // or else we get the last version by querying the database
-    const currentVersion: NonNegativeInteger | undefined = o.version;
-    const modelId = this.getModelId(o);
-    return (currentVersion === undefined
-      ? this.getNextVersion(this.getSearchKey(o))
-      : taskEither.of<CosmosErrors, NonNegativeInteger>(
-          incVersion(currentVersion)
-        )
-    ).chain(nextVersion =>
-      super.create(
-        {
-          ...o,
-          id: generateVersionedModelId(modelId, nextVersion),
-          version: nextVersion
-        } as TN & RetrievedVersionedModel,
-        requestOptions
-      )
+  ): TaskEither<CosmosErrors, TR> {
+    return this.getNextVersion(this.getSearchKey(o)).chain(nextVersion =>
+      this.createNewVersion(o, nextVersion, requestOptions)
     );
-  };
+  }
+
+  /**
+   * Try to create a new revision of a document from a full item definition
+   * with a specific version provided.
+   *
+   * The version of the new created document is always computed
+   * incrementing the one passed with the input document:
+   * the caller must provide an item retrived from the database
+   * without incrementing the version itself.
+   *
+   * A 409 Conflict error will be raised by the db engine
+   * if a document with the same (modelId, version + 1) already exists.
+   *
+   * Use this method to update a model which was already retrieved
+   * when you want the update to fail in case of previous (concurrent) updates.
+   *
+   * @param o the document to be saved
+   * @param requestOptions query options for the db operation
+   */
+  public update(
+    o: TR,
+    requestOptions?: RequestOptions
+  ): TaskEither<CosmosErrors, TR> {
+    return this.createNewVersion(
+      this.toBaseType(o),
+      incVersion(o.version),
+      requestOptions
+    );
+  }
 
   /**
    *  Find the last version of a document.
@@ -223,4 +227,56 @@ export abstract class CosmosdbModelVersioned<
         .map(_ => incVersion(_.version))
         .getOrElse(0 as NonNegativeInteger)
     );
+
+  /**
+   * Insert a document with a specific version
+   * @param o
+   * @param version
+   * @param requestOptions
+   */
+  private createNewVersion(
+    o: T,
+    version: NonNegativeInteger,
+    requestOptions?: RequestOptions
+  ): TaskEither<CosmosErrors, TR> {
+    const modelId = this.getModelId(o);
+    return fromEither(
+      t.intersection([this.newVersionedItemT, VersionedModel]).decode({
+        ...o,
+        id: generateVersionedModelId(modelId, version),
+        version
+      })
+    )
+      .mapLeft<CosmosErrors>(CosmosDecodingError)
+      .chain(document => super.create(document, requestOptions));
+  }
+
+  /**
+   * Strips off meta fields which are nor part of the base model definition
+   */
+  private toBaseType(o: TR): T {
+    // keys to remove
+    const removed: Record<keyof RetrievedVersionedModel, null> = {
+      _etag: null,
+      _rid: null,
+      _self: null,
+      _ts: null,
+      id: null,
+      version: null
+    };
+
+    const skimmed: Omit<TR, keyof RetrievedVersionedModel> = Object.keys(
+      removed
+    ).reduce(
+      (p, k) => {
+        const { [k]: x, ...n } = p;
+        return n;
+      },
+      // tslint:disable-next-line: no-any
+      o as any
+    );
+
+    // we know that T =  Omit<TR, keyof RetrievedVersionedModel>
+    return (skimmed as unknown) as T;
+  }
 }
