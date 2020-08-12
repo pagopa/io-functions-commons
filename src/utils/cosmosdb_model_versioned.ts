@@ -251,7 +251,26 @@ export abstract class CosmosdbModelVersioned<
    * Strips off meta fields which are nor part of the base model definition
    */
   private toBaseType(o: TR): T {
-    const { _etag, _rid, _self, _ts, id, version, ...n } = o;
-    return (n as unknown) as T;
+    // keys to remove
+    const removed: ReadonlyArray<keyof RetrievedVersionedModel> = [
+      "_etag",
+      "_rid",
+      "_self",
+      "_ts",
+      "id",
+      "version"
+    ]; // can we ensure we are getting ALL keys of RetrievedVersionedModel?
+
+    const skimmed: Omit<TR, keyof RetrievedVersionedModel> = removed.reduce(
+      (p, k) => {
+        const { [k]: x, ...n } = p;
+        return n;
+      },
+      // tslint:disable-next-line: no-any
+      o as any
+    );
+
+    // we know that T =  Omit<TR, keyof RetrievedVersionedModel>
+    return (skimmed as unknown) as T;
   }
 }
