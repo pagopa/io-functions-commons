@@ -2,7 +2,6 @@ import * as t from "io-ts";
 
 import {
   CosmosdbModelVersioned,
-  NewVersionedModel,
   RetrievedVersionedModel
 } from "../utils/cosmosdb_model_versioned";
 
@@ -97,16 +96,11 @@ const ServiceO = t.partial({
   serviceMetadata: ServiceMetadata
 });
 
+export type Service = t.TypeOf<typeof Service>;
 export const Service = t.intersection([ServiceR, ServiceO], "Service");
 
-export type Service = t.TypeOf<typeof Service>;
-
-export const NewService = wrapWithKind(
-  t.intersection([Service, NewVersionedModel]),
-  "INewService" as const
-);
-
 export type NewService = t.TypeOf<typeof NewService>;
+export const NewService = wrapWithKind(Service, "INewService" as const);
 
 export const RetrievedService = wrapWithKind(
   t.intersection([Service, RetrievedVersionedModel]),

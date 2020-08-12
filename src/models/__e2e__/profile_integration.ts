@@ -57,8 +57,7 @@ const createTest = createDatabase(cosmosDatabaseName)
   .chain(container =>
     new ProfileModel(container).create({
       kind: "INewProfile",
-      ...aProfile,
-      version: 0 as NonNegativeInteger
+      ...aProfile
     })
   );
 
@@ -79,8 +78,7 @@ const upsertTest = createDatabase(cosmosDatabaseName)
     new ProfileModel(container).upsert({
       kind: "INewProfile",
       ...aProfile,
-      email: "emailUpdated@example.com" as EmailString,
-      version: undefined
+      email: "emailUpdated@example.com" as EmailString
     })
   );
 

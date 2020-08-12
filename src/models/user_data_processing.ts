@@ -4,7 +4,6 @@ import { tag } from "italia-ts-commons/lib/types";
 
 import {
   CosmosdbModelVersioned,
-  NewVersionedModel,
   RetrievedVersionedModel
 } from "../utils/cosmosdb_model_versioned";
 
@@ -68,7 +67,7 @@ export const UserDataProcessing = t.intersection([
 export type UserDataProcessing = t.TypeOf<typeof UserDataProcessing>;
 
 export const NewUserDataProcessing = wrapWithKind(
-  t.intersection([UserDataProcessing, NewVersionedModel]),
+  UserDataProcessing,
   "INewUserDataProcessing" as const
 );
 
@@ -138,8 +137,7 @@ export class UserDataProcessingModel extends CosmosdbModelVersioned<
     const toUpdate: NewUserDataProcessing = {
       ...userDataProcessing,
       kind: "INewUserDataProcessing",
-      [USER_DATA_PROCESSING_MODEL_ID_FIELD]: newId,
-      version: undefined
+      [USER_DATA_PROCESSING_MODEL_ID_FIELD]: newId
     };
     return this.upsert(toUpdate);
   }
