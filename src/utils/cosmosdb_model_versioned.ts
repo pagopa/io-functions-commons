@@ -1,6 +1,7 @@
 import {
   BaseModel,
   CosmosdbModel,
+  CosmosDecodingError,
   CosmosErrors,
   CosmosResource,
   DocumentSearchKey
@@ -9,7 +10,7 @@ import {
 import * as t from "io-ts";
 
 import { Option } from "fp-ts/lib/Option";
-import { TaskEither } from "fp-ts/lib/TaskEither";
+import { fromEither, TaskEither } from "fp-ts/lib/TaskEither";
 
 import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
 
@@ -22,20 +23,22 @@ import {
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 
 /**
- * A NewVersionedModel may provide an optional version for new items
+ * Maps the fields of a versioned
  */
-export const NewVersionedModel = t.partial({});
-
-export type NewVersionedModel = t.TypeOf<typeof NewVersionedModel>;
+export const VersionedModel = t.intersection([
+  BaseModel,
+  t.interface({
+    version: NonNegativeInteger
+  })
+]);
+export type VersionedModel = t.TypeOf<typeof VersionedModel>;
 
 /**
  * A RetrievedVersionedModel should track the version of the model
  */
 export const RetrievedVersionedModel = t.intersection([
   CosmosResource,
-  t.interface({
-    version: NonNegativeInteger
-  })
+  VersionedModel
 ]);
 
 export type RetrievedVersionedModel = t.TypeOf<typeof RetrievedVersionedModel>;
@@ -69,7 +72,7 @@ export const incVersion = (version: NonNegativeInteger) =>
  */
 export abstract class CosmosdbModelVersioned<
   T,
-  TN extends Readonly<T & Partial<NewVersionedModel>>,
+  TN extends Readonly<T>,
   TR extends Readonly<T & RetrievedVersionedModel>,
   ModelIdKey extends keyof T,
   PartitionKey extends keyof T = ModelIdKey
@@ -237,14 +240,15 @@ export abstract class CosmosdbModelVersioned<
     requestOptions?: RequestOptions
   ): TaskEither<CosmosErrors, TR> {
     const modelId = this.getModelId(o);
-    return super.create(
-      {
+    return fromEither(
+      t.intersection([this.newVersionedItemT, VersionedModel]).decode({
         ...o,
         id: generateVersionedModelId(modelId, version),
         version
-      } as TN & RetrievedVersionedModel,
-      requestOptions
-    );
+      })
+    )
+      .mapLeft<CosmosErrors>(CosmosDecodingError)
+      .chain(document => super.create(document, requestOptions));
   }
 
   /**
@@ -252,16 +256,18 @@ export abstract class CosmosdbModelVersioned<
    */
   private toBaseType(o: TR): T {
     // keys to remove
-    const removed: ReadonlyArray<keyof RetrievedVersionedModel> = [
-      "_etag",
-      "_rid",
-      "_self",
-      "_ts",
-      "id",
-      "version"
-    ]; // can we ensure we are getting ALL keys of RetrievedVersionedModel?
+    const removed: Record<keyof RetrievedVersionedModel, null> = {
+      _etag: null,
+      _rid: null,
+      _self: null,
+      _ts: null,
+      id: null,
+      version: null
+    };
 
-    const skimmed: Omit<TR, keyof RetrievedVersionedModel> = removed.reduce(
+    const skimmed: Omit<TR, keyof RetrievedVersionedModel> = Object.keys(
+      removed
+    ).reduce(
       (p, k) => {
         const { [k]: x, ...n } = p;
         return n;

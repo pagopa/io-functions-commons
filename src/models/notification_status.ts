@@ -4,7 +4,6 @@ import { tag } from "italia-ts-commons/lib/types";
 
 import {
   CosmosdbModelVersioned,
-  NewVersionedModel,
   RetrievedVersionedModel
 } from "../utils/cosmosdb_model_versioned";
 
@@ -51,7 +50,7 @@ export const NotificationStatus = t.interface({
 export type NotificationStatus = t.TypeOf<typeof NotificationStatus>;
 
 export const NewNotificationStatus = wrapWithKind(
-  t.intersection([NotificationStatus, NewVersionedModel]),
+  NotificationStatus,
   "INewNotificationStatus" as const
 );
 

@@ -17,7 +17,6 @@ import { BaseModel } from "../cosmosdb_model";
 import {
   CosmosdbModelVersioned,
   generateVersionedModelId,
-  NewVersionedModel,
   RetrievedVersionedModel
 } from "../cosmosdb_model_versioned";
 
@@ -44,9 +43,6 @@ const MyDocument = t.interface({
 });
 type MyDocument = t.TypeOf<typeof MyDocument>;
 
-const NewMyDocument = t.intersection([MyDocument, NewVersionedModel]);
-type NewMyDocument = t.TypeOf<typeof NewMyDocument>;
-
 const RetrievedMyDocument = t.intersection([
   MyDocument,
   RetrievedVersionedModel,
@@ -56,19 +52,19 @@ type RetrievedMyDocument = t.TypeOf<typeof RetrievedMyDocument>;
 
 class MyModel extends CosmosdbModelVersioned<
   MyDocument,
-  NewMyDocument,
+  MyDocument,
   RetrievedMyDocument,
   typeof aModelIdField
 > {
   constructor(c: Container) {
-    super(c, NewMyDocument, RetrievedMyDocument, aModelIdField);
+    super(c, MyDocument, RetrievedMyDocument, aModelIdField);
   }
 }
 
 // tslint:disable-next-line: max-classes-per-file
 class MyPartitionedModel extends CosmosdbModelVersioned<
   MyDocument,
-  NewMyDocument,
+  MyDocument,
   RetrievedMyDocument,
   typeof aModelIdField,
   typeof aModelPartitionField
@@ -76,7 +72,7 @@ class MyPartitionedModel extends CosmosdbModelVersioned<
   constructor(c: Container) {
     super(
       c,
-      NewMyDocument,
+      MyDocument,
       RetrievedMyDocument,
       aModelIdField,
       aModelPartitionField
@@ -90,10 +86,6 @@ const aMyDocument = {
   [aModelIdField]: aModelIdValue,
   [aModelPartitionField]: aModelPartitionValue,
   test: "aNewMyDocument"
-};
-
-const aNewMyDocument: NewMyDocument = {
-  ...aMyDocument
 };
 
 const someMetadata = {
@@ -129,9 +121,9 @@ errorResponse.code = 500;
 
 describe("upsert", () => {
   it.each`
-    document          | currentlyOnDb                 | expectedVersion
-    ${aNewMyDocument} | ${undefined}                  | ${0}
-    ${aNewMyDocument} | ${aRetrievedExistingDocument} | ${aRetrievedExistingDocument.version + 1}
+    document       | currentlyOnDb                 | expectedVersion
+    ${aMyDocument} | ${undefined}                  | ${0}
+    ${aMyDocument} | ${aRetrievedExistingDocument} | ${aRetrievedExistingDocument.version + 1}
   `(
     "should create a document with version $expectedVersion",
     async ({ document, currentlyOnDb, expectedVersion }) => {
@@ -170,7 +162,7 @@ describe("upsert", () => {
     });
     const model = new MyModel(container);
 
-    const result = await model.upsert(aNewMyDocument).run();
+    const result = await model.upsert(aMyDocument).run();
     expect(isLeft(result));
     if (isLeft(result)) {
       expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");
@@ -187,7 +179,7 @@ describe("upsert", () => {
     containerMock.items.create.mockRejectedValueOnce(errorResponse);
     const model = new MyModel(container);
 
-    const result = await model.upsert(aNewMyDocument).run();
+    const result = await model.upsert(aMyDocument).run();
     expect(isLeft(result));
     if (isLeft(result)) {
       expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");
