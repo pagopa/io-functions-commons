@@ -545,18 +545,6 @@ ServicePayload:
       type: array
       items:
         $ref: "#/CIDR"
-    authorized_recipients:
-      description: |-
-        If non empty, the service will be able
-        to send messages only to these fiscal codes.
-      type: array
-      items:
-        $ref: "#/FiscalCode"
-    is_visible:
-      type: boolean
-      default: false
-    max_allowed_payment_amount:
-      $ref: "#/MaxAllowedPaymentAmount"
     version:
       type: integer
     require_secure_channels:
@@ -570,7 +558,6 @@ ServicePayload:
     - organization_name
     - organization_fiscal_code
     - authorized_cidrs
-    - authorized_recipients
 Service: 
   description: A service tied to user's subscription.
   allOf:
@@ -581,8 +568,21 @@ Service:
         type: string
       service_id:
         $ref: "#/ServiceId"
+      authorized_recipients:
+        description: |-
+          If non empty, the service will be able
+          to send messages only to these fiscal codes.
+        type: array
+        items:
+          $ref: "#/FiscalCode"
+      max_allowed_payment_amount:
+        $ref: "#/MaxAllowedPaymentAmount"
+      is_visible:
+        type: boolean
+        default: false
     required:
       - service_id
+      - authorized_recipients
 ServiceMetadata:
   type: object
   properties:
