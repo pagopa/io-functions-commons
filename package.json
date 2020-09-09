@@ -1,6 +1,6 @@
 {
   "name": "io-functions-commons",
-  "version": "13.0.0",
+  "version": "13.1.0",
   "description": "Common code for Azure functions",
   "repository": "https://github.com/pagopa/io-functions-commons",
   "author": "https://www.pagopa.gov.it",
@@ -29,7 +29,7 @@
     "danger": "^7.0.0",
     "danger-plugin-digitalcitizenship": "*",
     "italia-tslint-rules": "*",
-    "italia-utils": "^4.0.1",
+    "italia-utils": "^5.0.1",
     "jest": "^24.8.0",
     "prettier": "^1.14.3",
     "release-it": "^13.1.1",

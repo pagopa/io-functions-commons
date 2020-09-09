@@ -527,55 +527,62 @@ SenderMetadata:
     - service_name
     - organization_name
     - department_name
-Service:
-  description: A Service tied to an user's subscription.
+ServicePayload:
+  description: A payload used to create/update a service for a user.
   type: object
   properties:
-    service_id:
-      $ref: "#/ServiceId"
     service_name:
       $ref: "#/ServiceName"
-    organization_name:
-      $ref: "#/OrganizationName"
     department_name:
       $ref: "#/DepartmentName"
+    organization_name:
+      $ref: "#/OrganizationName"
+    organization_fiscal_code:
+      $ref: "#/OrganizationFiscalCode"
     authorized_cidrs:
       description: |-
         Allowed source IPs or CIDRs for this service.
       type: array
       items:
         $ref: "#/CIDR"
-    authorized_recipients:
-      description: |-
-        If non empty, the service will be able
-        to send messages only to these fiscal codes.
-      type: array
-      items:
-        $ref: "#/FiscalCode"
-    is_visible:
-      type: boolean
-      default: false
-    max_allowed_payment_amount:
-      $ref: "#/MaxAllowedPaymentAmount"
-    organization_fiscal_code:
-      $ref: "#/OrganizationFiscalCode"
     version:
       type: integer
-    id:
-      type: string
     require_secure_channels:
       type: boolean
       default: false
+    is_visible:
+        type: boolean
+        default: false
     service_metadata:
       $ref: "#/ServiceMetadata"
   required:
-    - service_id
     - service_name
-    - organization_name
     - department_name
-    - authorized_cidrs
-    - authorized_recipients
+    - organization_name
     - organization_fiscal_code
+    - authorized_cidrs
+Service: 
+  description: A service tied to user's subscription.
+  allOf:
+  - $ref: "#/ServicePayload"
+  - type: object
+    properties:
+      id:
+        type: string
+      service_id:
+        $ref: "#/ServiceId"
+      authorized_recipients:
+        description: |-
+          If non empty, the service will be able
+          to send messages only to these fiscal codes.
+        type: array
+        items:
+          $ref: "#/FiscalCode"
+      max_allowed_payment_amount:
+        $ref: "#/MaxAllowedPaymentAmount"
+    required:
+      - service_id
+      - authorized_recipients
 ServiceMetadata:
   type: object
   properties:
