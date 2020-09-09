@@ -550,6 +550,9 @@ ServicePayload:
     require_secure_channels:
       type: boolean
       default: false
+    is_visible:
+        type: boolean
+        default: false
     service_metadata:
       $ref: "#/ServiceMetadata"
   required:
@@ -577,9 +580,6 @@ Service:
           $ref: "#/FiscalCode"
       max_allowed_payment_amount:
         $ref: "#/MaxAllowedPaymentAmount"
-      is_visible:
-        type: boolean
-        default: false
     required:
       - service_id
       - authorized_recipients
