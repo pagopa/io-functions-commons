@@ -542,6 +542,7 @@ ServicePayload:
     authorized_cidrs:
       description: |-
         Allowed source IPs or CIDRs for this service.
+        When empty, every IP address it's authorized to call the IO API on behalf of the service.
       type: array
       items:
         $ref: "#/CIDR"
@@ -550,6 +551,8 @@ ServicePayload:
     require_secure_channels:
       type: boolean
       default: false
+      description: |-
+        When true, messages won't trigger email notifications (only push).
     is_visible:
         type: boolean
         default: false
@@ -585,6 +588,7 @@ Service:
       - authorized_recipients
 ServiceMetadata:
   type: object
+  description: A set of metadata properties related to this service.
   properties:
     description:
       type: string
