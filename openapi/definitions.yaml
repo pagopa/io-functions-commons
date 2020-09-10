@@ -556,6 +556,8 @@ ServicePayload:
     is_visible:
         type: boolean
         default: false
+        description: |-
+          When true the service appears in the service list, otherwise is hidden.
     service_metadata:
       $ref: "#/ServiceMetadata"
   required:
