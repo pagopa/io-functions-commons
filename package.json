@@ -46,7 +46,7 @@
     "azure-storage": "^2.10.3",
     "cidr-matcher": "^2.1.0",
     "fp-ts": "1.17.4",
-    "helmet": "^3.13.0",
+    "helmet": "^3.23.3",
     "helmet-csp": "^2.5.1",
     "io-functions-express": "^0.1.1",
     "io-ts": "1.8.5",
