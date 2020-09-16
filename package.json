@@ -40,7 +40,7 @@
     "typescript": "^3.8.0"
   },
   "dependencies": {
-    "@azure/cosmos": "^3.7.2",
+    "@azure/cosmos": "^3.9.0",
     "@types/node-fetch": "^2.5.6",
     "applicationinsights": "^1.7.3",
     "azure-storage": "^2.10.3",
