@@ -622,6 +622,15 @@ ServiceMetadata:
     pec:
       type: string
       minLength: 1
+    cta:
+      type: string
+      minLength: 1
+    token_name: 
+      type: string
+      minLength: 1
+    support_url:
+      type: string
+      minLength: 1
     scope:
       $ref: "#/ServiceScope"
   required:
