@@ -54,7 +54,13 @@ const ServiceMetadataO = t.partial({
 
   email: NonEmptyString,
 
-  pec: NonEmptyString
+  pec: NonEmptyString,
+
+  cta: NonEmptyString,
+
+  tokenName: NonEmptyString,
+
+  supportUrl: NonEmptyString
 });
 
 export const ServiceMetadata = t.intersection(
