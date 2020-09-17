@@ -14,6 +14,7 @@ import { ServicePublic } from "../../generated/definitions/ServicePublic";
 import { ServiceScopeEnum } from "../../generated/definitions/ServiceScope";
 import { ServiceTuple } from "../../generated/definitions/ServiceTuple";
 import { BaseModel } from "../utils/cosmosdb_model";
+import { toApiServiceMetadata } from "../utils/service_metadata";
 import { Service, ServiceMetadata } from "./service";
 
 // This is not a CosmosDB model, but entities are stored into blob storage
@@ -78,19 +79,7 @@ export function toServicePublic(visibleService: VisibleService): ServicePublic {
     organization_name: visibleService.organizationName,
     service_id: visibleService.serviceId,
     service_metadata: visibleService.serviceMetadata
-      ? {
-          address: visibleService.serviceMetadata.address,
-          app_android: visibleService.serviceMetadata.appAndroid,
-          app_ios: visibleService.serviceMetadata.appIos,
-          description: visibleService.serviceMetadata.description,
-          email: visibleService.serviceMetadata.email,
-          pec: visibleService.serviceMetadata.pec,
-          phone: visibleService.serviceMetadata.phone,
-          privacy_url: visibleService.serviceMetadata.privacyUrl,
-          scope: visibleService.serviceMetadata.scope,
-          tos_url: visibleService.serviceMetadata.tosUrl,
-          web_url: visibleService.serviceMetadata.webUrl
-        }
+      ? toApiServiceMetadata(visibleService.serviceMetadata)
       : undefined,
     service_name: visibleService.serviceName,
     version: visibleService.version
