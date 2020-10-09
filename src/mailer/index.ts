@@ -33,8 +33,6 @@ import {
   Transport
 } from "./transports";
 
-export { sendMail } from "./transports";
-
 // expects a never value. return a constant or the value itself
 const defaultNever = <T>(e: never, retVal: T = e): T => retVal;
 
@@ -102,3 +100,7 @@ export function getMailerTransporter(config: MailerConfig): MailerTransporter {
     );
   });
 }
+
+// expose inner stuff as public module interface
+export { MailerConfig } from "./config";
+export { sendMail, MailerTransporter } from "./transports";
