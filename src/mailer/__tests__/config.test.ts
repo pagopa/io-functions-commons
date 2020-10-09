@@ -26,6 +26,50 @@ const expectLeft = <L, R>(e: Either<L, R>, t: (l: L) => void = noop) =>
       fail(`Expecting left, received right. Value: ${JSON.stringify(e.value)}`)
   );
 
+const aSendgridConf1 = {
+  MAIL_FROM: aMailFrom,
+  NODE_ENV: "production",
+  SENDGRID_API_KEY: "a-sg-key"
+};
+
+const aSendgridConf2 = {
+  MAIL_FROM: aMailFrom,
+  NODE_ENV: "production",
+  SENDGRID_API_KEY: "a-sg-key",
+  MAILUP_USERNAME: "a-mu-username",
+  MAILUP_SECRET: "a-mu-secret"
+};
+
+const aMailupConf = {
+  MAIL_FROM: aMailFrom,
+  NODE_ENV: "production",
+  MAILUP_USERNAME: "a-mu-username",
+  MAILUP_SECRET: "a-mu-secret"
+};
+
+const aMailhogConf = {
+  MAIL_FROM: aMailFrom,
+  NODE_ENV: "dev",
+  MAILHOG_HOSTNAME: "a-mh-host"
+};
+
+const aTransport = {
+  password: "abc".repeat(5),
+  transport: "transport-name",
+  username: "t-username"
+};
+const aRawTrasport = [
+  aTransport.transport,
+  aTransport.username,
+  aTransport.password
+].join(":");
+
+const aMultiTransport = {
+  MAIL_FROM: aMailFrom,
+  NODE_ENV: "production",
+  MAIL_TRANSPORTS: [aRawTrasport, aRawTrasport].join(";")
+};
+
 describe("MailerConfig", () => {
   it("should decode configuration for sendgrid", () => {
     const rawConf = {
@@ -74,23 +118,7 @@ describe("MailerConfig", () => {
   });
 
   it("should decode configuration with multi transport", () => {
-    const aTransport = {
-      password: "abc".repeat(5),
-      transport: "transport-name",
-      username: "t-username"
-    };
-    const aRawTrasport = [
-      aTransport.transport,
-      aTransport.username,
-      aTransport.password
-    ].join(":");
-
-    const rawConf = {
-      MAIL_FROM: aMailFrom,
-      NODE_ENV: "production",
-      MAIL_TRANSPORTS: [aRawTrasport, aRawTrasport].join(";")
-    };
-    const result = MailerConfig.decode(rawConf);
+    const result = MailerConfig.decode(aMultiTransport);
 
     expectRight(result, value => {
       expect(value.MAIL_TRANSPORTS).toEqual([aTransport, aTransport]);
@@ -99,12 +127,7 @@ describe("MailerConfig", () => {
   });
 
   it("should decode configuration for mailhog", () => {
-    const rawConf = {
-      MAIL_FROM: aMailFrom,
-      NODE_ENV: "dev",
-      MAILHOG_HOSTNAME: "a-mh-host"
-    };
-    const result = MailerConfig.decode(rawConf);
+    const result = MailerConfig.decode(aMailhogConf);
 
     expectRight(result, value => {
       expect(value.MAILHOG_HOSTNAME).toBe("a-mh-host");
@@ -190,5 +213,27 @@ describe("MailerConfig", () => {
     ];
 
     examples.map(MailerConfig.decode).forEach(_ => expectLeft(_));
+  });
+
+  it.each`
+    name             | conf
+    ${"mailup"}      | ${aMailupConf}
+    ${"sendgrid(1)"} | ${aSendgridConf1}
+    ${"sendgrid(2)"} | ${aSendgridConf2}
+    ${"multi"}       | ${aMultiTransport}
+    ${"mailhog"}     | ${aMailhogConf}
+  `("should match $name with one and one only config type", ({ conf }) => {
+    const decoded = MailerConfig.decode(conf);
+    expectRight(decoded, value => {
+      // iterate config types to be sure that one and one only matches the decoded value
+      expect(
+        [
+          MailhogMailerConfig,
+          MailupMailerConfig,
+          MultiTrasnsportMailerConfig,
+          SendgridMailerConfig
+        ].filter(x => x.is(value)).length
+      ).toBe(1);
+    });
   });
 });
