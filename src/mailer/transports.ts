@@ -12,10 +12,10 @@ import { toError } from "fp-ts/lib/Either";
 import { none, Option, some } from "fp-ts/lib/Option";
 import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
-import { createTransport, SentMessageInfo, Transport } from "NodeMailer";
-import NodeMailerSendgrid = require("NodeMailer-sendgrid");
+import { createTransport, SentMessageInfo, Transport } from "nodemailer";
+import NodeMailerSendgrid = require("nodemailer-sendgrid");
 // tslint:disable-next-line: no-submodule-imports
-import MailerTransporter = require("NodeMailer/lib/mailer");
+import MailerTransporter = require("nodemailer/lib/mailer");
 import { promisify } from "util";
 import { MailUpTransport } from "./mailup";
 import { MailMultiTransportConnections } from "./multi_transport_connection";
