@@ -36,26 +36,27 @@ import {
 // expects a never value. return a constant or the value itself
 const defaultNever = <T>(e: never, retVal: T = e): T => retVal;
 
-// 5 seconds timeout by default
-const DEFAULT_EMAIL_REQUEST_TIMEOUT_MS = 5000;
-
-// Must be an https endpoint so we use an https agent
-const abortableFetch = AbortableFetch(agent.getHttpsFetch(process.env));
-const fetchWithTimeout = setFetchTimeout(
-  DEFAULT_EMAIL_REQUEST_TIMEOUT_MS as Millisecond,
-  abortableFetch
+// Some transports require http connections, this is the default client
+const defaultFetchAgent = toFetch(
+  setFetchTimeout(
+    5000 as Millisecond, // 5 seconds timeout by default
+    AbortableFetch(agent.getHttpsFetch(process.env))
+  )
 );
-const fetchAgent = toFetch(fetchWithTimeout);
 
 /**
  * Create a mail transporter object inferring the type from a given configuration
  *
- * @param config the configuration provided
+ * @param config the configuration provided.
+ * @param fetchAgent optional fetch function to be used by whose transport that use http connctions. A default with 5s timeout is used if no agent is passed.
  *
  * @returns a mail transporter object
  * @throws an error creating the transporter
  */
-export function getMailerTransporter(config: MailerConfig): MailerTransporter {
+export function getMailerTransporter(
+  config: MailerConfig,
+  fetchAgent: typeof fetch = defaultFetchAgent
+): MailerTransporter {
   const maybeTransportOpts: Option<
     | Transport
     | {
