@@ -23,7 +23,9 @@
     "@types/helmet": "^0.0.40",
     "@types/jest": "^24.0.13",
     "@types/node": "10.14.1",
+    "@types/node-fetch": "^2.5.7",
     "@types/nodemailer": "^6.4.0",
+    "@types/nodemailer-sendgrid": "^1.0.0",
     "@types/request-ip": "^0.0.33",
     "@types/winston": "^2.4.4",
     "danger": "^7.0.0",
@@ -41,8 +43,6 @@
   },
   "dependencies": {
     "@azure/cosmos": "^3.7.2",
-    "@types/node-fetch": "^2.5.6",
-    "@types/nodemailer-sendgrid": "^1.0.0",
     "applicationinsights": "^1.7.3",
     "azure-storage": "^2.10.3",
     "cidr-matcher": "^2.1.0",
