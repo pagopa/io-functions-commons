@@ -138,8 +138,7 @@ stages:
     jobs:
       - job: start_mailhog
         steps:
-          - displayName: 'Start Mailhog on a dedicated container'
-            script: |
+          - script: |
               docker run --rm -p 1025:1025 mailhog/mailhog
 
       - job: integrations_tests
