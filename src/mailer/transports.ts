@@ -129,7 +129,10 @@ const sendMail = (
   mailTransporter: MailerTransporter,
   options: Parameters<typeof mailTransporter.sendMail>[0]
 ): TaskEither<Error, SentMessageInfo> =>
-  tryCatch(() => promisify(mailTransporter.sendMail)(options), toError);
+  tryCatch(
+    () => promisify(mailTransporter.sendMail.bind(mailTransporter))(options),
+    toError
+  );
 
 export {
   // meaningful types
