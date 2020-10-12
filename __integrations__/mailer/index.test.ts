@@ -43,6 +43,7 @@ describe("Mailer", () => {
 
     const result = await Mailer.sendMail(transporter, aMailMessage).run();
 
+    expect(aMailhogConfig.MAILHOG_HOSTNAME).toBe(true);
     expect(result.isRight()).toBe(true);
     // TODO: try to check mailhog inbox for the message
   });

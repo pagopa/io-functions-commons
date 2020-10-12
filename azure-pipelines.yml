@@ -149,7 +149,7 @@ stages:
               make: build
 
           - script: |
-              MAILHOG_HOSTNAME=mailhog && yarn test:integration
+              MAILHOG_HOSTNAME=$(resources.container.mailhog.URI) && yarn test:integration
             displayName: 'Integrations tests exec'
 
 
