@@ -4,7 +4,7 @@ import * as Mailer from "../../src/mailer";
 const MAIL_FROM = "from@email.com";
 
 const aMailhogConfig = Mailer.MailerConfig.decode({
-  MAILHOG_HOSTNAME: process.env.MAILHOG_HOSTNAME || "mailhog",
+  MAILHOG_HOSTNAME: process.env.MAILHOG_HOSTNAME || "localhost",
   MAIL_FROM,
   NODE_ENV: "development"
 }).getOrElseL(e => fail(readableReport(e)));
