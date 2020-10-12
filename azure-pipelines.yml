@@ -55,6 +55,11 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
+resources:
+  containers:
+  - container: mailhog
+    image: mailhog:mailhog
+
 stages:
   # A) Build and code validation (always run)
   - stage: Build
@@ -136,11 +141,6 @@ stages:
   - stage: IntegrationsTest
     dependsOn: []
     jobs:
-      - job: start_mailhog
-        steps:
-          - script: |
-              docker run --rm -p 1025:1025 mailhog/mailhog
-
       - job: integrations_tests
         steps:
           - template: azure-templates/make-build-steps.yml
@@ -148,7 +148,7 @@ stages:
               make: build
 
           - script: |
-              yarn test:integration
+              MAILHOG_HOSTNAME=mailhog && yarn test:integration
             displayName: 'Integrations tests exec'
 
 
