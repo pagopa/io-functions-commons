@@ -59,7 +59,7 @@ resources:
   containers:
   - container: mailhog
     image: mailhog:mailhog
-    ports: [ "8025:8025" , "8025:8025" ]
+    ports: [ "1025:1025" , "8025:8025" ]
 
 stages:
   # A) Build and code validation (always run)
