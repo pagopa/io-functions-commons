@@ -14,6 +14,7 @@
     "build": "yarn generate:definitions && tsc",
     "postversion": "git push && git push --tags",
     "test": "jest -i",
+    "test:integration": "yarn build && cd ./__integrations__ && yarn install --frozen-lockfile && yarn start",
     "lint": "tslint --project .",
     "generate:definitions": "rimraf ./generated/definitions && shx mkdir -p ./generated/definitions && gen-api-models --api-spec ./openapi/index.yaml --out-dir ./generated/definitions"
   },
@@ -72,7 +73,6 @@
   "jest": {
     "testEnvironment": "node",
     "collectCoverage": true,
-    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
     "moduleFileExtensions": [
       "js",
       "json",
@@ -82,7 +82,9 @@
       "tsx"
     ],
     "preset": "ts-jest",
-    "testMatch": null
+    "testMatch": [
+      "**/__tests__/*.ts"
+    ]
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"

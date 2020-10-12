@@ -132,8 +132,28 @@ stages:
               bash <(curl -s https://codecov.io/bash)
             displayName: 'Code coverage'
 
+  # C) Run integration tests (use Linux OS, also required to generate certificates)
+  - stage: IntegrationsTest
+    dependsOn: []
+    jobs:
+      - job: start_mailhog
+        steps:
+          - displayName: 'Start Mailhog on a dedicated container'
+            script: |
+              docker run --rm -p 1025:1025 mailhog/mailhog
 
-  # C) Publish a new version of the package 'io-functions-commons' to the NPM 
+      - job: integrations_tests
+        steps:
+          - template: azure-templates/make-build-steps.yml
+            parameters:
+              make: build
+
+          - script: |
+              yarn test:integration
+            displayName: 'Integrations tests exec'
+
+
+  # D) Publish a new version of the package 'io-functions-commons' to the NPM 
   # registry and a release in GitHub if all the following conditions apply:
   #    - $ENABLE_MANUAL_DEPLOY == true 
   #    - it is a manual trigger
@@ -152,6 +172,7 @@ stages:
     dependsOn:
       - Build
       - Test
+      - IntegrationTest
     jobs:
       - job: publish_package
         steps:
