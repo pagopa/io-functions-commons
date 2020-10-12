@@ -171,7 +171,7 @@ stages:
     dependsOn:
       - Build
       - Test
-      - IntegrationTest
+      - IntegrationsTest
     jobs:
       - job: publish_package
         steps:
