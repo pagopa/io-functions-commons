@@ -1,0 +1,23 @@
+{
+  "name": "io-functions-commons-integrations",
+  "version": "1.0.0",
+  "description": "Integration test suite for integration testing",
+  "license": "MIT",
+  "scripts": {
+    "start": "jest --verbose"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@azure/functions": "^1.0.3",
+    "express": "^4.0.0",
+    "io-functions-commons": "../"
+  },
+  "devDependencies": {
+    "@types/jest": "^25.2.1",
+    "@types/node": "^13.11.0",
+    "jest": "^25.2.7",
+    "ts-jest": "^25.3.1"
+  }
+}
