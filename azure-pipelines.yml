@@ -55,12 +55,6 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
-resources:
-  containers:
-  - container: mailhog
-    image: mailhog/mailhog
-    ports: [ "1025" , "8025" ]
-
 stages:
   # A) Build and code validation (always run)
   - stage: Build
@@ -149,7 +143,11 @@ stages:
               make: build
 
           - script: |
-              MAILHOG_HOSTNAME=mailhog yarn test:integration
+              docker run -d -p 1025:1025 -p 8025:8025 --name mailhog mailhog/mailhog
+            displayName: 'Start mailhog'
+
+          - script: |
+              MAILHOG_HOSTNAME=localhost yarn test:integration
             displayName: 'Integrations tests exec'
 
 
