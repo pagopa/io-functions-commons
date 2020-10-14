@@ -147,7 +147,7 @@ stages:
             displayName: 'Start mailhog'
 
           - script: |
-              MAILHOG_HOSTNAME=mailhog yarn test:integration
+              MAILHOG_HOSTNAME=localhost yarn test:integration
             displayName: 'Integrations tests exec'
 
 
