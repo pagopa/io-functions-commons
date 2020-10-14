@@ -15,6 +15,7 @@
     "postversion": "git push && git push --tags",
     "test": "jest -i",
     "test:integration": "yarn build && cd ./__integrations__ && yarn install --frozen-lockfile && yarn start",
+    "test:all": "yarn test && yarn test:integration",
     "lint": "tslint --project .",
     "generate:definitions": "rimraf ./generated/definitions && shx mkdir -p ./generated/definitions && gen-api-models --api-spec ./openapi/index.yaml --out-dir ./generated/definitions"
   },
@@ -53,7 +54,7 @@
     "io-functions-express": "^0.1.1",
     "io-ts": "1.8.5",
     "italia-ts-commons": "^7.0.1",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "nodemailer": "^6.4.13",
     "nodemailer-sendgrid": "^1.0.3",
     "referrer-policy": "^1.1.0",
