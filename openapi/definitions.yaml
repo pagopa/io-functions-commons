@@ -529,7 +529,8 @@ SenderMetadata:
     - department_name
 ServicePayload:
   description: A payload used to create/update a service for a user.
-  oneOf:
+  x-one-of: true
+  allOf:
    - $ref: "#/VisibleServicePayload"    
    - $ref: "#/InvisibleServicePayload"
 CommonServicePayload:
