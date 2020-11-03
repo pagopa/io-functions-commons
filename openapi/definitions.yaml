@@ -532,7 +532,7 @@ ServicePayload:
   x-one-of: true
   allOf:
    - $ref: "#/VisibleServicePayload"    
-   - $ref: "#/InvisibleServicePayload"
+   - $ref: "#/HiddenServicePayload"
 CommonServicePayload:
   description: Common properties for a ServicePayload
   type: object
@@ -573,14 +573,15 @@ VisibleServicePayload:
     properties:
       is_visible:
         type: boolean
-        enum: [ true ]
+        enum:
+          - true
         description: |-
           It indicates that service appears in the service list
       service_metadata:
         $ref: "#/ServiceMetadata"
   required:
     - service_metadata
-InvisibleServicePayload:
+HiddenServicePayload:
   description: A payload used to create/update a service that is hidden.
   allOf:
   - $ref: "#/CommonServicePayload"
@@ -589,7 +590,8 @@ InvisibleServicePayload:
       is_visible:
         type: boolean
         default: false
-        enum: [ false ]
+        enum:
+          - false
         description: |-
           It indicates that service is hidden
       service_metadata:
