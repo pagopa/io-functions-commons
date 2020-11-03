@@ -3641,10 +3641,10 @@ italia-tslint-rules@*:
     tslint-sonarts "^1.9.0"
     typestrict "^1.0.2"
 
-italia-utils@^6.0.0:
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/italia-utils/-/italia-utils-6.0.0.tgz#f424d1e4077606aea444e6a6af101f107ff83675"
-  integrity sha512-p4n3953whfOmwQeE4yiyeW63QsdHrZXq3fGBIFhcHVAOT0wPdly8RA78nfjLgcEb6ZHccxDnARs8D4GcHdT38Q==
+italia-utils@^6.2.0:
+  version "6.2.0"
+  resolved "https://registry.yarnpkg.com/italia-utils/-/italia-utils-6.2.0.tgz#1b7ec4cc14192efb69a4a69f19cc7bd570202a09"
+  integrity sha512-GAfQE2ws9NF/LzMGF+26lK4iCh3jeYjjfjc2XnTU68aQkaxbxbDR7zU4rr1XI0qQU+NT06q5/UIKMGBZq0j9SQ==
   dependencies:
     fs-extra "^6.0.0"
     italia-ts-commons "^5.0.1"

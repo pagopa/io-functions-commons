@@ -33,7 +33,7 @@
     "danger": "^7.0.0",
     "danger-plugin-digitalcitizenship": "*",
     "italia-tslint-rules": "*",
-    "italia-utils": "^6.0.0",
+    "italia-utils": "^6.2.0",
     "jest": "^24.8.0",
     "prettier": "^1.14.3",
     "release-it": "^13.1.1",
