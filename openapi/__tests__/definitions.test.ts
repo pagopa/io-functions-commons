@@ -39,6 +39,10 @@ describe("ServicePayload definition", () => {
     is_visible: false
   };
 
+  const hiddenServiceWithoutIsVisible = {
+    ...commonServicePayload
+  };
+
   const invalidService = {
     is_visible: true,
     service_metadata: {
@@ -87,5 +91,21 @@ describe("ServicePayload definition", () => {
     expect(servicePayloadTest.isLeft()).toBe(true);
     expect(visibleServiceTest.isLeft()).toBe(true);
     expect(hiddenServiceTest.isLeft()).toBe(true);
+  });
+
+  it("should decode hiddenServiceWithoutIsVisible with HiddenService and ServicePayload", () => {
+    const servicePayloadTest = ServicePayload.decode(
+      hiddenServiceWithoutIsVisible
+    );
+    const visibleServiceTest = VisibleServicePayload.decode(
+      hiddenServiceWithoutIsVisible
+    );
+    const hiddenServiceTest = HiddenServicePayload.decode(
+      hiddenServiceWithoutIsVisible
+    );
+
+    expect(servicePayloadTest.isRight()).toBe(true);
+    expect(visibleServiceTest.isLeft()).toBe(true);
+    expect(hiddenServiceTest.isRight()).toBe(true);
   });
 });
