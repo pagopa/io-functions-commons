@@ -18,34 +18,34 @@
     <!-- Top Shadow -->
     <mj-section>
       <mj-column>
-        <mj-image height="40px" src="https://raw.githubusercontent.com/pagopa/io-functions/master/templates/images/bg-top-50-blue.gif" />
+        <mj-image height="40px" src="https://raw.githubusercontent.com/pagopa/io-functions-commons/master/templates/images/bg-top-50-blue.gif" />
       </mj-column>
     </mj-section>
     <!-- Section 1: Logos -->
-    <mj-section padding="32px 30px 32px" background-url="https://raw.githubusercontent.com/pagopa/io-functions/master/templates/images/bg-section.gif" background-repeat="repeat" background-size="100%">
+    <mj-section padding="32px 30px 32px" background-url="https://raw.githubusercontent.com/pagopa/io-functions-commons/master/templates/images/bg-section.gif" background-repeat="repeat" background-size="100%">
       <mj-group>
         <mj-column padding-left="32px">
           <mj-image width="80px" height="80px" src="https://raw.githubusercontent.com/teamdigitale/italia-services-metadata/master/logos/organizations/${organizationFiscalCode}.png" align="left" />
         </mj-column>
         <mj-column padding-right="32px" padding-top="16px">
-          <mj-image width="48px" src="https://raw.githubusercontent.com/pagopa/io-functions/master/templates/images/img-io.gif" align="right" />
+          <mj-image width="48px" src="https://raw.githubusercontent.com/pagopa/io-functions-commons/master/templates/images/img-io.gif" align="right" />
         </mj-column>
       </mj-group>
     </mj-section>
-    <mj-section padding="0 30px 32px" background-url="https://raw.githubusercontent.com/pagopa/io-functions/master/templates/images/bg-section.gif" background-repeat="repeat" background-size="100%">
+    <mj-section padding="0 30px 32px" background-url="https://raw.githubusercontent.com/pagopa/io-functions-commons/master/templates/images/bg-section.gif" background-repeat="repeat" background-size="100%">
       <mj-column padding="0px 32px">
         <mj-text padding="0" font-weight="400" font-size="24px" line-height="24px">${senderOrganizationName}</mj-text>
         <mj-text padding="0" font-weight="400" font-size="16px" line-height="24px">${senderServiceName}</mj-text>
       </mj-column>
     </mj-section>
     <!-- Section 2: Title -->
-    <mj-section padding="32px 30px" background-url="https://raw.githubusercontent.com/pagopa/io-functions/master/templates/images/bg-section.gif" background-repeat="repeat" background-size="100%">
+    <mj-section padding="32px 30px" background-url="https://raw.githubusercontent.com/pagopa/io-functions-commons/master/templates/images/bg-section.gif" background-repeat="repeat" background-size="100%">
       <mj-column padding="0 32px">
         <mj-text padding="0" font-weight="700" font-size="32px" line-height="36px">${titleText}</mj-text>
       </mj-column>
     </mj-section>
     <!-- Section 3: Content -->
-    <mj-section padding="32px 30px 48px" background-url="https://raw.githubusercontent.com/pagopa/io-functions/master/templates/images/bg-section.gif" background-repeat="repeat" background-size="100%">
+    <mj-section padding="32px 30px 48px" background-url="https://raw.githubusercontent.com/pagopa/io-functions-commons/master/templates/images/bg-section.gif" background-repeat="repeat" background-size="100%">
       <mj-column padding="0 32px">
         <mj-text padding="0" font-size="16px" line-height="24px" font-weight="400">${contentHtml}</mj-text>
       </mj-column>
@@ -53,7 +53,7 @@
     <!-- Bottom Shadow -->
     <mj-section>
       <mj-column>
-        <mj-image height="40px" src="https://raw.githubusercontent.com/pagopa/io-functions/master/templates/images/bg-bottom-50.gif" />
+        <mj-image height="40px" src="https://raw.githubusercontent.com/pagopa/io-functions-commons/master/templates/images/bg-bottom-50.gif" />
       </mj-column>
     </mj-section>
     <!-- Footer -->
