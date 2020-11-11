@@ -17,7 +17,7 @@
     "test:integration": "yarn build && cd ./__integrations__ && yarn install --frozen-lockfile && yarn start",
     "test:all": "yarn test && yarn test:integration",
     "lint": "tslint --project .",
-    "generate:all": "yarn generate:definitions && yarn generate:templates",
+    "generate:all": "npm-run-all generate:*,
     "generate:definitions": "rimraf ./generated/definitions && shx mkdir -p ./generated/definitions && gen-api-models --api-spec ./openapi/index.yaml --out-dir ./generated/definitions",
     "generate:templates": "gulp generate:templates"
   },
