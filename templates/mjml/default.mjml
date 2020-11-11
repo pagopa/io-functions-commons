@@ -1,5 +1,11 @@
 <mjml>
   <mj-head>
+    <!-- Add MS Office classes style -->
+    <mj-style>
+      .ReadMsgBody { width:100%; }
+      .ExternalClass { width:100%; }
+      .ExternalClass * { line-height:100%; }
+    </mj-style>
     <mj-title>${title}</mj-title>
     <mj-font name="Titillium Web" href="https://fonts.googleapis.com/css?family=Titillium+Web:400,700"></mj-font>
     <mj-attributes>
