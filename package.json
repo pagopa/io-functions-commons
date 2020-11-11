@@ -1,6 +1,6 @@
 {
   "name": "io-functions-commons",
-  "version": "16.2.0",
+  "version": "16.3.0",
   "description": "Common code for Azure functions",
   "repository": "https://github.com/pagopa/io-functions-commons",
   "author": "https://www.pagopa.gov.it",
@@ -53,7 +53,7 @@
     "typescript": "^3.8.0"
   },
   "dependencies": {
-    "@azure/cosmos": "^3.7.2",    
+    "@azure/cosmos": "^3.7.2",
     "applicationinsights": "^1.7.3",
     "azure-storage": "^2.10.3",
     "cidr-matcher": "^2.1.0",
