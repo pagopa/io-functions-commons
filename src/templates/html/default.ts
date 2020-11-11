@@ -33,7 +33,9 @@ export default function(
       }</style><style type="text/css">@media only screen and (max-width:480px) {
       table.mj-full-width-mobile { width: 100% !important; }
       td.mj-full-width-mobile { width: auto !important; }
-    }</style></head><body style="background-color:#FFFFFF;"><div style="background-color:#FFFFFF;"><!-- Header --><!-- <mj-section padding="10px 0">
+    }</style><style type="text/css">.ReadMsgBody { width:100%; }
+      .ExternalClass { width:100%; }
+      .ExternalClass * { line-height:100%; }</style><!-- Add MS Office classes style --></head><body style="background-color:#FFFFFF;"><div style="background-color:#FFFFFF;"><!-- Header --><!-- <mj-section padding="10px 0">
       <mj-column>
         <mj-text align="center" color="#9B9B9B" font-size="11px">${headlineText}</mj-text>
       </mj-column>
