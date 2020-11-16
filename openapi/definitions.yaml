@@ -579,8 +579,9 @@ VisibleServicePayload:
           It indicates that service appears in the service list
       service_metadata:
         $ref: "#/ServiceMetadata"
-  required:
-    - service_metadata
+    required:
+      - is_visible
+      - service_metadata
 HiddenServicePayload:
   description: A payload used to create/update a service that is hidden.
   allOf:
