@@ -529,6 +529,12 @@ SenderMetadata:
     - department_name
 ServicePayload:
   description: A payload used to create/update a service for a user.
+  x-one-of: true
+  allOf:
+   - $ref: "#/VisibleServicePayload"    
+   - $ref: "#/HiddenServicePayload"
+CommonServicePayload:
+  description: Common properties for a ServicePayload
   type: object
   properties:
     service_name:
@@ -553,19 +559,44 @@ ServicePayload:
       default: false
       description: |-
         When true, messages won't trigger email notifications (only push).
-    is_visible:
-        type: boolean
-        default: false
-        description: |-
-          When true the service appears in the service list, otherwise is hidden.
-    service_metadata:
-      $ref: "#/ServiceMetadata"
   required:
     - service_name
     - department_name
     - organization_name
     - organization_fiscal_code
     - authorized_cidrs
+VisibleServicePayload:
+  description: A payload used to create/update a service that appears in the service list.
+  allOf:
+  - $ref: "#/CommonServicePayload"
+  - type: object
+    properties:
+      is_visible:
+        type: boolean
+        enum:
+          - true
+        description: |-
+          It indicates that service appears in the service list
+      service_metadata:
+        $ref: "#/ServiceMetadata"
+    required:
+      - is_visible
+      - service_metadata
+HiddenServicePayload:
+  description: A payload used to create/update a service that is hidden.
+  allOf:
+  - $ref: "#/CommonServicePayload"
+  - type: object
+    properties:
+      is_visible:
+        type: boolean
+        default: false
+        enum:
+          - false
+        description: |-
+          It indicates that service is hidden
+      service_metadata:
+        $ref: "#/ServiceMetadata"
 Service: 
   description: A service tied to user's subscription.
   allOf:
