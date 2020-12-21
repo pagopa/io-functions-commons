@@ -211,7 +211,7 @@ CreatedMessageWithContent:
     content:
       $ref: "#/MessageContent"
     sender_service_id:
-      type: string
+      $ref: "#/ServiceId"
   required:
     - id
     - fiscal_code
@@ -230,7 +230,7 @@ CreatedMessageWithoutContent:
     created_at:
       $ref: "#/Timestamp"
     sender_service_id:
-      type: string
+      $ref: "#/ServiceId"
   required:
     - id
     - fiscal_code
