@@ -123,4 +123,4 @@ stages:
             inputs: 
               command: publish
               verbose: true
-              publishEndpoint: pagopa-github-bot
+              publishEndpoint: $(NPM_CONNECTION)
