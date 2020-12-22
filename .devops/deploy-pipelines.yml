@@ -80,13 +80,19 @@ stages:
       - Release
     jobs:
       - job: make_build
-        pool:
-          # As we deploy on Wondows machines, we use Windows to build
-          vmImage: 'windows-2019'
         steps:
-          - template: azure-templates/make-build-steps.yml
+          - template: azure-templates/setup-project.yml
             parameters:
-              make: build
+              # On the assumption that this stage is executed only when Relase stage is,
+              #  with this parameter we set the reference the deploy script must pull changes from.
+              # The branch/tag name is calculated from the source branch
+              #  ex: Build.SourceBranch=refs/heads/master --> master
+              #  ex: Build.SourceBranch=refs/tags/v1.2.3-RELEASE --> v1.2.3-RELEASE
+              gitReference: ${{ replace(replace(variables['Build.SourceBranch'], 'refs/tags/', ''), 'refs/heads/', '') }}
+
+          - script: |
+              yarn build
+            displayName: 'Build'
 
           - task: CopyFiles@2
             inputs:
