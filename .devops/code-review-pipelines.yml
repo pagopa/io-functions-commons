@@ -77,7 +77,7 @@ stages:
           - template: azure-templates/setup-project.yml
 
           - script: |
-              yarn generate-all
+              yarn generate:all
             displayName: 'Generate code'
 
           - script: |
@@ -96,7 +96,7 @@ stages:
           - template: azure-templates/setup-project.yml
 
           - script: |
-              yarn generate-all
+              yarn generate:all
             displayName: 'Generate code'
 
           - script: |
