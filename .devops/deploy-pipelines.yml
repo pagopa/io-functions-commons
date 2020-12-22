@@ -1,4 +1,12 @@
-# Azure DevOps pipeline to release a new version and deploy to production.
+# Azure DevOps pipeline to release a new version and publish the package to the registry
+#
+# The following variables must be configured in the pipeline settings
+#
+# GIT_EMAIL         - when bumping the package version, is the email we author the commit with
+# GIT_USERNAME      - when bumping the package version, is the name we author the commit with
+# GITHUB_CONNECTION - name of the Github service connection used to create a new release; be sure that the related user has appopriate right
+# NPM_CONNECTION    - name of the NPM service connection used to publish the package; be sure that the related user has appopriate right
+# 
 
 variables:
   NODE_VERSION: '10.14.1'
