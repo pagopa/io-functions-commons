@@ -1,3 +1,10 @@
+# Azure DevOps pipeline to build, check source codes and run tests.
+#
+# To make Danger JS run on a pull request you need to add the following pipeline 
+# variable and set it with a GitHub access token (scope public_repo); otherwise 
+# set its value to 'skip' without marking it secret: 
+# - DANGER_GITHUB_API_TOKEN
+# 
 
 variables:
   NODE_VERSION: '10.14.1'
@@ -16,6 +23,7 @@ stages:
     jobs:
       - job: make_build
         pool:
+          # As we deploy on Wondows machines, we use Windows to build
           vmImage: 'windows-2019'
         steps:
           - template: azure-templates/make-build-steps.yml
@@ -25,7 +33,6 @@ stages:
   - stage: Static_analysis
     dependsOn: []
     jobs:          
-      # A2) Analyze source code to find errors with lint
       - job: lint
         steps:
           - template: azure-templates/make-build-steps.yml
