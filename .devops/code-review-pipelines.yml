@@ -1,0 +1,102 @@
+
+variables:
+  NODE_VERSION: '10.14.1'
+  YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
+
+# Automatically triggered on PR
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=azure-devops&tabs=schema%2Cparameter-schema#pr-trigger
+trigger: none
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+  - stage: Build
+    dependsOn: []
+    jobs:
+      - job: make_build
+        pool:
+          vmImage: 'windows-2019'
+        steps:
+          - template: azure-templates/make-build-steps.yml
+            parameters:
+              make: build
+  
+  - stage: Static_analysis
+    dependsOn: []
+    jobs:          
+      # A2) Analyze source code to find errors with lint
+      - job: lint
+        steps:
+          - template: azure-templates/make-build-steps.yml
+            parameters:
+              make: install_dependencies
+
+          - script: |
+              yarn lint
+            displayName: 'Lint'
+
+      - job: lint_api
+        steps:
+          - task: UseNode@1
+            inputs:
+              version: $(NODE_VERSION)
+            displayName: 'Set up Node.js'
+
+          - bash: |
+              npx oval validate -p openapi/index.yaml
+            displayName: 'Validate openAPI'
+
+      - job: danger
+        condition: 
+          and(
+            succeeded(), 
+            and(
+              eq(variables['Build.Reason'], 'PullRequest'),
+              ne(variables['DANGER_GITHUB_API_TOKEN'], 'skip')
+            )
+          )
+        steps:
+          - template: azure-templates/make-build-steps.yml
+            parameters:
+              make: install_dependencies
+
+          - bash: |
+              yarn danger ci
+            env:
+              DANGER_GITHUB_API_TOKEN: '$(DANGER_GITHUB_API_TOKEN)'
+            displayName: 'Danger CI'
+
+  - stage: Test
+    dependsOn: []
+    jobs:
+      - job: unit_tests
+        steps:
+          - template: azure-templates/make-build-steps.yml
+            parameters:
+              make: build
+
+          - script: |
+              yarn test
+            displayName: 'Unit tests exec'
+
+          - bash: |
+              bash <(curl -s https://codecov.io/bash)
+            displayName: 'Code coverage'
+
+  - stage: IntegrationsTest
+    dependsOn: []
+    jobs:
+      - job: integrations_tests
+        steps:
+          - template: azure-templates/make-build-steps.yml
+            parameters:
+              make: build
+
+          - script: |
+              docker run -d -p 1025:1025 -p 8025:8025 --name mailhog mailhog/mailhog
+            displayName: 'Start mailhog'
+
+          - script: |
+              MAILHOG_HOSTNAME=localhost yarn test:integration
+            displayName: 'Integrations tests exec'
