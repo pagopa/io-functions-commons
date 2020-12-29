@@ -1,5 +1,5 @@
 {
-  "name": "io-functions-commons",
+  "name": "@pagopa/io-functions-commons",
   "version": "17.3.0",
   "description": "Common code for Azure functions",
   "repository": "https://github.com/pagopa/io-functions-commons",
