@@ -9,7 +9,6 @@
     "dist/"
   ],
   "scripts": {
-    "prepare": "yarn build",
     "prebuild": "rimraf dist",
     "build": "yarn generate:definitions && tsc",
     "postversion": "git push && git push --tags",
