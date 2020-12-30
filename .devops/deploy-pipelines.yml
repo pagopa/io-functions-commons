@@ -104,7 +104,7 @@ stages:
                 LICENSE
                 CHANGELOG.md
                 package.json
-                dist/
+                dist/**/*
             displayName: 'Copy bundle files'
           
           - publish: $(System.DefaultWorkingDirectory)/bundle
