@@ -138,3 +138,4 @@ stages:
               command: publish
               verbose: true
               publishEndpoint: $(NPM_CONNECTION)
+              workingDir: '$(Pipeline.Workspace)/Bundle'
