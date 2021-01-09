@@ -45,17 +45,6 @@ stages:
   # - is on branch master 
   # - is a tag in the form v{version}-RELEASE
   - stage: Release
-    condition:
-      and(
-        succeeded(),
-        or(
-          eq(variables['Build.SourceBranch'], 'refs/heads/master'),
-          and(
-            startsWith(variables['Build.SourceBranch'], 'refs/tags'),
-            endsWith(variables['Build.SourceBranch'], '-RELEASE')
-          )
-        )
-      )
     jobs:
       - job: make_release
         steps:
