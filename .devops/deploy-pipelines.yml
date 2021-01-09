@@ -24,7 +24,8 @@ parameters:
 
 # Only manual activations are intended
 trigger: none
-pr: none
+# I'm making a test: would it be triggered by the 
+# pr: none
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -122,10 +123,11 @@ stages:
           - download: current
             artifact: Bundle
 
-          - task: Npm@1
-            inputs: 
-              command: custom
-              customCommand: publish --access public
-              customEndpoint: $(NPM_CONNECTION)
-              verbose: true
-              workingDir: '$(Pipeline.Workspace)/Bundle'
+          # disable for testing
+          # - task: Npm@1
+            # inputs: 
+              #command: custom
+              #customCommand: publish --access public
+              #customEndpoint: $(NPM_CONNECTION)
+              #verbose: true
+              #workingDir: '$(Pipeline.Workspace)/Bundle'
