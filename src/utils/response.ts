@@ -3,7 +3,7 @@ import {
   HttpStatusCodeEnum,
   IResponse,
   ResponseErrorGeneric
-} from "italia-ts-commons/lib/responses";
+} from "@pagopa/ts-commons/lib/responses";
 import { asyncIteratorToArray } from "./async";
 import { CosmosErrors } from "./cosmosdb_model";
 

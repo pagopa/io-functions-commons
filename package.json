@@ -54,6 +54,7 @@
   },
   "dependencies": {
     "@azure/cosmos": "^3.7.2",
+    "@pagopa/ts-commons": "^9.1.0",
     "applicationinsights": "^1.7.3",
     "azure-storage": "^2.10.3",
     "cidr-matcher": "^2.1.0",
@@ -62,7 +63,6 @@
     "helmet-csp": "^2.5.1",
     "io-functions-express": "^0.1.1",
     "io-ts": "1.8.5",
-    "italia-ts-commons": "^8.6.0",
     "node-fetch": "^2.6.1",
     "nodemailer": "^6.4.13",
     "nodemailer-sendgrid": "^1.0.3",

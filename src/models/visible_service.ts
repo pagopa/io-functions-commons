@@ -5,7 +5,7 @@
 import * as t from "io-ts";
 
 import { collect, StrMap } from "fp-ts/lib/StrMap";
-import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import {
   NotificationChannel,
   NotificationChannelEnum

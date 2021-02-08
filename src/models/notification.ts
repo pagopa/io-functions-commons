@@ -3,7 +3,7 @@
  * a Message. A notification can be sent on multiple channels, based on the
  * User's preference.
  */
-import { enumType } from "italia-ts-commons/lib/types";
+import { enumType } from "@pagopa/ts-commons/lib/types";
 
 import * as t from "io-ts";
 
@@ -20,7 +20,7 @@ import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { Container } from "@azure/cosmos";
 import { Option } from "fp-ts/lib/Option";
 import { TaskEither } from "fp-ts/lib/TaskEither";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { HttpsUrl } from "../../generated/definitions/HttpsUrl";
 import { NotificationChannelEnum } from "../../generated/definitions/NotificationChannel";
 import { ObjectIdGenerator } from "../utils/strings";

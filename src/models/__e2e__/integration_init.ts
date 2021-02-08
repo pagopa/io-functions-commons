@@ -5,7 +5,7 @@ import { Container, Database } from "@azure/cosmos";
 
 import { CosmosClient } from "@azure/cosmos";
 import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
-import { PromiseType } from "italia-ts-commons/lib/types";
+import { PromiseType } from "@pagopa/ts-commons/lib/types";
 import {
   CosmosErrors,
   toCosmosErrorResponse

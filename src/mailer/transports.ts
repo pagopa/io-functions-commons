@@ -11,7 +11,7 @@ import { catOptions } from "fp-ts/lib/Array";
 import { toError } from "fp-ts/lib/Either";
 import { none, Option, some } from "fp-ts/lib/Option";
 import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { createTransport, SentMessageInfo, Transport } from "nodemailer";
 import NodeMailerSendgrid = require("nodemailer-sendgrid");
 // tslint:disable-next-line: no-submodule-imports

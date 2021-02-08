@@ -9,7 +9,7 @@ import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 import { MessageBodyMarkdown } from "../../../generated/definitions/MessageBodyMarkdown";
 import { MessageContent } from "../../../generated/definitions/MessageContent";
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import { fromNullable, none, some } from "fp-ts/lib/Option";
 

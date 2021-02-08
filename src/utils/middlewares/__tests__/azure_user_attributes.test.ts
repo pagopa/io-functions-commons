@@ -16,7 +16,7 @@ import {
   FiscalCode,
   NonEmptyString,
   OrganizationFiscalCode
-} from "italia-ts-commons/lib/strings";
+} from "@pagopa/ts-commons/lib/strings";
 
 import { Set } from "json-set-map";
 import { MaxAllowedPaymentAmount } from "../../../../generated/definitions/MaxAllowedPaymentAmount";

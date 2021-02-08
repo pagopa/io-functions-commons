@@ -1,6 +1,6 @@
 import * as t from "io-ts";
 
-import { tag } from "italia-ts-commons/lib/types";
+import { tag } from "@pagopa/ts-commons/lib/types";
 
 import {
   CosmosdbModelVersioned,
@@ -10,7 +10,7 @@ import {
 import { Container } from "@azure/cosmos";
 import { Option } from "fp-ts/lib/Option";
 import { TaskEither } from "fp-ts/lib/TaskEither";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import {
   NotificationChannel,
   NotificationChannelEnum

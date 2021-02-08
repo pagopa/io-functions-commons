@@ -3,11 +3,11 @@ import {
   EmailString,
   FiscalCode,
   NonEmptyString
-} from "italia-ts-commons/lib/strings";
+} from "@pagopa/ts-commons/lib/strings";
 
 import { isLeft, right } from "fp-ts/lib/Either";
 import { fromEither, fromLeft, taskEither } from "fp-ts/lib/TaskEither";
-import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import {
   Profile,
   PROFILE_COLLECTION_NAME,

@@ -3,11 +3,11 @@
 
 import { isLeft, isRight } from "fp-ts/lib/Either";
 
-import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 
 import { Container, FeedResponse, ResourceResponse } from "@azure/cosmos";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { UserDataProcessingChoiceEnum } from "../../../generated/definitions/UserDataProcessingChoice";
 import { UserDataProcessingStatusEnum } from "../../../generated/definitions/UserDataProcessingStatus";
 import {
@@ -181,4 +181,3 @@ describe("makeUserDataProcessingId", () => {
     expect(lazy).toThrow();
   });
 });
-

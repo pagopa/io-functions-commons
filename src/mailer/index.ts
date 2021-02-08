@@ -6,14 +6,14 @@
  */
 
 import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
-import { agent } from "italia-ts-commons";
+import { agent } from "@pagopa/ts-commons";
 import {
   AbortableFetch,
   setFetchTimeout,
   toFetch
-} from "italia-ts-commons/lib/fetch";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
-import { Millisecond } from "italia-ts-commons/lib/units";
+} from "@pagopa/ts-commons/lib/fetch";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { Millisecond } from "@pagopa/ts-commons/lib/units";
 
 import {
   MailerConfig,

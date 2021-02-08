@@ -4,7 +4,7 @@ import { CorrelationContextManager } from "applicationinsights/out/AutoCollectio
 // tslint:disable-next-line: no-submodule-imports
 import Traceparent = require("applicationinsights/out/Library/Traceparent");
 import { fromNullable } from "fp-ts/lib/Option";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 /**
  * Wraps a function handler with a telemetry context,
