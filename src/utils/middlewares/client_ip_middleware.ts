@@ -1,9 +1,9 @@
 import * as requestIp from "request-ip";
 import * as winston from "winston";
 
+import { IPString } from "@pagopa/ts-commons/lib/strings";
 import { right } from "fp-ts/lib/Either";
 import { fromEither as OptionFromEither, Option } from "fp-ts/lib/Option";
-import { IPString } from "@pagopa/ts-commons/lib/strings";
 import { IRequestMiddleware } from "../request_middleware";
 
 export type ClientIp = Option<IPString>;

@@ -18,9 +18,9 @@ import { EmailAddress } from "../../generated/definitions/EmailAddress";
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 
 import { Container } from "@azure/cosmos";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { Option } from "fp-ts/lib/Option";
 import { TaskEither } from "fp-ts/lib/TaskEither";
-import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { HttpsUrl } from "../../generated/definitions/HttpsUrl";
 import { NotificationChannelEnum } from "../../generated/definitions/NotificationChannel";
 import { ObjectIdGenerator } from "../utils/strings";

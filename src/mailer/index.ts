@@ -5,7 +5,6 @@
  * Ideally this is the only file that's needed to be imported when apps want to send email.
  */
 
-import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
 import { agent } from "@pagopa/ts-commons";
 import {
   AbortableFetch,
@@ -14,6 +13,7 @@ import {
 } from "@pagopa/ts-commons/lib/fetch";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { Millisecond } from "@pagopa/ts-commons/lib/units";
+import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
 
 import {
   MailerConfig,

@@ -4,9 +4,9 @@ import {
   OrganizationFiscalCode
 } from "@pagopa/ts-commons/lib/strings";
 
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { isLeft, right } from "fp-ts/lib/Either";
 import { fromEither, fromLeft, taskEither } from "fp-ts/lib/TaskEither";
-import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { MaxAllowedPaymentAmount } from "../../../generated/definitions/MaxAllowedPaymentAmount";
 import {
   RetrievedService,

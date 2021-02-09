@@ -1,5 +1,5 @@
-import * as t from "io-ts";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import * as t from "io-ts";
 
 import {
   MessageStatusValue,

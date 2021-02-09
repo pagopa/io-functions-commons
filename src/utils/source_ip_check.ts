@@ -5,9 +5,9 @@ import { IAzureUserAttributes } from "./middlewares/azure_user_attributes";
  * CIDRs allowed to make requests.
  */
 
-import CIDRMatcher = require("cidr-matcher");
 import { IPString } from "@pagopa/ts-commons/lib/strings";
 import { ITuple2, Tuple2 } from "@pagopa/ts-commons/lib/tuples";
+import CIDRMatcher = require("cidr-matcher");
 import { ClientIp } from "./middlewares/client_ip_middleware";
 
 import {

@@ -5,8 +5,8 @@
  * Messages API.
  */
 
-import * as t from "io-ts";
 import { NonNegativeNumber } from "@pagopa/ts-commons/lib/numbers";
+import * as t from "io-ts";
 
 import { MessageContent } from "../../generated/definitions/MessageContent";
 import { NewMessageDefaultAddresses } from "../../generated/definitions/NewMessageDefaultAddresses";

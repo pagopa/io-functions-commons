@@ -18,8 +18,8 @@ import {
 } from "@pagopa/ts-commons/lib/strings";
 
 import { Container } from "@azure/cosmos";
-import { TaskEither } from "fp-ts/lib/TaskEither";
 import { readonlySetType, withDefault } from "@pagopa/ts-commons/lib/types";
+import { TaskEither } from "fp-ts/lib/TaskEither";
 import { MaxAllowedPaymentAmount } from "../../generated/definitions/MaxAllowedPaymentAmount";
 import { ServiceScope } from "../../generated/definitions/ServiceScope";
 import { CosmosErrors } from "../utils/cosmosdb_model";

@@ -1,5 +1,5 @@
-import { isLeft } from "fp-ts/lib/Either";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { isLeft } from "fp-ts/lib/Either";
 
 /**
  * Helper function that validates an environment variable and return its value
