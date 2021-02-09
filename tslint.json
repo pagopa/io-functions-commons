@@ -1,9 +1,16 @@
 {
-    "defaultSeverity": "error",
-    "extends": [
-      "italia-tslint-rules/strong"
-    ],
-    "jsRules": {},
-    "rules": {},
-    "rulesDirectory": []
+  "defaultSeverity": "error",
+  "extends": [
+    "italia-tslint-rules/strong"
+  ],
+  "jsRules": {},
+  "rules": {
+    "no-submodule-imports": [
+      true,
+      "fp-ts",
+      "io-ts",
+      "@pagopa/ts-commons"
+    ]
+  },
+  "rulesDirectory": []
 }
