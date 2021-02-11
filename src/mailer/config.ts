@@ -1,5 +1,5 @@
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import * as t from "io-ts";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { MailMultiTransportConnectionsFromString } from "./multi_transport_connection";
 
 // exclude a specific value from a type

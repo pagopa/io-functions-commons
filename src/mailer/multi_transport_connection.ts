@@ -2,7 +2,7 @@ import { catOptions } from "fp-ts/lib/Array";
 import { none, some } from "fp-ts/lib/Option";
 import * as t from "io-ts";
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 /**
  * Describes a nodemailer transport connection

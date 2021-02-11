@@ -1,11 +1,11 @@
 // tslint:disable:no-any
 
 import { isLeft, isRight } from "fp-ts/lib/Either";
-import { NonNegativeNumber } from "italia-ts-commons/lib/numbers";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonNegativeNumber } from "@pagopa/ts-commons/lib/numbers";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import { Container } from "@azure/cosmos";
-import { readableReport } from "italia-ts-commons/lib/reporters";
+import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { MessageStatusValueEnum } from "../../../generated/definitions/MessageStatusValue";
 import { MessageStatusModel, RetrievedMessageStatus } from "../message_status";
 

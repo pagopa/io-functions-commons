@@ -1,10 +1,10 @@
 import { Context } from "@azure/functions";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 // tslint:disable-next-line: no-submodule-imports
 import { CorrelationContextManager } from "applicationinsights/out/AutoCollection/CorrelationContextManager";
 // tslint:disable-next-line: no-submodule-imports
 import Traceparent = require("applicationinsights/out/Library/Traceparent");
 import { fromNullable } from "fp-ts/lib/Option";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
 
 /**
  * Wraps a function handler with a telemetry context,

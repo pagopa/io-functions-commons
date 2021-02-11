@@ -5,7 +5,7 @@ import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
 import { fromEither, TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 
-import { PromiseType } from "italia-ts-commons/lib/types";
+import { PromiseType } from "@pagopa/ts-commons/lib/types";
 
 import {
   Container,
@@ -19,7 +19,7 @@ import {
   SqlQuerySpec
 } from "@azure/cosmos";
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { mapAsyncIterable } from "./async";
 import { isDefined } from "./types";
 

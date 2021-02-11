@@ -269,26 +269,26 @@ FiscalCode:
   type: string
   description: User's fiscal code.
   format: FiscalCode
-  x-import: italia-ts-commons/lib/strings
+  x-import: '@pagopa/ts-commons/lib/strings'
   example: SPNDNL80R13C555X
 PrescriberFiscalCode:
   type: string
   description: Fiscal code of the Doctor that made the prescription.
   format: FiscalCode
-  x-import: italia-ts-commons/lib/strings
+  x-import: '@pagopa/ts-commons/lib/strings'
   example: TCNZRO80R13C555Y
 SandboxFiscalCode:
   type: string
   description: |-
     Sandbox user's fiscal code (used for development).
   format: SandboxFiscalCode
-  x-import: italia-ts-commons/lib/strings
+  x-import: '@pagopa/ts-commons/lib/strings'
   example: SPNDNL80A13Y555X
 OrganizationFiscalCode:
   type: string
   description: Organization fiscal code.
   format: OrganizationFiscalCode
-  x-import: italia-ts-commons/lib/strings
+  x-import: '@pagopa/ts-commons/lib/strings'
   example: "12345678901"
 MessageSubject:
   type: string
@@ -782,7 +782,7 @@ Timestamp:
   type: string
   format: UTCISODateFromString
   description: A date-time field in ISO-8601 format and UTC timezone.
-  x-import: italia-ts-commons/lib/dates
+  x-import: '@pagopa/ts-commons/lib/dates'
   example: "2018-10-13T00:00:00.000Z"
 HttpsUrl:
   type: string

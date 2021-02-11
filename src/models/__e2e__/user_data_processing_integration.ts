@@ -1,9 +1,9 @@
 // tslint:disable: no-console no-identical-functions
-import { FiscalCode, NonEmptyString } from "italia-ts-commons/lib/strings";
+import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { isLeft, right } from "fp-ts/lib/Either";
 import { fromEither, fromLeft, taskEither } from "fp-ts/lib/TaskEither";
-import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
 import { UserDataProcessingChoiceEnum } from "../../../generated/definitions/UserDataProcessingChoice";
 import { UserDataProcessingStatusEnum } from "../../../generated/definitions/UserDataProcessingStatus";
 import {

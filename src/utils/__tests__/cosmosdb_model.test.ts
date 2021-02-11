@@ -4,7 +4,7 @@ import { isLeft, isRight } from "fp-ts/lib/Either";
 
 import { Container, ErrorResponse, ResourceResponse } from "@azure/cosmos";
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import {
   BaseModel,
   CosmosdbModel,

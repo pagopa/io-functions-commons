@@ -3,7 +3,7 @@ import * as t from "io-ts";
 import { right } from "fp-ts/lib/Either";
 import { none, Option, some } from "fp-ts/lib/Option";
 
-import { ResponseErrorFromValidationErrors } from "italia-ts-commons/lib/responses";
+import { ResponseErrorFromValidationErrors } from "@pagopa/ts-commons/lib/responses";
 import { IRequestMiddleware } from "../request_middleware";
 
 /**

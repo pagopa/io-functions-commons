@@ -5,7 +5,7 @@ import winston = require("winston");
 import { toError } from "fp-ts/lib/Either";
 import { fromEither, none, Option, some } from "fp-ts/lib/Option";
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import { RetrievedMessage } from "../models/message";
 import { NotificationModel } from "../models/notification";
