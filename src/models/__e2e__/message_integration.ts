@@ -1,5 +1,5 @@
 // tslint:disable: no-console no-identical-functions
-import { FiscalCode, NonEmptyString } from "italia-ts-commons/lib/strings";
+import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import { isLeft, right } from "fp-ts/lib/Either";
 import {

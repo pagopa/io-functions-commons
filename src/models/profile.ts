@@ -1,6 +1,6 @@
 import * as t from "io-ts";
 
-import { withDefault } from "italia-ts-commons/lib/types";
+import { withDefault } from "@pagopa/ts-commons/lib/types";
 
 import {
   CosmosdbModelVersioned,

@@ -7,7 +7,7 @@ import * as t from "io-ts";
 import { Either, left, right } from "fp-ts/lib/Either";
 import { fromNullable, isNone, none, Option, some } from "fp-ts/lib/Option";
 
-import { readableReport } from "italia-ts-commons/lib/reporters";
+import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 
 type Resolve<T> = (value?: T | PromiseLike<T>) => void;
 

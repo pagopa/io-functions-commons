@@ -3,7 +3,7 @@ import * as t from "io-ts";
 import { isLeft, isRight } from "fp-ts/lib/Either";
 import { isNone } from "fp-ts/lib/Option";
 
-import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 
 import {
   Container,
@@ -12,7 +12,7 @@ import {
   ResourceResponse
 } from "@azure/cosmos";
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { BaseModel } from "../cosmosdb_model";
 import {
   CosmosdbModelVersioned,

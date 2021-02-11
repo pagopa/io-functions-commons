@@ -1,6 +1,6 @@
 import * as t from "io-ts";
 
-import { tag } from "italia-ts-commons/lib/types";
+import { tag } from "@pagopa/ts-commons/lib/types";
 
 import {
   CosmosdbModelVersioned,
@@ -8,8 +8,8 @@ import {
 } from "../utils/cosmosdb_model_versioned";
 
 import { Container } from "@azure/cosmos";
+import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { TaskEither } from "fp-ts/lib/TaskEither";
-import { readableReport } from "italia-ts-commons/lib/reporters";
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { Timestamp } from "../../generated/definitions/Timestamp";
 import { UserDataProcessingChoice } from "../../generated/definitions/UserDataProcessingChoice";

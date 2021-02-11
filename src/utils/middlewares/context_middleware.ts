@@ -8,7 +8,7 @@ import { IRequestMiddleware } from "../request_middleware";
 import {
   IResponseErrorInternal,
   ResponseErrorInternal
-} from "italia-ts-commons/lib/responses";
+} from "@pagopa/ts-commons/lib/responses";
 
 import { Context } from "@azure/functions";
 

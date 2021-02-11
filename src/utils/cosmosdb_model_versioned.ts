@@ -12,7 +12,7 @@ import * as t from "io-ts";
 import { Option } from "fp-ts/lib/Option";
 import { fromEither, TaskEither } from "fp-ts/lib/TaskEither";
 
-import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 
 import {
   Container,
@@ -20,7 +20,7 @@ import {
   RequestOptions,
   SqlQuerySpec
 } from "@azure/cosmos";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 /**
  * Maps the fields of a versioned

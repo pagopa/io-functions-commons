@@ -15,11 +15,11 @@ import {
   FiscalCode,
   NonEmptyString,
   OrganizationFiscalCode
-} from "italia-ts-commons/lib/strings";
+} from "@pagopa/ts-commons/lib/strings";
 
 import { Container } from "@azure/cosmos";
+import { readonlySetType, withDefault } from "@pagopa/ts-commons/lib/types";
 import { TaskEither } from "fp-ts/lib/TaskEither";
-import { readonlySetType, withDefault } from "italia-ts-commons/lib/types";
 import { MaxAllowedPaymentAmount } from "../../generated/definitions/MaxAllowedPaymentAmount";
 import { ServiceScope } from "../../generated/definitions/ServiceScope";
 import { CosmosErrors } from "../utils/cosmosdb_model";

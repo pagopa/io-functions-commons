@@ -5,6 +5,7 @@
  * see http://help.mailup.com/display/mailupapi/Transactional+Emails+using+APIs
  *
  */
+import { EmailString, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { isLeft, isRight } from "fp-ts/lib/Either";
 import {
   fromEither,
@@ -13,7 +14,6 @@ import {
   tryCatch
 } from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
-import { EmailString, NonEmptyString } from "italia-ts-commons/lib/strings";
 import nodeFetch from "node-fetch";
 
 import * as nodemailer from "nodemailer";
@@ -23,8 +23,8 @@ import { Address as NodemailerAddress } from "nodemailer/lib/addressparser";
 
 import * as winston from "winston";
 
+import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { fromNullable, Option } from "fp-ts/lib/Option";
-import { readableReport } from "italia-ts-commons/lib/reporters";
 
 export const SEND_TRANSACTIONAL_MAIL_ENDPOINT =
   "https://send.mailup.com/API/v2.0/messages/sendmessage";
