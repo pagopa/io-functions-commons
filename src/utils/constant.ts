@@ -1,0 +1,2 @@
+export const CGN_OTP_PREFIX = "OTP_";
+export const CGN_FISCALCODE_OTP_PREFIX = "OTP_FISCALCODE_";
