@@ -16,6 +16,7 @@ import {
   ResponseErrorForbiddenNotAuthorized,
   ResponseErrorInternal
 } from "@pagopa/ts-commons/lib/responses";
+import { toAuthorizedCIDRs } from "../models/service";
 
 /**
  * Whether IP is contained in the provided CIDRs
@@ -162,5 +163,12 @@ export function clientIPAndCidrTuple(
   clientIp: ClientIp,
   userAttributes: IAzureUserAttributes
 ): ITuple2<ClientIp, ReadonlySet<string>> {
-  return Tuple2(clientIp, userAttributes.service.authorizedCIDRs);
+  return Tuple2(
+    clientIp,
+    toAuthorizedCIDRs(
+      Array.from(userAttributes.service.authorizedCIDRs).map(c =>
+        c.indexOf("/") !== -1 ? c : `${c}/32`
+      )
+    )
+  );
 }
