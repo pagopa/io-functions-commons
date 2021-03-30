@@ -16,6 +16,8 @@ import {
   ResponseErrorForbiddenNotAuthorized,
   ResponseErrorInternal
 } from "@pagopa/ts-commons/lib/responses";
+import { CIDR } from "../../generated/definitions/CIDR";
+import { toAuthorizedCIDRs } from "../models/service";
 
 /**
  * Whether IP is contained in the provided CIDRs
@@ -162,5 +164,15 @@ export function clientIPAndCidrTuple(
   clientIp: ClientIp,
   userAttributes: IAzureUserAttributes
 ): ITuple2<ClientIp, ReadonlySet<string>> {
-  return Tuple2(clientIp, userAttributes.service.authorizedCIDRs);
+  /**
+   * Add the default /32 subnet to an IP without any subnet.
+   */
+  const withDefaultSubnet = (ip: CIDR): CIDR =>
+    ip.indexOf("/") !== -1 ? ip : (`${ip}/32` as CIDR);
+  return Tuple2(
+    clientIp,
+    toAuthorizedCIDRs(
+      Array.from(userAttributes.service.authorizedCIDRs).map(withDefaultSubnet)
+    )
+  );
 }
