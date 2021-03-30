@@ -486,6 +486,20 @@
     "@types/yargs" "^15.0.0"
     chalk "^3.0.0"
 
+"@pagopa/ts-commons@^9.1.0":
+  version "9.1.0"
+  resolved "https://registry.yarnpkg.com/@pagopa/ts-commons/-/ts-commons-9.1.0.tgz#bbb5f41ffa7039e355123cc40411529b55cc1e34"
+  integrity sha512-wRXk/qm1ReYsg9QHC0cYZraZpJw6AB2RYlU1WrcDFXUnbxEqQ2immP1knyaMkbqhm/uD4EXzX6/vKNztUHN+lg==
+  dependencies:
+    abort-controller "^3.0.0"
+    agentkeepalive "^4.1.2"
+    applicationinsights "^1.7.4"
+    fp-ts "1.17.4"
+    io-ts "1.8.5"
+    json-set-map "^1.0.2"
+    node-fetch "^2.6.0"
+    validator "^10.1.0"
+
 "@sendgrid/client@^6.5.5":
   version "6.5.5"
   resolved "https://registry.yarnpkg.com/@sendgrid/client/-/client-6.5.5.tgz#66cf569445d98a795998a894bb432a9939ead7c3"
@@ -658,6 +672,13 @@ abab@^2.0.0:
   resolved "https://registry.yarnpkg.com/abab/-/abab-2.0.5.tgz#c0b678fb32d60fc1219c784d6a826fe385aeb79a"
   integrity sha512-9IK9EadsbHo6jLWIpxpR6pL0sazTXV6+SQv25ZB+F7Bj9mJNaOc4nCRabwd5M/JwmUa8idz6Eci6eKfJryPs6Q==
 
+abort-controller@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/abort-controller/-/abort-controller-3.0.0.tgz#eaf54d53b62bae4138e809ca225c8439a6efb392"
+  integrity sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==
+  dependencies:
+    event-target-shim "^5.0.0"
+
 accepts@~1.3.7:
   version "1.3.7"
   resolved "https://registry.yarnpkg.com/accepts/-/accepts-1.3.7.tgz#531bc726517a3b2b41f850021c6cc15eaab507cd"
@@ -689,9 +710,10 @@ acorn@^7.1.0:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-7.4.1.tgz#feaed255973d2e77555b83dbc08851a6c63520fa"
   integrity sha512-nQyp0o1/mNdbTO1PO6kHkwSrmgZ0MT/jCCpNiwbUjGoRN4dlBhqJtoQuCnEOKzgTVwg0ZWiCoQy6SxMebQVh8A==
 
-"agentkeepalive@git+https://github.com/pagopa/agentkeepalive.git#v4.1.1":
-  version "4.1.0"
-  resolved "git+https://github.com/pagopa/agentkeepalive.git#91309bcab216dccbd08631e227a974afbfe807fb"
+agentkeepalive@^4.1.2:
+  version "4.1.4"
+  resolved "https://registry.yarnpkg.com/agentkeepalive/-/agentkeepalive-4.1.4.tgz#d928028a4862cb11718e55227872e842a44c945b"
+  integrity sha512-+V/rGa3EuU74H6wR04plBb7Ks10FbtUQgRj/FQOG7uUIEuaINI+AiqJR1k6t3SVNs7o7ZjIdus6706qqzVq8jQ==
   dependencies:
     debug "^4.1.0"
     depd "^1.1.2"
@@ -1602,6 +1624,11 @@ etag@~1.8.1:
   resolved "https://registry.yarnpkg.com/etag/-/etag-1.8.1.tgz#41ae2eeb65efa62268aebfea83ac7d79299b0887"
   integrity sha1-Qa4u62XvpiJorr/qg6x9eSmbCIc=
 
+event-target-shim@^5.0.0:
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/event-target-shim/-/event-target-shim-5.0.1.tgz#5d4d3ebdf9583d63a5333ce2deb7480ab2b05789"
+  integrity sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==
+
 exec-sh@^0.3.2:
   version "0.3.4"
   resolved "https://registry.yarnpkg.com/exec-sh/-/exec-sh-0.3.4.tgz#3a018ceb526cc6f6df2bb504b2bfe8e3a4934ec5"
@@ -2214,9 +2241,10 @@ inherits@2.0.3:
   integrity sha1-Yzwsg+PaQqUC9SRmAiSA9CCCYd4=
 
 io-functions-commons@../:
-  version "15.0.0"
+  version "19.2.0"
   dependencies:
     "@azure/cosmos" "^3.7.2"
+    "@pagopa/ts-commons" "^9.1.0"
     applicationinsights "^1.7.3"
     azure-storage "^2.10.3"
     cidr-matcher "^2.1.0"
@@ -2225,8 +2253,7 @@ io-functions-commons@../:
     helmet-csp "^2.5.1"
     io-functions-express "^0.1.1"
     io-ts "1.8.5"
-    italia-ts-commons "^7.0.1"
-    node-fetch "^2.6.0"
+    node-fetch "^2.6.1"
     nodemailer "^6.4.13"
     nodemailer-sendgrid "^1.0.3"
     referrer-policy "^1.1.0"
@@ -2525,19 +2552,6 @@ istanbul-reports@^3.0.2:
   dependencies:
     html-escaper "^2.0.0"
     istanbul-lib-report "^3.0.0"
-
-italia-ts-commons@^7.0.1:
-  version "7.0.1"
-  resolved "https://registry.yarnpkg.com/italia-ts-commons/-/italia-ts-commons-7.0.1.tgz#7068643b09f069f4c96627e609d5dc578a64a04a"
-  integrity sha512-IIZYim8LydSA3nbeCxbR23marXhx3Z/FLUh7cV6XxNrB5OpKeVMmQhXV42oErP+g/vsrCQ/LRSrLX8cpi1Nghg==
-  dependencies:
-    agentkeepalive "https://github.com/pagopa/agentkeepalive#v4.1.1"
-    applicationinsights "^1.7.4"
-    fp-ts "1.17.4"
-    io-ts "1.8.5"
-    json-set-map "^1.0.2"
-    node-fetch "^2.6.0"
-    validator "^10.1.0"
 
 jest-changed-files@^25.5.0:
   version "25.5.0"
@@ -3340,7 +3354,7 @@ node-abort-controller@^1.0.4:
   resolved "https://registry.yarnpkg.com/node-abort-controller/-/node-abort-controller-1.1.0.tgz#8a734a631b022af29963be7245c1483cbb9e070d"
   integrity sha512-dEYmUqjtbivotqjraOe8UvhT/poFfog1BQRNsZm/MSEDDESk2cQ1tvD8kGyuN07TM/zoW+n42odL8zTeJupYdQ==
 
-node-fetch@^2.6.0:
+node-fetch@^2.6.0, node-fetch@^2.6.1:
   version "2.6.1"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.1.tgz#045bd323631f76ed2e2b55573394416b639a0052"
   integrity sha512-V4aYg89jEoVRxRb2fJdAg8FHvI7cEyYdVAh94HH0UIK8oJxUfkjlDQN9RbMx+bEjP7+ggMiFRprSti032Oipxw==
@@ -4972,9 +4986,9 @@ xtend@^4.0.0, xtend@^4.0.1:
   integrity sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==
 
 y18n@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/y18n/-/y18n-4.0.0.tgz#95ef94f85ecc81d007c264e190a120f0a3c8566b"
-  integrity sha512-r9S/ZyXu/Xu9q1tYlpsLIsa3EeLXXk0VwlxqTcFRfg9EhMW+17kbt9G0NrgCmhGb5vT2hyhJZLfDGx+7+5Uj/w==
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/y18n/-/y18n-4.0.1.tgz#8db2b83c31c5d75099bb890b23f3094891e247d4"
+  integrity sha512-wNcy4NvjMYL8gogWWYAO7ZFWFfHcbdbE57tZO8e4cbpj8tfUcwrwqSl3ad8HxpYWCdXcJUCeKKZS62Av1affwQ==
 
 yargs-parser@18.x, yargs-parser@^18.1.2:
   version "18.1.3"
