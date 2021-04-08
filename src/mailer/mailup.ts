@@ -36,44 +36,55 @@ const TRANSPORT_VERSION = "0.1";
  * You need to create a SMTP+ user in MailUp administration panel
  * see also http://help.mailup.com/display/MUG/SMTP+Settings
  */
+/* eslint-disable @typescript-eslint/naming-convention */
 export const SmtpAuthInfo = t.interface({
   Secret: NonEmptyString,
   Username: NonEmptyString
 });
+/* eslint-enable @typescript-eslint/naming-convention */
 
 export type SmtpAuthInfo = t.TypeOf<typeof SmtpAuthInfo>;
 
 /**
  * MailUp API calls common response fields
  */
+/* eslint-disable @typescript-eslint/naming-convention */
 const ApiResponse = t.interface({
   Code: t.string,
   Message: t.string,
   Status: t.string
 });
+/* eslint-enable @typescript-eslint/naming-convention */
 
 type ApiResponse = t.TypeOf<typeof ApiResponse>;
 
+/* eslint-disable @typescript-eslint/naming-convention */
 const Address = t.interface({
   Email: EmailString,
   Name: t.string
 });
+/* eslint-enable @typescript-eslint/naming-convention */
 
 type Address = t.TypeOf<typeof Address>;
 
+/* eslint-disable @typescript-eslint/naming-convention */
 const NameValue = t.interface({
   N: NonEmptyString,
   V: t.string
 });
+/* eslint-enable @typescript-eslint/naming-convention */
 
 type NameValue = t.TypeOf<typeof NameValue>;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const Html = t.interface({
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   Body: NonEmptyString
 });
 
 type Html = t.TypeOf<typeof NameValue>;
 
+/* eslint-disable @typescript-eslint/naming-convention */
 const EmailPayload = t.intersection([
   t.interface({
     ExtendedHeaders: t.array(NameValue),
@@ -89,6 +100,7 @@ const EmailPayload = t.intersection([
     ReplyTo: t.string
   })
 ]);
+/* eslint-enable @typescript-eslint/naming-convention */
 
 type EmailPayload = t.TypeOf<typeof EmailPayload>;
 
@@ -97,6 +109,7 @@ export interface IMailUpTransportOptions {
   readonly fetchAgent?: typeof fetch;
 }
 
+/* eslint-disable @typescript-eslint/naming-convention */
 interface IAddresses {
   readonly bcc?: ReadonlyArray<NodemailerAddress>;
   readonly cc?: ReadonlyArray<NodemailerAddress>;
@@ -105,7 +118,9 @@ interface IAddresses {
   readonly "reply-to"?: ReadonlyArray<NodemailerAddress>;
   readonly to?: ReadonlyArray<NodemailerAddress>;
 }
+/* eslint-enable @typescript-eslint/naming-convention */
 
+/* eslint-disable @typescript-eslint/naming-convention */
 const sendTransactionalMail = (
   creds: SmtpAuthInfo,
   payload: EmailPayload,
@@ -155,6 +170,7 @@ const sendTransactionalMail = (
           )
       )
     );
+/* eslint-enable @typescript-eslint/naming-convention */
 
 /**
  * Translates nodemailer parsed addresses ({ name: <name>, address: <address> })
@@ -164,6 +180,7 @@ const toMailupAddresses = (
   addresses: ReadonlyArray<NodemailerAddress>
 ): ReadonlyArray<Address> =>
   addresses.map((address: NodemailerAddress) => ({
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     Email: EmailString.decode(address.address).getOrElseL(() => {
       // this never happens as nodemailer has already parsed
       // the email address (so it's a valid one)
@@ -171,6 +188,7 @@ const toMailupAddresses = (
         `Error while parsing email address (toMailupAddresses): invalid format '${address.address}'.`
       );
     }),
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     Name: address.name || address.address
   }));
 
@@ -216,6 +234,7 @@ const toMailupAddress = (
  *   .then(res => console.log(JSON.stringify(res)))
  *   .catch(err => console.error(JSON.stringify(err)));
  */
+/* eslint-disable @typescript-eslint/naming-convention */
 export const MailUpTransport = (
   options: IMailUpTransportOptions
 ): nodemailer.Transport => {
@@ -306,3 +325,4 @@ export const MailUpTransport = (
     }
   };
 };
+/* eslint-enable @typescript-eslint/naming-convention */

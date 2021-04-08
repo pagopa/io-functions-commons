@@ -1,6 +1,7 @@
 import { ServiceMetadata as ApiServiceMetadata } from "../../generated/definitions/ServiceMetadata";
 import { ServiceMetadata } from "../models/service";
 
+/* eslint-disable @typescript-eslint/naming-convention */
 export const toApiServiceMetadata = (
   serviceMetadata: ServiceMetadata
 ): ApiServiceMetadata => ({
@@ -19,3 +20,4 @@ export const toApiServiceMetadata = (
   tos_url: serviceMetadata.tosUrl,
   web_url: serviceMetadata.webUrl
 });
+/* eslint-enable @typescript-eslint/naming-convention */

@@ -24,6 +24,7 @@ import { IRequestMiddleware } from "../request_middleware";
  * Each groups is named after a Scope.
  * A Scope associates an Access Type to a Resource.
  */
+/* eslint-disable @typescript-eslint/naming-convention */
 export enum UserGroup {
   // API management users: get, list, create user's subscriptions and groups
   ApiUserAdmin = "ApiUserAdmin",
@@ -73,6 +74,7 @@ export enum UserGroup {
   // debug endpoint
   ApiDebugRead = "ApiDebugRead"
 }
+/* eslint-enable @typescript-eslint/naming-convention */
 
 /**
  * Looks up a UserGroup by name
@@ -121,6 +123,7 @@ type AzureApiAuthMiddlewareErrorResponses =
  * it triggers a ResponseErrorForbidden.
  *
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const AzureApiAuthMiddleware = (
   allowedGroups: ReadonlySet<UserGroup>
 ): IRequestMiddleware<

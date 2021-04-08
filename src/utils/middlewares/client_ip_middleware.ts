@@ -17,6 +17,7 @@ export type ClientIp = Option<IPString>;
  * If you call Functions logic bypassing the API gateway
  * the IP will be null and the middleware will return None.
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ClientIpMiddleware: IRequestMiddleware<
   never,
   ClientIp

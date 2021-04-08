@@ -24,6 +24,7 @@ interface IUserDataProcessingIdTag {
   readonly kind: "IUserDataProcessingIdTag";
 }
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const UserDataProcessingId = tag<IUserDataProcessingIdTag>()(
   t.refinement(t.string, s => {
     // enforce pattern {fiscalCode-Choice}
@@ -39,6 +40,7 @@ export type UserDataProcessingId = t.TypeOf<typeof UserDataProcessingId>;
 /**
  * Base interface for User Data Processing objects
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const UserDataProcessing = t.intersection([
   t.interface({
     // the unique identifier of a user data processing request identified by concatenation of
@@ -66,6 +68,7 @@ export const UserDataProcessing = t.intersection([
 
 export type UserDataProcessing = t.TypeOf<typeof UserDataProcessing>;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NewUserDataProcessing = wrapWithKind(
   UserDataProcessing,
   "INewUserDataProcessing" as const
@@ -73,6 +76,7 @@ export const NewUserDataProcessing = wrapWithKind(
 
 export type NewUserDataProcessing = t.TypeOf<typeof NewUserDataProcessing>;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const RetrievedUserDataProcessing = wrapWithKind(
   t.intersection([UserDataProcessing, RetrievedVersionedModel]),
   "IRetrievedUserDataProcessing" as const

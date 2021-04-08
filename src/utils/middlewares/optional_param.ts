@@ -16,6 +16,7 @@ import { IRequestMiddleware } from "../request_middleware";
  * @param name  The name of the parameter
  * @param type  The io-ts Type for validating the parameter
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const OptionalParamMiddleware = <S, A>(
   name: string,
   type: t.Type<A, S>

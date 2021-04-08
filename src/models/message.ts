@@ -49,6 +49,7 @@ export const MESSAGE_MODEL_PK_FIELD = "fiscalCode" as const;
 
 const MESSAGE_BLOB_STORAGE_SUFFIX = ".json";
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const MessageBaseR = t.interface({
   // when the message was accepted by the system
   createdAt: Timestamp,
@@ -70,6 +71,7 @@ const MessageBaseR = t.interface({
   timeToLiveSeconds: TimeToLiveSeconds
 });
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const MessageBaseO = t.partial({
   // When true, the message is still being processed and should be
   // hidden from the result of getMessages requests. This is needed to avoid
@@ -79,6 +81,7 @@ const MessageBaseO = t.partial({
   isPending: t.boolean
 });
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const MessageBase = t.intersection([MessageBaseR, MessageBaseO], "MessageBase");
 
 /**
@@ -93,7 +96,7 @@ type MessageBase = t.TypeOf<typeof MessageBase>;
  * to have the content of the messages permanently stored in his inbox.
  */
 export type MessageWithoutContent = MessageBase;
-
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const MessageWithoutContent = MessageBase;
 
 /**
@@ -102,6 +105,7 @@ export const MessageWithoutContent = MessageBase;
  * A Message gets stored with content if the recipient opted-in
  * to have the content of the messages permanently stored in his inbox.
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const MessageWithContent = t.intersection([
   t.interface({
     content: MessageContent
@@ -114,10 +118,12 @@ export type MessageWithContent = t.TypeOf<typeof MessageWithContent>;
 /**
  * A Message can be with our without content
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const Message = t.union([MessageWithoutContent, MessageWithContent]);
 
 export type Message = t.TypeOf<typeof Message>;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NewMessageWithContent = wrapWithKind(
   t.intersection([MessageWithContent, BaseModel]),
   "INewMessageWithContent" as const
@@ -125,6 +131,7 @@ export const NewMessageWithContent = wrapWithKind(
 
 export type NewMessageWithContent = t.TypeOf<typeof NewMessageWithContent>;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NewMessageWithoutContent = wrapWithKind(
   t.intersection([MessageWithoutContent, BaseModel]),
   "INewMessageWithoutContent" as const
@@ -137,6 +144,7 @@ export type NewMessageWithoutContent = t.TypeOf<
 /**
  * A (yet to be saved) Message
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NewMessage = t.union([
   NewMessageWithContent,
   NewMessageWithoutContent
@@ -144,6 +152,7 @@ export const NewMessage = t.union([
 
 export type NewMessage = t.TypeOf<typeof NewMessage>;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const RetrievedMessageWithContent = wrapWithKind(
   t.intersection([MessageWithContent, CosmosResource]),
   "IRetrievedMessageWithContent" as const
@@ -153,6 +162,7 @@ export type RetrievedMessageWithContent = t.TypeOf<
   typeof RetrievedMessageWithContent
 >;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const RetrievedMessageWithoutContent = wrapWithKind(
   t.intersection([MessageWithoutContent, CosmosResource]),
   "IRetrievedMessageWithoutContent" as const
@@ -162,6 +172,7 @@ export type RetrievedMessageWithoutContent = t.TypeOf<
   typeof RetrievedMessageWithoutContent
 >;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ActiveMessage = t.refinement(
   MessageBase,
   message =>
@@ -175,7 +186,7 @@ export type NotExpiredMessage = t.TypeOf<typeof ActiveMessage>;
 /**
  * A (previously saved) retrieved Message
  */
-
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const RetrievedMessage = t.union([
   RetrievedMessageWithContent,
   RetrievedMessageWithoutContent

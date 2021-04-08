@@ -27,6 +27,7 @@ import {
 /**
  * Maps the fields of a versioned
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const VersionedModel = t.intersection([
   BaseModel,
   t.interface({
@@ -38,6 +39,7 @@ export type VersionedModel = t.TypeOf<typeof VersionedModel>;
 /**
  * A RetrievedVersionedModel should track the version of the model
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const RetrievedVersionedModel = t.intersection([
   CosmosResource,
   VersionedModel

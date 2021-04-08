@@ -114,6 +114,7 @@ export const getMessageNotificationStatuses = (
 /**
  * Converts a retrieved message to a message that can be shared via API
  */
+/* eslint-disable @typescript-eslint/naming-convention */
 export const retrievedMessageToPublic = (
   retrievedMessage: RetrievedMessage
 ): CreatedMessageWithoutContent => ({
@@ -122,3 +123,4 @@ export const retrievedMessageToPublic = (
   id: retrievedMessage.id,
   sender_service_id: retrievedMessage.senderServiceId
 });
+/* eslint-enable @typescript-eslint/naming-convention */

@@ -23,11 +23,13 @@ import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { mapAsyncIterable } from "./async";
 import { isDefined } from "./types";
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const CosmosDocumentIdKey = "id" as const;
 export type CosmosDocumentIdKey = typeof CosmosDocumentIdKey;
 
 // For basic models, the identity field is always the id of cosmos
 export type BaseModel = t.TypeOf<typeof BaseModel>;
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const BaseModel = t.interface({
   id: NonEmptyString
 });
@@ -64,7 +66,7 @@ export type DocumentSearchKey<
 // An io-ts definition of Cosmos Resource runtime type
 // IDs are enforced to be non-empty string, as we're sure they are always valued when coming from db.
 export type CosmosResource = t.TypeOf<typeof CosmosResource>;
-// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion, @typescript-eslint/naming-convention
 export const CosmosResource = t.intersection([
   BaseModel,
   t.interface({
@@ -78,11 +80,13 @@ export const CosmosResource = t.intersection([
 ]) as t.Type<Resource & { readonly id: NonEmptyString }>;
 
 // An empty response from a Cosmos operation
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const CosmosEmptyResponse = {
   kind: "COSMOS_EMPTY_RESPONSE"
 } as const;
 
 // Error while decoding object from an Cosmos operation
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const CosmosDecodingError = (error: t.Errors) =>
   ({
     error,
@@ -90,6 +94,7 @@ export const CosmosDecodingError = (error: t.Errors) =>
   } as const);
 
 // An ErrorResponse from a Cosmos operation
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const CosmosErrorResponse = (error: ErrorResponse) =>
   ({
     error,

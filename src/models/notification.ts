@@ -30,6 +30,7 @@ export const NOTIFICATION_MODEL_PK_FIELD = "messageId" as const;
 /**
  * All possible sources that can provide the address of the recipient.
  */
+/* eslint-disable @typescript-eslint/naming-convention */
 export enum NotificationAddressSourceEnum {
   // the notification address comes from the user profile
   PROFILE_ADDRESS = "PROFILE_ADDRESS",
@@ -38,7 +39,9 @@ export enum NotificationAddressSourceEnum {
   // the notification address was provided by the sending user email
   SERVICE_USER_ADDRESS = "SERVICE_USER_ADDRESS"
 }
+/* eslint-enable @typescript-eslint/naming-convention */
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NotificationAddressSource = enumType<
   NotificationAddressSourceEnum
 >(NotificationAddressSourceEnum, "NotificationAddressSource");
@@ -48,13 +51,14 @@ export type NotificationAddressSource = NotificationAddressSourceEnum;
 /**
  * Base interface for Notification objects
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NotificationBase = t.interface({
   fiscalCode: FiscalCode,
   messageId: NonEmptyString
 });
 
 // Email Notification
-
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NotificationChannelEmail = t.intersection([
   t.interface({
     addressSource: NotificationAddressSource,
@@ -68,6 +72,7 @@ export type NotificationChannelEmail = t.TypeOf<
   typeof NotificationChannelEmail
 >;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const EmailNotification = t.interface({
   ...NotificationBase.props,
   channels: t.interface({
@@ -77,7 +82,7 @@ export const EmailNotification = t.interface({
 export type EmailNotification = t.TypeOf<typeof EmailNotification>;
 
 // Webhook Notification
-
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NotificationChannelWebhook = t.interface({
   url: HttpsUrl
 });
@@ -85,6 +90,7 @@ export type NotificationChannelWebhook = t.TypeOf<
   typeof NotificationChannelWebhook
 >;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const WebhookNotification = t.interface({
   ...NotificationBase.props,
   channels: t.interface({
@@ -94,7 +100,7 @@ export const WebhookNotification = t.interface({
 export type WebhookNotification = t.TypeOf<typeof WebhookNotification>;
 
 // Generic Notification object
-
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const Notification = t.intersection([
   NotificationBase,
   t.interface({
@@ -108,6 +114,7 @@ export const Notification = t.intersection([
 ]);
 export type Notification = t.TypeOf<typeof Notification>;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NewNotification = wrapWithKind(
   t.intersection([Notification, BaseModel]),
   "INewNotification" as const
@@ -130,6 +137,7 @@ export const createNewNotification = (
   messageId
 });
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const RetrievedNotification = wrapWithKind(
   t.intersection([Notification, CosmosResource]),
   "IRetrievedNotification" as const

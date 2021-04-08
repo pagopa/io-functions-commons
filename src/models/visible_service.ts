@@ -31,6 +31,7 @@ const {
 } = Service.types[0].props;
 
 // Public view of RetrivedService type
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const VisibleServiceR = t.intersection([
   BaseModel,
   t.interface({
@@ -49,10 +50,12 @@ const VisibleServiceR = t.intersection([
   })
 ]);
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const VisibleServiceO = t.partial({
   serviceMetadata: ServiceMetadata
 });
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const VisibleService = t.intersection(
   [VisibleServiceR, VisibleServiceO],
   "VisibleService"
@@ -69,6 +72,7 @@ export const serviceAvailableNotificationChannels = (
   return [NotificationChannelEnum.EMAIL, NotificationChannelEnum.WEBHOOK];
 };
 
+/* eslint-disable @typescript-eslint/naming-convention */
 export const toServicePublic = (
   visibleService: VisibleService
 ): ServicePublic => ({
@@ -85,6 +89,7 @@ export const toServicePublic = (
   service_name: visibleService.serviceName,
   version: visibleService.version
 });
+/* eslint-enable @typescript-eslint/naming-convention */
 
 export const toServicesPublic = (
   visibleServices: StrMap<VisibleService>
@@ -99,6 +104,7 @@ export const toServicesTuple = (
       v.serviceMetadata && v.serviceMetadata.scope === ServiceScopeEnum.LOCAL
         ? ServiceScopeEnum.LOCAL
         : ServiceScopeEnum.NATIONAL,
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     service_id: v.serviceId,
     version: v.version
   }));

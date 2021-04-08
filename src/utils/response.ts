@@ -25,7 +25,7 @@ export interface IResponseSuccessJsonIterator<T>
  * TODO: pagination
  * TODO: make it stream the iterator instead of consumind it all at once
  */
-// eslint-disable-next-line prefer-arrow/prefer-arrow-functions
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions, @typescript-eslint/naming-convention
 export function ResponseJsonIterator<T>(
   i: AsyncIterator<T>
 ): IResponseSuccessJsonIterator<T> {
@@ -38,6 +38,7 @@ export function ResponseJsonIterator<T>(
         );
         return res.status(200).json({
           items: kindlessDocuments,
+          // eslint-disable-next-line @typescript-eslint/naming-convention
           page_size: kindlessDocuments.length
         });
       }),
@@ -58,6 +59,7 @@ export interface IResponseErrorQuery extends IResponse<"IResponseErrorQuery"> {}
  * @param detail The error message
  * @param error  The QueryError object
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ResponseErrorQuery = (
   detail: string,
   error: CosmosErrors

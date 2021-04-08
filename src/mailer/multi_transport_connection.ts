@@ -7,6 +7,7 @@ import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 /**
  * Describes a nodemailer transport connection
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const MailTransportConnection = t.interface({
   password: t.string,
   transport: NonEmptyString,
@@ -18,6 +19,7 @@ export type MailTransportConnection = t.TypeOf<typeof MailTransportConnection>;
 /**
  * An array of nodemailer transport connections
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const MailMultiTransportConnections = t.readonlyArray(
   MailTransportConnection
 );
@@ -59,6 +61,7 @@ const parseMultiProviderConnection = (
  * Decodes an array of nodemailer transport connections from a multi
  * transport connection string.
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const MailMultiTransportConnectionsFromString = new t.Type<
   MailMultiTransportConnections,
   string,

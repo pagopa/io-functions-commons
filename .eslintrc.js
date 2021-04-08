@@ -22,7 +22,6 @@ module.exports = {
         "@pagopa/eslint-config/strong",
     ],
     "rules": {
-        "jsdoc/check-indentation": "off",
-        "@typescript-eslint/naming-convention": "off",
+        "jsdoc/check-indentation": "off"
     }
 }

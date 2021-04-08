@@ -28,6 +28,7 @@ import { MailMultiTransportConnections } from "./multi_transport_connection";
  *
  * @returns maybe a mailer transport
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const MultiTransport = (
   transports: ReadonlyArray<Transport>
 ): Transport | undefined => {
@@ -100,7 +101,9 @@ const getTransportsForConnections = (
       return some(
         MailUpTransport({
           creds: {
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             Secret: config.password,
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             Username: config.username
           },
           fetchAgent

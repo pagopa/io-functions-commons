@@ -28,11 +28,13 @@ export const SERVICE_MODEL_ID_FIELD = "serviceId" as const;
 export const SERVICE_MODEL_PK_FIELD = SERVICE_MODEL_ID_FIELD;
 
 // required attributes
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const ServiceMetadataR = t.interface({
   scope: ServiceScope
 });
 
 // optional attributes
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const ServiceMetadataO = t.partial({
   address: NonEmptyString,
 
@@ -61,6 +63,7 @@ const ServiceMetadataO = t.partial({
   webUrl: NonEmptyString
 });
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ServiceMetadata = t.intersection(
   [ServiceMetadataR, ServiceMetadataO],
   "ServiceMetadata"
@@ -71,6 +74,7 @@ export type ServiceMetadata = t.TypeOf<typeof ServiceMetadata>;
 /**
  * Base interface for Service objects
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const ServiceR = t.interface({
   // authorized source CIDRs
   authorizedCIDRs: readonlySetType(CIDR, "CIDRs"),
@@ -95,17 +99,21 @@ const ServiceR = t.interface({
   serviceName: NonEmptyString
 });
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const ServiceO = t.partial({
   // the metadata of the service
   serviceMetadata: ServiceMetadata
 });
 
 export type Service = t.TypeOf<typeof Service>;
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const Service = t.intersection([ServiceR, ServiceO], "Service");
 
 export type NewService = t.TypeOf<typeof NewService>;
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NewService = wrapWithKind(Service, "INewService" as const);
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const RetrievedService = wrapWithKind(
   t.intersection([Service, RetrievedVersionedModel]),
   "IRetrievedService" as const
