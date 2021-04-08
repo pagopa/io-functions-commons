@@ -1,5 +1,5 @@
-/* tslint:disable:no-any */
-/* tslint:disable:no-identical-functions */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable sonarjs/no-identical-functions */
 
 import { isLeft, isRight } from "fp-ts/lib/Either";
 

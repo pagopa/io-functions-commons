@@ -1,4 +1,4 @@
-/* tslint:disable:no-identical-functions */
+/* eslint-disable sonarjs/no-identical-functions */
 
 import { ResponseSuccessJson } from "@pagopa/ts-commons/lib/responses";
 import { EmailString, IPString } from "@pagopa/ts-commons/lib/strings";

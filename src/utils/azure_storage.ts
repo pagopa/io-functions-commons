@@ -12,7 +12,7 @@ import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 type Resolve<T> = (value?: T | PromiseLike<T>) => void;
 
 export type StorageError = Error & {
-  code?: string;
+  readonly code?: string;
 };
 
 // BLOB STORAGE FUNCTIONS AND TYPES
@@ -29,7 +29,7 @@ const resolveErrorOrLeaseResult = (
   err: Error,
   result: azureStorage.BlobService.LeaseResult,
   _: azureStorage.ServiceResponse
-) => {
+): void => {
   if (err) {
     return resolve(left(err));
   } else {
@@ -44,13 +44,13 @@ const resolveErrorOrLeaseResult = (
  * @param containerName   the name of the Azure blob storage container
  * @param blobName        blob file name
  */
-export function acquireLease(
+export const acquireLease = (
   blobService: azureStorage.BlobService,
   containerName: string,
   blobName: string,
   options: azureStorage.BlobService.AcquireLeaseRequestOptions = {}
-): Promise<Either<Error, azureStorage.BlobService.LeaseResult>> {
-  return new Promise(resolve => {
+): Promise<Either<Error, azureStorage.BlobService.LeaseResult>> =>
+  new Promise(resolve => {
     blobService.acquireLease(
       containerName,
       blobName,
@@ -58,7 +58,6 @@ export function acquireLease(
       resolveErrorOrLeaseResult(resolve)
     );
   });
-}
 
 /**
  * Release lease for a blob.
@@ -68,14 +67,14 @@ export function acquireLease(
  * @param blobName        blob file name
  * @param leaseId         the id of the lease returned by acquireLease method
  */
-export function releaseLease(
+export const releaseLease = (
   blobService: azureStorage.BlobService,
   containerName: string,
   blobName: string,
   leaseId: string,
   options: azureStorage.BlobService.AcquireLeaseRequestOptions = {}
-): Promise<Either<Error, azureStorage.BlobService.LeaseResult>> {
-  return new Promise(resolve => {
+): Promise<Either<Error, azureStorage.BlobService.LeaseResult>> =>
+  new Promise(resolve => {
     blobService.releaseLease(
       containerName,
       blobName,
@@ -84,7 +83,6 @@ export function releaseLease(
       resolveErrorOrLeaseResult(resolve)
     );
   });
-}
 
 /**
  * Create a new blob (media) from plain text.
@@ -95,14 +93,14 @@ export function releaseLease(
  * @param blobName        blob storage container name
  * @param text            text to be saved
  */
-export function upsertBlobFromText(
+export const upsertBlobFromText = (
   blobService: azureStorage.BlobService,
   containerName: string,
   blobName: string,
   text: string | Buffer,
   options: azureStorage.BlobService.CreateBlobRequestOptions = {}
-): Promise<Either<Error, Option<azureStorage.BlobService.BlobResult>>> {
-  return new Promise(resolve =>
+): Promise<Either<Error, Option<azureStorage.BlobService.BlobResult>>> =>
+  new Promise(resolve =>
     blobService.createBlockBlobFromText(
       containerName,
       blobName,
@@ -123,7 +121,6 @@ export function upsertBlobFromText(
       }
     )
   );
-}
 
 /**
  * Create a new blob (media) from a typed object.
@@ -134,21 +131,20 @@ export function upsertBlobFromText(
  * @param blobName        blob storage container name
  * @param content         object to be serialized and saved
  */
-export function upsertBlobFromObject<T>(
+export const upsertBlobFromObject = <T>(
   blobService: azureStorage.BlobService,
   containerName: string,
   blobName: string,
   content: T,
   options: azureStorage.BlobService.CreateBlobRequestOptions = {}
-): Promise<Either<Error, Option<azureStorage.BlobService.BlobResult>>> {
-  return upsertBlobFromText(
+): Promise<Either<Error, Option<azureStorage.BlobService.BlobResult>>> =>
+  upsertBlobFromText(
     blobService,
     containerName,
     blobName,
     JSON.stringify(content),
     options
   );
-}
 
 /**
  * Get a blob content as text (string).
@@ -157,20 +153,20 @@ export function upsertBlobFromObject<T>(
  * @param containerName   the name of the Azure blob storage container
  * @param blobName        blob file name
  */
-export function getBlobAsText(
+export const getBlobAsText = (
   blobService: azureStorage.BlobService,
   containerName: string,
   blobName: string,
   options: azureStorage.BlobService.GetBlobRequestOptions = {}
-): Promise<Either<Error, Option<string>>> {
-  return new Promise(resolve => {
+): Promise<Either<Error, Option<string>>> =>
+  new Promise(resolve => {
     blobService.getBlobToText(
       containerName,
       blobName,
       options,
       (err, result, __) => {
         if (err) {
-          // tslint:disable-next-line: no-any
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const errorAsStorageError = err as StorageError;
           if (
             errorAsStorageError.code !== undefined &&
@@ -185,7 +181,6 @@ export function getBlobAsText(
       }
     );
   });
-}
 
 /**
  * Get a blob content as a typed (io-ts) object.
@@ -194,13 +189,13 @@ export function getBlobAsText(
  * @param containerName   the name of the Azure blob storage container
  * @param blobName        blob file name
  */
-export async function getBlobAsObject<A, O, I>(
+export const getBlobAsObject = async <A, O, I>(
   type: t.Type<A, O, I>,
   blobService: azureStorage.BlobService,
   containerName: string,
   blobName: string,
   options: azureStorage.BlobService.GetBlobRequestOptions = {}
-): Promise<Either<Error, Option<A>>> {
+): Promise<Either<Error, Option<A>>> => {
   const errorOrMaybeText = await getBlobAsText(
     blobService,
     containerName,
@@ -223,7 +218,7 @@ export async function getBlobAsObject<A, O, I>(
       return left(e);
     }
   });
-}
+};
 
 // TABLE STORAGE FUNCTIONS AND TYPES
 
@@ -239,15 +234,15 @@ export const ResourceNotFoundCode = "ResourceNotFound";
 
 // Describe a entity returned by the retrieveEntity function
 interface IEntityResult {
-  [key: string]: {
-    _: unknown; // Contains the value
-    $?: string; // Contains the type (Ex. `Edm.String`)
+  readonly [key: string]: {
+    readonly _: unknown; // Contains the value
+    readonly $?: string; // Contains the type (Ex. `Edm.String`)
   };
 }
 
 // A type used to map IEntityResult to an object containing only values
 interface IEntityResultValueOnly {
-  [key: string]: unknown;
+  readonly [key: string]: unknown;
 }
 
 /**
@@ -261,22 +256,20 @@ interface IEntityResultValueOnly {
  *
  * @param entityResult the object returned by TableService retrieveEntity function
  */
-export function getValueOnlyEntityResolver(
+export const getValueOnlyEntityResolver = (
   // We use Object becuase it is required by the azure-storage TableEntityRequestOptions type
-  // tslint:disable-next-line: ban-types
+  // eslint-disable-next-line @typescript-eslint/ban-types
   entityResult: Object
-): IEntityResultValueOnly {
+): IEntityResultValueOnly => {
   const typedEntityResult = entityResult as IEntityResult;
   return Object.keys(typedEntityResult).reduce<IEntityResultValueOnly>(
-    (accumulator, key) => {
-      return {
-        ...accumulator,
-        [key]: typedEntityResult[key]._
-      };
-    },
+    (accumulator, key) => ({
+      ...accumulator,
+      [key]: typedEntityResult[key]._
+    }),
     {}
   );
-}
+};
 
 /**
  * Insert an entity in table storage
@@ -285,18 +278,17 @@ export function getValueOnlyEntityResolver(
  * @param tableName the name of the table
  * @param entity the entity to store
  */
-export async function insertTableEntity<T extends ITableEntity>(
+export const insertTableEntity = async <T extends ITableEntity>(
   tableService: azureStorage.TableService,
   tableName: string,
   entity: T
-): Promise<Either<Error, azureStorage.TableService.EntityMetadata>> {
-  return new Promise(resolve => {
-    // tslint:disable-next-line: no-identical-functions
-    tableService.insertEntity<T>(tableName, entity, (err, result, _) => {
-      return resolve(err ? left(err) : right(result));
-    });
+): Promise<Either<Error, azureStorage.TableService.EntityMetadata>> =>
+  new Promise(resolve => {
+    // eslint-disable-next-line sonarjs/no-identical-functions
+    tableService.insertEntity<T>(tableName, entity, (err, result, _) =>
+      resolve(err ? left(err) : right(result))
+    );
   });
-}
 
 /**
  * Retrieve an entity from table storage
@@ -306,7 +298,7 @@ export async function insertTableEntity<T extends ITableEntity>(
  * @param partitionKey
  * @param rowKey
  */
-export async function retrieveTableEntity(
+export const retrieveTableEntity = async (
   tableService: azureStorage.TableService,
   tableName: string,
   partitionKey: string,
@@ -314,8 +306,8 @@ export async function retrieveTableEntity(
   options: azureStorage.TableService.TableEntityRequestOptions = {
     entityResolver: getValueOnlyEntityResolver
   }
-): Promise<Either<StorageError, Option<unknown>>> {
-  return new Promise(resolve => {
+): Promise<Either<StorageError, Option<unknown>>> =>
+  new Promise(resolve => {
     tableService.retrieveEntity(
       tableName,
       partitionKey,
@@ -334,4 +326,3 @@ export async function retrieveTableEntity(
       }
     );
   });
-}

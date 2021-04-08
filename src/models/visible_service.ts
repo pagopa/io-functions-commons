@@ -60,42 +60,41 @@ export const VisibleService = t.intersection(
 
 export type VisibleService = t.TypeOf<typeof VisibleService>;
 
-export function serviceAvailableNotificationChannels(
+export const serviceAvailableNotificationChannels = (
   visibleService: VisibleService
-): ReadonlyArray<NotificationChannel> {
+): ReadonlyArray<NotificationChannel> => {
   if (visibleService.requireSecureChannels) {
     return [NotificationChannelEnum.WEBHOOK];
   }
   return [NotificationChannelEnum.EMAIL, NotificationChannelEnum.WEBHOOK];
-}
+};
 
-export function toServicePublic(visibleService: VisibleService): ServicePublic {
-  return {
-    available_notification_channels: serviceAvailableNotificationChannels(
-      visibleService
-    ),
-    department_name: visibleService.departmentName,
-    organization_fiscal_code: visibleService.organizationFiscalCode,
-    organization_name: visibleService.organizationName,
-    service_id: visibleService.serviceId,
-    service_metadata: visibleService.serviceMetadata
-      ? toApiServiceMetadata(visibleService.serviceMetadata)
-      : undefined,
-    service_name: visibleService.serviceName,
-    version: visibleService.version
-  };
-}
+export const toServicePublic = (
+  visibleService: VisibleService
+): ServicePublic => ({
+  available_notification_channels: serviceAvailableNotificationChannels(
+    visibleService
+  ),
+  department_name: visibleService.departmentName,
+  organization_fiscal_code: visibleService.organizationFiscalCode,
+  organization_name: visibleService.organizationName,
+  service_id: visibleService.serviceId,
+  service_metadata: visibleService.serviceMetadata
+    ? toApiServiceMetadata(visibleService.serviceMetadata)
+    : undefined,
+  service_name: visibleService.serviceName,
+  version: visibleService.version
+});
 
-export function toServicesPublic(
+export const toServicesPublic = (
   visibleServices: StrMap<VisibleService>
-): ReadonlyArray<ServicePublic> {
-  return collect(visibleServices, (_, v) => toServicePublic(v));
-}
+): ReadonlyArray<ServicePublic> =>
+  collect(visibleServices, (_, v) => toServicePublic(v));
 
-export function toServicesTuple(
+export const toServicesTuple = (
   visibleServices: StrMap<VisibleService>
-): ReadonlyArray<ServiceTuple> {
-  return collect(visibleServices, (_, v) => ({
+): ReadonlyArray<ServiceTuple> =>
+  collect(visibleServices, (_, v) => ({
     scope:
       v.serviceMetadata && v.serviceMetadata.scope === ServiceScopeEnum.LOCAL
         ? ServiceScopeEnum.LOCAL
@@ -103,4 +102,3 @@ export function toServicesTuple(
     service_id: v.serviceId,
     version: v.version
   }));
-}

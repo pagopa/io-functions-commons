@@ -1,18 +1,12 @@
-import {
-  BaseModel,
-  CosmosdbModel,
-  CosmosDecodingError,
-  CosmosErrors,
-  CosmosResource,
-  DocumentSearchKey
-} from "./cosmosdb_model";
-
 import * as t from "io-ts";
 
 import { Option } from "fp-ts/lib/Option";
 import { fromEither, TaskEither } from "fp-ts/lib/TaskEither";
 
-import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
+import {
+  INonNegativeIntegerTag,
+  NonNegativeInteger
+} from "@pagopa/ts-commons/lib/numbers";
 
 import {
   Container,
@@ -21,6 +15,14 @@ import {
   SqlQuerySpec
 } from "@azure/cosmos";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import {
+  BaseModel,
+  CosmosdbModel,
+  CosmosDecodingError,
+  CosmosErrors,
+  CosmosResource,
+  DocumentSearchKey
+} from "./cosmosdb_model";
 
 /**
  * Maps the fields of a versioned
@@ -53,18 +55,18 @@ export type RetrievedVersionedModel = t.TypeOf<typeof RetrievedVersionedModel>;
  * @param modelId The base model ID
  * @param version The version of the model
  */
-export function generateVersionedModelId<T, ModelIdKey extends keyof T>(
+export const generateVersionedModelId = <T, ModelIdKey extends keyof T>(
   modelId: T[ModelIdKey],
   version: NonNegativeInteger
-): NonEmptyString {
+): NonEmptyString => {
   const paddingLength = 16; // length of Number.MAX_SAFE_INTEGER == 9007199254740991
   const paddedVersion = ("0".repeat(paddingLength) + String(version)).slice(
     -paddingLength
   );
   return `${String(modelId)}-${paddedVersion}` as NonEmptyString;
-}
+};
 
-export const incVersion = (version: NonNegativeInteger) =>
+export const incVersion = (version: NonNegativeInteger): NonNegativeInteger =>
   (Number(version) + 1) as NonNegativeInteger;
 
 /**
@@ -187,6 +189,7 @@ export abstract class CosmosdbModelVersioned<
 
   /**
    * Given a document, extract the tuple that define the search key for it
+   *
    * @param document
    */
   protected getSearchKey(
@@ -211,7 +214,8 @@ export abstract class CosmosdbModelVersioned<
   /**
    * Returns the value of the model ID for the provided item
    */
-  protected getModelId = (o: T): T[ModelIdKey] => o[this.modelIdKey];
+  // eslint-disable-next-line no-invalid-this
+  protected readonly getModelId = (o: T): T[ModelIdKey] => o[this.modelIdKey];
 
   /**
    * Returns the next version for the model which `id` is `modelId`.
@@ -219,9 +223,10 @@ export abstract class CosmosdbModelVersioned<
    * The next version will be the last one from the database incremented by 1 or
    * 0 if no previous version exists in the database.
    */
-  private getNextVersion = (
+  private readonly getNextVersion = (
     searchKey: DocumentSearchKey<T, ModelIdKey, PartitionKey>
-  ) =>
+  ): TaskEither<CosmosErrors, number & INonNegativeIntegerTag> =>
+    // eslint-disable-next-line no-invalid-this
     this.findLastVersionByModelId(searchKey).map(maybeLastVersion =>
       maybeLastVersion
         .map(_ => incVersion(_.version))
@@ -230,6 +235,7 @@ export abstract class CosmosdbModelVersioned<
 
   /**
    * Insert a document with a specific version
+   *
    * @param o
    * @param version
    * @param requestOptions
@@ -269,10 +275,11 @@ export abstract class CosmosdbModelVersioned<
       removed
     ).reduce(
       (p, k) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { [k]: x, ...n } = p;
         return n;
       },
-      // tslint:disable-next-line: no-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       o as any
     );
 

@@ -7,20 +7,18 @@ import { enumType } from "@pagopa/ts-commons/lib/types";
 
 import * as t from "io-ts";
 
+import { Container } from "@azure/cosmos";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { Option } from "fp-ts/lib/Option";
+import { TaskEither } from "fp-ts/lib/TaskEither";
+import { EmailAddress } from "../../generated/definitions/EmailAddress";
+import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import {
   BaseModel,
   CosmosdbModel,
   CosmosErrors,
   CosmosResource
 } from "../utils/cosmosdb_model";
-
-import { EmailAddress } from "../../generated/definitions/EmailAddress";
-import { FiscalCode } from "../../generated/definitions/FiscalCode";
-
-import { Container } from "@azure/cosmos";
-import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { Option } from "fp-ts/lib/Option";
-import { TaskEither } from "fp-ts/lib/TaskEither";
 import { HttpsUrl } from "../../generated/definitions/HttpsUrl";
 import { NotificationChannelEnum } from "../../generated/definitions/NotificationChannel";
 import { ObjectIdGenerator } from "../utils/strings";
@@ -120,19 +118,17 @@ export type NewNotification = t.TypeOf<typeof NewNotification>;
 /**
  * Factory method to make NewNotification objects
  */
-export function createNewNotification(
+export const createNewNotification = (
   ulidGenerator: ObjectIdGenerator,
   fiscalCode: FiscalCode,
   messageId: NonEmptyString
-): NewNotification {
-  return {
-    channels: {},
-    fiscalCode,
-    id: ulidGenerator(),
-    kind: "INewNotification",
-    messageId
-  };
-}
+): NewNotification => ({
+  channels: {},
+  fiscalCode,
+  id: ulidGenerator(),
+  kind: "INewNotification",
+  messageId
+});
 
 export const RetrievedNotification = wrapWithKind(
   t.intersection([Notification, CosmosResource]),

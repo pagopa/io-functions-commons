@@ -4,7 +4,7 @@ import { MailMultiTransportConnectionsFromString } from "./multi_transport_conne
 
 // exclude a specific value from a type
 // as strict equality is performed, allowed input types are constrained to be values not references (object, arrays, etc)
-// tslint:disable-next-line max-union-size
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const AnyBut = <A extends string | number | boolean | symbol, O = A>(
   but: A,
   base: t.Type<A, O> = t.any

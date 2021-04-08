@@ -6,19 +6,24 @@
 
 export enum ErrorTypes {
   // a temporary error while processing the message (operation can be retried)
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   TransientError = "TransientError",
 
   // a permanent error while processing the message (operation cannot be retried)
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   PermanentError = "PermanentError",
 
   // triggered when an unknown error gets catched
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   UnknownError = "UnknownError",
 
   // message is expired, it couldn't be delivered withing the TTL
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   ExpiredError = "ExpiredError",
 
   // a recipient error, either the profile is non existent or the sender isn't
   // allowed by the recipient
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   RecipientError = "RecipientError"
 }
 
@@ -30,13 +35,14 @@ interface IRuntimeError<T extends ErrorTypes> {
 
 const RuntimeError = <T extends ErrorTypes>(
   kind: T
-): ((message: string, cause?: Error) => IRuntimeError<T>) => {
-  return (message: string, cause?: Error) => ({
-    cause,
-    kind,
-    message
-  });
-};
+): ((message: string, cause?: Error) => IRuntimeError<T>) => (
+  message: string,
+  cause?: Error
+): IRuntimeError<T> => ({
+  cause,
+  kind,
+  message
+});
 
 export type TransientError = IRuntimeError<ErrorTypes.TransientError>;
 export const TransientError = RuntimeError(ErrorTypes.TransientError);
@@ -57,8 +63,9 @@ export const RecipientError = RuntimeError(ErrorTypes.RecipientError);
  * Construct a RuntimeError from an object.
  * Useful in try / catch blocks where the object caught is untyped.
  */
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const toRuntimeError = (error: any): RuntimeError =>
+  // eslint-disable-next-line no-prototype-builtins
   error && ErrorTypes.hasOwnProperty(error.kind)
     ? error
     : UnknownError(

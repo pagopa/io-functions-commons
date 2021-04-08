@@ -1,4 +1,4 @@
-// tslint:disable: no-console no-identical-functions
+/* eslint-disable no-console */
 import {
   EmailString,
   FiscalCode,
@@ -61,6 +61,7 @@ const createTest = createDatabase(cosmosDatabaseName)
     })
   );
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const retrieveTest = (modelId: FiscalCode) =>
   createDatabase(cosmosDatabaseName)
     .chain(db =>
@@ -82,6 +83,7 @@ const upsertTest = createDatabase(cosmosDatabaseName)
     })
   );
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const test = () =>
   createTest
     .foldTaskEither(
