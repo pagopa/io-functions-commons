@@ -181,13 +181,13 @@ export function withRequestMiddlewares<
       v5?: T5,
       v6?: T6
     ) => Promise<IResponse<RH>>
-    // eslint-disable-next-line sonarjs/cognitive-complexity
-  ) =>
+    // eslint-disable-next-line arrow-body-style, sonarjs/cognitive-complexity
+  ) => {
     // The outer promise with resolve to a type that can either be the the type returned
     // by the handler or one of the types returned by any of the middlewares (i.e., when
     // a middleware returns an error response).
     // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    request =>
+    return request =>
       new Promise<IResponse<R1 | R2 | R3 | R4 | R5 | R6 | RH>>(
         (resolve, reject) => {
           // we execute each middleware in sequence, stopping at the first middleware that is
@@ -289,4 +289,5 @@ export function withRequestMiddlewares<
           }, reject);
         }
       );
+  };
 }
