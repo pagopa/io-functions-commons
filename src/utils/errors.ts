@@ -35,7 +35,6 @@ interface IRuntimeError<T extends ErrorTypes> {
   readonly cause?: Error;
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const RuntimeError = <T extends ErrorTypes>(
   kind: T
 ): ((message: string, cause?: Error) => IRuntimeError<T>) => (
@@ -48,23 +47,18 @@ const RuntimeError = <T extends ErrorTypes>(
 });
 
 export type TransientError = IRuntimeError<ErrorTypes.TransientError>;
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const TransientError = RuntimeError(ErrorTypes.TransientError);
 
 export type PermanentError = IRuntimeError<ErrorTypes.PermanentError>;
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const PermanentError = RuntimeError(ErrorTypes.PermanentError);
 
 export type UnknownError = IRuntimeError<ErrorTypes.UnknownError>;
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const UnknownError = RuntimeError(ErrorTypes.UnknownError);
 
 export type ExpiredError = IRuntimeError<ErrorTypes.ExpiredError>;
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ExpiredError = RuntimeError(ErrorTypes.ExpiredError);
 
 export type RecipientError = IRuntimeError<ErrorTypes.RecipientError>;
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const RecipientError = RuntimeError(ErrorTypes.RecipientError);
 
 /**

@@ -46,7 +46,6 @@ export interface IAzureUserAttributes {
  * On success, the middleware provides an IUserAttributes.
  *
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const AzureUserAttributesMiddleware = (
   serviceModel: ServiceModel
 ): IRequestMiddleware<

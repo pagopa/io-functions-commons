@@ -76,9 +76,7 @@ const NameValue = t.interface({
 
 type NameValue = t.TypeOf<typeof NameValue>;
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const Html = t.interface({
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   Body: NonEmptyString
 });
 
@@ -180,7 +178,6 @@ const toMailupAddresses = (
   addresses: ReadonlyArray<NodemailerAddress>
 ): ReadonlyArray<Address> =>
   addresses.map((address: NodemailerAddress) => ({
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     Email: EmailString.decode(address.address).getOrElseL(() => {
       // this never happens as nodemailer has already parsed
       // the email address (so it's a valid one)
@@ -188,7 +185,6 @@ const toMailupAddresses = (
         `Error while parsing email address (toMailupAddresses): invalid format '${address.address}'.`
       );
     }),
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     Name: address.name || address.address
   }));
 

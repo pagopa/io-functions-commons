@@ -27,7 +27,6 @@ export const PROFILE_MODEL_PK_FIELD = "fiscalCode" as const;
 /**
  * Base interface for Profile objects
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const Profile = t.intersection([
   t.interface({
     // the fiscal code of the citized associated to this profile
@@ -73,12 +72,10 @@ export const Profile = t.intersection([
 
 export type Profile = t.TypeOf<typeof Profile>;
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NewProfile = wrapWithKind(Profile, "INewProfile" as const);
 
 export type NewProfile = t.TypeOf<typeof NewProfile>;
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const RetrievedProfile = wrapWithKind(
   t.intersection([Profile, RetrievedVersionedModel]),
   "IRetrievedProfile" as const

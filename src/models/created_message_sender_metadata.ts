@@ -6,7 +6,6 @@ import { OrganizationFiscalCode } from "../../generated/definitions/Organization
 /**
  * Sender metadata associated to a message
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const CreatedMessageEventSenderMetadata = t.interface({
   departmentName: NonEmptyString,
   organizationFiscalCode: OrganizationFiscalCode,

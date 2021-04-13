@@ -27,7 +27,6 @@ export const getAppContext = (request: express.Request): Option<Context> =>
  *
  * @param T The type of the bindings found in the context.
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ContextMiddleware = (): IRequestMiddleware<
   "IResponseErrorInternal",
   Context

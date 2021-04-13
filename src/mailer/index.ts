@@ -74,9 +74,7 @@ export const getMailerTransporter = (
     ? some(
         MailUpTransport({
           creds: {
-            // eslint-disable-next-line @typescript-eslint/naming-convention
             Secret: config.MAILUP_SECRET,
-            // eslint-disable-next-line @typescript-eslint/naming-convention
             Username: config.MAILUP_USERNAME
           },
           // HTTPS-only fetch with optional keepalive agent

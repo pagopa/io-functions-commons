@@ -8,7 +8,6 @@ import { RequiredParamMiddleware } from "./required_param";
  * in the request. In case the parameter is missing or is not valid, the middleware
  * returns an `IResponseErrorValidation`.
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const FiscalCodeMiddleware = RequiredParamMiddleware(
   "fiscalcode",
   FiscalCode
@@ -22,7 +21,6 @@ export const FiscalCodeMiddleware = RequiredParamMiddleware(
  * - `some(FiscalCode)`: if the parameter is present in the request and is valid
  * - `IResponseErrorValidation` it the parameter is present in the request but is NOT valid
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const OptionalFiscalCodeMiddleware = OptionalParamMiddleware(
   "fiscalcode",
   FiscalCode

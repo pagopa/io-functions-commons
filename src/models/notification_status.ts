@@ -30,13 +30,11 @@ interface INotificationStatusIdTag {
   readonly kind: "INotificationStatusIdTag";
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NotificationStatusId = tag<INotificationStatusIdTag>()(t.string);
 export type NotificationStatusId = t.TypeOf<typeof NotificationStatusId>;
 
 // We cannot intersect with NotificationChannelStatus
 // as it is a *strict* interface
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NotificationStatus = t.interface({
   channel: NotificationChannel,
   messageId: NonEmptyString,
@@ -50,7 +48,6 @@ export const NotificationStatus = t.interface({
 
 export type NotificationStatus = t.TypeOf<typeof NotificationStatus>;
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NewNotificationStatus = wrapWithKind(
   NotificationStatus,
   "INewNotificationStatus" as const
@@ -58,7 +55,6 @@ export const NewNotificationStatus = wrapWithKind(
 
 export type NewNotificationStatus = t.TypeOf<typeof NewNotificationStatus>;
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const RetrievedNotificationStatus = wrapWithKind(
   t.intersection([NotificationStatus, RetrievedVersionedModel]),
   "IRetrievedNotificationStatus" as const

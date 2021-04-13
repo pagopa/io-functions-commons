@@ -123,7 +123,6 @@ type AzureApiAuthMiddlewareErrorResponses =
  * it triggers a ResponseErrorForbidden.
  *
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const AzureApiAuthMiddleware = (
   allowedGroups: ReadonlySet<UserGroup>
 ): IRequestMiddleware<

@@ -15,15 +15,12 @@ export const VALIDATION_TOKEN_TABLE_NAME = "ValidationTokens";
  * Used to describe properties of the ValidationToken storage table.
  * By convention storage table properties uses PascalCase.
  */
-/* eslint-disable @typescript-eslint/naming-convention */
 export const ValidationToken = t.interface({
   Email: EmailAddress,
   FiscalCode,
   InvalidAfter: UTCISODateFromString
 });
-/* eslint-enable @typescript-eslint/naming-convention */
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ValidationTokenEntity = t.intersection([
   ValidationToken,
   TableEntity

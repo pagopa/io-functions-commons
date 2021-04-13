@@ -13,7 +13,6 @@ import { NewMessageWithoutContent } from "./message";
  * This event gets triggered on new notifications to the channels that
  * have been configured for that notification.
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NotificationEvent = t.interface({
   content: MessageContent,
   message: NewMessageWithoutContent,

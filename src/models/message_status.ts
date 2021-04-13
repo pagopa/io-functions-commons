@@ -22,7 +22,6 @@ export const MESSAGE_STATUS_MODEL_PK_FIELD = "messageId" as const;
 
 // We cannot intersect with MessageStatus
 // as it is a *strict* interface
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const MessageStatus = t.interface({
   messageId: NonEmptyString,
   status: MessageStatusValue,
@@ -31,7 +30,6 @@ export const MessageStatus = t.interface({
 
 export type MessageStatus = t.TypeOf<typeof MessageStatus>;
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NewMessageStatus = wrapWithKind(
   MessageStatus,
   "INewMessageStatus" as const
@@ -39,7 +37,6 @@ export const NewMessageStatus = wrapWithKind(
 
 export type NewMessageStatus = t.TypeOf<typeof NewMessageStatus>;
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const RetrievedMessageStatus = wrapWithKind(
   t.intersection([MessageStatus, RetrievedVersionedModel]),
   "IRetrievedMessageStatus" as const

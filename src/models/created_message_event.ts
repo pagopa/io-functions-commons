@@ -15,7 +15,6 @@ import { NewMessageWithoutContent } from "./message";
 
 import { CreatedMessageEventSenderMetadata } from "./created_message_sender_metadata";
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const CreatedMessageEventR = t.interface({
   content: MessageContent,
   message: NewMessageWithoutContent,
@@ -23,12 +22,10 @@ const CreatedMessageEventR = t.interface({
   serviceVersion: NonNegativeNumber
 });
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const CreatedMessageEventO = t.partial({
   defaultAddresses: NewMessageDefaultAddresses
 });
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const CreatedMessageEvent = t.intersection(
   [CreatedMessageEventR, CreatedMessageEventO],
   "CreatedMessageEvent"
