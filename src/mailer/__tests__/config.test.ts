@@ -1,4 +1,4 @@
-// tslint:disable: no-empty
+// eslint-disable no-empty, no-empty-function
 
 import { Either } from "fp-ts/lib/Either";
 import {
@@ -202,7 +202,7 @@ describe("MailerConfig", () => {
       NODE_ENV: "production"
     };
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const examples: ReadonlyArray<any> = [
       // the following configuration is not ambiguos as sendgrid would override mailup anyway
       // see here for the rationale: https://github.com/pagopa/io-functions-admin/pull/89#commitcomment-42917672

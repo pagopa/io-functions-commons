@@ -1,4 +1,4 @@
-// tslint:disable: no-hardcoded-credentials
+// eslint-disable sonar/no-hardcoded-credentials
 import { right } from "fp-ts/lib/Either";
 
 import { MailMultiTransportConnectionsFromString } from "../multi_transport_connection";

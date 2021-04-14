@@ -2,15 +2,14 @@ import * as t from "io-ts";
 
 import { tag } from "@pagopa/ts-commons/lib/types";
 
-import {
-  CosmosdbModelVersioned,
-  RetrievedVersionedModel
-} from "../utils/cosmosdb_model_versioned";
-
 import { Container } from "@azure/cosmos";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { Option } from "fp-ts/lib/Option";
 import { TaskEither } from "fp-ts/lib/TaskEither";
+import {
+  CosmosdbModelVersioned,
+  RetrievedVersionedModel
+} from "../utils/cosmosdb_model_versioned";
 import {
   NotificationChannel,
   NotificationChannelEnum
@@ -65,16 +64,13 @@ export type RetrievedNotificationStatus = t.TypeOf<
   typeof RetrievedNotificationStatus
 >;
 
-export function makeStatusId(
+export const makeStatusId = (
   notificationId: NonEmptyString,
   channel: NotificationChannel
-): NotificationStatusId {
-  return NotificationStatusId.decode(`${notificationId}:${channel}`).getOrElseL(
-    () => {
-      throw new Error("Invalid Notification Status id");
-    }
-  );
-}
+): NotificationStatusId =>
+  NotificationStatusId.decode(`${notificationId}:${channel}`).getOrElseL(() => {
+    throw new Error("Invalid Notification Status id");
+  });
 
 export type NotificationStatusUpdater = (
   status: NotificationChannelStatusValueEnum
@@ -89,19 +85,18 @@ export const getNotificationStatusUpdater = (
   channel: NotificationChannelEnum,
   messageId: NonEmptyString,
   notificationId: NonEmptyString
-): NotificationStatusUpdater => {
-  return status => {
-    const statusId = makeStatusId(notificationId, channel);
-    return notificationStatusModel.upsert({
-      channel,
-      kind: "INewNotificationStatus",
-      messageId,
-      notificationId,
-      status,
-      statusId,
-      updatedAt: new Date()
-    });
-  };
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+): NotificationStatusUpdater => status => {
+  const statusId = makeStatusId(notificationId, channel);
+  return notificationStatusModel.upsert({
+    channel,
+    kind: "INewNotificationStatus",
+    messageId,
+    notificationId,
+    status,
+    statusId,
+    updatedAt: new Date()
+  });
 };
 
 /**

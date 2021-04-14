@@ -20,12 +20,11 @@ export type ClientIp = Option<IPString>;
 export const ClientIpMiddleware: IRequestMiddleware<
   never,
   ClientIp
-> = request => {
-  return new Promise(resolve => {
+> = request =>
+  new Promise(resolve => {
     const clientIp = requestIp.getClientIp(request);
     winston.debug(`Handling request for client IP|${clientIp}`);
     resolve(
       right<never, ClientIp>(OptionFromEither(IPString.decode(clientIp)))
     );
   });
-};

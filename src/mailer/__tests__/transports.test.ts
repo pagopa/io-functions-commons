@@ -1,4 +1,4 @@
-// tslint:disable: no-duplicate-string
+// eslint-disable sonarjs/no-duplicate-string
 
 import { fromNullable } from "fp-ts/lib/Option";
 import {

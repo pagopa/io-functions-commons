@@ -7,6 +7,7 @@
  * This is the place to come to add a new mail provider.
  */
 
+import { promisify } from "util";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { catOptions } from "fp-ts/lib/Array";
 import { toError } from "fp-ts/lib/Either";
@@ -14,9 +15,8 @@ import { none, Option, some } from "fp-ts/lib/Option";
 import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 import { createTransport, SentMessageInfo, Transport } from "nodemailer";
 import NodeMailerSendgrid = require("nodemailer-sendgrid");
-// tslint:disable-next-line: no-submodule-imports
+// eslint-disable-next-line import/no-internal-modules
 import MailerTransporter = require("nodemailer/lib/mailer");
-import { promisify } from "util";
 import { MailUpTransport } from "./mailup";
 import { MailMultiTransportConnections } from "./multi_transport_connection";
 
@@ -28,9 +28,9 @@ import { MailMultiTransportConnections } from "./multi_transport_connection";
  *
  * @returns maybe a mailer transport
  */
-function MultiTransport(
+const MultiTransport = (
   transports: ReadonlyArray<Transport>
-): Transport | undefined {
+): Transport | undefined => {
   const count = transports.length;
   if (count === 0) {
     // can't create the transport if we don't have any transports available
@@ -38,10 +38,10 @@ function MultiTransport(
   }
 
   // returns the index of a randomly chosen transport
-  const randomTransportIndex = () => Math.floor(Math.random() * count);
+  const randomTransportIndex = (): number => Math.floor(Math.random() * count);
 
   // returns a randomly chosen transport
-  const randomTransport = () => transports[randomTransportIndex()];
+  const randomTransport = (): Transport => transports[randomTransportIndex()];
 
   return {
     name: "Multi",
@@ -51,7 +51,8 @@ function MultiTransport(
     // The send method selects a random transport and calls its send method.
     // Note that, in case of success, the info object gets augmented with
     // details on the actual transport used to deliver the email.
-    send: (mail, callback) => {
+    // eslint-disable-next-line sort-keys
+    send: (mail, callback): void => {
       const transport = randomTransport();
       const extraInfo = {
         selectedTransportName: transport.name,
@@ -75,20 +76,20 @@ function MultiTransport(
       });
     }
   };
-}
+};
 
 /**
  * Converts an array of mail transport connections into their corresponding
  * NodeMailer transports
  */
-function getTransportsForConnections(
+const getTransportsForConnections = (
   configs: MailMultiTransportConnections,
   fetchAgent: typeof fetch
-): ReadonlyArray<Transport> {
+): ReadonlyArray<Transport> => {
   const fn = (config: {
-    password: string;
-    transport: NonEmptyString;
-    username: string;
+    readonly password: string;
+    readonly transport: NonEmptyString;
+    readonly username: string;
   }): Option<Transport> => {
     // configure mailup
     if (
@@ -120,7 +121,7 @@ function getTransportsForConnections(
     return none;
   };
   return catOptions(configs.map(fn));
-}
+};
 
 /**
  * TaskEither wrapper around MailerTransporter#sendMail
