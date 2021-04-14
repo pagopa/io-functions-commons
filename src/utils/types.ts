@@ -1,5 +1,6 @@
 import * as t from "io-ts";
 
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions
 export function isDefined<T>(o: T | undefined | null): o is T {
   return o !== undefined && o !== null;
 }
@@ -18,7 +19,7 @@ export const wrapWithKind = <C extends t.Any, K extends string>(
   kind: K
 ): t.RefinementType<
   C,
-  t.TypeOf<C> & { kind: K },
+  t.TypeOf<C> & { readonly kind: K },
   t.OutputOf<C>,
   t.InputOf<C>
 > =>
@@ -31,7 +32,7 @@ export const wrapWithKind = <C extends t.Any, K extends string>(
         kind
       })),
     (a: t.TypeOf<C>) => {
-      // tslint:disable-next-line: no-useless-cast
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-unnecessary-type-assertion
       const { kind: _, ...o } = codec.encode(a) as t.OutputOf<C>;
       return o;
     },

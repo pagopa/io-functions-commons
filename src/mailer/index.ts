@@ -53,16 +53,16 @@ const defaultFetchAgent = toFetch(
  * @returns a mail transporter object
  * @throws an error creating the transporter
  */
-export function getMailerTransporter(
+export const getMailerTransporter = (
   config: MailerConfig,
   fetchAgent: typeof fetch = defaultFetchAgent
-): MailerTransporter {
+): MailerTransporter => {
   const maybeTransportOpts: Option<
     | Transport
     | {
-        host: NonEmptyString;
-        port: number;
-        secure: boolean;
+        readonly host: NonEmptyString;
+        readonly port: number;
+        readonly secure: boolean;
       }
   > = SendgridMailerConfig.is(config)
     ? some(
@@ -100,7 +100,7 @@ export function getMailerTransporter(
       "Failed to choose a mail transport based on provided configuration"
     );
   });
-}
+};
 
 // expose inner stuff as public module interface
 export { MailerConfig } from "./config";

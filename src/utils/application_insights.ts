@@ -1,8 +1,8 @@
 import { Context } from "@azure/functions";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-// tslint:disable-next-line: no-submodule-imports
+// eslint-disable-next-line import/no-internal-modules
 import { CorrelationContextManager } from "applicationinsights/out/AutoCollection/CorrelationContextManager";
-// tslint:disable-next-line: no-submodule-imports
+// eslint-disable-next-line import/no-internal-modules
 import Traceparent = require("applicationinsights/out/Library/Traceparent");
 import { fromNullable } from "fp-ts/lib/Option";
 
@@ -10,7 +10,7 @@ import { fromNullable } from "fp-ts/lib/Option";
  * Wraps a function handler with a telemetry context,
  * useful in case you want to set correlation id.
  */
-export function withAppInsightsContext<R>(context: Context, f: () => R): R {
+export const withAppInsightsContext = <R>(context: Context, f: () => R): R => {
   // @see https://github.com/Azure/azure-functions-host/issues/5170#issuecomment-553583362
   const traceId = fromNullable(context.traceContext).fold(
     context.invocationId,
@@ -25,7 +25,7 @@ export function withAppInsightsContext<R>(context: Context, f: () => R): R {
     traceId,
     context.executionContext.functionName
   );
-  return CorrelationContextManager.runWithContext(correlationContext, () => {
-    return f();
-  });
-}
+  return CorrelationContextManager.runWithContext(correlationContext, () =>
+    f()
+  );
+};

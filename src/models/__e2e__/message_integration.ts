@@ -1,4 +1,4 @@
-// tslint:disable: no-console no-identical-functions
+/* eslint-disable no-console */
 import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import { isLeft, right } from "fp-ts/lib/Either";
@@ -73,6 +73,7 @@ const createTest = createDatabase(cosmosDatabaseName)
     _ => taskEither.of({ ..._ } as RetrievedMessageWithoutContent)
   );
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const findMessagesTest = (fiscalCode: FiscalCode) =>
   createDatabase(cosmosDatabaseName)
     .chain(db =>
@@ -84,6 +85,7 @@ const findMessagesTest = (fiscalCode: FiscalCode) =>
       )
     );
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const retrieveOneByQueryTest = (modelId: string) =>
   createDatabase(cosmosDatabaseName)
     .chain(db =>
@@ -101,6 +103,7 @@ const retrieveOneByQueryTest = (modelId: string) =>
       })
     );
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const findTest = (modelId: NonEmptyString, fiscalCode: FiscalCode) =>
   createDatabase(cosmosDatabaseName)
     .chain(db =>
@@ -124,6 +127,7 @@ const upsertTest = createDatabase(cosmosDatabaseName)
     })
   );
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const findAllTest = (fiscalCode: FiscalCode) =>
   createDatabase(cosmosDatabaseName)
     .chain(db =>
@@ -152,6 +156,7 @@ const findAllTest = (fiscalCode: FiscalCode) =>
       )
     );
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const test = () =>
   createTest
     .foldTaskEither<CosmosErrors, RetrievedMessageWithoutContent>(
@@ -203,9 +208,11 @@ export const test = () =>
     })
     .catch(console.error);
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const findAllByQueryTest = () =>
   findAllTest(aSerializedNewMessageWithoutContent.fiscalCode)
     .run()
+    // eslint-disable-next-line sonarjs/no-identical-functions
     .then(_ => {
       if (isLeft(_)) {
         console.log(`${logPrefix}-Test| Error = `);

@@ -6,7 +6,7 @@ import { isLeft } from "fp-ts/lib/Either";
  * if it's a `NonEmptyString`.
  * Throws an Error otherwise.
  */
-export function getRequiredStringEnv(k: string): NonEmptyString {
+export const getRequiredStringEnv = (k: string): NonEmptyString => {
   const maybeValue = NonEmptyString.decode(process.env[k]);
 
   if (isLeft(maybeValue)) {
@@ -14,4 +14,4 @@ export function getRequiredStringEnv(k: string): NonEmptyString {
   }
 
   return maybeValue.value;
-}
+};

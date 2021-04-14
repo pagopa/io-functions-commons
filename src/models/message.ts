@@ -13,19 +13,6 @@ import {
 import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
 import * as t from "io-ts";
 import {
-  BaseModel,
-  CosmosdbModel,
-  CosmosDecodingError,
-  CosmosErrors,
-  CosmosResource,
-  toCosmosErrorResponse
-} from "../utils/cosmosdb_model";
-
-import { MessageContent } from "../../generated/definitions/MessageContent";
-
-import { FiscalCode } from "../../generated/definitions/FiscalCode";
-
-import {
   Container,
   FeedOptions,
   FeedResponse,
@@ -38,6 +25,19 @@ import {
   taskEither,
   tryCatch as tryCatchT
 } from "fp-ts/lib/TaskEither";
+import {
+  BaseModel,
+  CosmosdbModel,
+  CosmosDecodingError,
+  CosmosErrors,
+  CosmosResource,
+  toCosmosErrorResponse
+} from "../utils/cosmosdb_model";
+
+import { MessageContent } from "../../generated/definitions/MessageContent";
+
+import { FiscalCode } from "../../generated/definitions/FiscalCode";
+
 import { ServiceId } from "../../generated/definitions/ServiceId";
 import { Timestamp } from "../../generated/definitions/Timestamp";
 import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds";
@@ -50,8 +50,15 @@ export const MESSAGE_MODEL_PK_FIELD = "fiscalCode" as const;
 const MESSAGE_BLOB_STORAGE_SUFFIX = ".json";
 
 const MessageBaseR = t.interface({
+  // when the message was accepted by the system
+  createdAt: Timestamp,
+
   // the fiscal code of the recipient
   fiscalCode: FiscalCode,
+
+  // needed to order by id or to make range queries (ie. WHERE id > "string")
+  // see https://stackoverflow.com/questions/48710600/azure-cosmosdb-how-to-order-by-id
+  indexedId: NonEmptyString,
 
   // the identifier of the service of the sender
   senderServiceId: ServiceId,
@@ -60,14 +67,7 @@ const MessageBaseR = t.interface({
   senderUserId: NonEmptyString,
 
   // time to live in seconds
-  timeToLiveSeconds: TimeToLiveSeconds,
-
-  // when the message was accepted by the system
-  createdAt: Timestamp,
-
-  // needed to order by id or to make range queries (ie. WHERE id > "string")
-  // see https://stackoverflow.com/questions/48710600/azure-cosmosdb-how-to-order-by-id
-  indexedId: NonEmptyString
+  timeToLiveSeconds: TimeToLiveSeconds
 });
 
 const MessageBaseO = t.partial({
@@ -93,7 +93,6 @@ type MessageBase = t.TypeOf<typeof MessageBase>;
  * to have the content of the messages permanently stored in his inbox.
  */
 export type MessageWithoutContent = MessageBase;
-
 export const MessageWithoutContent = MessageBase;
 
 /**
@@ -175,7 +174,6 @@ export type NotExpiredMessage = t.TypeOf<typeof ActiveMessage>;
 /**
  * A (previously saved) retrieved Message
  */
-
 export const RetrievedMessage = t.union([
   RetrievedMessageWithContent,
   RetrievedMessageWithoutContent
@@ -183,9 +181,8 @@ export const RetrievedMessage = t.union([
 
 export type RetrievedMessage = t.TypeOf<typeof RetrievedMessage>;
 
-function blobIdFromMessageId(messageId: string): string {
-  return `${messageId}${MESSAGE_BLOB_STORAGE_SUFFIX}`;
-}
+const blobIdFromMessageId = (messageId: string): string =>
+  `${messageId}${MESSAGE_BLOB_STORAGE_SUFFIX}`;
 
 /**
  * A model for handling Messages
@@ -263,10 +260,12 @@ export class MessageModel extends CosmosdbModel<
   > {
     return tryCatchT<
       CosmosErrors,
+      // eslint-disable-next-line @typescript-eslint/array-type
       FeedResponse<readonly RetrievedMessageWithoutContent[]>
     >(
       () =>
         this.container.items
+          // eslint-disable-next-line @typescript-eslint/array-type
           .query<readonly RetrievedMessageWithoutContent[]>(query, options)
           .fetchAll(),
       toCosmosErrorResponse

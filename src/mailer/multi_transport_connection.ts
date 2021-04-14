@@ -34,10 +34,10 @@ export type MailMultiTransportConnections = t.TypeOf<
  * transport:username:password[;transport:username:password][;transport:username:password]...
  *
  */
-function parseMultiProviderConnection(
+const parseMultiProviderConnection = (
   conn: string
-): MailMultiTransportConnections {
-  return catOptions(
+): MailMultiTransportConnections =>
+  catOptions(
     conn.split(";").map(providerStr => {
       const [transport, username, password] = providerStr.split(":");
       if (
@@ -54,7 +54,6 @@ function parseMultiProviderConnection(
       return none;
     })
   );
-}
 
 /**
  * Decodes an array of nodemailer transport connections from a multi
