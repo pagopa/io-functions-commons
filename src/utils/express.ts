@@ -43,7 +43,7 @@ export function secureExpressApp(app: express.Express): void {
 }
 
 /**
- * Create an express middleware to set the 'X-API-Version' response header field containing the current app version in execution (from the npm environment).
+ * Create an express middleware to set the 'X-API-Version' response header field to the current app version in execution (from the npm environment).
  * @returns a factory method for the Middleware
  */
 const createAppVersionHeaderHandler: () => express.RequestHandler = () => (
