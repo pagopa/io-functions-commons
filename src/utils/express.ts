@@ -1,4 +1,5 @@
 import * as express from "express";
+import { toString } from "fp-ts/lib/function";
 import * as helmet from "helmet";
 import * as csp from "helmet-csp";
 import * as referrerPolicy from "referrer-policy";
@@ -39,4 +40,26 @@ export function secureExpressApp(app: express.Express): void {
       }
     })
   );
+}
+
+/**
+ * Create an express middleware to set the 'X-API-Version' response header field containing the current app version in execution (from the npm environment).
+ * @returns a factory method for the Middleware
+ */
+const createAppVersionHeaderHandler: () => express.RequestHandler = () => (
+  _,
+  res,
+  next
+) => {
+  res.setHeader("X-API-Version", toString(process.env.npm_package_version));
+  next();
+};
+
+/**
+ * Configure all the default express middleware handlers on the input express app.
+ * Register here all the non business-logic-related common behaviours.
+ * @param app an express application
+ */
+export function configureDefaultHandlers(app: express.Express): void {
+  app.use(createAppVersionHeaderHandler());
 }
