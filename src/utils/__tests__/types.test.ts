@@ -35,7 +35,7 @@ describe("WithKind", () => {
   });
 
   // it should decode to the right type
-  // tslint:disable-next-line: no-dead-store
+  // eslint-disable-next-line sonar/no-dead-store
   const _: t.Validation<{
     n: number;
     s: string;

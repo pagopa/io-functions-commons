@@ -1,13 +1,18 @@
-/* tslint:disable:no-identical-functions */
+/* eslint-disable sonarjs/no-identical-functions */
 
 import { ResponseSuccessJson } from "@pagopa/ts-commons/lib/responses";
-import { IPString } from "@pagopa/ts-commons/lib/strings";
+import { EmailString, IPString } from "@pagopa/ts-commons/lib/strings";
 import { ITuple2, Tuple2 } from "@pagopa/ts-commons/lib/tuples";
-import { toAuthorizedCIDRs } from "../../models/service";
+import { Service, toAuthorizedCIDRs } from "../../models/service";
 import { ClientIp } from "../middlewares/client_ip_middleware";
 
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { fromEither as OptionFromEither } from "fp-ts/lib/Option";
-import { checkSourceIpForHandler } from "../source_ip_check";
+import { IAzureUserAttributes } from "../middlewares/azure_user_attributes";
+import {
+  checkSourceIpForHandler,
+  clientIPAndCidrTuple
+} from "../source_ip_check";
 
 describe("checkSourceIpForHandler", () => {
   // a sample request handler that gets the source IP and allowed CIDRs
@@ -57,5 +62,40 @@ describe("checkSourceIpForHandler", () => {
       toAuthorizedCIDRs(["192.168.1.0/24"])
     );
     expect(result.kind).toEqual("IResponseErrorForbiddenNotAuthorized");
+  });
+});
+
+describe("clientIPAndCidrTuple", () => {
+  const userAttributes: IAzureUserAttributes = {
+    email: "email@example.com" as EmailString,
+    kind: "IAzureUserAttributes",
+    service: ({
+      authorizedCIDRs: toAuthorizedCIDRs(["192.168.1.0/24"])
+    } as unknown) as Service & { readonly version: NonNegativeInteger }
+  };
+  const expectedClientIp = OptionFromEither(IPString.decode("192.168.10.10"));
+  it("should return a set with client ip and autorizedCIDRs", () => {
+    const resultTuple = clientIPAndCidrTuple(expectedClientIp, userAttributes);
+    expect(resultTuple.e1).toBe(expectedClientIp);
+    expect(resultTuple.e2).toStrictEqual(
+      userAttributes.service.authorizedCIDRs
+    );
+  });
+  it("should add /32 subnet if autorizedCIDR hasn't any subnet", () => {
+    const userAttributesNoSubnet: IAzureUserAttributes = {
+      email: "email@example.com" as EmailString,
+      kind: "IAzureUserAttributes",
+      service: ({
+        authorizedCIDRs: toAuthorizedCIDRs(["192.168.1.0", "192.168.1.1/24"])
+      } as unknown) as Service & { readonly version: NonNegativeInteger }
+    };
+    const resultTuple = clientIPAndCidrTuple(
+      expectedClientIp,
+      userAttributesNoSubnet
+    );
+    expect(resultTuple.e1).toBe(expectedClientIp);
+    expect(resultTuple.e2).toStrictEqual(
+      toAuthorizedCIDRs(["192.168.1.0/32", "192.168.1.1/24"])
+    );
   });
 });

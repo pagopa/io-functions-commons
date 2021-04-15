@@ -2,6 +2,7 @@ import * as t from "io-ts";
 
 import { withDefault } from "@pagopa/ts-commons/lib/types";
 
+import { Container } from "@azure/cosmos";
 import {
   CosmosdbModelVersioned,
   RetrievedVersionedModel
@@ -18,7 +19,6 @@ import { IsTestProfile } from "../../generated/definitions/IsTestProfile";
 import { IsWebhookEnabled } from "../../generated/definitions/IsWebhookEnabled";
 import { PreferredLanguages } from "../../generated/definitions/PreferredLanguages";
 
-import { Container } from "@azure/cosmos";
 import { wrapWithKind } from "../utils/types";
 
 export const PROFILE_COLLECTION_NAME = "profiles";
@@ -34,6 +34,9 @@ export const Profile = t.intersection([
   }),
   t.partial({
     // Notification channels blocked by the user;
+    // Version of terms of services accepted by citizen
+    acceptedTosVersion: AcceptedTosVersion,
+
     // each channel is related to a specific Service (sender)
     blockedInboxOrChannels: BlockedInboxOrChannels,
 
@@ -41,6 +44,11 @@ export const Profile = t.intersection([
     // if defined, will override the default email provided by the API client
     // if defined, will enable email notifications for the citizen
     email: EmailAddress,
+
+    // whether to send email notifications (defaults to true)
+    // this field defaults to true to keep backward compatibility with users
+    // that don't have this setting in their profile
+    isEmailEnabled: withDefault(IsEmailEnabled, true),
 
     // if true the email has been validated by the user
     // this field defaults to true to keep backward compatibility with users
@@ -50,23 +58,15 @@ export const Profile = t.intersection([
     // whether to store the content of messages sent to this citizen
     isInboxEnabled: IsInboxEnabled,
 
-    // Version of terms of services accepted by citizen
-    acceptedTosVersion: AcceptedTosVersion,
+    // if true this profile is only for test purpose
+    isTestProfile: IsTestProfile,
 
     // whether to push notifications to the default webhook (defaults to false)
     isWebhookEnabled: IsWebhookEnabled,
 
-    // whether to send email notifications (defaults to true)
-    // this field defaults to true to keep backward compatibility with users
-    // that don't have this setting in their profile
-    isEmailEnabled: withDefault(IsEmailEnabled, true),
-
     // array of user's preferred languages in ISO-3166-1-2 format
     // https://it.wikipedia.org/wiki/ISO_3166-2
-    preferredLanguages: PreferredLanguages,
-
-    // if true this profile is only for test purpose
-    isTestProfile: IsTestProfile
+    preferredLanguages: PreferredLanguages
   })
 ]);
 

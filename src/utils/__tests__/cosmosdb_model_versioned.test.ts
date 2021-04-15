@@ -61,7 +61,7 @@ class MyModel extends CosmosdbModelVersioned<
   }
 }
 
-// tslint:disable-next-line: max-classes-per-file
+// eslint-disable-next-line max-classes-per-file
 class MyPartitionedModel extends CosmosdbModelVersioned<
   MyDocument,
   MyDocument,
@@ -116,7 +116,7 @@ const containerMock = {
 const container = (containerMock as unknown) as Container;
 
 const errorResponse: ErrorResponse = new Error();
-// tslint:disable-next-line: no-object-mutation
+// eslint-disable-next-line functional/immutable-data
 errorResponse.code = 500;
 
 describe("upsert", () => {

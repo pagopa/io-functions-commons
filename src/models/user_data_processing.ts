@@ -2,14 +2,13 @@ import * as t from "io-ts";
 
 import { tag } from "@pagopa/ts-commons/lib/types";
 
+import { Container } from "@azure/cosmos";
+import { readableReport } from "@pagopa/ts-commons/lib/reporters";
+import { TaskEither } from "fp-ts/lib/TaskEither";
 import {
   CosmosdbModelVersioned,
   RetrievedVersionedModel
 } from "../utils/cosmosdb_model_versioned";
-
-import { Container } from "@azure/cosmos";
-import { readableReport } from "@pagopa/ts-commons/lib/reporters";
-import { TaskEither } from "fp-ts/lib/TaskEither";
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { Timestamp } from "../../generated/definitions/Timestamp";
 import { UserDataProcessingChoice } from "../../generated/definitions/UserDataProcessingChoice";
@@ -43,20 +42,21 @@ export type UserDataProcessingId = t.TypeOf<typeof UserDataProcessingId>;
 export const UserDataProcessing = t.intersection([
   t.interface({
     // the unique identifier of a user data processing request identified by concatenation of
+    // eslint-disable-next-line extra-rules/no-commented-out-code
     // fiscalCode - choice
     [USER_DATA_PROCESSING_MODEL_ID_FIELD]: UserDataProcessingId,
-
-    // the fiscal code of the citized associated to this user data processing request
-    fiscalCode: FiscalCode,
 
     // the request choice made by user to download or delete its own data
     choice: UserDataProcessingChoice,
 
-    // the status of the user's request
-    status: UserDataProcessingStatus,
-
     // creation date of this user data processing request
-    createdAt: Timestamp
+    createdAt: Timestamp,
+
+    // the fiscal code of the citized associated to this user data processing request
+    fiscalCode: FiscalCode,
+
+    // the status of the user's request
+    status: UserDataProcessingStatus
   }),
   t.partial({
     // update date of this user data processing request
@@ -82,18 +82,15 @@ export type RetrievedUserDataProcessing = t.TypeOf<
   typeof RetrievedUserDataProcessing
 >;
 
-export function makeUserDataProcessingId(
+export const makeUserDataProcessingId = (
   choice: UserDataProcessingChoice,
   fiscalCode: FiscalCode
-): UserDataProcessingId {
-  return UserDataProcessingId.decode(`${fiscalCode}-${choice}`).getOrElseL(
-    errors => {
-      throw new Error(
-        `Invalid User Data Processing id, reason: ${readableReport(errors)}`
-      );
-    }
-  );
-}
+): UserDataProcessingId =>
+  UserDataProcessingId.decode(`${fiscalCode}-${choice}`).getOrElseL(errors => {
+    throw new Error(
+      `Invalid User Data Processing id, reason: ${readableReport(errors)}`
+    );
+  });
 
 /**
  * A model for handling UserDataProcessing
@@ -136,8 +133,8 @@ export class UserDataProcessingModel extends CosmosdbModelVersioned<
 
     const toUpdate: NewUserDataProcessing = {
       ...userDataProcessing,
-      kind: "INewUserDataProcessing",
-      [USER_DATA_PROCESSING_MODEL_ID_FIELD]: newId
+      [USER_DATA_PROCESSING_MODEL_ID_FIELD]: newId,
+      kind: "INewUserDataProcessing"
     };
     return this.upsert(toUpdate);
   }

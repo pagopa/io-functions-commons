@@ -1,14 +1,14 @@
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import * as t from "io-ts";
 
+import { Container } from "@azure/cosmos";
+import { TaskEither } from "fp-ts/lib/TaskEither";
 import {
   MessageStatusValue,
   MessageStatusValueEnum
 } from "../../generated/definitions/MessageStatusValue";
 import { Timestamp } from "../../generated/definitions/Timestamp";
 
-import { Container } from "@azure/cosmos";
-import { TaskEither } from "fp-ts/lib/TaskEither";
 import { CosmosErrors } from "../utils/cosmosdb_model";
 import {
   CosmosdbModelVersioned,
@@ -55,16 +55,14 @@ export type MessageStatusUpdater = (
 export const getMessageStatusUpdater = (
   messageStatusModel: MessageStatusModel,
   messageId: NonEmptyString
-): MessageStatusUpdater => {
-  return status => {
-    return messageStatusModel.upsert({
-      kind: "INewMessageStatus",
-      messageId,
-      status,
-      updatedAt: new Date()
-    });
-  };
-};
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+): MessageStatusUpdater => status =>
+  messageStatusModel.upsert({
+    kind: "INewMessageStatus",
+    messageId,
+    status,
+    updatedAt: new Date()
+  });
 
 /**
  * A model for handling MessageStatus

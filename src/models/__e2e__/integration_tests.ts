@@ -1,4 +1,4 @@
-// tslint:disable: no-console
+/* eslint-disable no-console */
 import * as messageIntegration from "./message_integration";
 import * as profileIntegration from "./profile_integration";
 import * as serviceIntegration from "./service_integration";
