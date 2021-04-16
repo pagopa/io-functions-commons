@@ -1,5 +1,4 @@
 import * as express from "express";
-import { toString } from "fp-ts/lib/function";
 import { fromNullable } from "fp-ts/lib/Option";
 import * as helmet from "helmet";
 import * as csp from "helmet-csp";
@@ -53,8 +52,9 @@ export const createAppVersionHeaderHandler: () => express.RequestHandler = () =>
   res,
   next
 ): void => {
-  fromNullable(process.env.npm_package_version)
-    .map(v => res.setHeader("X-API-Version", v));
+  fromNullable(process.env.npm_package_version).map(v =>
+    res.setHeader("X-API-Version", v)
+  );
   next();
 };
 
