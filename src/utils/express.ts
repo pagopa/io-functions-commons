@@ -1,5 +1,6 @@
 import * as express from "express";
 import { toString } from "fp-ts/lib/function";
+import { fromNullable } from "fp-ts/lib/Option";
 import * as helmet from "helmet";
 import * as csp from "helmet-csp";
 import * as referrerPolicy from "referrer-policy";
@@ -47,12 +48,13 @@ export const secureExpressApp = (app: express.Express): void => {
  *
  * @returns a factory method for the Middleware
  */
-const createAppVersionHeaderHandler: () => express.RequestHandler = () => (
+export const createAppVersionHeaderHandler: () => express.RequestHandler = () => (
   _,
   res,
   next
 ): void => {
-  res.setHeader("X-API-Version", toString(process.env.npm_package_version));
+  fromNullable(process.env.npm_package_version)
+    .map(v => res.setHeader("X-API-Version", v));
   next();
 };
 
