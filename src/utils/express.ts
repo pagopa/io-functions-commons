@@ -10,7 +10,7 @@ import * as referrerPolicy from "referrer-policy";
  *
  * @param app an express application.
  */
-export function secureExpressApp(app: express.Express): void {
+export const secureExpressApp = (app: express.Express): void => {
   // Set header `referrer-policy` to `no-referrer`
   app.use(referrerPolicy());
 
@@ -40,17 +40,18 @@ export function secureExpressApp(app: express.Express): void {
       }
     })
   );
-}
+};
 
 /**
  * Create an express middleware to set the 'X-API-Version' response header field to the current app version in execution (from the npm environment).
+ *
  * @returns a factory method for the Middleware
  */
 const createAppVersionHeaderHandler: () => express.RequestHandler = () => (
   _,
   res,
   next
-) => {
+): void => {
   res.setHeader("X-API-Version", toString(process.env.npm_package_version));
   next();
 };
@@ -58,8 +59,9 @@ const createAppVersionHeaderHandler: () => express.RequestHandler = () => (
 /**
  * Configure all the default express middleware handlers on the input express app.
  * Register here all the non business-logic-related common behaviours.
+ *
  * @param app an express application
  */
-export function configureDefaultHandlers(app: express.Express): void {
+export const configureDefaultHandlers = (app: express.Express): void => {
   app.use(createAppVersionHeaderHandler());
-}
+};
