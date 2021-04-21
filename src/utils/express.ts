@@ -47,7 +47,7 @@ export const secureExpressApp = (app: express.Express): void => {
  *
  * @returns a factory method for the Middleware
  */
-export const createAppVersionHeaderHandler: () => express.RequestHandler = () => (
+export const createAppVersionHeaderMiddleware: () => express.RequestHandler = () => (
   _,
   res,
   next
@@ -64,6 +64,6 @@ export const createAppVersionHeaderHandler: () => express.RequestHandler = () =>
  *
  * @param app an express application
  */
-export const configureDefaultHandlers = (app: express.Express): void => {
-  app.use(createAppVersionHeaderHandler());
+export const configureDefaultMiddlewares = (app: express.Express): void => {
+  app.use(createAppVersionHeaderMiddleware());
 };
