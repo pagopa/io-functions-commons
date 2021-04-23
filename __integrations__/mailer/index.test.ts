@@ -1,4 +1,4 @@
-import { readableReport } from "italia-ts-commons/lib/reporters";
+import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import fetch from "node-fetch";
 import * as Mailer from "../../src/mailer";
 
