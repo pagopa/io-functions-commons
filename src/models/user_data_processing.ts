@@ -12,7 +12,7 @@ import {
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { Timestamp } from "../../generated/definitions/Timestamp";
 import { UserDataProcessingChoice } from "../../generated/definitions/UserDataProcessingChoice";
-import { UserDataProcessingStatus } from "../../generated/definitions/UserDataProcessingStatus";
+import { UserDataProcessingStatus, UserDataProcessingStatusEnum } from "../../generated/definitions/UserDataProcessingStatus";
 import { CosmosErrors } from "../utils/cosmosdb_model";
 import { wrapWithKind } from "../utils/types";
 
@@ -60,11 +60,27 @@ export const UserDataProcessing = t.intersection([
   }),
   t.partial({
     // update date of this user data processing request
-    updatedAt: Timestamp
+    updatedAt: Timestamp,
+
+    // the reason of failure, present only if status is FAILED
+    reason: t.string
   })
 ]);
 
 export type UserDataProcessing = t.TypeOf<typeof UserDataProcessing>;
+
+interface ValidUserDataProcessingBrand {
+  readonly IsValid: unique symbol;
+}
+
+export const ValidUserDataProcessing = t.brand(
+  UserDataProcessing,
+  (m): m is t.Branded<UserDataProcessing, ValidUserDataProcessingBrand> =>
+    m.status === UserDataProcessingStatusEnum.FAILED ? !!m.reason : !m.reason,
+  "IsValid"
+);
+
+export type ValidUserDataProcessing = t.TypeOf<typeof ValidUserDataProcessing>;
 
 export const NewUserDataProcessing = wrapWithKind(
   UserDataProcessing,

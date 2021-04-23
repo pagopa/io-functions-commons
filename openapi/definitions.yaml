@@ -748,6 +748,8 @@ UserDataProcessing:
       $ref: "#/Timestamp"
     version:
       type: integer
+    reason:
+      type: string
   required:
     - choice
     - status
