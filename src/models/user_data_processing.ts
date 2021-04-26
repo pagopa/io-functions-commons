@@ -1,6 +1,6 @@
 import * as t from "io-ts";
 
-import { tag } from "@pagopa/ts-commons/lib/types";
+import { tag, withDefault } from "@pagopa/ts-commons/lib/types";
 
 import { Container } from "@azure/cosmos";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
@@ -15,6 +15,7 @@ import { UserDataProcessingChoice } from "../../generated/definitions/UserDataPr
 import { UserDataProcessingStatus, UserDataProcessingStatusEnum } from "../../generated/definitions/UserDataProcessingStatus";
 import { CosmosErrors } from "../utils/cosmosdb_model";
 import { wrapWithKind } from "../utils/types";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 export const USER_DATA_PROCESSING_COLLECTION_NAME = "user-data-processing";
 export const USER_DATA_PROCESSING_MODEL_PK_FIELD = "fiscalCode" as const;
@@ -36,10 +37,7 @@ export const UserDataProcessingId = tag<IUserDataProcessingIdTag>()(
 );
 export type UserDataProcessingId = t.TypeOf<typeof UserDataProcessingId>;
 
-/**
- * Base interface for User Data Processing objects
- */
-export const UserDataProcessing = t.intersection([
+const CommonUserDataProcessing = t.intersection([
   t.interface({
     // the unique identifier of a user data processing request identified by concatenation of
     // eslint-disable-next-line extra-rules/no-commented-out-code
@@ -60,27 +58,32 @@ export const UserDataProcessing = t.intersection([
   }),
   t.partial({
     // update date of this user data processing request
-    updatedAt: Timestamp,
-
-    // the reason of failure, present only if status is FAILED
-    reason: t.string
+    updatedAt: Timestamp
   })
 ]);
 
+/**
+ * Base interface for User Data Processing objects
+ */
+ export const UserDataProcessing = t.intersection([
+  CommonUserDataProcessing,
+  t.union([
+    t.interface({
+      status: t.union([
+        t.literal(UserDataProcessingStatusEnum.ABORTED),
+        t.literal(UserDataProcessingStatusEnum.CLOSED),
+        t.literal(UserDataProcessingStatusEnum.PENDING),
+        t.literal(UserDataProcessingStatusEnum.WIP)
+      ])
+    }),
+    t.interface({
+      reason: withDefault(NonEmptyString, "no reason found" as NonEmptyString),
+      status: t.literal(UserDataProcessingStatusEnum.FAILED)
+    })
+  ])
+]);
+
 export type UserDataProcessing = t.TypeOf<typeof UserDataProcessing>;
-
-interface ValidUserDataProcessingBrand {
-  readonly IsValid: unique symbol;
-}
-
-export const ValidUserDataProcessing = t.brand(
-  UserDataProcessing,
-  (m): m is t.Branded<UserDataProcessing, ValidUserDataProcessingBrand> =>
-    m.status === UserDataProcessingStatusEnum.FAILED ? !!m.reason : !m.reason,
-  "IsValid"
-);
-
-export type ValidUserDataProcessing = t.TypeOf<typeof ValidUserDataProcessing>;
 
 export const NewUserDataProcessing = wrapWithKind(
   UserDataProcessing,
