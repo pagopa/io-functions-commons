@@ -1,8 +1,8 @@
-// tslint:disable:no-any
+// eslint-disable @typescript-eslint/no-explicit-any
 
 jest.mock("winston");
 
-// tslint:disable-next-line:no-submodule-imports
+// eslint-disable-next-line import/no-internal-modules
 import Mail = require("nodemailer/lib/mailer");
 
 import * as nodemailer from "nodemailer";

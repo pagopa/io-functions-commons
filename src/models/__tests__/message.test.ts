@@ -1,4 +1,4 @@
-/* tslint:disable:no-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as azureStorage from "azure-storage";
 import { isLeft, isRight, left, right } from "fp-ts/lib/Either";
@@ -117,7 +117,7 @@ describe("findMessages", () => {
 
     const asyncIteratorSpy = jest
       .spyOn(asyncI, "mapAsyncIterable")
-      // tslint:disable-next-line: no-identical-functions
+      // eslint-disable-next-line sonarjs/no-identical-functions
       .mockImplementation(() => {
         return {
           [Symbol.asyncIterator]: () => iteratorMock

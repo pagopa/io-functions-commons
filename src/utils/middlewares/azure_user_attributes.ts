@@ -3,15 +3,11 @@
  */
 import * as winston from "winston";
 
-import { isLeft, left, right } from "fp-ts/lib/Either";
+import { Either, isLeft, left, right } from "fp-ts/lib/Either";
 
 import { isNone } from "fp-ts/lib/Option";
 
 import { EmailString, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-
-import { Service, ServiceModel } from "../../models/service";
-import { IRequestMiddleware } from "../request_middleware";
-import { ResponseErrorQuery } from "../response";
 
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import {
@@ -19,6 +15,9 @@ import {
   ResponseErrorForbiddenNotAuthorized,
   ResponseErrorInternal
 } from "@pagopa/ts-commons/lib/responses";
+import { Service, ServiceModel } from "../../models/service";
+import { IRequestMiddleware } from "../request_middleware";
+import { ResponseErrorQuery } from "../response";
 
 // The user email will be passed in this header by the API Gateway
 const HEADER_USER_EMAIL = "x-user-email";
@@ -47,87 +46,96 @@ export interface IAzureUserAttributes {
  * On success, the middleware provides an IUserAttributes.
  *
  */
-export function AzureUserAttributesMiddleware(
+export const AzureUserAttributesMiddleware = (
   serviceModel: ServiceModel
 ): IRequestMiddleware<
   | "IResponseErrorForbiddenNotAuthorized"
   | "IResponseErrorQuery"
   | "IResponseErrorInternal",
   IAzureUserAttributes
-> {
-  return async request => {
-    const errorOrUserEmail = EmailString.decode(
-      request.header(HEADER_USER_EMAIL)
+> => async (
+  request
+): Promise<
+  Either<
+    IResponse<
+      | "IResponseErrorInternal"
+      | "IResponseErrorQuery"
+      | "IResponseErrorForbiddenNotAuthorized"
+    >,
+    IAzureUserAttributes
+  >
+> => {
+  const errorOrUserEmail = EmailString.decode(
+    request.header(HEADER_USER_EMAIL)
+  );
+
+  if (isLeft(errorOrUserEmail)) {
+    return left<IResponse<"IResponseErrorInternal">, IAzureUserAttributes>(
+      ResponseErrorInternal(
+        `Missing, empty or invalid ${HEADER_USER_EMAIL} header`
+      )
     );
+  }
 
-    if (isLeft(errorOrUserEmail)) {
-      return left<IResponse<"IResponseErrorInternal">, IAzureUserAttributes>(
-        ResponseErrorInternal(
-          `Missing, empty or invalid ${HEADER_USER_EMAIL} header`
-        )
-      );
-    }
+  const userEmail = errorOrUserEmail.value;
 
-    const userEmail = errorOrUserEmail.value;
+  const errorOrUserSubscriptionId = NonEmptyString.decode(
+    request.header(HEADER_USER_SUBSCRIPTION_KEY)
+  );
 
-    const errorOrUserSubscriptionId = NonEmptyString.decode(
-      request.header(HEADER_USER_SUBSCRIPTION_KEY)
+  if (isLeft(errorOrUserSubscriptionId)) {
+    return left<IResponse<"IResponseErrorInternal">, IAzureUserAttributes>(
+      ResponseErrorInternal(
+        `Missing or empty ${HEADER_USER_SUBSCRIPTION_KEY} header`
+      )
     );
+  }
 
-    if (isLeft(errorOrUserSubscriptionId)) {
-      return left<IResponse<"IResponseErrorInternal">, IAzureUserAttributes>(
-        ResponseErrorInternal(
-          `Missing or empty ${HEADER_USER_SUBSCRIPTION_KEY} header`
-        )
-      );
-    }
+  const subscriptionId = errorOrUserSubscriptionId.value;
 
-    const subscriptionId = errorOrUserSubscriptionId.value;
+  // serviceId equals subscriptionId
+  const errorOrMaybeService = await serviceModel
+    .findLastVersionByModelId([subscriptionId])
+    .run();
 
-    // serviceId equals subscriptionId
-    const errorOrMaybeService = await serviceModel
-      .findLastVersionByModelId([subscriptionId])
-      .run();
+  if (isLeft(errorOrMaybeService)) {
+    winston.error(
+      `No service found for subscription|${subscriptionId}|${JSON.stringify(
+        errorOrMaybeService.value
+      )}`
+    );
+    return left<IResponse<"IResponseErrorQuery">, IAzureUserAttributes>(
+      ResponseErrorQuery(
+        `Error while retrieving the service tied to the provided subscription id`,
+        errorOrMaybeService.value
+      )
+    );
+  }
 
-    if (isLeft(errorOrMaybeService)) {
-      winston.error(
-        `No service found for subscription|${subscriptionId}|${JSON.stringify(
-          errorOrMaybeService.value
-        )}`
-      );
-      return left<IResponse<"IResponseErrorQuery">, IAzureUserAttributes>(
-        ResponseErrorQuery(
-          `Error while retrieving the service tied to the provided subscription id`,
-          errorOrMaybeService.value
-        )
-      );
-    }
+  const maybeService = errorOrMaybeService.value;
 
-    const maybeService = errorOrMaybeService.value;
-
-    if (isNone(maybeService)) {
-      winston.error(
-        `AzureUserAttributesMiddleware|Service not found|${subscriptionId}`
-      );
-      return left<
-        IResponse<"IResponseErrorForbiddenNotAuthorized">,
-        IAzureUserAttributes
-      >(ResponseErrorForbiddenNotAuthorized);
-    }
-
-    const authInfo: IAzureUserAttributes = {
-      email: userEmail,
-      kind: "IAzureUserAttributes",
-      service: maybeService.value
-    };
-
-    return right<
-      IResponse<
-        | "IResponseErrorForbiddenNotAuthorized"
-        | "IResponseErrorQuery"
-        | "IResponseErrorInternal"
-      >,
+  if (isNone(maybeService)) {
+    winston.error(
+      `AzureUserAttributesMiddleware|Service not found|${subscriptionId}`
+    );
+    return left<
+      IResponse<"IResponseErrorForbiddenNotAuthorized">,
       IAzureUserAttributes
-    >(authInfo);
+    >(ResponseErrorForbiddenNotAuthorized);
+  }
+
+  const authInfo: IAzureUserAttributes = {
+    email: userEmail,
+    kind: "IAzureUserAttributes",
+    service: maybeService.value
   };
-}
+
+  return right<
+    IResponse<
+      | "IResponseErrorForbiddenNotAuthorized"
+      | "IResponseErrorQuery"
+      | "IResponseErrorInternal"
+    >,
+    IAzureUserAttributes
+  >(authInfo);
+};

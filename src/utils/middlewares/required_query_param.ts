@@ -1,6 +1,10 @@
 import * as t from "io-ts";
 
-import { ResponseErrorFromValidationErrors } from "@pagopa/ts-commons/lib/responses";
+import {
+  IResponse,
+  ResponseErrorFromValidationErrors
+} from "@pagopa/ts-commons/lib/responses";
+import { Either } from "fp-ts/lib/Either";
 import { IRequestMiddleware } from "../request_middleware";
 
 /**
@@ -10,12 +14,12 @@ import { IRequestMiddleware } from "../request_middleware";
  * @param name  The name of the parameter
  * @param type  The io-ts Type for validating the parameter
  */
-export function RequiredQueryParamMiddleware<S, A>(
+export const RequiredQueryParamMiddleware = <S, A>(
   name: string,
   type: t.Type<A, S>
-): IRequestMiddleware<"IResponseErrorValidation", A> {
-  return async request =>
-    type
-      .decode(request.query[name])
-      .mapLeft(ResponseErrorFromValidationErrors(type));
-}
+): IRequestMiddleware<"IResponseErrorValidation", A> => async (
+  request
+): Promise<Either<IResponse<"IResponseErrorValidation">, A>> =>
+  type
+    .decode(request.query[name])
+    .mapLeft(ResponseErrorFromValidationErrors(type));

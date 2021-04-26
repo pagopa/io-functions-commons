@@ -25,10 +25,12 @@ export interface IResponseSuccessJsonIterator<T>
  * TODO: pagination
  * TODO: make it stream the iterator instead of consumind it all at once
  */
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions
 export function ResponseJsonIterator<T>(
   i: AsyncIterator<T>
 ): IResponseSuccessJsonIterator<T> {
   return {
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
     apply: res =>
       asyncIteratorToArray(i).then(documents => {
         const kindlessDocuments = documents.map(d =>
@@ -47,6 +49,7 @@ export function ResponseJsonIterator<T>(
 /**
  * Interface for a response describing a database error.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface IResponseErrorQuery extends IResponse<"IResponseErrorQuery"> {}
 
 /**
@@ -55,19 +58,17 @@ export interface IResponseErrorQuery extends IResponse<"IResponseErrorQuery"> {}
  * @param detail The error message
  * @param error  The QueryError object
  */
-export function ResponseErrorQuery(
+export const ResponseErrorQuery = (
   detail: string,
   error: CosmosErrors
-): IResponseErrorQuery {
-  return {
-    ...ResponseErrorGeneric(
-      HttpStatusCodeEnum.HTTP_STATUS_500,
-      `Query error (${error.kind})$` +
-        (error.kind === "COSMOS_ERROR_RESPONSE"
-          ? ` (${error.error.code}/${error.error.message})`
-          : ""),
-      detail
-    ),
-    kind: "IResponseErrorQuery"
-  };
-}
+): IResponseErrorQuery => ({
+  ...ResponseErrorGeneric(
+    HttpStatusCodeEnum.HTTP_STATUS_500,
+    `Query error (${error.kind})$` +
+      (error.kind === "COSMOS_ERROR_RESPONSE"
+        ? ` (${error.error.code}/${error.error.message})`
+        : ""),
+    detail
+  ),
+  kind: "IResponseErrorQuery"
+});

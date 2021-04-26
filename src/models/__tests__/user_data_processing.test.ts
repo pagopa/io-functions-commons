@@ -1,5 +1,5 @@
-/* tslint:disable:no-any */
-/* tslint:disable:no-identical-functions */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable sonarjs/no-identical-functions */
 
 import { isLeft, isRight } from "fp-ts/lib/Either";
 
@@ -73,7 +73,7 @@ describe("createOrUpdateByNewOne", () => {
             {
               ...aNewUserDataProcessing,
               ...someMetadata,
-              // tslint:disable-next-line: restrict-plus-operands
+              // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
               id: aModelId + "1",
               test: "anUpdatedUserDataProcessing",
               version: 1
@@ -146,7 +146,7 @@ describe("UserDataProcessingId", () => {
     expect(result.isRight()).toBeTruthy();
   });
 
-  // tslint:disable: no-nested-template-literals
+  // eslint-disable sonar/no-nested-template-literals
   it.each`
     name                        | value
     ${"with wrong separator"}   | ${aFiscalCode + "--" + UserDataProcessingChoiceEnum.DELETE}
