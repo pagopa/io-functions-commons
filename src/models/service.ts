@@ -128,7 +128,7 @@ export type ExtendedService = t.TypeOf<typeof ExtendedService>;
 export const RequiredMetadata = t.intersection([
   ServiceMetadata,
   t.interface({
-    desciption: NonEmptyString,
+    description: NonEmptyString,
     privacyUrl: NonEmptyString
   }),
   t.union([
