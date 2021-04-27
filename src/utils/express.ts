@@ -1,8 +1,10 @@
 import * as express from "express";
-import { fromNullable } from "fp-ts/lib/Option";
 import * as helmet from "helmet";
 import * as csp from "helmet-csp";
 import * as referrerPolicy from "referrer-policy";
+import { tryCatch, fromEither } from "fp-ts/lib/TaskEither";
+import { toError, fromNullable } from "fp-ts/lib/Either";
+import * as t from "io-ts";
 
 /**
  * Set up secure HTTP headers applying middlewares
@@ -43,7 +45,18 @@ export const secureExpressApp = (app: express.Express): void => {
 };
 
 /**
- * Create an express middleware to set the 'X-API-Version' response header field to the current app version in execution (from the npm environment).
+ * Type used to map version from package.json
+ */
+type PackageJson = t.TypeOf<typeof PackageJson>;
+const PackageJson = t.interface({
+  version: t.string
+});
+
+/**
+ * Create an express middleware to set the 'X-API-Version' response header field to the current app version in execution.
+ * The function will extract from (win first):
+ * 1. the package.json file in the process working directory;
+ * 2. the npm environment.
  *
  * @returns a factory method for the Middleware
  */
@@ -52,15 +65,29 @@ export const createAppVersionHeaderMiddleware: () => express.RequestHandler = ()
   res,
   next
 ): void => {
-  fromNullable(process.env.npm_package_version).map(v =>
-    res.setHeader("X-API-Version", v)
-  );
+  void tryCatch<Error, PackageJson>(
+    () => import(`${process.cwd()}/package.json`),
+    toError
+  )
+    .map(p => p.version)
+    .orElse(__ =>
+      fromEither(
+        fromNullable(new Error("Missing NPM Package Version"))(
+          process.env.npm_package_version
+        )
+      )
+    )
+    .map(v => res.setHeader("X-API-Version", v))
+    .run();
+
   next();
 };
 
 /**
  * Configure all the default express middleware handlers on the input express app.
  * Register here all the non business-logic-related common behaviours.
+ * Registerd middlewares:
+ *  - @see createAppVersionHeaderMiddleware
  *
  * @param app an express application
  */
