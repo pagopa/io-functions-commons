@@ -37,6 +37,9 @@ export const UserDataProcessingId = tag<IUserDataProcessingIdTag>()(
 );
 export type UserDataProcessingId = t.TypeOf<typeof UserDataProcessingId>;
 
+/**
+ * Base interface for User Data Processing objects
+ */
 const CommonUserDataProcessing = t.intersection([
   t.interface({
     // the unique identifier of a user data processing request identified by concatenation of
@@ -63,24 +66,27 @@ const CommonUserDataProcessing = t.intersection([
 ]);
 
 /**
- * Base interface for User Data Processing objects
+ * Reason for FAILED status
  */
- export const UserDataProcessing = t.intersection([
+const PossibleReasonOfFailure = t.union([
+  t.partial({
+    status: t.union([
+      t.literal(UserDataProcessingStatusEnum.ABORTED),
+      t.literal(UserDataProcessingStatusEnum.CLOSED),
+      t.literal(UserDataProcessingStatusEnum.PENDING),
+      t.literal(UserDataProcessingStatusEnum.WIP)
+    ]),
+    reason: t.void
+  }),
+  t.interface({
+    status: t.literal(UserDataProcessingStatusEnum.FAILED),
+    reason: withDefault(NonEmptyString, "no reason found" as NonEmptyString)
+  }),
+]);
+
+export const UserDataProcessing = t.intersection([
   CommonUserDataProcessing,
-  t.union([
-    t.interface({
-      status: t.union([
-        t.literal(UserDataProcessingStatusEnum.ABORTED),
-        t.literal(UserDataProcessingStatusEnum.CLOSED),
-        t.literal(UserDataProcessingStatusEnum.PENDING),
-        t.literal(UserDataProcessingStatusEnum.WIP)
-      ])
-    }),
-    t.interface({
-      reason: withDefault(NonEmptyString, "no reason found" as NonEmptyString),
-      status: t.literal(UserDataProcessingStatusEnum.FAILED)
-    })
-  ])
+  PossibleReasonOfFailure
 ]);
 
 export type UserDataProcessing = t.TypeOf<typeof UserDataProcessing>;
@@ -150,6 +156,7 @@ export class UserDataProcessingModel extends CosmosdbModelVersioned<
       userDataProcessing.fiscalCode
     );
 
+    // @ts-ignore
     const toUpdate: NewUserDataProcessing = {
       ...userDataProcessing,
       [USER_DATA_PROCESSING_MODEL_ID_FIELD]: newId,

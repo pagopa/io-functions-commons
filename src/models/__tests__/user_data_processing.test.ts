@@ -181,3 +181,41 @@ describe("makeUserDataProcessingId", () => {
     expect(lazy).toThrow();
   });
 });
+
+describe("userDataProcessing", () => {
+  it.each`
+  value
+  ${{
+    ...aUserDataProcessing,
+    status: UserDataProcessingStatusEnum.CLOSED
+  }}
+  ${{
+    ...aUserDataProcessing,
+    status: UserDataProcessingStatusEnum.FAILED
+  }}
+  ${{
+    ...aUserDataProcessing,
+    status: UserDataProcessingStatusEnum.FAILED,
+    reason: "a"
+  }}
+  `
+  ("should decode valid UserDataProcessing records", ({value}) => {
+    let result = UserDataProcessing.decode(value);
+
+    expect(result.isRight()).toBeTruthy();
+  });
+
+  it.each`
+  value
+  ${{
+    ...aUserDataProcessing,
+    status: UserDataProcessingStatusEnum.CLOSED,
+    reason: "a"
+  }}
+  `
+  ("should not decode invalid UserDataProcessing records", ({value}) => {
+    let result = UserDataProcessing.decode(value);
+
+    expect(result.isLeft()).toBeTruthy();
+  });
+});
