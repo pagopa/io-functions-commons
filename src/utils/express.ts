@@ -2,8 +2,7 @@ import * as express from "express";
 import * as helmet from "helmet";
 import * as csp from "helmet-csp";
 import * as referrerPolicy from "referrer-policy";
-import { tryCatch, fromEither } from "fp-ts/lib/TaskEither";
-import { toError, fromNullable } from "fp-ts/lib/Either";
+import { toError, fromNullable, tryCatch2v } from "fp-ts/lib/Either";
 import * as t from "io-ts";
 
 /**
@@ -52,6 +51,8 @@ const PackageJson = t.interface({
   version: t.string
 });
 
+export const cwd = (): string => process.cwd();
+
 /**
  * Create an express middleware to set the 'X-API-Version' response header field to the current app version in execution.
  * The function will extract from (win first):
@@ -65,20 +66,17 @@ export const createAppVersionHeaderMiddleware: () => express.RequestHandler = ()
   res,
   next
 ): void => {
-  void tryCatch<Error, PackageJson>(
-    () => import(`${process.cwd()}/package.json`),
+  tryCatch2v<Error, PackageJson>(
+    () => require(`${cwd()}/package.json`),
     toError
   )
     .map(p => p.version)
     .orElse(__ =>
-      fromEither(
-        fromNullable(new Error("Missing NPM Package Version"))(
-          process.env.npm_package_version
-        )
+      fromNullable(new Error("Missing NPM Package Version"))(
+        process.env.npm_package_version
       )
     )
-    .map(v => res.setHeader("X-API-Version", v))
-    .run();
+    .map(v => res.setHeader("X-API-Version", v));
 
   next();
 };
