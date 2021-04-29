@@ -5,6 +5,7 @@ import { tag, withDefault } from "@pagopa/ts-commons/lib/types";
 import { Container } from "@azure/cosmos";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { TaskEither } from "fp-ts/lib/TaskEither";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import {
   CosmosdbModelVersioned,
   RetrievedVersionedModel
@@ -12,10 +13,12 @@ import {
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { Timestamp } from "../../generated/definitions/Timestamp";
 import { UserDataProcessingChoice } from "../../generated/definitions/UserDataProcessingChoice";
-import { UserDataProcessingStatus, UserDataProcessingStatusEnum } from "../../generated/definitions/UserDataProcessingStatus";
+import {
+  UserDataProcessingStatus,
+  UserDataProcessingStatusEnum
+} from "../../generated/definitions/UserDataProcessingStatus";
 import { CosmosErrors } from "../utils/cosmosdb_model";
 import { wrapWithKind } from "../utils/types";
-import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 export const USER_DATA_PROCESSING_COLLECTION_NAME = "user-data-processing";
 export const USER_DATA_PROCESSING_MODEL_PK_FIELD = "fiscalCode" as const;
@@ -70,18 +73,18 @@ const CommonUserDataProcessing = t.intersection([
  */
 const PossibleReasonOfFailure = t.union([
   t.partial({
+    reason: t.void,
     status: t.union([
       t.literal(UserDataProcessingStatusEnum.ABORTED),
       t.literal(UserDataProcessingStatusEnum.CLOSED),
       t.literal(UserDataProcessingStatusEnum.PENDING),
       t.literal(UserDataProcessingStatusEnum.WIP)
-    ]),
-    reason: t.void
+    ])
   }),
   t.interface({
-    status: t.literal(UserDataProcessingStatusEnum.FAILED),
-    reason: withDefault(NonEmptyString, "no reason found" as NonEmptyString)
-  }),
+    reason: withDefault(NonEmptyString, "no reason found" as NonEmptyString),
+    status: t.literal(UserDataProcessingStatusEnum.FAILED)
+  })
 ]);
 
 export const UserDataProcessing = t.intersection([
