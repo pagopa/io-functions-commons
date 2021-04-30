@@ -175,10 +175,16 @@ export const RequiredMetadata = t.intersection([
   ])
 ]);
 
+/**
+ * Interface for a Service that has all the required information
+ * for running in production.
+ */
 export const ValidService = t.intersection([
   Service,
   t.interface({
+    // At least one authorizedCIDR must be present
     authorizedCIDRs: readonlyNonEmptySetType(CIDR, "CIDRs"),
+    // Required metadata for production
     serviceMetadata: RequiredMetadata
   })
 ]);
