@@ -11,7 +11,11 @@ import {
 } from "@pagopa/ts-commons/lib/strings";
 
 import { Container } from "@azure/cosmos";
-import { readonlySetType, withDefault } from "@pagopa/ts-commons/lib/types";
+import {
+  readonlyNonEmptySetType,
+  readonlySetType,
+  withDefault
+} from "@pagopa/ts-commons/lib/types";
 import { TaskEither } from "fp-ts/lib/TaskEither";
 import { CIDR } from "../../generated/definitions/CIDR";
 import {
@@ -112,6 +116,79 @@ export const RetrievedService = wrapWithKind(
 );
 
 export type RetrievedService = t.TypeOf<typeof RetrievedService>;
+
+export const RequiredMetadata = t.intersection([
+  ServiceMetadata,
+  t.interface({
+    description: NonEmptyString,
+    privacyUrl: NonEmptyString
+  }),
+  t.union([
+    t.intersection([
+      t.interface({
+        email: NonEmptyString
+      }),
+      t.partial({
+        pec: NonEmptyString,
+
+        phone: NonEmptyString,
+
+        supportUrl: NonEmptyString
+      })
+    ]),
+    t.intersection([
+      t.interface({
+        pec: NonEmptyString
+      }),
+      t.partial({
+        email: NonEmptyString,
+
+        phone: NonEmptyString,
+
+        supportUrl: NonEmptyString
+      })
+    ]),
+    t.intersection([
+      t.interface({
+        phone: NonEmptyString
+      }),
+      t.partial({
+        email: NonEmptyString,
+
+        pec: NonEmptyString,
+
+        supportUrl: NonEmptyString
+      })
+    ]),
+    t.intersection([
+      t.interface({
+        supportUrl: NonEmptyString
+      }),
+      t.partial({
+        email: NonEmptyString,
+
+        pec: NonEmptyString,
+
+        phone: NonEmptyString
+      })
+    ])
+  ])
+]);
+
+/**
+ * Interface for a Service that has all the required information
+ * for running in production.
+ */
+export const ValidService = t.intersection([
+  Service,
+  t.interface({
+    // At least one authorizedCIDR must be present
+    authorizedCIDRs: readonlyNonEmptySetType(CIDR, "CIDRs"),
+    // Required metadata for production
+    serviceMetadata: RequiredMetadata
+  })
+]);
+export type ValidService = t.TypeOf<typeof ValidService>;
 
 /**
  * Converts an Array or a Set of strings to a ReadonlySet of fiscalCodes.
