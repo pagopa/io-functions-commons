@@ -117,14 +117,6 @@ export const RetrievedService = wrapWithKind(
 
 export type RetrievedService = t.TypeOf<typeof RetrievedService>;
 
-export const ExtendedService = t.intersection([
-  t.interface({
-    isComplete: t.boolean
-  }),
-  RetrievedService
-]);
-export type ExtendedService = t.TypeOf<typeof ExtendedService>;
-
 export const RequiredMetadata = t.intersection([
   ServiceMetadata,
   t.interface({
@@ -190,7 +182,6 @@ export const ValidService = t.intersection([
     serviceMetadata: RequiredMetadata
   })
 ]);
-
 export type ValidService = t.TypeOf<typeof ValidService>;
 
 /**
