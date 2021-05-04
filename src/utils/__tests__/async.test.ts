@@ -11,12 +11,12 @@ const mockAsyncIterator = {
   next: mockNext
 };
 
-// tslint:disable-next-line: typedef no-any
+// eslint-disable-next-line @typescript-eslint/typedef, @typescript-eslint/no-explicit-any
 const createMockIterator = <T, TReturn = any>(
   items: readonly T[],
   lastValue?: TReturn
 ): AsyncIterator<T> => {
-  // tslint:disable-next-line: readonly-array
+  // eslint-disable-next-line functional/prefer-readonly-type
   const data: T[] = [...items];
   const result = (value: T): IteratorYieldResult<T> => ({
     done: false,
@@ -195,7 +195,7 @@ describe("filterAsyncIterator utils", () => {
 
 describe("Scenarios", () => {
   type ModelType = t.TypeOf<typeof ModelType>;
-  // tslint:disable-next-line: no-dead-store
+  // eslint-disable-next-line sonar/no-dead-store
   const ModelType = t.interface({
     fieldA: t.string,
     fieldB: t.number
@@ -291,7 +291,7 @@ describe("Scenarios", () => {
 
 describe("Scenarios", () => {
   type ModelType = t.TypeOf<typeof ModelType>;
-  // tslint:disable-next-line: no-dead-store
+  // eslint-disable-next-line sonar/no-dead-store
   const ModelType = t.interface({
     fieldA: t.string,
     fieldB: t.number

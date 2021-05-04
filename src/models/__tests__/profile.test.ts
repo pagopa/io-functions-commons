@@ -1,11 +1,16 @@
 import { isLeft, isRight } from "fp-ts/lib/Either";
 import { isSome } from "fp-ts/lib/Option";
 
-import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
-import { EmailString, NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
+import { EmailString, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 
-import { NewProfile, Profile, ProfileModel, RetrievedProfile } from "../profile";
+import {
+  NewProfile,
+  Profile,
+  ProfileModel,
+  RetrievedProfile
+} from "../profile";
 
 import { Container } from "@azure/cosmos";
 

@@ -211,7 +211,7 @@ CreatedMessageWithContent:
     content:
       $ref: "#/MessageContent"
     sender_service_id:
-      type: string
+      $ref: "#/ServiceId"
   required:
     - id
     - fiscal_code
@@ -230,7 +230,7 @@ CreatedMessageWithoutContent:
     created_at:
       $ref: "#/Timestamp"
     sender_service_id:
-      type: string
+      $ref: "#/ServiceId"
   required:
     - id
     - fiscal_code
@@ -269,26 +269,26 @@ FiscalCode:
   type: string
   description: User's fiscal code.
   format: FiscalCode
-  x-import: italia-ts-commons/lib/strings
+  x-import: '@pagopa/ts-commons/lib/strings'
   example: SPNDNL80R13C555X
 PrescriberFiscalCode:
   type: string
   description: Fiscal code of the Doctor that made the prescription.
   format: FiscalCode
-  x-import: italia-ts-commons/lib/strings
+  x-import: '@pagopa/ts-commons/lib/strings'
   example: TCNZRO80R13C555Y
 SandboxFiscalCode:
   type: string
   description: |-
     Sandbox user's fiscal code (used for development).
   format: SandboxFiscalCode
-  x-import: italia-ts-commons/lib/strings
+  x-import: '@pagopa/ts-commons/lib/strings'
   example: SPNDNL80A13Y555X
 OrganizationFiscalCode:
   type: string
   description: Organization fiscal code.
   format: OrganizationFiscalCode
-  x-import: italia-ts-commons/lib/strings
+  x-import: '@pagopa/ts-commons/lib/strings'
   example: "12345678901"
 MessageSubject:
   type: string
@@ -529,6 +529,12 @@ SenderMetadata:
     - department_name
 ServicePayload:
   description: A payload used to create/update a service for a user.
+  x-one-of: true
+  allOf:
+   - $ref: "#/VisibleServicePayload"    
+   - $ref: "#/HiddenServicePayload"
+CommonServicePayload:
+  description: Common properties for a ServicePayload
   type: object
   properties:
     service_name:
@@ -553,19 +559,44 @@ ServicePayload:
       default: false
       description: |-
         When true, messages won't trigger email notifications (only push).
-    is_visible:
-        type: boolean
-        default: false
-        description: |-
-          When true the service appears in the service list, otherwise is hidden.
-    service_metadata:
-      $ref: "#/ServiceMetadata"
   required:
     - service_name
     - department_name
     - organization_name
     - organization_fiscal_code
     - authorized_cidrs
+VisibleServicePayload:
+  description: A payload used to create/update a service that appears in the service list.
+  allOf:
+  - $ref: "#/CommonServicePayload"
+  - type: object
+    properties:
+      is_visible:
+        type: boolean
+        enum:
+          - true
+        description: |-
+          It indicates that service appears in the service list
+      service_metadata:
+        $ref: "#/ServiceMetadata"
+    required:
+      - is_visible
+      - service_metadata
+HiddenServicePayload:
+  description: A payload used to create/update a service that is hidden.
+  allOf:
+  - $ref: "#/CommonServicePayload"
+  - type: object
+    properties:
+      is_visible:
+        type: boolean
+        default: false
+        enum:
+          - false
+        description: |-
+          It indicates that service is hidden
+      service_metadata:
+        $ref: "#/ServiceMetadata"
 Service: 
   description: A service tied to user's subscription.
   allOf:
@@ -620,6 +651,15 @@ ServiceMetadata:
       type: string
       minLength: 1
     pec:
+      type: string
+      minLength: 1
+    cta:
+      type: string
+      minLength: 1
+    token_name: 
+      type: string
+      minLength: 1
+    support_url:
       type: string
       minLength: 1
     scope:
@@ -742,7 +782,7 @@ Timestamp:
   type: string
   format: UTCISODateFromString
   description: A date-time field in ISO-8601 format and UTC timezone.
-  x-import: italia-ts-commons/lib/dates
+  x-import: '@pagopa/ts-commons/lib/dates'
   example: "2018-10-13T00:00:00.000Z"
 HttpsUrl:
   type: string

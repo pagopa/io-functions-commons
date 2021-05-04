@@ -2,7 +2,7 @@ import { catOptions } from "fp-ts/lib/Array";
 import { none, some } from "fp-ts/lib/Option";
 import * as t from "io-ts";
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 /**
  * Describes a nodemailer transport connection
@@ -34,10 +34,10 @@ export type MailMultiTransportConnections = t.TypeOf<
  * transport:username:password[;transport:username:password][;transport:username:password]...
  *
  */
-function parseMultiProviderConnection(
+const parseMultiProviderConnection = (
   conn: string
-): MailMultiTransportConnections {
-  return catOptions(
+): MailMultiTransportConnections =>
+  catOptions(
     conn.split(";").map(providerStr => {
       const [transport, username, password] = providerStr.split(":");
       if (
@@ -54,7 +54,6 @@ function parseMultiProviderConnection(
       return none;
     })
   );
-}
 
 /**
  * Decodes an array of nodemailer transport connections from a multi

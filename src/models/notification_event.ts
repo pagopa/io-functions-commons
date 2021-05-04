@@ -1,6 +1,6 @@
 import * as t from "io-ts";
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import { MessageContent } from "../../generated/definitions/MessageContent";
 

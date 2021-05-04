@@ -42,10 +42,7 @@ variables:
 # of the following conditions is true:
 # - a push is made to any branch in the repository (not only 'master')
 # - a pull request is created
-trigger:
-  branches:
-    include:
-      - '*'
+trigger: none
 
 # This pipeline has been implemented to be run on hosted agent pools based both
 # on 'windows' and 'ubuntu' virtual machine images and using the scripts defined
@@ -132,8 +129,26 @@ stages:
               bash <(curl -s https://codecov.io/bash)
             displayName: 'Code coverage'
 
+  # C) Run integration tests (use Linux OS, also required to generate certificates)
+  - stage: IntegrationsTest
+    dependsOn: []
+    jobs:
+      - job: integrations_tests
+        steps:
+          - template: azure-templates/make-build-steps.yml
+            parameters:
+              make: build
 
-  # C) Publish a new version of the package 'io-functions-commons' to the NPM 
+          - script: |
+              docker run -d -p 1025:1025 -p 8025:8025 --name mailhog mailhog/mailhog
+            displayName: 'Start mailhog'
+
+          - script: |
+              MAILHOG_HOSTNAME=localhost yarn test:integration
+            displayName: 'Integrations tests exec'
+
+
+  # D) Publish a new version of the package 'io-functions-commons' to the NPM 
   # registry and a release in GitHub if all the following conditions apply:
   #    - $ENABLE_MANUAL_DEPLOY == true 
   #    - it is a manual trigger
@@ -152,6 +167,7 @@ stages:
     dependsOn:
       - Build
       - Test
+      - IntegrationsTest
     jobs:
       - job: publish_package
         steps:

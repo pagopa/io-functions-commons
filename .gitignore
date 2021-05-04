@@ -8,3 +8,7 @@ coverage
 .vscode
 .npmrc
 .env
+
+# eslint section
+!.eslintrc.js
+.eslintcache

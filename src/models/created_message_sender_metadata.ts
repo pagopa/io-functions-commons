@@ -1,6 +1,6 @@
 import * as t from "io-ts";
 
-import { EmailString, NonEmptyString } from "italia-ts-commons/lib/strings";
+import { EmailString, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { OrganizationFiscalCode } from "../../generated/definitions/OrganizationFiscalCode";
 
 /**

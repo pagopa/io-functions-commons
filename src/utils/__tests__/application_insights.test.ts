@@ -1,6 +1,6 @@
 import { withAppInsightsContext } from "../application_insights";
 
-// tslint:disable-next-line: no-submodule-imports
+// eslint-disable-next-line import/no-internal-modules
 import { CorrelationContextManager } from "applicationinsights/out/AutoCollection/CorrelationContextManager";
 
 describe("Wrap an handler with Application Insights context", () => {
@@ -17,7 +17,7 @@ describe("Wrap an handler with Application Insights context", () => {
           functionName: "foo"
         },
         invocationId: "123"
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any,
       () => handler("bar", 2)
     );
@@ -35,7 +35,7 @@ describe("Wrap an handler with Application Insights context", () => {
         traceContext: {
           traceparent: "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"
         }
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any,
       () => handler("bar", 2)
     );

@@ -1,10 +1,10 @@
-// tslint:disable:no-any
+// eslint-disable @typescript-eslint/no-explicit-any
 
 import { isLeft, isRight } from "fp-ts/lib/Either";
 
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import { Container } from "@azure/cosmos";
 import { EmailAddress } from "../../../generated/definitions/EmailAddress";

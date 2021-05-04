@@ -1,4 +1,4 @@
-/* tslint:disable:no-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as azureStorage from "azure-storage";
 import { isLeft, isRight, left, right } from "fp-ts/lib/Either";
@@ -9,7 +9,7 @@ import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 import { MessageBodyMarkdown } from "../../../generated/definitions/MessageBodyMarkdown";
 import { MessageContent } from "../../../generated/definitions/MessageContent";
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import { fromNullable, none, some } from "fp-ts/lib/Option";
 
@@ -117,7 +117,7 @@ describe("findMessages", () => {
 
     const asyncIteratorSpy = jest
       .spyOn(asyncI, "mapAsyncIterable")
-      // tslint:disable-next-line: no-identical-functions
+      // eslint-disable-next-line sonarjs/no-identical-functions
       .mockImplementation(() => {
         return {
           [Symbol.asyncIterator]: () => iteratorMock

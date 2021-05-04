@@ -5,14 +5,14 @@ import winston = require("winston");
 import { toError } from "fp-ts/lib/Either";
 import { fromEither, none, Option, some } from "fp-ts/lib/Option";
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
+import { array } from "fp-ts/lib/Array";
+import { taskEither, TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 import { RetrievedMessage } from "../models/message";
 import { NotificationModel } from "../models/notification";
 import { NotificationStatusModel } from "../models/notification_status";
 
-import { array } from "fp-ts/lib/Array";
-import { taskEither, TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 import { CreatedMessageWithoutContent } from "../../generated/definitions/CreatedMessageWithoutContent";
 import { NotificationChannelEnum } from "../../generated/definitions/NotificationChannel";
 import { NotificationChannelStatusValueEnum } from "../../generated/definitions/NotificationChannelStatusValue";
@@ -29,11 +29,11 @@ export type NotificationStatusHolder = Partial<
 /**
  * Returns the status of a channel
  */
-export async function getChannelStatus(
+export const getChannelStatus = async (
   notificationStatusModel: NotificationStatusModel,
   notificationId: NonEmptyString,
   channel: NotificationChannelEnum
-): Promise<NotificationChannelStatusValueEnum | undefined> {
+): Promise<NotificationChannelStatusValueEnum | undefined> => {
   const errorOrMaybeStatus = await notificationStatusModel
     .findOneNotificationStatusByNotificationChannel(notificationId, channel)
     .run();
@@ -41,7 +41,7 @@ export async function getChannelStatus(
     .chain(t.identity)
     .map(o => o.status)
     .toUndefined();
-}
+};
 
 /**
  * Retrieve all notifications statuses (all channels) for a message.
@@ -53,30 +53,30 @@ export async function getChannelStatus(
  * @returns an object with channels as keys and statuses as values
  *          ie. { email: "SENT" }
  */
-export function getMessageNotificationStatuses(
+export const getMessageNotificationStatuses = (
   notificationModel: NotificationModel,
   notificationStatusModel: NotificationStatusModel,
   messageId: NonEmptyString
-): TaskEither<Error, Option<NotificationStatusHolder>> {
-  return notificationModel
+): TaskEither<Error, Option<NotificationStatusHolder>> =>
+  notificationModel
     .findNotificationForMessage(messageId)
     .mapLeft(error => {
       // temporary log COSMOS_ERROR_RESPONSE kind due to body unavailability
       winston.error(`getMessageNotificationStatuses|Query error|${error.kind}`);
       return new Error(`Error querying for NotificationStatus`);
     })
-    .chain(maybeNotification => {
+    .chain(maybeNotification =>
       // It may happen that the notification object is not yet created in the database
       // due to some latency, so it's better to not fail here but return an empty object
-      return maybeNotification.foldL(
+      maybeNotification.foldL(
         () => {
           winston.debug(
             `getMessageNotificationStatuses|Notification not found|messageId=${messageId}`
           );
           return taskEither.of<Error, Option<NotificationStatusHolder>>(none);
         },
-        notification => {
-          return array
+        notification =>
+          array
             .sequence(taskEither)(
               // collect the statuses of all channels
               Object.keys(NotificationChannelEnum)
@@ -86,7 +86,7 @@ export function getMessageNotificationStatuses(
                     () =>
                       getChannelStatus(
                         notificationStatusModel,
-                        // tslint:disable-next-line: no-useless-cast
+                        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
                         notification.id as NonEmptyString,
                         channel
                       ),
@@ -107,22 +107,20 @@ export function getMessageNotificationStatuses(
                 {}
               )
             )
-            .map(response => some(response));
-        }
-      );
-    });
-}
+            .map(response => some(response))
+      )
+    );
 
 /**
  * Converts a retrieved message to a message that can be shared via API
  */
-export function retrievedMessageToPublic(
+/* eslint-disable @typescript-eslint/naming-convention */
+export const retrievedMessageToPublic = (
   retrievedMessage: RetrievedMessage
-): CreatedMessageWithoutContent {
-  return {
-    created_at: retrievedMessage.createdAt,
-    fiscal_code: retrievedMessage.fiscalCode,
-    id: retrievedMessage.id,
-    sender_service_id: retrievedMessage.senderServiceId
-  };
-}
+): CreatedMessageWithoutContent => ({
+  created_at: retrievedMessage.createdAt,
+  fiscal_code: retrievedMessage.fiscalCode,
+  id: retrievedMessage.id,
+  sender_service_id: retrievedMessage.senderServiceId
+});
+/* eslint-enable @typescript-eslint/naming-convention */

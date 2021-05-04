@@ -1,7 +1,6 @@
-/* tslint:disable:no-any */
-/* tslint:disable:no-null-keyword */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import { MessageBodyMarkdown } from "../../../generated/definitions/MessageBodyMarkdown";
 
