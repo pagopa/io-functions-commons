@@ -5,6 +5,7 @@
  * see http://help.mailup.com/display/mailupapi/Transactional+Emails+using+APIs
  *
  */
+import { EmailString, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { isLeft, isRight } from "fp-ts/lib/Either";
 import {
   fromEither,
@@ -13,18 +14,17 @@ import {
   tryCatch
 } from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
-import { EmailString, NonEmptyString } from "italia-ts-commons/lib/strings";
 import nodeFetch from "node-fetch";
 
 import * as nodemailer from "nodemailer";
 
-// tslint:disable-next-line:no-submodule-imports
+// eslint-disable-next-line import/no-internal-modules
 import { Address as NodemailerAddress } from "nodemailer/lib/addressparser";
 
 import * as winston from "winston";
 
+import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { fromNullable, Option } from "fp-ts/lib/Option";
-import { readableReport } from "italia-ts-commons/lib/reporters";
 
 export const SEND_TRANSACTIONAL_MAIL_ENDPOINT =
   "https://send.mailup.com/API/v2.0/messages/sendmessage";
@@ -36,35 +36,43 @@ const TRANSPORT_VERSION = "0.1";
  * You need to create a SMTP+ user in MailUp administration panel
  * see also http://help.mailup.com/display/MUG/SMTP+Settings
  */
+/* eslint-disable @typescript-eslint/naming-convention */
 export const SmtpAuthInfo = t.interface({
   Secret: NonEmptyString,
   Username: NonEmptyString
 });
+/* eslint-enable @typescript-eslint/naming-convention */
 
 export type SmtpAuthInfo = t.TypeOf<typeof SmtpAuthInfo>;
 
 /**
  * MailUp API calls common response fields
  */
+/* eslint-disable @typescript-eslint/naming-convention */
 const ApiResponse = t.interface({
   Code: t.string,
   Message: t.string,
   Status: t.string
 });
+/* eslint-enable @typescript-eslint/naming-convention */
 
 type ApiResponse = t.TypeOf<typeof ApiResponse>;
 
+/* eslint-disable @typescript-eslint/naming-convention */
 const Address = t.interface({
   Email: EmailString,
   Name: t.string
 });
+/* eslint-enable @typescript-eslint/naming-convention */
 
 type Address = t.TypeOf<typeof Address>;
 
+/* eslint-disable @typescript-eslint/naming-convention */
 const NameValue = t.interface({
   N: NonEmptyString,
   V: t.string
 });
+/* eslint-enable @typescript-eslint/naming-convention */
 
 type NameValue = t.TypeOf<typeof NameValue>;
 
@@ -74,6 +82,7 @@ const Html = t.interface({
 
 type Html = t.TypeOf<typeof NameValue>;
 
+/* eslint-disable @typescript-eslint/naming-convention */
 const EmailPayload = t.intersection([
   t.interface({
     ExtendedHeaders: t.array(NameValue),
@@ -89,6 +98,7 @@ const EmailPayload = t.intersection([
     ReplyTo: t.string
   })
 ]);
+/* eslint-enable @typescript-eslint/naming-convention */
 
 type EmailPayload = t.TypeOf<typeof EmailPayload>;
 
@@ -97,6 +107,7 @@ export interface IMailUpTransportOptions {
   readonly fetchAgent?: typeof fetch;
 }
 
+/* eslint-disable @typescript-eslint/naming-convention */
 interface IAddresses {
   readonly bcc?: ReadonlyArray<NodemailerAddress>;
   readonly cc?: ReadonlyArray<NodemailerAddress>;
@@ -105,13 +116,15 @@ interface IAddresses {
   readonly "reply-to"?: ReadonlyArray<NodemailerAddress>;
   readonly to?: ReadonlyArray<NodemailerAddress>;
 }
+/* eslint-enable @typescript-eslint/naming-convention */
 
-function sendTransactionalMail(
+/* eslint-disable @typescript-eslint/naming-convention */
+const sendTransactionalMail = (
   creds: SmtpAuthInfo,
   payload: EmailPayload,
   fetchAgent: typeof fetch
-): TaskEither<Error, ApiResponse> {
-  return tryCatch(
+): TaskEither<Error, ApiResponse> =>
+  tryCatch(
     () =>
       fetchAgent(SEND_TRANSACTIONAL_MAIL_ENDPOINT, {
         body: JSON.stringify({ ...payload, User: creds }),
@@ -155,40 +168,37 @@ function sendTransactionalMail(
           )
       )
     );
-}
+/* eslint-enable @typescript-eslint/naming-convention */
 
 /**
  * Translates nodemailer parsed addresses ({ name: <name>, address: <address> })
  * to the format expected by the MailUp API ({ Name: <name>, Email: <address> })
  */
-function toMailupAddresses(
+const toMailupAddresses = (
   addresses: ReadonlyArray<NodemailerAddress>
-): ReadonlyArray<Address> {
-  return addresses.map((address: NodemailerAddress) => {
-    return {
-      Email: EmailString.decode(address.address).getOrElseL(() => {
-        // this never happens as nodemailer has already parsed
-        // the email address (so it's a valid one)
-        throw new Error(
-          `Error while parsing email address (toMailupAddresses): invalid format '${address.address}'.`
-        );
-      }),
-      Name: address.name || address.address
-    };
-  });
-}
+): ReadonlyArray<Address> =>
+  addresses.map((address: NodemailerAddress) => ({
+    Email: EmailString.decode(address.address).getOrElseL(() => {
+      // this never happens as nodemailer has already parsed
+      // the email address (so it's a valid one)
+      throw new Error(
+        `Error while parsing email address (toMailupAddresses): invalid format '${address.address}'.`
+      );
+    }),
+    Name: address.name || address.address
+  }));
 
 /**
  * Translates nodemailer parsed addresses ({ name: <name>, address: <address> })
  * to the format expected by the MailUp API ({ Name: <name>, Email: <address> })
  * then get the first one from the input array.
  */
-function toMailupAddress(
+const toMailupAddress = (
   addresses: ReadonlyArray<NodemailerAddress>
-): Option<Address> {
+): Option<Address> => {
   const addrs = toMailupAddresses(addresses);
   return fromNullable(addrs[0]);
-}
+};
 
 /**
  * Nodemailer transport for MailUp transactional APIs
@@ -220,9 +230,10 @@ function toMailupAddress(
  *   .then(res => console.log(JSON.stringify(res)))
  *   .catch(err => console.error(JSON.stringify(err)));
  */
-export function MailUpTransport(
+/* eslint-disable @typescript-eslint/naming-convention */
+export const MailUpTransport = (
   options: IMailUpTransportOptions
-): nodemailer.Transport {
+): nodemailer.Transport => {
   const fetchAgent =
     options.fetchAgent !== undefined
       ? options.fetchAgent
@@ -232,7 +243,8 @@ export function MailUpTransport(
 
     version: TRANSPORT_VERSION,
 
-    send: (mail, callback) => {
+    // eslint-disable-next-line sort-keys
+    send: (mail, callback): void => {
       // We don't extract email addresses from mail.data.from / mail.data.to
       // as they are just strings that can contain invalid addresses.
       // Instead, mail.message.getAddresses() gets the email addresses
@@ -251,7 +263,7 @@ export function MailUpTransport(
         }
       ).map(header => ({
         N: header,
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         V: (mail.data.headers as any)[header]
       }));
 
@@ -297,7 +309,6 @@ export function MailUpTransport(
         .run()
         .then(errorOrResponse => {
           if (isRight(errorOrResponse)) {
-            // tslint:disable-next-line:no-null-keyword
             return callback(null, {
               ...errorOrResponse.value,
               messageId: mail.data.messageId
@@ -309,4 +320,5 @@ export function MailUpTransport(
         .catch(e => callback(e, undefined));
     }
   };
-}
+};
+/* eslint-enable @typescript-eslint/naming-convention */

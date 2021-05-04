@@ -1,9 +1,9 @@
 import * as requestIp from "request-ip";
 import * as winston from "winston";
 
+import { IPString } from "@pagopa/ts-commons/lib/strings";
 import { right } from "fp-ts/lib/Either";
 import { fromEither as OptionFromEither, Option } from "fp-ts/lib/Option";
-import { IPString } from "italia-ts-commons/lib/strings";
 import { IRequestMiddleware } from "../request_middleware";
 
 export type ClientIp = Option<IPString>;
@@ -20,12 +20,11 @@ export type ClientIp = Option<IPString>;
 export const ClientIpMiddleware: IRequestMiddleware<
   never,
   ClientIp
-> = request => {
-  return new Promise(resolve => {
+> = request =>
+  new Promise(resolve => {
     const clientIp = requestIp.getClientIp(request);
     winston.debug(`Handling request for client IP|${clientIp}`);
     resolve(
       right<never, ClientIp>(OptionFromEither(IPString.decode(clientIp)))
     );
   });
-};

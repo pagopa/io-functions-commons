@@ -9,7 +9,7 @@ import * as referrerPolicy from "referrer-policy";
  *
  * @param app an express application.
  */
-export function secureExpressApp(app: express.Express): void {
+export const secureExpressApp = (app: express.Express): void => {
   // Set header `referrer-policy` to `no-referrer`
   app.use(referrerPolicy());
 
@@ -39,4 +39,4 @@ export function secureExpressApp(app: express.Express): void {
       }
     })
   );
-}
+};

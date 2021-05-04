@@ -1,4 +1,4 @@
-// tslint:disable:no-any
+// eslint-disable @typescript-eslint/no-explicit-any
 import { isLeft, isRight } from "fp-ts/lib/Either";
 
 import { FiscalCodeMiddleware } from "../fiscalcode";

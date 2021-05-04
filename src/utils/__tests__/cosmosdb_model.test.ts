@@ -4,7 +4,7 @@ import { isLeft, isRight } from "fp-ts/lib/Either";
 
 import { Container, ErrorResponse, ResourceResponse } from "@azure/cosmos";
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import {
   BaseModel,
   CosmosdbModel,
@@ -38,7 +38,7 @@ class MyModel extends CosmosdbModel<
   }
 }
 
-// tslint:disable-next-line: max-classes-per-file
+// eslint-disable-next-line max-classes-per-file
 class MyPartitionedModel extends CosmosdbModel<
   MyDocument,
   NewMyDocument,
@@ -77,7 +77,7 @@ export const someMetadata = {
 };
 
 const errorResponse: ErrorResponse = new Error();
-// tslint:disable-next-line: no-object-mutation
+// eslint-disable-next-line functional/immutable-data
 errorResponse.code = 500;
 
 describe("create", () => {
@@ -193,7 +193,7 @@ describe("upsert", () => {
   });
 });
 
-// tslint:disable-next-line: interface-name
+// eslint-disable-next-line @typescript-eslint/interface-name-prefix
 
 describe("find", () => {
   it("should retrieve an existing document", async () => {

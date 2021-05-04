@@ -4,7 +4,7 @@
 
 import * as t from "io-ts";
 
-import { UTCISODateFromString } from "italia-ts-commons/lib/dates";
+import { UTCISODateFromString } from "@pagopa/ts-commons/lib/dates";
 import { EmailAddress } from "../../generated/definitions/EmailAddress";
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { TableEntity } from "../utils/azure_storage";

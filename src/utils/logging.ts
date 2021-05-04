@@ -5,10 +5,11 @@ import * as Transport from "winston-transport";
 /**
  * Returns the Context logging function matching the provided logging level
  */
-function getLoggerForLevel(
+const getLoggerForLevel = (
   logger: Context["log"],
   level: string
-): (...args: readonly unknown[]) => void {
+  // eslint-disable-next-line @typescript-eslint/array-type
+): ((...args: readonly unknown[]) => void) => {
   switch (level) {
     case "debug":
       return logger.verbose;
@@ -19,10 +20,11 @@ function getLoggerForLevel(
     case "error":
       return logger.error;
     default:
-      return (...args: readonly unknown[]) =>
+      // eslint-disable-next-line @typescript-eslint/array-type
+      return (...args: readonly unknown[]): void =>
         logger.info(`[${level}] `, ...args);
   }
-}
+};
 
 /**
  * A custom Winston Transport that logs to the Azure Functions context
