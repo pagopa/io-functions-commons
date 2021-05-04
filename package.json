@@ -6,7 +6,8 @@
   "author": "https://www.pagopa.gov.it",
   "license": "MIT",
   "files": [
-    "dist/"
+    "dist/",
+    "openapi/*.(yaml|yml)"
   ],
   "scripts": {
     "prebuild": "rimraf dist",
