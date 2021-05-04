@@ -1,11 +1,11 @@
-// tslint:disable: member-ordering
+// eslint-disable @typescript-eslint/member-ordering
 
 import { right } from "fp-ts/lib/Either";
 import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
 import { fromEither, TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 
-import { PromiseType } from "italia-ts-commons/lib/types";
+import { PromiseType } from "@pagopa/ts-commons/lib/types";
 
 import {
   Container,
@@ -19,7 +19,7 @@ import {
   SqlQuerySpec
 } from "@azure/cosmos";
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { mapAsyncIterable } from "./async";
 import { isDefined } from "./types";
 
@@ -41,6 +41,7 @@ export const BaseModel = t.interface({
  * Model a tuple which defines the references to search for a document.
  * A Cosmodb document must be looked-up by its Identity alongside its PartitionKey. If PartitionKey field is the same of Identity field, it can be omitted.
  * Hence this type models both cases: (ID) or (ID,PK) respectively if PK literal type is omitted or provided.
+ *
  * @param T the type of the document mapped by the model
  * @param ModelIdKey the literal type defining the name of the ID field for the document.
  * @param PartitionKey (optional) the literal type defining the name of the partition key field. Default: undefined
@@ -53,9 +54,9 @@ export type DocumentSearchKey<
   ModelIdKey extends keyof (T & BaseModel),
   PartitionKey extends keyof (T & BaseModel) = ModelIdKey
 > = (T & BaseModel)[ModelIdKey] extends string // narrow type to the ones that might be an identity
-  ? PartitionKey extends ModelIdKey // tslint:disable-next-line: readonly-array
-    ? [(T & BaseModel)[ModelIdKey]] // tslint:disable-next-line: readonly-array
-    : PartitionKey extends keyof (T & BaseModel) // tslint:disable-next-line: readonly-array
+  ? PartitionKey extends ModelIdKey // eslint-disable-next-line functional/prefer-readonly-type
+    ? [(T & BaseModel)[ModelIdKey]] // eslint-disable-next-line functional/prefer-readonly-type
+    : PartitionKey extends keyof (T & BaseModel) // eslint-disable-next-line functional/prefer-readonly-type
     ? [(T & BaseModel)[ModelIdKey], (T & BaseModel)[PartitionKey]]
     : never
   : never;
@@ -63,7 +64,7 @@ export type DocumentSearchKey<
 // An io-ts definition of Cosmos Resource runtime type
 // IDs are enforced to be non-empty string, as we're sure they are always valued when coming from db.
 export type CosmosResource = t.TypeOf<typeof CosmosResource>;
-// tslint:disable-next-line: no-useless-cast
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 export const CosmosResource = t.intersection([
   BaseModel,
   t.interface({
@@ -74,7 +75,7 @@ export const CosmosResource = t.intersection([
   })
   // this cast is used to keep CosmosResource aligned
   // with @azure/cosmos/Resource type definition
-]) as t.Type<Resource & { id: NonEmptyString }>;
+]) as t.Type<Resource & { readonly id: NonEmptyString }>;
 
 // An empty response from a Cosmos operation
 export const CosmosEmptyResponse = {
@@ -273,7 +274,9 @@ export abstract class CosmosdbModel<
     ).map(_ => _.resources.map(this.retrievedItemT.decode));
   }
 
-  /** Fetch the first document returned by a given query
+  /**
+   * Fetch the first document returned by a given query
+   *
    * @deprecated use getQueryIterator + asyncIterableToArray
    */
   public findOneByQuery(

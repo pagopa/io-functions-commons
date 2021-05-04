@@ -1,6 +1,6 @@
-/* tslint:disable:no-any */
-/* tslint:disable:no-duplicate-string */
-/* tslint:disable:no-identical-functions */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable sonarjs/no-duplicate-string */
+/* eslint-disable sonarjs/no-identical-functions */
 
 jest.mock("winston");
 
@@ -16,7 +16,7 @@ import {
   FiscalCode,
   NonEmptyString,
   OrganizationFiscalCode
-} from "italia-ts-commons/lib/strings";
+} from "@pagopa/ts-commons/lib/strings";
 
 import { Set } from "json-set-map";
 import { MaxAllowedPaymentAmount } from "../../../../generated/definitions/MaxAllowedPaymentAmount";

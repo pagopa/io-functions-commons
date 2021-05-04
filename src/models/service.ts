@@ -1,25 +1,27 @@
 import * as t from "io-ts";
 
-import {
-  CosmosdbModelVersioned,
-  RetrievedVersionedModel
-} from "../utils/cosmosdb_model_versioned";
-
 import { Option } from "fp-ts/lib/Option";
 
 import { Set } from "json-set-map";
-
-import { CIDR } from "../../generated/definitions/CIDR";
 
 import {
   FiscalCode,
   NonEmptyString,
   OrganizationFiscalCode
-} from "italia-ts-commons/lib/strings";
+} from "@pagopa/ts-commons/lib/strings";
 
 import { Container } from "@azure/cosmos";
+import {
+  readonlyNonEmptySetType,
+  readonlySetType,
+  withDefault
+} from "@pagopa/ts-commons/lib/types";
 import { TaskEither } from "fp-ts/lib/TaskEither";
-import { readonlySetType, withDefault } from "italia-ts-commons/lib/types";
+import { CIDR } from "../../generated/definitions/CIDR";
+import {
+  CosmosdbModelVersioned,
+  RetrievedVersionedModel
+} from "../utils/cosmosdb_model_versioned";
 import { MaxAllowedPaymentAmount } from "../../generated/definitions/MaxAllowedPaymentAmount";
 import { ServiceScope } from "../../generated/definitions/ServiceScope";
 import { CosmosErrors } from "../utils/cosmosdb_model";
@@ -36,25 +38,31 @@ const ServiceMetadataR = t.interface({
 
 // optional attributes
 const ServiceMetadataO = t.partial({
-  description: NonEmptyString,
-
-  webUrl: NonEmptyString,
-
-  appIos: NonEmptyString,
+  address: NonEmptyString,
 
   appAndroid: NonEmptyString,
 
-  tosUrl: NonEmptyString,
+  appIos: NonEmptyString,
 
-  privacyUrl: NonEmptyString,
+  cta: NonEmptyString,
 
-  address: NonEmptyString,
-
-  phone: NonEmptyString,
+  description: NonEmptyString,
 
   email: NonEmptyString,
 
-  pec: NonEmptyString
+  pec: NonEmptyString,
+
+  phone: NonEmptyString,
+
+  privacyUrl: NonEmptyString,
+
+  supportUrl: NonEmptyString,
+
+  tokenName: NonEmptyString,
+
+  tosUrl: NonEmptyString,
+
+  webUrl: NonEmptyString
 });
 
 export const ServiceMetadata = t.intersection(
@@ -109,6 +117,79 @@ export const RetrievedService = wrapWithKind(
 
 export type RetrievedService = t.TypeOf<typeof RetrievedService>;
 
+export const RequiredMetadata = t.intersection([
+  ServiceMetadata,
+  t.interface({
+    description: NonEmptyString,
+    privacyUrl: NonEmptyString
+  }),
+  t.union([
+    t.intersection([
+      t.interface({
+        email: NonEmptyString
+      }),
+      t.partial({
+        pec: NonEmptyString,
+
+        phone: NonEmptyString,
+
+        supportUrl: NonEmptyString
+      })
+    ]),
+    t.intersection([
+      t.interface({
+        pec: NonEmptyString
+      }),
+      t.partial({
+        email: NonEmptyString,
+
+        phone: NonEmptyString,
+
+        supportUrl: NonEmptyString
+      })
+    ]),
+    t.intersection([
+      t.interface({
+        phone: NonEmptyString
+      }),
+      t.partial({
+        email: NonEmptyString,
+
+        pec: NonEmptyString,
+
+        supportUrl: NonEmptyString
+      })
+    ]),
+    t.intersection([
+      t.interface({
+        supportUrl: NonEmptyString
+      }),
+      t.partial({
+        email: NonEmptyString,
+
+        pec: NonEmptyString,
+
+        phone: NonEmptyString
+      })
+    ])
+  ])
+]);
+
+/**
+ * Interface for a Service that has all the required information
+ * for running in production.
+ */
+export const ValidService = t.intersection([
+  Service,
+  t.interface({
+    // At least one authorizedCIDR must be present
+    authorizedCIDRs: readonlyNonEmptySetType(CIDR, "CIDRs"),
+    // Required metadata for production
+    serviceMetadata: RequiredMetadata
+  })
+]);
+export type ValidService = t.TypeOf<typeof ValidService>;
+
 /**
  * Converts an Array or a Set of strings to a ReadonlySet of fiscalCodes.
  *
@@ -123,11 +204,10 @@ export type RetrievedService = t.TypeOf<typeof RetrievedService>;
  *
  * @deprecated Use the Service validation to do the conversion.
  */
-export function toAuthorizedRecipients(
+export const toAuthorizedRecipients = (
   authorizedRecipients: ReadonlyArray<string> | ReadonlySet<string> | undefined
-): ReadonlySet<FiscalCode> {
-  return new Set(Array.from(authorizedRecipients || []).filter(FiscalCode.is));
-}
+): ReadonlySet<FiscalCode> =>
+  new Set(Array.from(authorizedRecipients || []).filter(FiscalCode.is));
 
 /**
  * @see toAuthorizedRecipients
@@ -135,11 +215,10 @@ export function toAuthorizedRecipients(
  *
  * @deprecated Use the Service validation to do the conversion.
  */
-export function toAuthorizedCIDRs(
+export const toAuthorizedCIDRs = (
   authorizedCIDRs: ReadonlyArray<string> | ReadonlySet<string> | undefined
-): ReadonlySet<CIDR> {
-  return new Set(Array.from(authorizedCIDRs || []).filter(CIDR.is));
-}
+): ReadonlySet<CIDR> =>
+  new Set(Array.from(authorizedCIDRs || []).filter(CIDR.is));
 
 /**
  * A model for handling Services

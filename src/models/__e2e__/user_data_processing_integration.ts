@@ -1,9 +1,9 @@
-// tslint:disable: no-console no-identical-functions
-import { FiscalCode, NonEmptyString } from "italia-ts-commons/lib/strings";
+/* eslint-disable no-console */
+import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { isLeft, right } from "fp-ts/lib/Either";
 import { fromEither, fromLeft, taskEither } from "fp-ts/lib/TaskEither";
-import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
 import { UserDataProcessingChoiceEnum } from "../../../generated/definitions/UserDataProcessingChoice";
 import { UserDataProcessingStatusEnum } from "../../../generated/definitions/UserDataProcessingStatus";
 import {
@@ -70,8 +70,10 @@ const createTest = createDatabase(cosmosDatabaseName)
     })
   );
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const retrieveTest = (modelId: UserDataProcessingId, partition: FiscalCode) =>
   createDatabase(cosmosDatabaseName)
+    // eslint-disable-next-line sonarjs/no-identical-functions
     .chain(db =>
       createContainer(
         db,
@@ -87,6 +89,7 @@ const retrieveTest = (modelId: UserDataProcessingId, partition: FiscalCode) =>
     );
 
 const upsertTest = createDatabase(cosmosDatabaseName)
+  // eslint-disable-next-line sonarjs/no-identical-functions
   .chain(db =>
     createContainer(
       db,
@@ -102,6 +105,7 @@ const upsertTest = createDatabase(cosmosDatabaseName)
     })
   );
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const test = () =>
   createTest
     .foldTaskEither(

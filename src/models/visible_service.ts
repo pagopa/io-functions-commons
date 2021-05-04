@@ -4,8 +4,8 @@
  */
 import * as t from "io-ts";
 
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { collect, StrMap } from "fp-ts/lib/StrMap";
-import { NonNegativeInteger } from "italia-ts-commons/lib/numbers";
 import {
   NotificationChannel,
   NotificationChannelEnum
@@ -14,6 +14,7 @@ import { ServicePublic } from "../../generated/definitions/ServicePublic";
 import { ServiceScopeEnum } from "../../generated/definitions/ServiceScope";
 import { ServiceTuple } from "../../generated/definitions/ServiceTuple";
 import { BaseModel } from "../utils/cosmosdb_model";
+import { toApiServiceMetadata } from "../utils/service_metadata";
 import { Service, ServiceMetadata } from "./service";
 
 // This is not a CosmosDB model, but entities are stored into blob storage
@@ -59,54 +60,43 @@ export const VisibleService = t.intersection(
 
 export type VisibleService = t.TypeOf<typeof VisibleService>;
 
-export function serviceAvailableNotificationChannels(
+export const serviceAvailableNotificationChannels = (
   visibleService: VisibleService
-): ReadonlyArray<NotificationChannel> {
+): ReadonlyArray<NotificationChannel> => {
   if (visibleService.requireSecureChannels) {
     return [NotificationChannelEnum.WEBHOOK];
   }
   return [NotificationChannelEnum.EMAIL, NotificationChannelEnum.WEBHOOK];
-}
+};
 
-export function toServicePublic(visibleService: VisibleService): ServicePublic {
-  return {
-    available_notification_channels: serviceAvailableNotificationChannels(
-      visibleService
-    ),
-    department_name: visibleService.departmentName,
-    organization_fiscal_code: visibleService.organizationFiscalCode,
-    organization_name: visibleService.organizationName,
-    service_id: visibleService.serviceId,
-    service_metadata: visibleService.serviceMetadata
-      ? {
-          address: visibleService.serviceMetadata.address,
-          app_android: visibleService.serviceMetadata.appAndroid,
-          app_ios: visibleService.serviceMetadata.appIos,
-          description: visibleService.serviceMetadata.description,
-          email: visibleService.serviceMetadata.email,
-          pec: visibleService.serviceMetadata.pec,
-          phone: visibleService.serviceMetadata.phone,
-          privacy_url: visibleService.serviceMetadata.privacyUrl,
-          scope: visibleService.serviceMetadata.scope,
-          tos_url: visibleService.serviceMetadata.tosUrl,
-          web_url: visibleService.serviceMetadata.webUrl
-        }
-      : undefined,
-    service_name: visibleService.serviceName,
-    version: visibleService.version
-  };
-}
+/* eslint-disable @typescript-eslint/naming-convention */
+export const toServicePublic = (
+  visibleService: VisibleService
+): ServicePublic => ({
+  available_notification_channels: serviceAvailableNotificationChannels(
+    visibleService
+  ),
+  department_name: visibleService.departmentName,
+  organization_fiscal_code: visibleService.organizationFiscalCode,
+  organization_name: visibleService.organizationName,
+  service_id: visibleService.serviceId,
+  service_metadata: visibleService.serviceMetadata
+    ? toApiServiceMetadata(visibleService.serviceMetadata)
+    : undefined,
+  service_name: visibleService.serviceName,
+  version: visibleService.version
+});
+/* eslint-enable @typescript-eslint/naming-convention */
 
-export function toServicesPublic(
+export const toServicesPublic = (
   visibleServices: StrMap<VisibleService>
-): ReadonlyArray<ServicePublic> {
-  return collect(visibleServices, (_, v) => toServicePublic(v));
-}
+): ReadonlyArray<ServicePublic> =>
+  collect(visibleServices, (_, v) => toServicePublic(v));
 
-export function toServicesTuple(
+export const toServicesTuple = (
   visibleServices: StrMap<VisibleService>
-): ReadonlyArray<ServiceTuple> {
-  return collect(visibleServices, (_, v) => ({
+): ReadonlyArray<ServiceTuple> =>
+  collect(visibleServices, (_, v) => ({
     scope:
       v.serviceMetadata && v.serviceMetadata.scope === ServiceScopeEnum.LOCAL
         ? ServiceScopeEnum.LOCAL
@@ -114,4 +104,3 @@ export function toServicesTuple(
     service_id: v.serviceId,
     version: v.version
   }));
-}
