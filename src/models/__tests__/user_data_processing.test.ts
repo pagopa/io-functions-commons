@@ -2,11 +2,12 @@
 /* eslint-disable sonarjs/no-identical-functions */
 
 import { isLeft, isRight } from "fp-ts/lib/Either";
+import { toString } from "fp-ts/lib/function";
 
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 
-import { Container, FeedResponse, ResourceResponse } from "@azure/cosmos";
+import { Container, FeedResponse, ResourceResponse, User } from "@azure/cosmos";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { UserDataProcessingChoiceEnum } from "../../../generated/definitions/UserDataProcessingChoice";
 import { UserDataProcessingStatusEnum } from "../../../generated/definitions/UserDataProcessingStatus";
@@ -18,6 +19,7 @@ import {
   UserDataProcessingId,
   UserDataProcessingModel
 } from "../user_data_processing";
+import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 
 const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
 const aUserDataProcessingChoice = UserDataProcessingChoiceEnum.DOWNLOAD;
@@ -99,14 +101,25 @@ describe("createOrUpdateByNewOne", () => {
       .createOrUpdateByNewOne(aUserDataProcessing)
       .run();
 
-    expect(containerMock.items.create).toHaveBeenCalledTimes(1);
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.updatedAt).toEqual(aNewUserDataProcessing.createdAt);
-      expect(result.value.userDataProcessingId).toEqual(
-        `${aNewUserDataProcessing.userDataProcessingId}`
-      );
-    }
+    result.fold(
+      err => {
+        // @ts-ignore
+        console.log(err.error);
+        fail(
+          `Failed createOrUpdateByNewOne, kind: ${err.kind}, reason: ${
+            err.kind === "COSMOS_DECODING_ERROR"
+              ? readableReport(err.error)
+              : "unknown"
+          }`
+        );
+      },
+      value => {
+        expect(value.updatedAt).toEqual(aNewUserDataProcessing.createdAt);
+        expect(value.userDataProcessingId).toEqual(
+          `${aNewUserDataProcessing.userDataProcessingId}`
+        );
+      }
+    );
   });
 
   it("should return a CosmosErrors in case of errors", async () => {
@@ -141,9 +154,14 @@ describe("createOrUpdateByNewOne", () => {
 describe("UserDataProcessingId", () => {
   it("should decode a valid id", () => {
     const id = `${aFiscalCode}-${UserDataProcessingChoiceEnum.DELETE}`;
-    const result = UserDataProcessingId.decode(id);
+    const decoded = UserDataProcessingId.decode(id)
+      .mapLeft(readableReport)
+      .getOrElseL(err =>
+        fail(`Cannot decode UserDataProcessingId, id: ${id}, err: ${err}`)
+      );
 
-    expect(result.isRight()).toBeTruthy();
+    expect(id).toBe(decoded);
+    expect(UserDataProcessingId.is(id)).toBe(true);
   });
 
   // eslint-disable sonar/no-nested-template-literals
@@ -179,5 +197,67 @@ describe("makeUserDataProcessingId", () => {
       );
 
     expect(lazy).toThrow();
+  });
+});
+
+describe("userDataProcessing", () => {
+  it.each`
+    value
+    ${{
+  ...aUserDataProcessing,
+  status: UserDataProcessingStatusEnum.CLOSED
+}}
+    ${{
+  ...aUserDataProcessing,
+  status: UserDataProcessingStatusEnum.FAILED
+}}
+    ${{
+  ...aUserDataProcessing,
+  status: UserDataProcessingStatusEnum.FAILED,
+  reason: "a"
+}}
+  `("should decode valid UserDataProcessing records", ({ value }) => {
+    let result = UserDataProcessing.decode(value);
+
+    expect(result.isRight()).toBeTruthy();
+  });
+
+  const aWrongWithStringReason = {
+    ...aUserDataProcessing,
+    status: UserDataProcessingStatusEnum.CLOSED,
+    reason: "any reason"
+  };
+
+  const aWrongWithNoReason = {
+    ...aUserDataProcessing,
+    status: UserDataProcessingStatusEnum.CLOSED
+  };
+
+  const aWrongWithUndefinedReason = {
+    ...aUserDataProcessing,
+    status: UserDataProcessingStatusEnum.CLOSED,
+    reason: undefined
+  };
+
+  const { status: _, ...aWrongWithNoStatus } = aUserDataProcessing;
+
+  it.each`
+    title                                           | value
+    ${"has string reason and status is not FAILED"} | ${aWrongWithStringReason}
+    ${"has string reason and status is not FAILED"} | ${aWrongWithNoStatus}
+  `("should not decode when $title", ({ value }) => {
+    const result = UserDataProcessing.decode(value);
+
+    expect(result.isLeft()).toBe(true);
+  });
+
+  it.each`
+    title                                              | value
+    ${"has no reason and status is not FAILED"}        | ${aWrongWithNoReason}
+    ${"has reason undefined and status is not FAILED"} | ${aWrongWithUndefinedReason}
+  `("should  decode when $title", ({ value }) => {
+    const result = UserDataProcessing.decode(value);
+
+    expect(result.isRight()).toBe(true);
   });
 });
