@@ -63,7 +63,7 @@
     "helmet-csp": "^2.5.1",
     "helmet": "^4.5.0",
     "io-functions-express": "^0.1.1",
-    "io-ts": "1.8.5",
+    "io-ts": "1.10.4",
     "node-fetch": "^2.6.1",
     "nodemailer-sendgrid": "^1.0.3",
     "nodemailer": "^4.6.7",
