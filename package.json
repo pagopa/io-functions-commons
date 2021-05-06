@@ -7,7 +7,7 @@
   "license": "MIT",
   "files": [
     "dist/",
-    "openapi/*.(yaml|yml)"
+    "openapi/**/*.y*ml"
   ],
   "scripts": {
     "prebuild": "rimraf dist",
