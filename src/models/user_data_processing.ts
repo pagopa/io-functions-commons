@@ -1,11 +1,11 @@
 import * as t from "io-ts";
 
-import { withDefault } from "@pagopa/ts-commons/lib/types";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { tag } from "@pagopa/ts-commons/lib/types";
 
 import { Container } from "@azure/cosmos";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { TaskEither } from "fp-ts/lib/TaskEither";
-import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import {
   CosmosdbModelVersioned,
   RetrievedVersionedModel
@@ -24,33 +24,32 @@ export const USER_DATA_PROCESSING_COLLECTION_NAME = "user-data-processing";
 export const USER_DATA_PROCESSING_MODEL_PK_FIELD = "fiscalCode" as const;
 export const USER_DATA_PROCESSING_MODEL_ID_FIELD = "userDataProcessingId" as const;
 
-/**
- * Ensure UserDataProcessing IDs are in correct shape
- * The unique identifier of a user data processing request identified by concatenation offiscalCode - choice
- */
-export type UserDataProcessingId = t.TypeOf<typeof UserDataProcessingId>;
-export const UserDataProcessingId = t.brand(
-  t.string,
-  (
-    s: string
-  ): s is t.Branded<string, { readonly IUserDataProcessingIdTag: symbol }> => {
+interface IUserDataProcessingIdTag {
+  readonly kind: "IUserDataProcessingIdTag";
+}
+
+export const UserDataProcessingId = tag<IUserDataProcessingIdTag>()(
+  t.refinement(t.string, s => {
     // enforce pattern {fiscalCode-Choice}
     const [fiscalCode, choice] = s.split("-");
     return (
       FiscalCode.decode(fiscalCode).isRight() &&
       UserDataProcessingChoice.decode(choice).isRight()
     );
-  },
-  "IUserDataProcessingIdTag"
+  })
 );
+export type UserDataProcessingId = t.TypeOf<typeof UserDataProcessingId>;
 
 /**
  * Base interface for User Data Processing objects
- * For convenience, IT DOES NOT HAVE ID FIELD (it will be added later).
- * This is because we need a version of UserDataProcessing WITHOUT the ID, and Omit<> won't work as expected
  */
-const CommonUserDataProcessing = t.intersection([
+export const UserDataProcessing = t.intersection([
   t.interface({
+    // the unique identifier of a user data processing request identified by concatenation of
+    // eslint-disable-next-line extra-rules/no-commented-out-code
+    // fiscalCode - choice
+    [USER_DATA_PROCESSING_MODEL_ID_FIELD]: UserDataProcessingId,
+
     // the request choice made by user to download or delete its own data
     choice: UserDataProcessingChoice,
 
@@ -64,48 +63,16 @@ const CommonUserDataProcessing = t.intersection([
     status: UserDataProcessingStatus
   }),
   t.partial({
+    // an optional string field in which store a descriptive error message in case of a FAILED processing
+    //   it should be modelled for FAILED records only using a disjointed union on the status field
+    //   it turns out it would introduce unwanted complexity, so we rather sacrifice type-soundness in favor of usability
+    reason: NonEmptyString,
     // update date of this user data processing request
     updatedAt: Timestamp
   })
 ]);
 
-/**
- * A reason field is needed (and accepted) only on records of status FAILED
- */
-const WithFailureReason = t.union([
-  t.partial({
-    // we might want not to enumerate all status but FAILED,
-    // we'd like to just say "any status but FAILED"
-    // so far, we have no solution but the following
-    reason: t.void,
-    status: t.union([
-      t.literal(UserDataProcessingStatusEnum.ABORTED),
-      t.literal(UserDataProcessingStatusEnum.CLOSED),
-      t.literal(UserDataProcessingStatusEnum.PENDING),
-      t.literal(UserDataProcessingStatusEnum.WIP)
-    ])
-  }),
-  t.interface({
-    reason: withDefault(NonEmptyString, "no reason found" as NonEmptyString),
-    status: t.literal(UserDataProcessingStatusEnum.FAILED)
-  })
-]);
-
-export type UserDataProcessingWithoutId = t.TypeOf<
-  typeof UserDataProcessingWithoutId
->;
-export const UserDataProcessingWithoutId = t.intersection([
-  CommonUserDataProcessing,
-  WithFailureReason
-]);
-
 export type UserDataProcessing = t.TypeOf<typeof UserDataProcessing>;
-export const UserDataProcessing = t.intersection([
-  UserDataProcessingWithoutId,
-  t.interface({
-    [USER_DATA_PROCESSING_MODEL_ID_FIELD]: UserDataProcessingId
-  })
-]);
 
 export const NewUserDataProcessing = wrapWithKind(
   UserDataProcessing,
@@ -162,15 +129,24 @@ export class UserDataProcessingModel extends CosmosdbModelVersioned<
   public createOrUpdateByNewOne(
     // omit userDataProcessingId from new documents as we create it from the
     // provided object
-    userDataProcessing: UserDataProcessingWithoutId
+    {
+      reason,
+      ...userDataProcessing
+    }: Omit<UserDataProcessing, typeof USER_DATA_PROCESSING_MODEL_ID_FIELD>
   ): TaskEither<CosmosErrors, RetrievedUserDataProcessing> {
     const newId = makeUserDataProcessingId(
       userDataProcessing.choice,
       userDataProcessing.fiscalCode
     );
 
+    //
+
     const toUpdate: NewUserDataProcessing = {
       ...userDataProcessing,
+      // In order to keep data clean, we skim reason field if status is different than FAILED
+      ...(userDataProcessing.status === UserDataProcessingStatusEnum.FAILED
+        ? { reason }
+        : {}),
       [USER_DATA_PROCESSING_MODEL_ID_FIELD]: newId,
       kind: "INewUserDataProcessing"
     };
