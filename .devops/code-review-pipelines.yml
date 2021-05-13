@@ -102,7 +102,7 @@ stages:
 
           - bash: |
               docker build -t cosmosdb ./__integrations__/cosmosdb
-              docker run --rm -p 3000:3000 --name cosmosdb cosmosdb
+              docker run -d --rm -p 3000:3000 --name cosmosdb cosmosdb
             displayName: 'Start mock CosmosDB'
 
           - bash: |
