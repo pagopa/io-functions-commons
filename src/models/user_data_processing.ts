@@ -1,7 +1,6 @@
 import * as t from "io-ts";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { tag } from "@pagopa/ts-commons/lib/types";
 
 import { Container } from "@azure/cosmos";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
@@ -24,21 +23,25 @@ export const USER_DATA_PROCESSING_COLLECTION_NAME = "user-data-processing";
 export const USER_DATA_PROCESSING_MODEL_PK_FIELD = "fiscalCode" as const;
 export const USER_DATA_PROCESSING_MODEL_ID_FIELD = "userDataProcessingId" as const;
 
-interface IUserDataProcessingIdTag {
-  readonly kind: "IUserDataProcessingIdTag";
-}
-
-export const UserDataProcessingId = tag<IUserDataProcessingIdTag>()(
-  t.refinement(t.string, s => {
+/**
+ * Ensure UserDataProcessing IDs are in correct shape
+ * The unique identifier of a user data processing request identified by concatenation offiscalCode - choice
+ */
+export type UserDataProcessingId = t.TypeOf<typeof UserDataProcessingId>;
+export const UserDataProcessingId = t.brand(
+  t.string,
+  (
+    s: string
+  ): s is t.Branded<string, { readonly IUserDataProcessingIdTag: symbol }> => {
     // enforce pattern {fiscalCode-Choice}
     const [fiscalCode, choice] = s.split("-");
     return (
       FiscalCode.decode(fiscalCode).isRight() &&
       UserDataProcessingChoice.decode(choice).isRight()
     );
-  })
+  },
+  "IUserDataProcessingIdTag"
 );
-export type UserDataProcessingId = t.TypeOf<typeof UserDataProcessingId>;
 
 /**
  * Base interface for User Data Processing objects
