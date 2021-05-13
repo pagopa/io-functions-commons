@@ -216,6 +216,11 @@ describe("userDataProcessing", () => {
   status: UserDataProcessingStatusEnum.FAILED,
   reason: "a"
 }}
+    ${{
+  ...aUserDataProcessing,
+  status: UserDataProcessingStatusEnum.WIP,
+  reason: "a"
+}}
   `("should decode valid UserDataProcessing records", ({ value }) => {
     let result = UserDataProcessing.decode(value);
 
@@ -240,24 +245,4 @@ describe("userDataProcessing", () => {
   };
 
   const { status: _, ...aWrongWithNoStatus } = aUserDataProcessing;
-
-  it.each`
-    title                                           | value
-    ${"has string reason and status is not FAILED"} | ${aWrongWithStringReason}
-    ${"has string reason and status is not FAILED"} | ${aWrongWithNoStatus}
-  `("should not decode when $title", ({ value }) => {
-    const result = UserDataProcessing.decode(value);
-
-    expect(result.isLeft()).toBe(true);
-  });
-
-  it.each`
-    title                                              | value
-    ${"has no reason and status is not FAILED"}        | ${aWrongWithNoReason}
-    ${"has reason undefined and status is not FAILED"} | ${aWrongWithUndefinedReason}
-  `("should  decode when $title", ({ value }) => {
-    const result = UserDataProcessing.decode(value);
-
-    expect(result.isRight()).toBe(true);
-  });
 });
