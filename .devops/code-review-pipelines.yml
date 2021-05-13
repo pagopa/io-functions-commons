@@ -92,14 +92,23 @@ stages:
         steps:
           - template: azure-templates/setup-project.yml
 
-          - script: |
+          - bash: |
               yarn generate:definitions
             displayName: 'Generate code'
 
-          - script: |
+          - bash: |
               docker run -d -p 1025:1025 -p 8025:8025 --name mailhog mailhog/mailhog
             displayName: 'Start mailhog'
 
-          - script: |
-              MAILHOG_HOSTNAME=localhost yarn test:integration
+          - bash: |
+              docker build -t cosmosdb ./__integrations__/cosmosdb
+              docker run --rm -p 3000:3000 --name cosmosdb cosmosdb
+            displayName: 'Start mock CosmosDB'
+
+          - bash: |
+              MAILHOG_HOSTNAME=localhost \
+              COSMOSDB_URI=https://localhost:3000/ \
+              COSMOSDB_KEY="dummy key" \
+              COSMOSDB_DATABASE_NAME=integration-tests \
+              yarn test:integration
             displayName: 'Integrations tests exec'
