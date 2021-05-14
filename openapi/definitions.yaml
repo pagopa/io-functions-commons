@@ -117,8 +117,8 @@ MessageContentWithMaybePaymentData:
 MessageContent:
   x-one-of: true
   allOf:
-    - $ref: "#/MessageContentWithoutPaymentData"
     - $ref: "#/MessageContentWithPaymentData"
+    - $ref: "#/MessageContentWithoutPaymentData"
 NewMessage:
   type: object
   properties:
