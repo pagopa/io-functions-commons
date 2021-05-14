@@ -218,6 +218,18 @@ export abstract class CosmosdbModelVersioned<
   protected readonly getModelId = (o: T): T[ModelIdKey] => o[this.modelIdKey];
 
   /**
+   * Process a document before being saved.
+   * It's intended to be overridden by class implementations, if needed
+   *
+   * @param o the document to be pre-processed
+   *
+   * @returns a modified clone of the object
+   */
+  protected beforeSave(o: T): T {
+    return { ...o }; // default: no modifications
+  }
+
+  /**
    * Returns the next version for the model which `id` is `modelId`.
    *
    * The next version will be the last one from the database incremented by 1 or
@@ -246,9 +258,10 @@ export abstract class CosmosdbModelVersioned<
     requestOptions?: RequestOptions
   ): TaskEither<CosmosErrors, TR> {
     const modelId = this.getModelId(o);
+    const toSave = this.beforeSave(o);
     return fromEither(
       t.intersection([this.newVersionedItemT, VersionedModel]).decode({
-        ...o,
+        ...toSave,
         id: generateVersionedModelId(modelId, version),
         version
       })
