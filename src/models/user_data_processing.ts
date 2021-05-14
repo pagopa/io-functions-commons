@@ -22,6 +22,7 @@ import { wrapWithKind } from "../utils/types";
 export const USER_DATA_PROCESSING_COLLECTION_NAME = "user-data-processing";
 export const USER_DATA_PROCESSING_MODEL_PK_FIELD = "fiscalCode" as const;
 export const USER_DATA_PROCESSING_MODEL_ID_FIELD = "userDataProcessingId" as const;
+export const USER_DATA_PROCESSING_REASON_FIELD = "reason" as const;
 
 /**
  * Ensure UserDataProcessing IDs are in correct shape
@@ -66,12 +67,12 @@ export const UserDataProcessing = t.intersection([
     status: UserDataProcessingStatus
   }),
   t.partial({
+    // update date of this user data processing request
+    updatedAt: Timestamp,
     // an optional string field in which store a descriptive error message in case of a FAILED processing
     //   it should be modelled for FAILED records only using a disjointed union on the status field
     //   it turns out it would introduce unwanted complexity, so we rather sacrifice type-soundness in favor of usability
-    reason: NonEmptyString,
-    // update date of this user data processing request
-    updatedAt: Timestamp
+    [USER_DATA_PROCESSING_REASON_FIELD]: NonEmptyString
   })
 ]);
 
@@ -132,27 +133,32 @@ export class UserDataProcessingModel extends CosmosdbModelVersioned<
   public createOrUpdateByNewOne(
     // omit userDataProcessingId from new documents as we create it from the
     // provided object
-    {
-      reason,
-      ...userDataProcessing
-    }: Omit<UserDataProcessing, typeof USER_DATA_PROCESSING_MODEL_ID_FIELD>
+    userDataProcessing: Omit<
+      UserDataProcessing,
+      typeof USER_DATA_PROCESSING_MODEL_ID_FIELD
+    >
   ): TaskEither<CosmosErrors, RetrievedUserDataProcessing> {
     const newId = makeUserDataProcessingId(
       userDataProcessing.choice,
       userDataProcessing.fiscalCode
     );
 
-    //
+    // In order to keep data clean, we skim reason field if status is different than FAILED
+    const validUserDataProcessing = {
+      ...(userDataProcessing.status === UserDataProcessingStatusEnum.FAILED
+        ? userDataProcessing
+        : (userDataProcessing as Omit<
+            UserDataProcessing,
+            typeof USER_DATA_PROCESSING_REASON_FIELD
+          >))
+    };
 
     const toUpdate: NewUserDataProcessing = {
-      ...userDataProcessing,
-      // In order to keep data clean, we skim reason field if status is different than FAILED
-      ...(userDataProcessing.status === UserDataProcessingStatusEnum.FAILED
-        ? { reason }
-        : {}),
+      ...validUserDataProcessing,
       [USER_DATA_PROCESSING_MODEL_ID_FIELD]: newId,
       kind: "INewUserDataProcessing"
     };
+
     return this.upsert(toUpdate);
   }
 }
