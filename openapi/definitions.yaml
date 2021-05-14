@@ -93,39 +93,37 @@ MessageContentWithoutPaymentData:
   required:
     - subject
     - markdown
-MessageContentWithPaymentData:
+MessageContentWithMaybePaymentDataWithMaybePayee:
   allOf:
     - $ref: "#/MessageContentWithoutPaymentData"
     - type: object
       properties:
         payment_data:
-          $ref: "#/PaymentDataWithPayee"
-      required:
-        - subject
-        - markdown
-        - payment_data
-MessageContentWithMaybePaymentData:
-  allOf:
-    - $ref: "#/MessageContentWithoutPaymentData"
-    - type: object
-      properties:
-        payment_data:
-          $ref: "#/PaymentData"
+          $ref: "#/PaymentDataWithMaybePayee"
       required:
         - subject
         - markdown
 MessageContent:
-  x-one-of: true
-  allOf:
-    - $ref: "#/MessageContentWithPaymentData"
-    - $ref: "#/MessageContentWithoutPaymentData"
+  type: object
+  properties:
+    subject:
+      $ref: "#/MessageSubject"
+    markdown:
+      $ref: "#/MessageBodyMarkdown"
+    prescription_data:
+      $ref: "#/PrescriptionData"
+    due_date:
+      $ref: "#/Timestamp"
+  required:
+    - subject
+    - markdown
 NewMessage:
   type: object
   properties:
     time_to_live:
       $ref: "#/TimeToLiveSeconds"
     content:
-      $ref: "#/MessageContentWithMaybePaymentData"
+      $ref: "#/MessageContentWithMaybePaymentDataWithMaybePayee"
     default_addresses:
       $ref: "#/NewMessageDefaultAddresses"
     fiscal_code:
@@ -170,7 +168,16 @@ PaymentDataWithoutPayee:
   required:
     - amount
     - notice_number
-PaymentDataWithPayee:
+PaymentDataWithMaybePayee:
+  allOf:
+    - $ref: "#/PaymentDataWithoutPayee"
+    - type: object
+      description: |-
+        Metadata to indicate a specific Payee for the payment
+      properties:
+        payee:
+          $ref: "#/Payee"
+PaymentData:
   allOf:
     - $ref: "#/PaymentDataWithoutPayee"
     - type: object
@@ -181,11 +188,6 @@ PaymentDataWithPayee:
           $ref: "#/Payee"
       required:
         - payee
-PaymentData:
-  x-one-of: true
-  allOf:
-    - $ref: "#/PaymentDataWithoutPayee"
-    - $ref: "#/PaymentDataWithPayee"
 PaymentNoticeNumber:
   description:
     The field ["Numero Avviso"](https://pagopa-specifichepagamenti.readthedocs.io/it/latest/_docs/Capitolo7.html#il-numero-avviso-e-larchivio-dei-pagamenti-in-attesa)

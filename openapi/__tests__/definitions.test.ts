@@ -11,8 +11,11 @@ import { OrganizationFiscalCode } from "../../generated/definitions/Organization
 import { PaymentAmount } from "../../generated/definitions/PaymentAmount";
 import { PaymentNoticeNumber } from "../../generated/definitions/PaymentNoticeNumber";
 import { Payee } from "../../generated/definitions/Payee";
-import { PaymentDataWithPayee } from "../../generated/definitions/PaymentDataWithPayee";
 import { MessageContent } from "../../generated/definitions/MessageContent";
+import { NewMessage } from "../../generated/definitions/NewMessage";
+import { PaymentDataWithoutPayee } from "../../generated/definitions/PaymentDataWithoutPayee";
+import { PaymentDataWithMaybePayee } from "../../generated/definitions/PaymentDataWithMaybePayee";
+import { MessageContentWithMaybePaymentDataWithMaybePayee } from "../../generated/definitions/MessageContentWithMaybePaymentDataWithMaybePayee";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -122,54 +125,50 @@ describe("ServicePayload definition", () => {
   });
 });
 
+const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
+const anOrganizationFiscalCode = "12345678901" as OrganizationFiscalCode;
+const aDate = new Date();
+const aMessageWithoutContent = {
+  id: "A_MESSAGE_ID",
+  fiscal_code: aFiscalCode,
+  created_at: aDate,
+  sender_service_id: "test"
+};
+
+const aCountentWithoutPaymentData = {
+  subject:
+    "A Subject of more than 80 characters. Try to reach this value with stupid words, and I will leave here because I like it",
+  markdown:
+    "A markdown of more than 80 characters. Try to reach this value with stupid words, and I will leave here because I like it"
+};
+
+const aPaymentDataWithoutPayee: PaymentDataWithoutPayee = {
+  amount: 1000 as PaymentAmount,
+  notice_number: "177777777777777777" as PaymentNoticeNumber
+};
+
+const aPayee: Payee = { fiscal_code: anOrganizationFiscalCode };
+
 describe("NewMessage definition", () => {
-  const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
-  const anOrganizationFiscalCode = "FRLFRC74E04B157I" as OrganizationFiscalCode;
-  const aDate = new Date();
-  const aMessageWithoutContent = {
-    id: "A_MESSAGE_ID",
-    fiscal_code: aFiscalCode,
-    created_at: aDate,
-    sender_service_id: "test"
-  };
-
-  const aCountentWithoutPaymentData = {
-    subject:
-      "A Subject of more than 80 characters. Try to reach this value with stupid words, but it's too hard!!! Very hard!!!!!!",
-    markdown:
-      "A markdown of more than 80 characters. Try to reach this value with stupid words, but it's too hard!!! Very hard!!!!!!!"
-  };
-
-  const aPaymentDataWithoutPayee: PaymentData = {
-    amount: 10.0 as PaymentAmount,
-    notice_number: "1001242" as PaymentNoticeNumber
-  };
-
-  const aPayee: Payee = { fiscal_code: anOrganizationFiscalCode };
-
-  it("should decode message without content", () => {
-    const messageWithoutContent = CreatedMessageWithoutContent.decode(
-      aMessageWithoutContent
-    );
-
-    expect(messageWithoutContent.isRight()).toBe(true);
-  });
-
-  it("should decode message with content but without payment data", () => {
+  it("should decode NewMessage with content but without payment data", () => {
     const aMessageWithContent = {
       ...aMessageWithoutContent,
       content: aCountentWithoutPaymentData
     };
 
-    const messageWithContent = CreatedMessageWithContent.decode(
-      aMessageWithContent
-    );
+    expect(
+      MessageContentWithMaybePaymentDataWithMaybePayee.decode(
+        aCountentWithoutPaymentData
+      ).isRight()
+    ).toBe(true);
+
+    const messageWithContent = NewMessage.decode(aMessageWithContent);
 
     expect(messageWithContent.isRight()).toBe(true);
   });
 
-  it("should not decode message with content and payment data but without payee", () => {
-    const aMessageWithContentWithPaymentDataWithoutPayee  = {
+  it("should decode NewMessage with content and payment data but without payee", () => {
+    const aMessageWithContentWithPaymentDataWithoutPayee = {
       ...aMessageWithoutContent,
       content: {
         ...aCountentWithoutPaymentData,
@@ -177,15 +176,77 @@ describe("NewMessage definition", () => {
       }
     };
 
-    const messageWithContent = MessageContent.decode(
-      {
-        ...aCountentWithoutPaymentData,
-        payment_data: aPaymentDataWithoutPayee
-      }
+    expect(
+      PaymentDataWithMaybePayee.decode(aPaymentDataWithoutPayee).isRight()
+    ).toBe(true);
+
+    const messageWithContent = NewMessage.decode(
+      aMessageWithContentWithPaymentDataWithoutPayee
     );
 
-    
-    
-    expect(messageWithContent.isLeft()).toBe(true);
+    expect(messageWithContent.isRight()).toBe(true);
   });
+
+  it("should decode NewMessage with content and payment data with payee", () => {
+    const aMessageWithContentWithPaymentDataWithPayee = {
+      ...aMessageWithoutContent,
+      content: {
+        ...aCountentWithoutPaymentData,
+        payment_data: { ...aPaymentDataWithoutPayee, payee: aPayee }
+      }
+    };
+
+    expect(
+      PaymentData.decode(
+        aMessageWithContentWithPaymentDataWithPayee.content.payment_data
+      ).isRight()
+    ).toBe(true);
+
+    const messageWithContent = NewMessage.decode(
+      aMessageWithContentWithPaymentDataWithPayee
+    );
+
+    expect(messageWithContent.isRight()).toBe(true);
+  });
+});
+
+describe("CreatedMessageWithContent definition", () => {
+  it("should decode CreatedMessageWithContent with content and payment data with payee", () => {
+    const aMessageWithContentWithPaymentDataWithoutPayee = {
+      ...aMessageWithoutContent,
+      content: {
+        ...aCountentWithoutPaymentData,
+        payment_data: { ...aPaymentDataWithoutPayee, payee: aPayee }
+      }
+    };
+
+    expect(
+      Payee.decode(
+        aMessageWithContentWithPaymentDataWithoutPayee.content.payment_data
+          .payee
+      ).isRight()
+    ).toBe(true);
+
+    const messageWithContent = CreatedMessageWithContent.decode(
+      aMessageWithContentWithPaymentDataWithoutPayee
+    );
+
+    expect(messageWithContent.isRight()).toBe(true);
+  });
+
+  // it("should NOT decode CreatedMessageWithContent with content and payment data without payee", () => {
+  //   const aMessageWithContentWithPaymentDataWithoutPayee = {
+  //     ...aMessageWithoutContent,
+  //     content: {
+  //       ...aCountentWithoutPaymentData,
+  //       payment_data: { ...aPaymentDataWithoutPayee }
+  //     }
+  //   };
+
+  //   const messageWithContent = CreatedMessageWithContent.decode(
+  //     aMessageWithContentWithPaymentDataWithoutPayee
+  //   );
+
+  //   expect(messageWithContent.isLeft()).toBe(true);
+  // });
 });
