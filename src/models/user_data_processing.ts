@@ -67,12 +67,12 @@ export const UserDataProcessing = t.intersection([
     status: UserDataProcessingStatus
   }),
   t.partial({
-    // update date of this user data processing request
-    updatedAt: Timestamp,
     // an optional string field in which store a descriptive error message in case of a FAILED processing
     //   it should be modelled for FAILED records only using a disjointed union on the status field
     //   it turns out it would introduce unwanted complexity, so we rather sacrifice type-soundness in favor of usability
-    [USER_DATA_PROCESSING_REASON_FIELD]: NonEmptyString
+    [USER_DATA_PROCESSING_REASON_FIELD]: NonEmptyString,
+    // update date of this user data processing request
+    updatedAt: Timestamp
   })
 ]);
 
