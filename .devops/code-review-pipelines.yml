@@ -102,7 +102,7 @@ stages:
 
           - bash: |
               npm install -g @zeit/cosmosdb-server
-              cosmosdb-server
+              nohup cosmosdb-server &
             displayName: 'Start mock CosmosDB'
 
           - bash: |
