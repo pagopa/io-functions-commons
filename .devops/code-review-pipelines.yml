@@ -89,7 +89,8 @@ stages:
     dependsOn: []
     jobs:
       - job: integrations_tests
-        vmImage: 'windows-2019'
+        pool:
+          vmImage: 'windows-2019'
         steps:
           - template: azure-templates/setup-project.yml
 
