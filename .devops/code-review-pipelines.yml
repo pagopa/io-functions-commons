@@ -89,6 +89,7 @@ stages:
     dependsOn: []
     jobs:
       - job: integrations_tests
+        vmImage: 'windows-2019'
         steps:
           - template: azure-templates/setup-project.yml
 
@@ -101,13 +102,12 @@ stages:
             displayName: 'Start mailhog'
 
           - bash: |
-              docker build -t cosmosdb ./__integrations__/cosmosdb
-              docker run -d --rm -p 3000:3000 --name cosmosdb cosmosdb
-            displayName: 'Start mock CosmosDB'
+              docker run -d --rm -p 8081:8081 --name cosmosdb microsoft/azure-cosmosdb-emulator
+            displayName: 'Start CosmosDB'
 
           - bash: |
               MAILHOG_HOSTNAME=localhost \
-              COSMOSDB_URI=https://localhost:3000/ \
+              COSMOSDB_URI=https://localhost:8081/ \
               COSMOSDB_KEY="dummy key" \
               COSMOSDB_DATABASE_NAME=integration-tests \
               yarn test:integration
