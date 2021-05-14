@@ -132,27 +132,32 @@ export class UserDataProcessingModel extends CosmosdbModelVersioned<
   public createOrUpdateByNewOne(
     // omit userDataProcessingId from new documents as we create it from the
     // provided object
-    {
-      reason,
-      ...userDataProcessing
-    }: Omit<UserDataProcessing, typeof USER_DATA_PROCESSING_MODEL_ID_FIELD>
+    userDataProcessing: Omit<
+      UserDataProcessing,
+      typeof USER_DATA_PROCESSING_MODEL_ID_FIELD
+    >
   ): TaskEither<CosmosErrors, RetrievedUserDataProcessing> {
     const newId = makeUserDataProcessingId(
       userDataProcessing.choice,
       userDataProcessing.fiscalCode
     );
 
-    //
-
     const toUpdate: NewUserDataProcessing = {
       ...userDataProcessing,
       // In order to keep data clean, we skim reason field if status is different than FAILED
-      ...(userDataProcessing.status === UserDataProcessingStatusEnum.FAILED
-        ? { reason }
-        : {}),
       [USER_DATA_PROCESSING_MODEL_ID_FIELD]: newId,
       kind: "INewUserDataProcessing"
     };
     return this.upsert(toUpdate);
+  }
+
+  protected beforeSave(o: UserDataProcessing): UserDataProcessing {
+    const { reason, status, ...rest } = o;
+    return {
+      ...rest,
+      status,
+      // In order to keep data clean, we skim reason field if status is different than FAILED
+      ...(status === UserDataProcessingStatusEnum.FAILED ? { reason } : {})
+    };
   }
 }
