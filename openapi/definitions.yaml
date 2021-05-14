@@ -100,9 +100,6 @@ MessageContentWithMaybePaymentDataWithMaybePayee:
       properties:
         payment_data:
           $ref: "#/PaymentDataWithMaybePayee"
-      required:
-        - subject
-        - markdown
 MessageContent:
   type: object
   properties:
