@@ -90,7 +90,7 @@ stages:
     jobs:
       - job: integrations_tests
         steps:
-          - template: azure-templates/setup-project.yml'
+          - template: azure-templates/setup-project.yml
 
           - bash: |
               docker run -d -p 1025:1025 -p 8025:8025 --name mailhog mailhog/mailhog
