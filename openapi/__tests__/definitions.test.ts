@@ -234,19 +234,19 @@ describe("CreatedMessageWithContent definition", () => {
     expect(messageWithContent.isRight()).toBe(true);
   });
 
-  // it("should NOT decode CreatedMessageWithContent with content and payment data without payee", () => {
-  //   const aMessageWithContentWithPaymentDataWithoutPayee = {
-  //     ...aMessageWithoutContent,
-  //     content: {
-  //       ...aCountentWithoutPaymentData,
-  //       payment_data: { ...aPaymentDataWithoutPayee }
-  //     }
-  //   };
+  it("should NOT decode CreatedMessageWithContent with content and payment data without payee", () => {
+    const aMessageWithContentWithPaymentDataWithoutPayee = {
+      ...aMessageWithoutContent,
+      content: {
+        ...aCountentWithoutPaymentData,
+        payment_data: { ...aPaymentDataWithoutPayee }
+      }
+    };
 
-  //   const messageWithContent = CreatedMessageWithContent.decode(
-  //     aMessageWithContentWithPaymentDataWithoutPayee
-  //   );
+    const messageWithContent = CreatedMessageWithContent.decode(
+      aMessageWithContentWithPaymentDataWithoutPayee
+    );
 
-  //   expect(messageWithContent.isLeft()).toBe(true);
-  // });
+    expect(messageWithContent.isLeft()).toBe(true);
+  });
 });

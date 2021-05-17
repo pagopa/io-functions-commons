@@ -107,6 +107,8 @@ MessageContent:
       $ref: "#/MessageSubject"
     markdown:
       $ref: "#/MessageBodyMarkdown"
+    payment_data:
+      $ref: "#/PaymentData"
     prescription_data:
       $ref: "#/PrescriptionData"
     due_date:
