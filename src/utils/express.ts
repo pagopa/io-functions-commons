@@ -2,6 +2,8 @@ import * as express from "express";
 import * as helmet from "helmet";
 import * as csp from "helmet-csp";
 import * as referrerPolicy from "referrer-policy";
+import { toError, fromNullable, tryCatch2v } from "fp-ts/lib/Either";
+import * as t from "io-ts";
 
 /**
  * Set up secure HTTP headers applying middlewares
@@ -39,4 +41,54 @@ export const secureExpressApp = (app: express.Express): void => {
       }
     })
   );
+};
+
+/**
+ * Type used to map version from package.json
+ */
+type PackageJson = t.TypeOf<typeof PackageJson>;
+const PackageJson = t.interface({
+  version: t.string
+});
+
+export const cwd = (): string => process.cwd();
+
+/**
+ * Create an express middleware to set the 'X-API-Version' response header field to the current app version in execution.
+ * The function will extract from (win first):
+ * 1. the package.json file in the process working directory;
+ * 2. the npm environment.
+ *
+ * @returns a factory method for the Middleware
+ */
+export const createAppVersionHeaderMiddleware: () => express.RequestHandler = () => (
+  _,
+  res,
+  next
+): void => {
+  tryCatch2v<Error, PackageJson>(
+    () => require(`${cwd()}/package.json`),
+    toError
+  )
+    .map(p => p.version)
+    .orElse(__ =>
+      fromNullable(new Error("Missing NPM Package Version"))(
+        process.env.npm_package_version
+      )
+    )
+    .map(v => res.setHeader("X-API-Version", v));
+
+  next();
+};
+
+/**
+ * Configure all the default express middleware handlers on the input express app.
+ * Register here all the non business-logic-related common behaviours.
+ * Registerd middlewares:
+ *  - @see createAppVersionHeaderMiddleware
+ *
+ * @param app an express application
+ */
+export const configureDefaultMiddlewares = (app: express.Express): void => {
+  app.use(createAppVersionHeaderMiddleware());
 };
