@@ -140,4 +140,104 @@ describe("Models |> UserDataProcessing", () => {
 
     context.dispose();
   });
+
+  it("should save reason only for FAILED docs", async () => {
+    const context = await createContext(USER_DATA_PROCESSING_MODEL_PK_FIELD);
+    await context.init();
+    const model = new UserDataProcessingModel(context.container);
+
+    const newDoc = {
+      kind: "INewUserDataProcessing" as const,
+      ...aUserDataProcessing,
+      status: UserDataProcessingStatusEnum.WIP,
+      reason: "should not be saved" as NonEmptyString
+    };
+
+    // create a new document
+    const created = await model
+      .create(newDoc)
+      .fold(
+        _ => fail(`Failed to create doc, error: ${toString(_)}`),
+        result => {
+          expect(result).toEqual(
+            expect.objectContaining({
+              ...aUserDataProcessing,
+              status: UserDataProcessingStatusEnum.WIP,
+              version: 0
+            })
+          );
+          expect(result.reason).not.toBeDefined();
+          return result;
+        }
+      )
+      .run();
+
+    // update document
+    const updates = {
+      status: UserDataProcessingStatusEnum.ABORTED,
+      reason: "should not be saved" as NonEmptyString
+    };
+    await model
+      .update({ ...created, ...updates })
+      .fold(
+        _ => fail(`Failed to update doc, error: ${toString(_)}`),
+        result => {
+          expect(result).toEqual(
+            expect.objectContaining({
+              ...aUserDataProcessing,
+              status: UserDataProcessingStatusEnum.ABORTED
+            })
+          );
+          expect(result.reason).not.toBeDefined();
+        }
+      )
+      .run();
+
+    // update document with FAILED
+    const updatesToFailed = {
+      status: UserDataProcessingStatusEnum.FAILED,
+      reason: "should be saved" as NonEmptyString
+    };
+    await model
+      .update({
+        ...created,
+        ...updatesToFailed,
+        version: (created.version + 1) as number & INonNegativeIntegerTag
+      })
+      .fold(
+        _ => fail(`Failed to update doc, error: ${toString(_)}`),
+        result => {
+          expect(result).toEqual(
+            expect.objectContaining({
+              ...aUserDataProcessing,
+              status: UserDataProcessingStatusEnum.FAILED,
+              reason: "should be saved"
+            })
+          );
+        }
+      )
+      .run();
+
+    // upsert should not have reason
+    const toUpsert = {
+      kind: "INewUserDataProcessing" as const,
+      ...aUserDataProcessing
+    };
+    await model
+      .upsert(toUpsert)
+      .fold(
+        _ => fail(`Failed to upsert doc, error: ${toString(_)}`),
+        result => {
+          expect(result).toEqual(
+            expect.objectContaining({
+              ...aUserDataProcessing
+            })
+          );
+          expect(result.reason).not.toBeDefined();
+        }
+      )
+      .run();
+
+    context.dispose();
+  });
 });
