@@ -93,27 +93,27 @@ MessageContentBase:
   required:
     - subject
     - markdown
-MessageContentWithMaybePaymentDataWithMaybePayee:
+MessageContent:
   allOf:
     - $ref: "#/MessageContentBase"
     - type: object
       properties:
         payment_data:
-          $ref: "#/PaymentDataWithMaybePayee"
-MessageContent:
+          $ref: "#/PaymentData"
+MessageContentWithExplicitPayee:
     allOf:
     - $ref: "#/MessageContentBase"
     - type: object
       properties:
         payment_data:
-          $ref: "#/PaymentData"
+          $ref: "#/PaymentDataWithExplicitPayee"
 NewMessage:
   type: object
   properties:
     time_to_live:
       $ref: "#/TimeToLiveSeconds"
     content:
-      $ref: "#/MessageContentWithMaybePaymentDataWithMaybePayee"
+      $ref: "#/MessageContent"
     default_addresses:
       $ref: "#/NewMessageDefaultAddresses"
     fiscal_code:
@@ -158,7 +158,7 @@ PaymentDataBase:
   required:
     - amount
     - notice_number
-PaymentDataWithMaybePayee:
+PaymentData:
   allOf:
     - $ref: "#/PaymentDataBase"
     - type: object
@@ -167,7 +167,7 @@ PaymentDataWithMaybePayee:
       properties:
         payee:
           $ref: "#/Payee"
-PaymentData:
+PaymentDataWithExplicitPayee:
   allOf:
     - $ref: "#/PaymentDataBase"
     - type: object
@@ -250,7 +250,7 @@ CreatedMessageWithContent:
     created_at:
       $ref: "#/Timestamp"
     content:
-      $ref: "#/MessageContent"
+      $ref: "#/MessageContentWithExplicitPayee"
     sender_service_id:
       $ref: "#/ServiceId"
   required:

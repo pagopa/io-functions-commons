@@ -13,9 +13,6 @@ import { PaymentNoticeNumber } from "../../generated/definitions/PaymentNoticeNu
 import { Payee } from "../../generated/definitions/Payee";
 import { MessageContent } from "../../generated/definitions/MessageContent";
 import { NewMessage } from "../../generated/definitions/NewMessage";
-import { PaymentDataWithoutPayee } from "../../generated/definitions/PaymentDataWithoutPayee";
-import { PaymentDataWithMaybePayee } from "../../generated/definitions/PaymentDataWithMaybePayee";
-import { MessageContentWithMaybePaymentDataWithMaybePayee } from "../../generated/definitions/MessageContentWithMaybePaymentDataWithMaybePayee";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -142,7 +139,7 @@ const aCountentWithoutPaymentData = {
     "A markdown of more than 80 characters. Try to reach this value with stupid words, and I will leave here because I like it"
 };
 
-const aPaymentDataWithoutPayee: PaymentDataWithoutPayee = {
+const aPaymentDataWithoutPayee: PaymentData = {
   amount: 1000 as PaymentAmount,
   notice_number: "177777777777777777" as PaymentNoticeNumber
 };
@@ -157,7 +154,7 @@ describe("NewMessage definition", () => {
     };
 
     expect(
-      MessageContentWithMaybePaymentDataWithMaybePayee.decode(
+      MessageContent.decode(
         aCountentWithoutPaymentData
       ).isRight()
     ).toBe(true);
@@ -177,7 +174,7 @@ describe("NewMessage definition", () => {
     };
 
     expect(
-      PaymentDataWithMaybePayee.decode(aPaymentDataWithoutPayee).isRight()
+      PaymentData.decode(aPaymentDataWithoutPayee).isRight()
     ).toBe(true);
 
     const messageWithContent = NewMessage.decode(
