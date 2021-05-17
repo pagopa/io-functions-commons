@@ -79,7 +79,7 @@ NotificationChannelStatus:
     - channel
     - status
     - updated_at
-MessageContentWithoutPaymentData:
+MessageContentBase:
   type: object
   properties:
     subject:
@@ -95,27 +95,18 @@ MessageContentWithoutPaymentData:
     - markdown
 MessageContentWithMaybePaymentDataWithMaybePayee:
   allOf:
-    - $ref: "#/MessageContentWithoutPaymentData"
+    - $ref: "#/MessageContentBase"
     - type: object
       properties:
         payment_data:
           $ref: "#/PaymentDataWithMaybePayee"
 MessageContent:
-  type: object
-  properties:
-    subject:
-      $ref: "#/MessageSubject"
-    markdown:
-      $ref: "#/MessageBodyMarkdown"
-    payment_data:
-      $ref: "#/PaymentData"
-    prescription_data:
-      $ref: "#/PrescriptionData"
-    due_date:
-      $ref: "#/Timestamp"
-  required:
-    - subject
-    - markdown
+    allOf:
+    - $ref: "#/MessageContentBase"
+    - type: object
+      properties:
+        payment_data:
+          $ref: "#/PaymentData"
 NewMessage:
   type: object
   properties:
@@ -152,7 +143,7 @@ PrescriptionNRE:
   type: string
   minLength: 15
   maxLength: 15
-PaymentDataWithoutPayee:
+PaymentDataBase:
   type: object
   description: |-
     Metadata needed to process pagoPA payments.
@@ -169,7 +160,7 @@ PaymentDataWithoutPayee:
     - notice_number
 PaymentDataWithMaybePayee:
   allOf:
-    - $ref: "#/PaymentDataWithoutPayee"
+    - $ref: "#/PaymentDataBase"
     - type: object
       description: |-
         Metadata to indicate a specific Payee for the payment
@@ -178,7 +169,7 @@ PaymentDataWithMaybePayee:
           $ref: "#/Payee"
 PaymentData:
   allOf:
-    - $ref: "#/PaymentDataWithoutPayee"
+    - $ref: "#/PaymentDataBase"
     - type: object
       description: |-
         Metadata to indicate a specific Payee for the payment
