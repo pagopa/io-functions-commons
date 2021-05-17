@@ -194,14 +194,14 @@ describe("Models |> UserDataProcessing", () => {
       .run();
 
     // update document with FAILED
-    const updates2 = {
+    const updatesToFailed = {
       status: UserDataProcessingStatusEnum.FAILED,
       reason: "should be saved" as NonEmptyString
     };
     await model
       .update({
         ...created,
-        ...updates2,
+        ...updatesToFailed,
         version: (created.version + 1) as number & INonNegativeIntegerTag
       })
       .fold(
