@@ -1692,10 +1692,10 @@ ci-info@^2.0.0:
   resolved "https://registry.yarnpkg.com/ci-info/-/ci-info-2.0.0.tgz#67a9e964be31a51e15e5010d58e6f12834002f46"
   integrity sha512-5tK7EtrZ0N+OLFMthtqOj4fI2Jeb88C4CAZPu25LDVUgXJ0A3Js4PMGqrn0JU1W0Mh1/Z8wZzYPxqUrXeBboCQ==
 
-cidr-matcher@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/cidr-matcher/-/cidr-matcher-2.1.0.tgz#4f1ab176aef778806d719e908cafb5b6b43a5bc0"
-  integrity sha512-ragEBJw5aNrgeXEOlvni+kO0gtzuBgw0Uq9PCfJKms/eU348m6OXwVg80QNPHsJwlkFWCLKVKWH+F+Atpml+Sw==
+cidr-matcher@^2.1.1:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/cidr-matcher/-/cidr-matcher-2.1.1.tgz#01a489f291bfbc7a3a14358120a6d839a98b1c90"
+  integrity sha512-QPJRz4HDQxpB8AZWEqd6ejVp+siArXh3u1MYaUFV85cd293StGSMb87jVe0z9gS92KsFwxCxjb3utO3e5HKHTw==
   dependencies:
     ip6addr "^0.2.2"
 
