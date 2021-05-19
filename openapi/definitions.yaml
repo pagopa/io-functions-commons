@@ -94,19 +94,39 @@ MessageContentBase:
     - subject
     - markdown
 MessageContent:
-  allOf:
-    - $ref: "#/MessageContentBase"
-    - type: object
-      properties:
-        payment_data:
-          $ref: "#/PaymentData"
+  type: object
+  properties:
+    subject:
+      $ref: "#/MessageSubject"
+    markdown:
+      $ref: "#/MessageBodyMarkdown"
+    prescription_data:
+      $ref: "#/PrescriptionData"
+    due_date:
+      $ref: "#/Timestamp"
+    payment_data:
+      $ref: "#/PaymentData"
+  required:
+    - subject
+    - markdown
+
 MessageContentWithExplicitPayee:
-    allOf:
-    - $ref: "#/MessageContentBase"
-    - type: object
-      properties:
-        payment_data:
-          $ref: "#/PaymentDataWithExplicitPayee"
+  type: object
+  properties:
+    subject:
+      $ref: "#/MessageSubject"
+    markdown:
+      $ref: "#/MessageBodyMarkdown"
+    prescription_data:
+      $ref: "#/PrescriptionData"
+    due_date:
+      $ref: "#/Timestamp"
+    payment_data:
+      $ref: "#/PaymentDataWithExplicitPayee"
+  required:
+    - subject
+    - markdown
+
 NewMessage:
   type: object
   properties:

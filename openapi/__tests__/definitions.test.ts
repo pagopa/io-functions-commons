@@ -13,6 +13,7 @@ import { PaymentNoticeNumber } from "../../generated/definitions/PaymentNoticeNu
 import { Payee } from "../../generated/definitions/Payee";
 import { MessageContent } from "../../generated/definitions/MessageContent";
 import { NewMessage } from "../../generated/definitions/NewMessage";
+import { PaymentDataWithExplicitPayee } from "../../generated/definitions/PaymentDataWithExplicitPayee";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -125,6 +126,9 @@ describe("ServicePayload definition", () => {
 const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
 const anOrganizationFiscalCode = "12345678901" as OrganizationFiscalCode;
 const aDate = new Date();
+const aNewMessageWithoutContent = {
+  fiscal_code: aFiscalCode
+};
 const aMessageWithoutContent = {
   id: "A_MESSAGE_ID",
   fiscal_code: aFiscalCode,
@@ -148,40 +152,66 @@ const aPayee: Payee = { fiscal_code: anOrganizationFiscalCode };
 
 describe("NewMessage definition", () => {
   it("should decode NewMessage with content but without payment data", () => {
-    const aMessageWithContent = {
-      ...aMessageWithoutContent,
+    const aMessageWithContentWithoutPaymentData = {
+      ...aNewMessageWithoutContent,
       content: aCountentWithoutPaymentData
     };
 
-    expect(
-      MessageContent.decode(
-        aCountentWithoutPaymentData
-      ).isRight()
-    ).toBe(true);
+    expect(MessageContent.decode(aCountentWithoutPaymentData).isRight()).toBe(
+      true
+    );
 
-    const messageWithContent = NewMessage.decode(aMessageWithContent);
+    const messageWithContent = NewMessage.decode(
+      aMessageWithContentWithoutPaymentData
+    );
 
     expect(messageWithContent.isRight()).toBe(true);
+    expect(messageWithContent.value).toEqual({
+      ...aMessageWithContentWithoutPaymentData,
+      time_to_live: 3600
+    });
   });
 
   it("should decode NewMessage with content and payment data but without payee", () => {
     const aMessageWithContentWithPaymentDataWithoutPayee = {
-      ...aMessageWithoutContent,
+      ...aNewMessageWithoutContent,
       content: {
         ...aCountentWithoutPaymentData,
         payment_data: aPaymentDataWithoutPayee
       }
     };
 
-    expect(
-      PaymentData.decode(aPaymentDataWithoutPayee).isRight()
-    ).toBe(true);
-
     const messageWithContent = NewMessage.decode(
       aMessageWithContentWithPaymentDataWithoutPayee
     );
 
     expect(messageWithContent.isRight()).toBe(true);
+    expect(messageWithContent.value).toEqual({
+      ...aMessageWithContentWithPaymentDataWithoutPayee,
+      content: {
+        ...aMessageWithContentWithPaymentDataWithoutPayee.content,
+        payment_data: {
+          ...aMessageWithContentWithPaymentDataWithoutPayee.content
+            .payment_data,
+          invalid_after_due_date: false
+        }
+      },
+      time_to_live: 3600
+    });
+  });
+
+  it("should decode PaymentDataWithExplicitPayee with payment data with payee", () => {
+    const aPaymentDataWithPaye = { ...aPaymentDataWithoutPayee, payee: aPayee };
+
+    const messageWithContent = PaymentDataWithExplicitPayee.decode(
+      aPaymentDataWithPaye
+    );
+
+    expect(messageWithContent.isRight()).toBe(true);
+    expect(messageWithContent.value).toEqual({
+      ...aPaymentDataWithPaye,
+      invalid_after_due_date: false
+    });
   });
 
   it("should decode NewMessage with content and payment data with payee", () => {
@@ -245,5 +275,28 @@ describe("CreatedMessageWithContent definition", () => {
     );
 
     expect(messageWithContent.isLeft()).toBe(true);
+  });
+});
+
+describe("Type definition", () => {
+  it("should decode MessageContent with content without payment data", () => {
+    const decodedMessageContent = MessageContent.decode(
+      aCountentWithoutPaymentData
+    );
+
+    expect(decodedMessageContent.isRight()).toBe(true);
+    decodedMessageContent;
+
+    expect(decodedMessageContent.value).toBe(aCountentWithoutPaymentData);
+  });
+
+  it("should decode PaymentData without payee", () => {
+    const decodedPaymentData = PaymentData.decode(aPaymentDataWithoutPayee);
+
+    expect(decodedPaymentData.isRight()).toBe(true);
+    expect(decodedPaymentData.value).toEqual({
+      ...aPaymentDataWithoutPayee,
+      invalid_after_due_date: false
+    });
   });
 });
