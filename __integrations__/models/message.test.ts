@@ -3,11 +3,9 @@ import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import { fromEither, taskEither, tryCatch } from "fp-ts/lib/TaskEither";
 import {
-  Message,
   MESSAGE_MODEL_PK_FIELD,
   MessageModel,
-  NewMessageWithoutContent,
-  MessageWithoutContent
+  NewMessageWithoutContent
 } from "../../src/models/message";
 import { createContext } from "./cosmos_utils";
 import { fromOption } from "fp-ts/lib/Either";
@@ -23,6 +21,7 @@ import {
 const MESSAGE_CONTAINER_NAME = "test-message-container" as NonEmptyString;
 
 const aFiscalCode = "RLDBSV36A78Y792X" as FiscalCode;
+const anotherFiscalCode = "TDDBSV36A78Y792X" as FiscalCode;
 const aSerializedNewMessageWithoutContent = {
   fiscalCode: aFiscalCode,
   id: "A_MESSAGE_ID" as NonEmptyString,
@@ -38,7 +37,31 @@ const aNewMessageWithoutContent: NewMessageWithoutContent = {
   kind: "INewMessageWithoutContent"
 };
 
-describe("Models |> Service", () => {
+const aMessageContentWithPayment = {
+  subject: "a".repeat(20),
+  markdown: "a".repeat(100),
+  payment_data: {
+    amount: 10,
+    notice_number: `0${"9".repeat(17)}`
+  }
+};
+
+const aMessageContentPrescription = {
+  subject: "a".repeat(20),
+  markdown: "a".repeat(100),
+  prescription_data: {
+    nre: "a".repeat(15),
+    iup: "a".repeat(10),
+    prescriber_fiscal_code: anotherFiscalCode
+  }
+};
+
+const aMessageContentWithNoPayment = {
+  subject: "a".repeat(20),
+  markdown: "a".repeat(100)
+};
+
+describe("Models |> Message", () => {
   it("should save messages without content", async () => {
     const context = await createContext(MESSAGE_MODEL_PK_FIELD);
     await context.init();
@@ -148,5 +171,63 @@ describe("Models |> Service", () => {
       .run();
 
     context.dispose();
+  });
+
+  it.each`
+    title                                      | value
+    ${"a message content without"}             | ${aMessageContentWithNoPayment}
+    ${"a message content with payment data"}   | ${aMessageContentWithPayment}
+    ${"a message content with a prescription"} | ${aMessageContentPrescription}
+  `("should save $title correctly", async ({ value }) => {
+    const context = await createContext(MESSAGE_MODEL_PK_FIELD, true);
+    await context.init();
+    const model = new MessageModel(
+      context.container,
+      context.containerName as NonEmptyString
+    );
+
+    const aFakeMessageId = "fakemessageid";
+
+    await model
+      .storeContentAsBlob(context.storage, aFakeMessageId, value)
+      .fold(
+        _ => fail(`Failed to store content, error: ${toString(_)}`),
+        result => {
+          expect(result.isSome()).toBe(true);
+          return result;
+        }
+      )
+      .run();
+
+    await model
+      .getContentFromBlob(context.storage, aFakeMessageId)
+      .chain(_ => fromEither(fromOption(new Error(`Blob not found`))(_)))
+      .fold(
+        _ => fail(`Failed to get content, error: ${toString(_)}`),
+        result => {
+          // check the output contains the values stored before
+          expect(result.due_date).toEqual(value.due_date);
+          expect(result.markdown).toEqual(value.markdown);
+          expect(result.subject).toEqual(value.subject);
+          expect(result.payment_data?.amount).toEqual(
+            value.payment_data?.amount
+          );
+          expect(result.payment_data?.notice_number).toEqual(
+            value.payment_data?.notice_number
+          );
+          expect(result.prescription_data?.nre).toEqual(
+            value.prescription_data?.nre
+          );
+          expect(result.prescription_data?.iup).toEqual(
+            value.prescription_data?.iup
+          );
+          expect(result.prescription_data?.prescriber_fiscal_code).toEqual(
+            value.prescription_data?.prescriber_fiscal_code
+          );
+        }
+      )
+      .run();
+
+    await context.dispose();
   });
 });
