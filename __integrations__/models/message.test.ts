@@ -56,6 +56,14 @@ const aMessageContentPrescription = {
   }
 };
 
+const aMessageContentEUCovidCert = {
+  subject: "a".repeat(20),
+  markdown: "a".repeat(100),
+  eu_covid_cert: {
+    auth_code: "a".repeat(25)
+  }
+};
+
 const aMessageContentWithNoPayment = {
   subject: "a".repeat(20),
   markdown: "a".repeat(100)
@@ -174,10 +182,11 @@ describe("Models |> Message", () => {
   });
 
   it.each`
-    title                                      | value
-    ${"a message content without"}             | ${aMessageContentWithNoPayment}
-    ${"a message content with payment data"}   | ${aMessageContentWithPayment}
-    ${"a message content with a prescription"} | ${aMessageContentPrescription}
+    title                                                        | value
+    ${"a message content without"}                               | ${aMessageContentWithNoPayment}
+    ${"a message content with payment data"}                     | ${aMessageContentWithPayment}
+    ${"a message content with a prescription"}                   | ${aMessageContentPrescription}
+    ${"a message content with a EU Covid Certificate auth code"} | ${aMessageContentEUCovidCert}
   `("should save $title correctly", async ({ value }) => {
     const context = await createContext(MESSAGE_MODEL_PK_FIELD, true);
     await context.init();
@@ -223,6 +232,9 @@ describe("Models |> Message", () => {
           );
           expect(result.prescription_data?.prescriber_fiscal_code).toEqual(
             value.prescription_data?.prescriber_fiscal_code
+          );
+          expect(result.eu_covid_cert?.auth_code).toEqual(
+            value.eu_covid_cert?.auth_code
           );
         }
       )
