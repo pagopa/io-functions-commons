@@ -1,9 +1,9 @@
 /**
  * Insert fake data into CosmosDB database emulator.
  */
-import { Container, Database } from "@azure/cosmos";
+import { Container, Database, CosmosClient } from "@azure/cosmos";
+import { BlobService } from "azure-storage";
 
-import { CosmosClient } from "@azure/cosmos";
 import { PromiseType } from "@pagopa/ts-commons/lib/types";
 import { toString } from "fp-ts/lib/function";
 import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
@@ -15,6 +15,7 @@ import { getRequiredStringEnv } from "../../src/utils/env";
 
 const endpoint = getRequiredStringEnv("COSMOSDB_URI");
 const key = getRequiredStringEnv("COSMOSDB_KEY");
+const storageConnectionString = getRequiredStringEnv("STORAGE_CONN_STRING");
 
 const client = new CosmosClient({ endpoint, key });
 export const cosmosDatabaseName = getRequiredStringEnv(
@@ -72,9 +73,10 @@ const makeRandomContainerName = (): string => {
   return `test-${result.join("")}`;
 };
 
-export const createContext = (partitionKey: string) => {
+export const createContext = (partitionKey: string, hasStorage = false) => {
   const containerName = makeRandomContainerName();
   let db: Database;
+  let storage: BlobService;
   let container: Container;
   return {
     async init() {
@@ -91,6 +93,14 @@ export const createContext = (partitionKey: string) => {
           )
         )
         .run();
+      if (hasStorage) {
+        storage = new BlobService(storageConnectionString);
+        await new Promise((resolve, reject) => {
+          storage.createContainerIfNotExists(containerName, (err, res) =>
+            err ? reject(err) : resolve(res)
+          );
+        });
+      }
       db = r.db;
       container = r.container;
       return r;
@@ -103,6 +113,12 @@ export const createContext = (partitionKey: string) => {
     },
     get container() {
       return container;
+    },
+    get containerName() {
+      return containerName;
+    },
+    get storage() {
+      return storage;
     }
   };
 };
