@@ -1,4 +1,5 @@
-import { Either, isLeft, left, right } from "fp-ts/lib/Either";
+import * as t from "io-ts";
+import { Either, isLeft, left, right, either } from "fp-ts/lib/Either";
 import { fromNullable, isSome, Option, Some } from "fp-ts/lib/Option";
 
 import {
@@ -221,3 +222,60 @@ export const AzureApiAuthMiddleware = (
       )
     );
   });
+
+type AzureAllowBodyPayloadMiddlewareMiddlewareErrorResponses =
+  | IResponseErrorForbiddenNoAuthorizationGroups
+  | IResponseErrorForbiddenNotAuthorized;
+
+/**
+ * A middleware that allow a specific payload to be provided only by a specific set of user groups
+ *
+ * The middleware expects the following headers:
+ *
+ *   x-user-groups:   A comma separated list of names of Azure API Groups
+ *
+ * On success, the middleware just lets the request to continue,
+ * on failure it triggers a ResponseErrorForbidden.
+ *
+ * @param pattern a codec that matches the payload pattern to restrict access to
+ * @param allowedGroups a set of user groups to allow provided payload
+ *
+ */
+export const AzureAllowBodyPayloadMiddleware = <S, A>(
+  pattern: t.Type<A, S>,
+  allowedGroups: ReadonlySet<UserGroup>
+): IRequestMiddleware<
+  | "IResponseErrorForbiddenNotAuthorized"
+  | "IResponseErrorForbiddenNoAuthorizationGroups",
+  void
+> => async (
+  request
+): Promise<
+  Either<AzureAllowBodyPayloadMiddlewareMiddlewareErrorResponses, void>
+> =>
+  either
+    .of<AzureAllowBodyPayloadMiddlewareMiddlewareErrorResponses, unknown>(
+      request.body
+    )
+    .chain(payload =>
+      pattern.decode(payload).fold(
+        // if pattern does not match payload, just skip the middleware
+        _ => right(void 0),
+        _ =>
+          NonEmptyString.decode(request.header("x-user-groups"))
+            // user groups groups must be valued
+            .mapLeft<AzureAllowBodyPayloadMiddlewareMiddlewareErrorResponses>(
+              __ => ResponseErrorForbiddenNoAuthorizationGroups
+            )
+            .map(getGroupsFromHeader)
+            // check if current user belongs to at least one of the allowed groups
+            .map(userGroups =>
+              Array.from(allowedGroups).some(e => userGroups.has(e))
+            )
+            .chain(isInGroup =>
+              isInGroup
+                ? right(void 0)
+                : left(ResponseErrorForbiddenNotAuthorized)
+            )
+      )
+    );
