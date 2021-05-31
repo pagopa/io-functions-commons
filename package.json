@@ -57,7 +57,7 @@
     "@azure/cosmos": "^3.11.1",
     "@pagopa/ts-commons": "^9.4.0",
     "@types/node-fetch": "^2.5.6",
-    "applicationinsights": "^1.8.5",
+    "applicationinsights": "^1.8.10",
     "azure-storage": "^2.10.3",
     "cidr-matcher": "^2.1.1",
     "fp-ts": "1.17.4",
