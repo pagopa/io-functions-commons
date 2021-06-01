@@ -73,7 +73,10 @@ export enum UserGroup {
   ApiInfoRead = "ApiInfoRead",
 
   // debug endpoint
-  ApiDebugRead = "ApiDebugRead"
+  ApiDebugRead = "ApiDebugRead",
+
+  // messages: send messages with EU Covid Certificate access data
+  ApiMessageWriteEUCovidCert = "ApiMessageWriteEUCovidCert"
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
