@@ -105,7 +105,7 @@ stages:
                 CHANGELOG.md
                 package.json
                 dist/**/*
-                openapi/**/*.(yaml|yml)
+                openapi/definitions.yaml
             displayName: 'Copy bundle files'
           
           - publish: $(System.DefaultWorkingDirectory)/bundle
