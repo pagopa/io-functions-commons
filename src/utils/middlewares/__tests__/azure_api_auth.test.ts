@@ -4,8 +4,14 @@
 /* eslint-disable sonarjs/no-identical-functions */
 
 import { isLeft, isRight } from "fp-ts/lib/Either";
+import { failure } from "fp-ts/lib/Validation";
+import * as t from "io-ts";
 
-import { AzureApiAuthMiddleware, UserGroup } from "../azure_api_auth";
+import {
+  AzureAllowBodyPayloadMiddleware,
+  AzureApiAuthMiddleware,
+  UserGroup
+} from "../azure_api_auth";
 
 const anAllowedGroupSet = new Set([UserGroup.ApiMessageWrite]);
 
@@ -254,5 +260,134 @@ describe("AzureApiAuthMiddleware", () => {
     if (isRight(result)) {
       expect(result.value.groups).toEqual(new Set([UserGroup.ApiMessageWrite]));
     }
+  });
+});
+
+describe("AzureAllowBodyPayloadMiddleware", () => {
+  it("should success if pattern is not matched", async () => {
+    const headers = {
+      ...someHeaders
+    };
+    const aPayload = { foo: { bar: "baz" } };
+    const mockRequest = {
+      header: jest.fn(lookup(headers)),
+      body: aPayload
+    };
+    const aNonMatchingCodec = t.interface({ anyField: t.number });
+    const anyGroupSet = new Set([UserGroup.ApiMessageWrite]);
+
+    const middleware = AzureAllowBodyPayloadMiddleware(
+      aNonMatchingCodec,
+      anyGroupSet
+    );
+
+    const result = await middleware(mockRequest as any);
+
+    expect(isRight(result)).toBe(true);
+    expect(aNonMatchingCodec.decode(aPayload).isLeft()).toBe(true); // test is wrong if it fails
+  });
+
+  it("should success if pattern is matched and user do belongs to correct user group", async () => {
+    const headers = {
+      ...someHeaders
+    };
+    const aPayload = { foo: { bar: "baz" } };
+    const mockRequest = {
+      header: jest.fn(lookup(headers)),
+      body: aPayload
+    };
+    const aMatchingCodec = t.interface({
+      foo: t.interface({ bar: t.string })
+    });
+    const allowedGroupSet = new Set([UserGroup.ApiMessageWrite]);
+
+    const middleware = AzureAllowBodyPayloadMiddleware(
+      aMatchingCodec,
+      allowedGroupSet
+    );
+
+    const result = await middleware(mockRequest as any);
+
+    expect(isRight(result)).toBe(true);
+    expect(aMatchingCodec.decode(aPayload).isRight()).toBe(true); // test is wrong if it fails
+  });
+
+  it("should success if pattern is not matched - test nr. 2", async () => {
+    const headers = {
+      ...someHeaders
+    };
+    const aPayload = { foo: { bar: "baz" } };
+    const mockRequest = {
+      header: jest.fn(lookup(headers)),
+      body: aPayload
+    };
+    const aNonMatchingCodec = t.interface({ anyField: t.string });
+    const anyGroupSet = new Set([UserGroup.ApiDebugRead]); // any value
+
+    const middleware = AzureAllowBodyPayloadMiddleware(
+      aNonMatchingCodec,
+      anyGroupSet
+    );
+
+    const result = await middleware(mockRequest as any);
+
+    expect(isRight(result)).toBe(true);
+    expect(aNonMatchingCodec.decode(aPayload).isLeft()).toBe(true); // test is wrong if it fails
+  });
+
+  it("should fail if pattern is matched and current user does not belongs to user group", async () => {
+    const headers = {
+      ...someHeaders
+    };
+    const aPayload = { foo: { bar: "baz" } };
+    const mockRequest = {
+      header: jest.fn(lookup(headers)),
+      body: aPayload
+    };
+    const aMatchingCodec = t.interface({
+      foo: t.interface({ bar: t.string })
+    });
+    const anotherAllowedGroupSet = new Set([UserGroup.ApiDebugRead]);
+
+    const middleware = AzureAllowBodyPayloadMiddleware(
+      aMatchingCodec,
+      anotherAllowedGroupSet
+    );
+
+    const result = await middleware(mockRequest as any);
+
+    expect(isLeft(result)).toBe(true);
+    result.fold(
+      _ => expect(_.kind).toBe("IResponseErrorForbiddenNotAuthorized"),
+      _ => fail("Expecting left")
+    );
+  });
+
+  it("should fail if pattern is matched and current user has no groups", async () => {
+    const headers = {
+      ...someHeaders,
+      "x-user-groups": ""
+    };
+    const aPayload = { foo: { bar: "baz" } };
+    const mockRequest = {
+      header: jest.fn(lookup(headers)),
+      body: aPayload
+    };
+    const aMatchingCodec = t.interface({
+      foo: t.interface({ bar: t.string })
+    });
+
+    const middleware = AzureAllowBodyPayloadMiddleware(
+      aMatchingCodec,
+      anAllowedGroupSet
+    );
+
+    const result = await middleware(mockRequest as any);
+
+    expect(isLeft(result)).toBe(true);
+    result.fold(
+      _ => expect(_.kind).toBe("IResponseErrorForbiddenNoAuthorizationGroups"),
+      _ => fail("Expecting left")
+    );
   });
 });

@@ -90,6 +90,8 @@ MessageContent:
       $ref: "#/PaymentData"
     prescription_data:
       $ref: "#/PrescriptionData"
+    eu_covid_cert:
+      $ref: "#/EUCovidCert"
     due_date:
       $ref: "#/Timestamp"
   required:
@@ -121,6 +123,15 @@ PrescriptionData:
       $ref: "#/PrescriberFiscalCode"
   required:
     - nre
+EUCovidCert:
+  type: object
+  description: |-
+    Paylod with access token to retrieve a EU Covid Certificate
+  properties:
+    auth_code:
+      type: string
+  required:
+    - auth_code
 PrescriptionIUP:
   description: The field *Identificativo Unico di Prescrizione* identifies the medical prescription at regional level.
   type: string

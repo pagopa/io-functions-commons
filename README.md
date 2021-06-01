@@ -2,14 +2,23 @@
 
 Common code across Azure functions of project IO.
 
-To release a new package on GitHub and npm:
+## Integration tests
+The `__integrations__` folder contains a sub-project which uses `jest` to execute tests against production-like reources. Such test suites expect resources to be up-and-running and they don't care if they are local or cloud resources.
 
-yarn release-it <minor|major|patch>
+### Run integration tests with local resources
+```sh
+# run Mailhog, used to simulate an email recipient
+docker run -d -p 1025:1025 -p 8025:8025 --name mailhog mailhog/mailhog
 
-## Upgrading from 13.x to 14.x
+# run a local mock of CosmosDB
+npm install -g @zeit/cosmosdb-server
+nohup cosmosdb-server -p 3000 &
 
-Version 14.x is the first version that uses italia-utils 5.x,
-a major upgrade to the package that generates the provided Typescript definitions.
+# execute test passing references as env variables
+MAILHOG_HOSTNAME=localhost \
+COSMOSDB_URI=https://localhost:3000/ \
+COSMOSDB_KEY="dummy key" \
+COSMOSDB_DATABASE_NAME=integration-tests \
+yarn test:integration
+```
 
-This translates in the fact that you must upgrade italia-utils to a version >= 5.x
-if you want to upgrade your deps using io-functions-common 14.x.
