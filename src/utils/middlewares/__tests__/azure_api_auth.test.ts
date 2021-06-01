@@ -287,6 +287,31 @@ describe("AzureAllowBodyPayloadMiddleware", () => {
     expect(aNonMatchingCodec.decode(aPayload).isLeft()).toBe(true); // test is wrong if it fails
   });
 
+  it("should success if pattern is matched and user do belongs to correct user group", async () => {
+    const headers = {
+      ...someHeaders
+    };
+    const aPayload = { foo: { bar: "baz" } };
+    const mockRequest = {
+      header: jest.fn(lookup(headers)),
+      body: aPayload
+    };
+    const aMatchingCodec = t.interface({
+      foo: t.interface({ bar: t.string })
+    });
+    const allowedGroupSet = new Set([UserGroup.ApiMessageWrite]);
+
+    const middleware = AzureAllowBodyPayloadMiddleware(
+      aMatchingCodec,
+      allowedGroupSet
+    );
+
+    const result = await middleware(mockRequest as any);
+
+    expect(isRight(result)).toBe(true);
+    expect(aMatchingCodec.decode(aPayload).isRight()).toBe(true); // test is wrong if it fails
+  });
+
   it("should success if pattern is not matched", async () => {
     const headers = {
       ...someHeaders
