@@ -223,7 +223,7 @@ export const AzureApiAuthMiddleware = (
     );
   });
 
-type AzureAllowBodyPayloadMiddlewareMiddlewareErrorResponses =
+type AzureAllowBodyPayloadMiddlewareErrorResponses =
   | IResponseErrorForbiddenNoAuthorizationGroups
   | IResponseErrorForbiddenNotAuthorized;
 
@@ -250,13 +250,9 @@ export const AzureAllowBodyPayloadMiddleware = <S, A>(
   void
 > => async (
   request
-): Promise<
-  Either<AzureAllowBodyPayloadMiddlewareMiddlewareErrorResponses, void>
-> =>
+): Promise<Either<AzureAllowBodyPayloadMiddlewareErrorResponses, void>> =>
   either
-    .of<AzureAllowBodyPayloadMiddlewareMiddlewareErrorResponses, unknown>(
-      request.body
-    )
+    .of<AzureAllowBodyPayloadMiddlewareErrorResponses, unknown>(request.body)
     .chain(payload =>
       pattern.decode(payload).fold(
         // if pattern does not match payload, just skip the middleware
@@ -264,7 +260,7 @@ export const AzureAllowBodyPayloadMiddleware = <S, A>(
         _ =>
           NonEmptyString.decode(request.header("x-user-groups"))
             // user groups groups must be valued
-            .mapLeft<AzureAllowBodyPayloadMiddlewareMiddlewareErrorResponses>(
+            .mapLeft<AzureAllowBodyPayloadMiddlewareErrorResponses>(
               __ => ResponseErrorForbiddenNoAuthorizationGroups
             )
             .map(getGroupsFromHeader)
