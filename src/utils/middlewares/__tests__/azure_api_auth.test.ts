@@ -312,7 +312,7 @@ describe("AzureAllowBodyPayloadMiddleware", () => {
     expect(aMatchingCodec.decode(aPayload).isRight()).toBe(true); // test is wrong if it fails
   });
 
-  it("should success if pattern is not matched", async () => {
+  it("should success if pattern is not matched - test nr. 2", async () => {
     const headers = {
       ...someHeaders
     };
