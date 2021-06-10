@@ -63,7 +63,6 @@
     "fp-ts": "1.17.4",
     "helmet": "^4.6.0",
     "helmet-csp": "^2.5.1",
-    "io-functions-express": "^1.1.0",
     "io-ts": "1.8.5",
     "node-fetch": "^2.6.1",
     "nodemailer": "^6.5.0",

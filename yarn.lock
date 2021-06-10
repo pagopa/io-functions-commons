@@ -3999,11 +3999,6 @@ invert-kv@^2.0.0:
   resolved "https://registry.yarnpkg.com/invert-kv/-/invert-kv-2.0.0.tgz#7393f5afa59ec9ff5f67a27620d11c226e3eec02"
   integrity sha512-wPVv/y/QQ/Uiirj/vh3oP+1Ww+AWehmi1g5fFWGPF6IpCBCDVrhgHRMvrLfdYcwDh3QJbGXDW4JAuzxElLSqKA==
 
-io-functions-express@^1.1.0:
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/io-functions-express/-/io-functions-express-1.1.2.tgz#3025242c2096e443a889c7eb8cb7555fb7f1e5c6"
-  integrity sha512-Gy+g5QQ7k+WnG9TpbgHXObIKrIj05iY/0uK86k+rTyTg6JF9YXVWCnKKmxX2LsJqLpWQtdwOQSwRQhNSfs/rxg==
-
 io-ts@1.8.5:
   version "1.8.5"
   resolved "https://registry.yarnpkg.com/io-ts/-/io-ts-1.8.5.tgz#2e102f7f518abe17b0f7e7ede0db54a4c4ddc188"
