@@ -1,6 +1,7 @@
 import * as t from "io-ts";
 
 import { withDefault } from "@pagopa/ts-commons/lib/types";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 
 import { Container } from "@azure/cosmos";
 import {
@@ -17,6 +18,10 @@ import { IsEmailValidated } from "../../generated/definitions/IsEmailValidated";
 import { IsInboxEnabled } from "../../generated/definitions/IsInboxEnabled";
 import { IsTestProfile } from "../../generated/definitions/IsTestProfile";
 import { IsWebhookEnabled } from "../../generated/definitions/IsWebhookEnabled";
+import {
+  ServicesPreferencesMode,
+  ServicesPreferencesModeEnum
+} from "../../generated/definitions/ServicesPreferencesMode";
 import { PreferredLanguages } from "../../generated/definitions/PreferredLanguages";
 
 import { wrapWithKind } from "../utils/types";
@@ -63,6 +68,16 @@ export const Profile = t.intersection([
 
     // whether to push notifications to the default webhook (defaults to false)
     isWebhookEnabled: IsWebhookEnabled,
+
+    preferencesMode: withDefault(
+      ServicesPreferencesMode,
+      ServicesPreferencesModeEnum.AUTO
+    ),
+
+    preferencesVersion: withDefault(
+      NonNegativeInteger,
+      0 as number & NonNegativeInteger
+    ),
 
     // array of user's preferred languages in ISO-3166-1-2 format
     // https://it.wikipedia.org/wiki/ISO_3166-2

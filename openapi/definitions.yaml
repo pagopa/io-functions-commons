@@ -828,3 +828,8 @@ UserDataProcessingChoiceRequest:
       $ref: "#/UserDataProcessingChoice"
   required:
     - choice
+ServicesPreferencesMode:
+  type: string
+  enum:
+    - AUTO
+    - MANUAL

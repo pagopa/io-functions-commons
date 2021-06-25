@@ -1,18 +1,17 @@
 import { isLeft, isRight } from "fp-ts/lib/Either";
-import { isSome } from "fp-ts/lib/Option";
 
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
-import { EmailString, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 
 import {
-  NewProfile,
   Profile,
   ProfileModel,
   RetrievedProfile
 } from "../profile";
 
 import { Container } from "@azure/cosmos";
+import { ServicesPreferencesModeEnum } from "../../../generated/definitions/ServicesPreferencesMode";
 
 const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
 
@@ -60,7 +59,9 @@ describe("findLastVersionByModelId", () => {
       expect(result.value.toUndefined()).toEqual({
         ...aRetrievedProfile,
         isEmailEnabled: true,
-        isTestProfile: false
+        isTestProfile: false,
+        preferencesMode: ServicesPreferencesModeEnum.AUTO,
+        preferencesVersion: 0
       });
     }
   });
