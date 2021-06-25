@@ -4,7 +4,14 @@ import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 
-import {getServicesPreferencesDocumentId, NewServicePreference, RetrievedServicePreference, ServicePreference, ServicesPreferencesModel, SERVICE_PREFERENCES_COLLECTION_NAME} from "../services_preferences";
+import {
+  getServicesPreferencesDocumentId,
+  NewServicePreference,
+  RetrievedServicePreference,
+  ServicePreference,
+  ServicesPreferencesModel,
+  SERVICE_PREFERENCES_COLLECTION_NAME
+} from "../service_preference";
 
 import { Container } from "@azure/cosmos";
 
