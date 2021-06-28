@@ -20,12 +20,25 @@ export const SERVICE_PREFERENCES_MODEL_PK_FIELD = "fiscalCode" as const;
  * Base interface for ServicePreference objects
  */
 export const ServicePreference = t.interface({
-  email: t.boolean,
+  // the fiscal code of the citized associated to this service preference
   fiscalCode: FiscalCode,
-  inbox: t.boolean,
+
+  // whether to send email notifications for a specific service
+  isEmailEnabled: t.boolean,
+
+  // whether to store the content of messages sent to this citizen from a specific service
+  isInboxEnabled: t.boolean,
+
+  // whether to push notifications to the default webhook for a specific service
+  isWebhookEnabled: t.boolean,
+
+  // the identifier of the service to which this preference refers
+  // this equals user's subscriptionId
   serviceId: ServiceId,
-  version: NonNegativeInteger,
-  webhook: t.boolean
+
+  // the service preference version
+  // this value refers to preferencesVersion in user Profile
+  version: NonNegativeInteger
 });
 export type ServicePreference = t.TypeOf<typeof ServicePreference>;
 
@@ -74,6 +87,17 @@ export class ServicesPreferencesModel extends CosmosdbModel<
     super(container, NewServicePreference, RetrievedServicePreference);
   }
 
+  /**
+   * Create a new document for a service preference
+   *
+   * The ID of this document is generated from the properties
+   * - fiscalCode
+   * - serviceId
+   * - version
+   *
+   * @param newDocument the document to be saved
+   * @param options query options for the db operation
+   */
   public create(
     newDocument: NewServicePreference,
     options?: RequestOptions
@@ -91,17 +115,28 @@ export class ServicesPreferencesModel extends CosmosdbModel<
     );
   }
 
+  /**
+   * Create a new document or update an existing one for a service preference
+   *
+   * The ID of this document is generated from the properties
+   * - fiscalCode
+   * - serviceId
+   * - version
+   *
+   * @param document the document to be saved
+   * @param options query options for the db operation
+   */
   public upsert(
-    newDocument: NewServicePreference,
+    document: NewServicePreference,
     options?: RequestOptions
   ): TaskEither<CosmosErrors, RetrievedServicePreference> {
     return super.upsert(
       {
-        ...newDocument,
+        ...document,
         id: getServicesPreferencesDocumentId(
-          newDocument.fiscalCode,
-          newDocument.serviceId,
-          newDocument.version
+          document.fiscalCode,
+          document.serviceId,
+          document.version
         )
       },
       options

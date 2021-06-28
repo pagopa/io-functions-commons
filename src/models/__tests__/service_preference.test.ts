@@ -21,21 +21,21 @@ const aServiceId = "aServiceId" as NonEmptyString;
 const aStoredServicePreference: ServicePreference = {
   fiscalCode: aFiscalCode,
   serviceId: aServiceId,
-  email: true,
-  inbox: true,
+  isEmailEnabled: true,
+  isInboxEnabled: true,
   version: 0 as NonNegativeInteger,
-  webhook: true
+  isWebhookEnabled: true
 };
 
 const aNewServicePreference: NewServicePreference = {
   id: getServicesPreferencesDocumentId(aFiscalCode, aServiceId, 0 as NonNegativeInteger),
   fiscalCode: aFiscalCode,
   serviceId: aServiceId,
-  email: true,
-  inbox: true,
+  isEmailEnabled: true,
+  isInboxEnabled: true,
   version: 0 as NonNegativeInteger,
   kind: "INewServicePreference",
-  webhook: true
+  isWebhookEnabled: true
 }
 
 const aRetrievedServicePreference: RetrievedServicePreference = {
