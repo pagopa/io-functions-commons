@@ -60,12 +60,12 @@ export type RetrievedServicePreference = t.TypeOf<
 export const getServicesPreferencesDocumentId = (
   fiscalCode: FiscalCode,
   serviceId: ServiceId,
-  version: NonNegativeInteger
+  settingsVersion: NonNegativeInteger
 ): NonEmptyString => {
   const paddingLength = 16; // length of Number.MAX_SAFE_INTEGER == 9007199254740991
-  const paddedVersion = ("0".repeat(paddingLength) + String(version)).slice(
-    -paddingLength
-  );
+  const paddedVersion = (
+    "0".repeat(paddingLength) + String(settingsVersion)
+  ).slice(-paddingLength);
   return `${fiscalCode}-${serviceId}-${paddedVersion}` as NonEmptyString;
 };
 
@@ -108,7 +108,7 @@ export class ServicesPreferencesModel extends CosmosdbModel<
         id: getServicesPreferencesDocumentId(
           newDocument.fiscalCode,
           newDocument.serviceId,
-          newDocument.version
+          newDocument.settingsVersion
         )
       },
       options
@@ -136,7 +136,7 @@ export class ServicesPreferencesModel extends CosmosdbModel<
         id: getServicesPreferencesDocumentId(
           document.fiscalCode,
           document.serviceId,
-          document.version
+          document.settingsVersion
         )
       },
       options
