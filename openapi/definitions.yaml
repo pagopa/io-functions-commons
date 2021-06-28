@@ -851,3 +851,28 @@ ServicesPreferencesMode:
   enum:
     - AUTO
     - MANUAL
+ServicePreference:
+  description: |-
+    Define a set of preferences of a Citizen for a given Service.
+    It's needed by Citizens to express how they want Services to get in touch with them.
+  type: object
+  properties:
+    fiscal_code:
+      $ref: "#/FiscalCode"
+    is_email_enabled:
+      type: boolean
+    is_inbox_enabled:
+      type: boolean
+    is_webhook_enabled:
+      type: boolean
+    service_id:
+      $ref: "#/ServiceId"
+    settings_version:
+      type: integer
+  required:
+    - fiscal_code
+    - is_email_enabled
+    - is_inbox_enabled
+    - is_webhook_enabled
+    - service_id
+    - settings_version
