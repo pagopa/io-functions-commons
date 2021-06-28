@@ -29,13 +29,26 @@ import { wrapWithKind } from "../utils/types";
 export const PROFILE_COLLECTION_NAME = "profiles";
 export const PROFILE_MODEL_PK_FIELD = "fiscalCode" as const;
 
+type ServicePreferences = t.TypeOf<typeof ServicePreferences>;
+const ServicePreferences = t.interface({
+  mode: ServicesPreferencesMode,
+  version: NonNegativeInteger
+});
+
 /**
  * Base interface for Profile objects
  */
 export const Profile = t.intersection([
   t.interface({
     // the fiscal code of the citized associated to this profile
-    fiscalCode: FiscalCode
+    fiscalCode: FiscalCode,
+
+    // how the citizen prefers to handle subscriptions to Services
+    // default value is needed to handle citizens that didn't make the choice yet
+    servicePreferences: withDefault(ServicePreferences, {
+      mode: ServicesPreferencesModeEnum.AUTO,
+      version: 0 as NonNegativeInteger
+    })
   }),
   t.partial({
     // Notification channels blocked by the user;
@@ -68,16 +81,6 @@ export const Profile = t.intersection([
 
     // whether to push notifications to the default webhook (defaults to false)
     isWebhookEnabled: IsWebhookEnabled,
-
-    preferencesMode: withDefault(
-      ServicesPreferencesMode,
-      ServicesPreferencesModeEnum.AUTO
-    ),
-
-    preferencesVersion: withDefault(
-      NonNegativeInteger,
-      0 as number & NonNegativeInteger
-    ),
 
     // array of user's preferred languages in ISO-3166-1-2 format
     // https://it.wikipedia.org/wiki/ISO_3166-2
