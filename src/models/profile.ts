@@ -1,6 +1,7 @@
 import * as t from "io-ts";
 
 import { withDefault } from "@pagopa/ts-commons/lib/types";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 
 import { Container } from "@azure/cosmos";
 import {
@@ -17,6 +18,10 @@ import { IsEmailValidated } from "../../generated/definitions/IsEmailValidated";
 import { IsInboxEnabled } from "../../generated/definitions/IsInboxEnabled";
 import { IsTestProfile } from "../../generated/definitions/IsTestProfile";
 import { IsWebhookEnabled } from "../../generated/definitions/IsWebhookEnabled";
+import {
+  ServicesPreferencesMode,
+  ServicesPreferencesModeEnum
+} from "../../generated/definitions/ServicesPreferencesMode";
 import { PreferredLanguages } from "../../generated/definitions/PreferredLanguages";
 
 import { wrapWithKind } from "../utils/types";
@@ -24,13 +29,26 @@ import { wrapWithKind } from "../utils/types";
 export const PROFILE_COLLECTION_NAME = "profiles";
 export const PROFILE_MODEL_PK_FIELD = "fiscalCode" as const;
 
+type ServicePreferencesSettings = t.TypeOf<typeof ServicePreferencesSettings>;
+const ServicePreferencesSettings = t.interface({
+  mode: ServicesPreferencesMode,
+  version: NonNegativeInteger
+});
+
 /**
  * Base interface for Profile objects
  */
 export const Profile = t.intersection([
   t.interface({
     // the fiscal code of the citized associated to this profile
-    fiscalCode: FiscalCode
+    fiscalCode: FiscalCode,
+
+    // how the citizen prefers to handle subscriptions to Services
+    // default value is needed to handle citizens that didn't make the choice yet
+    servicePreferencesSettings: withDefault(ServicePreferencesSettings, {
+      mode: ServicesPreferencesModeEnum.AUTO,
+      version: 0 as NonNegativeInteger
+    })
   }),
   t.partial({
     // Notification channels blocked by the user;

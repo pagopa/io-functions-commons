@@ -1,28 +1,27 @@
 import { isLeft, isRight } from "fp-ts/lib/Either";
-import { isSome } from "fp-ts/lib/Option";
 
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
-import { EmailString, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { readableReport } from "@pagopa/ts-commons/lib/reporters";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 
-import {
-  NewProfile,
-  Profile,
-  ProfileModel,
-  RetrievedProfile
-} from "../profile";
+import { Profile, ProfileModel, RetrievedProfile } from "../profile";
 
 import { Container } from "@azure/cosmos";
+import { ServicesPreferencesModeEnum } from "../../../generated/definitions/ServicesPreferencesMode";
+import { version } from "process";
 
 const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
 
-const aStoredProfile: Profile = {
+const aStoredProfile: Profile = Profile.decode({
   acceptedTosVersion: 1,
   fiscalCode: aFiscalCode,
   isEmailValidated: false,
   isInboxEnabled: false,
   isWebhookEnabled: false
-};
+}).getOrElseL(_ =>
+  fail(`Cannot decode aStoredProfile, error: ${readableReport(_)}`)
+);
 
 const aRetrievedProfile: RetrievedProfile = {
   _etag: "_etag",
@@ -60,7 +59,11 @@ describe("findLastVersionByModelId", () => {
       expect(result.value.toUndefined()).toEqual({
         ...aRetrievedProfile,
         isEmailEnabled: true,
-        isTestProfile: false
+        isTestProfile: false,
+        servicePreferencesSettings: {
+          mode: ServicesPreferencesModeEnum.AUTO,
+          version: 0
+        }
       });
     }
   });

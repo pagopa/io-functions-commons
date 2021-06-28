@@ -10,6 +10,8 @@ import {
 import { createContext } from "./cosmos_utils";
 import { fromOption } from "fp-ts/lib/Either";
 import { toString } from "fp-ts/lib/function";
+import { ServicesPreferencesModeEnum } from "../../generated/definitions/ServicesPreferencesMode";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 
 const aProfile: Profile = Profile.decode({
   acceptedTosVersion: 1,
@@ -22,7 +24,7 @@ const aProfile: Profile = Profile.decode({
 }).getOrElseL(() => {
   throw new Error("Cannot decode profile payload.");
 });
-describe("Models |> Service", () => {
+describe("Models |> Profile", () => {
   it("should save documents with correct versioning", async () => {
     const context = await createContext(PROFILE_MODEL_PK_FIELD);
     await context.init();
@@ -108,6 +110,90 @@ describe("Models |> Service", () => {
               ...aProfile,
               ...upserts,
               version: 2
+            })
+          );
+        }
+      )
+      .run();
+
+    context.dispose();
+  });
+
+  it("should consider service prefereces", async () => {
+    const context = await createContext(PROFILE_MODEL_PK_FIELD);
+    await context.init();
+    const model = new ProfileModel(context.container);
+
+    const newDoc = {
+      kind: "INewProfile" as const,
+      ...aProfile
+    };
+
+    // create a new document
+    const created = await model
+      .create(newDoc)
+      .fold(
+        _ => fail(`Failed to create doc, error: ${toString(_)}`),
+        result => {
+          expect(result).toEqual(
+            expect.objectContaining({
+              ...aProfile,
+              // checks a default value for servicePreferencesSettings is provided
+              servicePreferencesSettings: {
+                mode: expect.any(String), // we don't bother the specific value, we just expect a value
+                version: 0 // version 0 means default
+              }
+            })
+          );
+          return result;
+        }
+      )
+      .run();
+
+    // update document
+    const updates = {
+      servicePreferencesSettings: {
+        mode: ServicesPreferencesModeEnum.AUTO,
+        version: 1 as NonNegativeInteger
+      }
+    };
+    await model
+      .update({ ...created, ...updates })
+      .fold(
+        _ => fail(`Failed to update doc, error: ${toString(_)}`),
+        result => {
+          expect(result).toEqual(
+            expect.objectContaining({
+              ...aProfile,
+              ...updates,
+              servicePreferencesSettings: {
+                mode: ServicesPreferencesModeEnum.AUTO,
+                version: 1
+              }
+            })
+          );
+        }
+      )
+      .run();
+
+    // read latest version of the document
+    await taskEither
+      .of<any, void>(void 0)
+      .chain(_ =>
+        model.findLastVersionByModelId([newDoc[PROFILE_MODEL_PK_FIELD]])
+      )
+      .chain(_ => fromEither(fromOption("It's none")(_)))
+      .fold(
+        _ => fail(`Failed to read doc, error: ${toString(_)}`),
+        result => {
+          expect(result).toEqual(
+            expect.objectContaining({
+              ...aProfile,
+              ...updates,
+              servicePreferencesSettings: {
+                mode: ServicesPreferencesModeEnum.AUTO,
+                version: 1
+              }
             })
           );
         }
