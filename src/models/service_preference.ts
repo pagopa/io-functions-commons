@@ -37,8 +37,8 @@ export const ServicePreference = t.interface({
   serviceId: ServiceId,
 
   // the service preference version
-  // this value refers to preferencesVersion in user Profile
-  version: NonNegativeInteger
+  // this value refers to servicePreferencesSettings.version in user Profile
+  settingsVersion: NonNegativeInteger
 });
 export type ServicePreference = t.TypeOf<typeof ServicePreference>;
 
