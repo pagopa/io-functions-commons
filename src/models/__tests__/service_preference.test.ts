@@ -23,27 +23,35 @@ const aStoredServicePreference: ServicePreference = {
   serviceId: aServiceId,
   isEmailEnabled: true,
   isInboxEnabled: true,
-  version: 0 as NonNegativeInteger,
+  settingsVersion: 0 as NonNegativeInteger,
   isWebhookEnabled: true
 };
 
 const aNewServicePreference: NewServicePreference = {
-  id: getServicesPreferencesDocumentId(aFiscalCode, aServiceId, 0 as NonNegativeInteger),
+  id: getServicesPreferencesDocumentId(
+    aFiscalCode,
+    aServiceId,
+    0 as NonNegativeInteger
+  ),
   fiscalCode: aFiscalCode,
   serviceId: aServiceId,
   isEmailEnabled: true,
   isInboxEnabled: true,
-  version: 0 as NonNegativeInteger,
+  settingsVersion: 0 as NonNegativeInteger,
   kind: "INewServicePreference",
   isWebhookEnabled: true
-}
+};
 
 const aRetrievedServicePreference: RetrievedServicePreference = {
   _etag: "_etag",
   _rid: "_rid",
   _self: "_self",
   _ts: 1,
-  id: getServicesPreferencesDocumentId(aFiscalCode, aServiceId, 0 as NonNegativeInteger),
+  id: getServicesPreferencesDocumentId(
+    aFiscalCode,
+    aServiceId,
+    0 as NonNegativeInteger
+  ),
   kind: "IRetrievedServicePreference",
   ...aStoredServicePreference
 };
@@ -52,39 +60,63 @@ describe("find", () => {
   it("should resolve to an existing profile", async () => {
     const containerMock = ({
       item: jest.fn().mockImplementation((_, __) => ({
-        read: jest.fn(() => Promise.resolve({
-          resource: aRetrievedServicePreference
-        })
+        read: jest.fn(() =>
+          Promise.resolve({
+            resource: aRetrievedServicePreference
+          })
         )
       }))
-    }) as unknown as Container;
+    } as unknown) as Container;
 
-    const model = new ServicesPreferencesModel(containerMock, SERVICE_PREFERENCES_COLLECTION_NAME);
+    const model = new ServicesPreferencesModel(
+      containerMock,
+      SERVICE_PREFERENCES_COLLECTION_NAME
+    );
 
-    const result = await model.find([getServicesPreferencesDocumentId(aFiscalCode, aServiceId, 0 as NonNegativeInteger), aFiscalCode]).run();
+    const result = await model
+      .find([
+        getServicesPreferencesDocumentId(
+          aFiscalCode,
+          aServiceId,
+          0 as NonNegativeInteger
+        ),
+        aFiscalCode
+      ])
+      .run();
 
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
       expect(result.value.isSome()).toBeTruthy();
-      expect(result.value.toUndefined()).toEqual(
-        aRetrievedServicePreference
-      );
+      expect(result.value.toUndefined()).toEqual(aRetrievedServicePreference);
     }
   });
 
   it("should resolve to empty if no profile is found", async () => {
     const containerMock = ({
       item: jest.fn().mockImplementation((_, __) => ({
-        read: jest.fn(() => Promise.resolve({
-          resource: undefined
-        })
+        read: jest.fn(() =>
+          Promise.resolve({
+            resource: undefined
+          })
         )
       }))
-    }) as unknown as Container;
+    } as unknown) as Container;
 
-    const model = new ServicesPreferencesModel(containerMock, SERVICE_PREFERENCES_COLLECTION_NAME);
+    const model = new ServicesPreferencesModel(
+      containerMock,
+      SERVICE_PREFERENCES_COLLECTION_NAME
+    );
 
-    const result = await model.find([getServicesPreferencesDocumentId(aFiscalCode, aServiceId, 0 as NonNegativeInteger), aFiscalCode]).run();
+    const result = await model
+      .find([
+        getServicesPreferencesDocumentId(
+          aFiscalCode,
+          aServiceId,
+          0 as NonNegativeInteger
+        ),
+        aFiscalCode
+      ])
+      .run();
 
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
@@ -95,16 +127,29 @@ describe("find", () => {
   it("should validate the retrieved object agains the model type", async () => {
     const containerMock = ({
       item: jest.fn().mockImplementation((_, __) => ({
-        read: jest.fn(() => Promise.resolve({
-          resource: {}
-        })
+        read: jest.fn(() =>
+          Promise.resolve({
+            resource: {}
+          })
         )
       }))
-    }) as unknown as Container;
+    } as unknown) as Container;
 
-    const model = new ServicesPreferencesModel(containerMock, SERVICE_PREFERENCES_COLLECTION_NAME);
+    const model = new ServicesPreferencesModel(
+      containerMock,
+      SERVICE_PREFERENCES_COLLECTION_NAME
+    );
 
-    const result = await model.find([getServicesPreferencesDocumentId(aFiscalCode, aServiceId, 0 as NonNegativeInteger), aFiscalCode]).run();
+    const result = await model
+      .find([
+        getServicesPreferencesDocumentId(
+          aFiscalCode,
+          aServiceId,
+          0 as NonNegativeInteger
+        ),
+        aFiscalCode
+      ])
+      .run();
 
     expect(isLeft(result)).toBeTruthy();
     if (isLeft(result)) {
@@ -117,21 +162,23 @@ describe("create ServicePreference", () => {
   it("should create a new document", async () => {
     const containerMock = ({
       items: {
-        create: jest.fn((_, __) => Promise.resolve({
-          resource: aRetrievedServicePreference
-        })
+        create: jest.fn((_, __) =>
+          Promise.resolve({
+            resource: aRetrievedServicePreference
+          })
         )
       }
-    }) as unknown as Container;
-    const model = new ServicesPreferencesModel(containerMock, SERVICE_PREFERENCES_COLLECTION_NAME);
+    } as unknown) as Container;
+    const model = new ServicesPreferencesModel(
+      containerMock,
+      SERVICE_PREFERENCES_COLLECTION_NAME
+    );
 
     const result = await model.create(aNewServicePreference).run();
 
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
-      expect(result.value).toEqual(
-        aRetrievedServicePreference
-      );
+      expect(result.value).toEqual(aRetrievedServicePreference);
     }
-  })
+  });
 });
