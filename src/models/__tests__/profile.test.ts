@@ -60,7 +60,7 @@ describe("findLastVersionByModelId", () => {
         ...aRetrievedProfile,
         isEmailEnabled: true,
         isTestProfile: false,
-        servicePreferences: {
+        servicePreferencesSettings: {
           mode: ServicesPreferencesModeEnum.AUTO,
           version: 0
         }

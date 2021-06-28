@@ -29,8 +29,8 @@ import { wrapWithKind } from "../utils/types";
 export const PROFILE_COLLECTION_NAME = "profiles";
 export const PROFILE_MODEL_PK_FIELD = "fiscalCode" as const;
 
-type ServicePreferences = t.TypeOf<typeof ServicePreferences>;
-const ServicePreferences = t.interface({
+type ServicePreferencesSettings = t.TypeOf<typeof ServicePreferencesSettings>;
+const ServicePreferencesSettings = t.interface({
   mode: ServicesPreferencesMode,
   version: NonNegativeInteger
 });
@@ -45,7 +45,7 @@ export const Profile = t.intersection([
 
     // how the citizen prefers to handle subscriptions to Services
     // default value is needed to handle citizens that didn't make the choice yet
-    servicePreferences: withDefault(ServicePreferences, {
+    servicePreferencesSettings: withDefault(ServicePreferencesSettings, {
       mode: ServicesPreferencesModeEnum.AUTO,
       version: 0 as NonNegativeInteger
     })
