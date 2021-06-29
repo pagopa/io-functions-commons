@@ -858,8 +858,6 @@ ServicePreference:
     It's needed by Citizens to express how they want Services to get in touch with them.
   type: object
   properties:
-    fiscal_code:
-      $ref: "#/FiscalCode"
     is_email_enabled:
       type: boolean
     is_inbox_enabled:
@@ -871,7 +869,6 @@ ServicePreference:
     settings_version:
       type: integer
   required:
-    - fiscal_code
     - is_email_enabled
     - is_inbox_enabled
     - is_webhook_enabled
