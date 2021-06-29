@@ -864,13 +864,10 @@ ServicePreference:
       type: boolean
     is_webhook_enabled:
       type: boolean
-    service_id:
-      $ref: "#/ServiceId"
     settings_version:
       type: integer
   required:
     - is_email_enabled
     - is_inbox_enabled
     - is_webhook_enabled
-    - service_id
     - settings_version
