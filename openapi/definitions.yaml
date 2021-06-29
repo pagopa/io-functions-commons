@@ -866,6 +866,7 @@ ServicePreference:
       type: boolean
     settings_version:
       type: integer
+      minimum: 0
   required:
     - is_email_enabled
     - is_inbox_enabled
