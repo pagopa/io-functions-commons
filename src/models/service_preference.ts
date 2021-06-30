@@ -57,7 +57,7 @@ export type RetrievedServicePreference = t.TypeOf<
   typeof RetrievedServicePreference
 >;
 
-export const getServicesPreferencesDocumentId = (
+export const makeServicesPreferencesDocumentId = (
   fiscalCode: FiscalCode,
   serviceId: ServiceId,
   settingsVersion: NonNegativeInteger
@@ -105,7 +105,7 @@ export class ServicesPreferencesModel extends CosmosdbModel<
     return super.create(
       {
         ...newDocument,
-        id: getServicesPreferencesDocumentId(
+        id: makeServicesPreferencesDocumentId(
           newDocument.fiscalCode,
           newDocument.serviceId,
           newDocument.settingsVersion
@@ -133,7 +133,7 @@ export class ServicesPreferencesModel extends CosmosdbModel<
     return super.upsert(
       {
         ...document,
-        id: getServicesPreferencesDocumentId(
+        id: makeServicesPreferencesDocumentId(
           document.fiscalCode,
           document.serviceId,
           document.settingsVersion
