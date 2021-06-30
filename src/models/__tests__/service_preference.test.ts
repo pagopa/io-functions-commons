@@ -5,7 +5,7 @@ import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 
 import {
-  getServicesPreferencesDocumentId,
+  makeServicesPreferencesDocumentId,
   NewServicePreference,
   RetrievedServicePreference,
   ServicePreference,
@@ -28,7 +28,7 @@ const aStoredServicePreference: ServicePreference = {
 };
 
 const aNewServicePreference: NewServicePreference = {
-  id: getServicesPreferencesDocumentId(
+  id: makeServicesPreferencesDocumentId(
     aFiscalCode,
     aServiceId,
     0 as NonNegativeInteger
@@ -47,7 +47,7 @@ const aRetrievedServicePreference: RetrievedServicePreference = {
   _rid: "_rid",
   _self: "_self",
   _ts: 1,
-  id: getServicesPreferencesDocumentId(
+  id: makeServicesPreferencesDocumentId(
     aFiscalCode,
     aServiceId,
     0 as NonNegativeInteger
@@ -75,7 +75,7 @@ describe("find", () => {
 
     const result = await model
       .find([
-        getServicesPreferencesDocumentId(
+        makeServicesPreferencesDocumentId(
           aFiscalCode,
           aServiceId,
           0 as NonNegativeInteger
@@ -109,7 +109,7 @@ describe("find", () => {
 
     const result = await model
       .find([
-        getServicesPreferencesDocumentId(
+        makeServicesPreferencesDocumentId(
           aFiscalCode,
           aServiceId,
           0 as NonNegativeInteger
@@ -142,7 +142,7 @@ describe("find", () => {
 
     const result = await model
       .find([
-        getServicesPreferencesDocumentId(
+        makeServicesPreferencesDocumentId(
           aFiscalCode,
           aServiceId,
           0 as NonNegativeInteger
