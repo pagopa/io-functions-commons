@@ -352,4 +352,47 @@ describe("Models |> Profile", () => {
       context.dispose();
     }
   );
+
+  it.each`
+    mode                                  | version
+    ${ServicesPreferencesModeEnum.LEGACY} | ${PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION}
+    ${ServicesPreferencesModeEnum.AUTO}   | ${PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION + 1 /* should be zero, but we do not know */}
+    ${ServicesPreferencesModeEnum.AUTO}   | ${0 /* explicitly zero */}
+    ${ServicesPreferencesModeEnum.AUTO}   | ${100 /* any positive number */}
+    ${ServicesPreferencesModeEnum.MANUAL} | ${PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION + 1 /* should be zero, but we do not know */}
+    ${ServicesPreferencesModeEnum.MANUAL} | ${0 /* explicitly zero */}
+    ${ServicesPreferencesModeEnum.MANUAL} | ${100 /* any positive number */}
+  `(
+    "should save records when passing consistent service preferences (mode: $mode, version: $version})",
+    async ({ mode, version }) => {
+      const context = await createContext(PROFILE_MODEL_PK_FIELD);
+      await context.init();
+      const model = new ProfileModel(context.container);
+
+      const withInconsistentValues = {
+        kind: "INewProfile" as const,
+        ...aProfile,
+        servicePreferencesSettings: {
+          mode,
+          version
+        }
+      };
+
+      await model
+        .create(withInconsistentValues)
+        .fold(
+          _ =>
+            fail(
+              `Should not have failed with mode: ${mode} and version: ${version}`
+            ),
+          _ => {
+            expect(_.servicePreferencesSettings.mode).toBe(mode);
+            expect(_.servicePreferencesSettings.version).toBe(version);
+          }
+        )
+        .run();
+
+      context.dispose();
+    }
+  );
 });
