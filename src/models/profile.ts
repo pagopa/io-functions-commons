@@ -48,7 +48,6 @@ const ServicePreferencesSettings = t.union([
     ]),
     // Every time mode is changed, version should be incremented.
     // This is because specific service preferences, which are bound to a settings version, will be invalidated
-    // We consider version=0 to only belong to Citizen that didn't switch to the new mechanism
     version: NonNegativeInteger
   }),
   // LEGACY mode is valid only with version equals to -1
