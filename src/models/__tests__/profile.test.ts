@@ -9,7 +9,6 @@ import { Profile, ProfileModel, RetrievedProfile } from "../profile";
 
 import { Container } from "@azure/cosmos";
 import { ServicesPreferencesModeEnum } from "../../../generated/definitions/ServicesPreferencesMode";
-import { version } from "process";
 
 const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
 
@@ -61,7 +60,7 @@ describe("findLastVersionByModelId", () => {
         isEmailEnabled: true,
         isTestProfile: false,
         servicePreferencesSettings: {
-          mode: ServicesPreferencesModeEnum.AUTO,
+          mode: ServicesPreferencesModeEnum.LEGACY,
           version: 0
         }
       });

@@ -1,7 +1,6 @@
 import * as t from "io-ts";
 
 import { withDefault } from "@pagopa/ts-commons/lib/types";
-import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 
 import { Container } from "@azure/cosmos";
 import {
@@ -18,10 +17,7 @@ import { IsEmailValidated } from "../../generated/definitions/IsEmailValidated";
 import { IsInboxEnabled } from "../../generated/definitions/IsInboxEnabled";
 import { IsTestProfile } from "../../generated/definitions/IsTestProfile";
 import { IsWebhookEnabled } from "../../generated/definitions/IsWebhookEnabled";
-import {
-  ServicesPreferencesMode,
-  ServicesPreferencesModeEnum
-} from "../../generated/definitions/ServicesPreferencesMode";
+import { ServicesPreferencesModeEnum } from "../../generated/definitions/ServicesPreferencesMode";
 import { PreferredLanguages } from "../../generated/definitions/PreferredLanguages";
 
 import { wrapWithKind } from "../utils/types";
@@ -30,10 +26,21 @@ export const PROFILE_COLLECTION_NAME = "profiles";
 export const PROFILE_MODEL_PK_FIELD = "fiscalCode" as const;
 
 type ServicePreferencesSettings = t.TypeOf<typeof ServicePreferencesSettings>;
-const ServicePreferencesSettings = t.interface({
-  mode: ServicesPreferencesMode,
-  version: NonNegativeInteger
-});
+const ServicePreferencesSettings = t.union([
+  t.interface({
+    mode: t.literal(
+      ServicesPreferencesModeEnum.AUTO,
+      ServicesPreferencesModeEnum.MANUAL
+    ),
+    version: t.refinement(t.number, e => e > 0)
+  }),
+  // Legacy mode is valid only with version equals to 0
+  // and is the default value retrieved from an existing profile
+  t.interface({
+    mode: t.literal(ServicesPreferencesModeEnum.LEGACY),
+    version: t.literal(0)
+  })
+]);
 
 /**
  * Base interface for Profile objects
@@ -46,8 +53,8 @@ export const Profile = t.intersection([
     // how the citizen prefers to handle subscriptions to Services
     // default value is needed to handle citizens that didn't make the choice yet
     servicePreferencesSettings: withDefault(ServicePreferencesSettings, {
-      mode: ServicesPreferencesModeEnum.AUTO,
-      version: 0 as NonNegativeInteger
+      mode: ServicesPreferencesModeEnum.LEGACY,
+      version: 0
     })
   }),
   t.partial({
