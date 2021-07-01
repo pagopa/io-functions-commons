@@ -841,15 +841,12 @@ ServicePreferencesSettings:
   properties:
     mode:
       $ref: "#/ServicesPreferencesMode"
-    version:
-      type: integer
-      minimum: 0
   required:
     - mode
-    - version
 ServicesPreferencesMode:
   type: string
   enum:
+    - LEGACY
     - AUTO
     - MANUAL
 ServicePreference:

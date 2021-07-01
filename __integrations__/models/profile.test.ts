@@ -11,7 +11,6 @@ import { createContext } from "./cosmos_utils";
 import { fromOption } from "fp-ts/lib/Either";
 import { toString } from "fp-ts/lib/function";
 import { ServicesPreferencesModeEnum } from "../../generated/definitions/ServicesPreferencesMode";
-import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 
 const aProfile: Profile = Profile.decode({
   acceptedTosVersion: 1,
@@ -153,8 +152,8 @@ describe("Models |> Profile", () => {
     // update document
     const updates = {
       servicePreferencesSettings: {
-        mode: ServicesPreferencesModeEnum.AUTO,
-        version: 1 as NonNegativeInteger
+        mode: ServicesPreferencesModeEnum.AUTO as const,
+        version: 1
       }
     };
     await model
@@ -202,4 +201,45 @@ describe("Models |> Profile", () => {
 
     context.dispose();
   });
+
+  it.each`
+    mode                                  | version
+    ${ServicesPreferencesModeEnum.LEGACY} | ${1}
+    ${ServicesPreferencesModeEnum.AUTO}   | ${0}
+    ${ServicesPreferencesModeEnum.MANUAL} | ${0}
+    ${ServicesPreferencesModeEnum.MANUAL} | ${-1}
+    ${ServicesPreferencesModeEnum.LEGACY} | ${-1}
+    ${"fantasy-mode"}                     | ${1}
+  `(
+    "should fail when passing inconsistent service preferences (mode: $mode, version: $version})",
+    async ({ mode, version }) => {
+      const context = await createContext(PROFILE_MODEL_PK_FIELD);
+      await context.init();
+      const model = new ProfileModel(context.container);
+
+      const withInconsistentValues = {
+        kind: "INewProfile" as const,
+        ...aProfile,
+        servicePreferencesSettings: {
+          mode,
+          version
+        }
+      };
+
+      await model
+        .create(withInconsistentValues)
+        .fold(
+          _ => {
+            expect(_.kind).toBe("COSMOS_DECODING_ERROR");
+          },
+          _ =>
+            fail(
+              `Should not have succeedeed with mode: ${mode} and version: ${version}`
+            )
+        )
+        .run();
+
+      context.dispose();
+    }
+  );
 });
