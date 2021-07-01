@@ -25,16 +25,27 @@ import { wrapWithKind } from "../utils/types";
 export const PROFILE_COLLECTION_NAME = "profiles";
 export const PROFILE_MODEL_PK_FIELD = "fiscalCode" as const;
 
+/**
+ * A value object that describes how the Citizen wants to handle service subscriptions.
+ * This mechanism replaces what used to do by only using 'blockedInboxOrChannels' field,
+ *   as the latter lacks some features to be fully GDPR-compliant.
+ * For this reasaon, we mapped a LEGACY mode which refers to Citizens whose profile didn't switch to new mechanism yet.
+ */
 type ServicePreferencesSettings = t.TypeOf<typeof ServicePreferencesSettings>;
 const ServicePreferencesSettings = t.union([
   t.interface({
-    mode: t.literal(
-      ServicesPreferencesModeEnum.AUTO,
-      ServicesPreferencesModeEnum.MANUAL
-    ),
+    mode: t.union([
+      // A Citizen is subscribed to every service, then they can cerry-picking specific services to unsubscribe from
+      t.literal(ServicesPreferencesModeEnum.AUTO),
+      // A Citizen is not subscribed to any service, then they can cerry-picking specific services to subscribe to
+      t.literal(ServicesPreferencesModeEnum.MANUAL)
+    ]),
+    // Every time mode is changed, version should be incremented.
+    // This is because specific service preferences, which are bound to a settings version, will be invalidated
+    // We consider version=0 to only belong to Citizen that didn't switch to the new mechanism
     version: t.refinement(t.number, e => e > 0)
   }),
-  // Legacy mode is valid only with version equals to 0
+  // LEGACY mode is valid only with version equals to 0
   // and is the default value retrieved from an existing profile
   t.interface({
     mode: t.literal(ServicesPreferencesModeEnum.LEGACY),
