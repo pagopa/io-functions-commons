@@ -12,13 +12,15 @@ import { ServicesPreferencesModeEnum } from "../../../generated/definitions/Serv
 
 const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
 
-const aStoredProfile: Profile = Profile.decode({
+const aRawProfile = {
   acceptedTosVersion: 1,
   fiscalCode: aFiscalCode,
   isEmailValidated: false,
   isInboxEnabled: false,
   isWebhookEnabled: false
-}).getOrElseL(_ =>
+};
+
+const aStoredProfile: Profile = Profile.decode(aRawProfile).getOrElseL(_ =>
   fail(`Cannot decode aStoredProfile, error: ${readableReport(_)}`)
 );
 
@@ -112,6 +114,27 @@ describe("findLastVersionByModelId", () => {
     expect(isLeft(result)).toBeTruthy();
     if (isLeft(result)) {
       expect(result.value.kind).toBe("COSMOS_DECODING_ERROR");
+    }
+  });
+});
+
+describe("Profile codec", () => {
+  it("should consider all possible ServicesPreferencesMode values", async () => {
+    // This is a safe-guard to programmatically ensure all possible values of ServicesPreferencesModeEnum are considered
+
+    expect.assertions(0);
+    for (const mode in ServicesPreferencesModeEnum) {
+      const version = mode === "LEGACY" ? 0 : 1;
+      Profile.decode({
+        ...aRawProfile,
+        servicePreferencesSettings: { mode, version }
+      }).getOrElseL(_ =>
+        fail(
+          `Cannot decode profile, maybe an unhandled ServicesPreferencesMode: ${mode}, error: ${readableReport(
+            _
+          )}`
+        )
+      );
     }
   });
 });
