@@ -273,7 +273,7 @@ describe("Models |> Profile", () => {
     // update document without changing mode, again
     await model
       .update({
-        ...created,
+        ...updated2,
         servicePreferencesSettings:
           // This example is just to show an uncomfortable scenario led by ServicePreferencesSettings type definition
           // This works => servicePreferencesSettings: updated2.servicePreferencesSettings
