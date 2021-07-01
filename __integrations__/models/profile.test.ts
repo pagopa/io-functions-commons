@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { EmailString, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { EmailString } from "@pagopa/ts-commons/lib/strings";
 
 import { fromEither, taskEither } from "fp-ts/lib/TaskEither";
 import {
