@@ -386,6 +386,8 @@ Profile:
   properties:
     email:
       $ref: "#/EmailAddress"
+    service_preferences_settings:
+      $ref: "#/ServicePreferencesSettings"
     blocked_inbox_or_channels:
       $ref: "#/BlockedInboxOrChannels"
     preferred_languages:
@@ -425,6 +427,8 @@ ExtendedProfile:
   properties:
     email:
       $ref: "#/EmailAddress"
+    service_preferences_settings:
+      $ref: "#/ServicePreferencesSettings"
     blocked_inbox_or_channels:
       $ref: "#/BlockedInboxOrChannels"
     preferred_languages:
@@ -448,6 +452,7 @@ ExtendedProfile:
     - is_email_validated
     - is_inbox_enabled
     - is_webhook_enabled
+    - service_preferences_settings
     - version
 IsEmailValidated:
   type: boolean
@@ -828,3 +833,39 @@ UserDataProcessingChoiceRequest:
       $ref: "#/UserDataProcessingChoice"
   required:
     - choice
+ServicePreferencesSettings:
+  description: |-
+    Describes the citizen's profile, mostly interesting for preferences
+    attributes.
+  type: object
+  properties:
+    mode:
+      $ref: "#/ServicesPreferencesMode"
+  required:
+    - mode
+ServicesPreferencesMode:
+  type: string
+  enum:
+    - LEGACY
+    - AUTO
+    - MANUAL
+ServicePreference:
+  description: |-
+    Define a set of preferences of a Citizen for a given Service.
+    It's needed by Citizens to express how they want Services to get in touch with them.
+  type: object
+  properties:
+    is_email_enabled:
+      type: boolean
+    is_inbox_enabled:
+      type: boolean
+    is_webhook_enabled:
+      type: boolean
+    settings_version:
+      type: integer
+      minimum: 0
+  required:
+    - is_email_enabled
+    - is_inbox_enabled
+    - is_webhook_enabled
+    - settings_version

@@ -62,7 +62,8 @@ describe("findOneServiceById", () => {
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
       expect(result.value.isSome()).toBeTruthy();
-      expect(result.value.toUndefined()).toEqual(aRetrievedService);
+      // use JSON.stringify because of a jest matcher bug ref. https://github.com/facebook/jest/issues/8475
+      expect(JSON.stringify(result.value.toUndefined())).toEqual(JSON.stringify(aRetrievedService));
     }
   });
 
