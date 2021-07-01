@@ -3,6 +3,7 @@ import * as t from "io-ts";
 import { withDefault } from "@pagopa/ts-commons/lib/types";
 
 import { Container } from "@azure/cosmos";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import {
   CosmosdbModelVersioned,
   RetrievedVersionedModel
@@ -25,6 +26,11 @@ import { wrapWithKind } from "../utils/types";
 export const PROFILE_COLLECTION_NAME = "profiles";
 export const PROFILE_MODEL_PK_FIELD = "fiscalCode" as const;
 
+// The placeholder value to be assigned to servicePreferencesSettings.version when servicePreferencesSettings.mode=LEGACY
+// As such value will never be used in LEGACY scenario and would not make much sense, it could be anything
+// For convenience, is -1 as it could be incremented and become 0 (which is a valid NonNegativeInteger)
+export const PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION = -1 as const;
+
 /**
  * A value object that describes how the Citizen wants to handle service subscriptions.
  * This mechanism replaces what used to do by only using 'blockedInboxOrChannels' field,
@@ -43,13 +49,13 @@ const ServicePreferencesSettings = t.union([
     // Every time mode is changed, version should be incremented.
     // This is because specific service preferences, which are bound to a settings version, will be invalidated
     // We consider version=0 to only belong to Citizen that didn't switch to the new mechanism
-    version: t.refinement(t.number, e => e > 0)
+    version: NonNegativeInteger
   }),
-  // LEGACY mode is valid only with version equals to 0
+  // LEGACY mode is valid only with version equals to -1
   // and is the default value retrieved from an existing profile
   t.interface({
     mode: t.literal(ServicesPreferencesModeEnum.LEGACY),
-    version: t.literal(0)
+    version: t.literal(PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION)
   })
 ]);
 
@@ -65,7 +71,7 @@ export const Profile = t.intersection([
     // default value is needed to handle citizens that didn't make the choice yet
     servicePreferencesSettings: withDefault(ServicePreferencesSettings, {
       mode: ServicesPreferencesModeEnum.LEGACY,
-      version: 0
+      version: PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION
     })
   }),
   t.partial({
