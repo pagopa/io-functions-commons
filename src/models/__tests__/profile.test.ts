@@ -122,7 +122,6 @@ describe("Profile codec", () => {
   it("should consider all possible ServicesPreferencesMode values", async () => {
     // This is a safe-guard to programmatically ensure all possible values of ServicesPreferencesModeEnum are considered
 
-    expect.assertions(0);
     for (const mode in ServicesPreferencesModeEnum) {
       const version = mode === "LEGACY" ? 0 : 1;
       Profile.decode({
