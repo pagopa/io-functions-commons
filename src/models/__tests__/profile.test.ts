@@ -5,7 +5,12 @@ import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 
-import { Profile, ProfileModel, RetrievedProfile } from "../profile";
+import {
+  Profile,
+  ProfileModel,
+  PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION,
+  RetrievedProfile
+} from "../profile";
 
 import { Container } from "@azure/cosmos";
 import { ServicesPreferencesModeEnum } from "../../../generated/definitions/ServicesPreferencesMode";
@@ -63,7 +68,7 @@ describe("findLastVersionByModelId", () => {
         isTestProfile: false,
         servicePreferencesSettings: {
           mode: ServicesPreferencesModeEnum.LEGACY,
-          version: 0
+          version: PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION
         }
       });
     }
@@ -123,7 +128,10 @@ describe("Profile codec", () => {
     // This is a safe-guard to programmatically ensure all possible values of ServicesPreferencesModeEnum are considered
 
     for (const mode in ServicesPreferencesModeEnum) {
-      const version = mode === "LEGACY" ? 0 : 1;
+      const version =
+        mode === "LEGACY"
+          ? PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION
+          : 0;
       Profile.decode({
         ...aRawProfile,
         servicePreferencesSettings: { mode, version }

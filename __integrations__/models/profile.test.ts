@@ -1,16 +1,18 @@
 /* eslint-disable no-console */
-import { EmailString, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { EmailString } from "@pagopa/ts-commons/lib/strings";
 
 import { fromEither, taskEither } from "fp-ts/lib/TaskEither";
 import {
   Profile,
   PROFILE_MODEL_PK_FIELD,
-  ProfileModel
+  ProfileModel,
+  PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION
 } from "../../src/models/profile";
 import { createContext } from "./cosmos_utils";
 import { fromOption } from "fp-ts/lib/Either";
-import { toString } from "fp-ts/lib/function";
+import { identity, toString } from "fp-ts/lib/function";
 import { ServicesPreferencesModeEnum } from "../../generated/definitions/ServicesPreferencesMode";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 
 const aProfile: Profile = Profile.decode({
   acceptedTosVersion: 1,
@@ -140,7 +142,7 @@ describe("Models |> Profile", () => {
               // checks a default value for servicePreferencesSettings is provided
               servicePreferencesSettings: {
                 mode: expect.any(String), // we don't bother the specific value, we just expect a value
-                version: 0 // version 0 means default
+                version: -1 // version -1 means default
               }
             })
           );
@@ -153,7 +155,7 @@ describe("Models |> Profile", () => {
     const updates = {
       servicePreferencesSettings: {
         mode: ServicesPreferencesModeEnum.AUTO as const,
-        version: 1
+        version: 0 as NonNegativeInteger
       }
     };
     await model
@@ -167,7 +169,7 @@ describe("Models |> Profile", () => {
               ...updates,
               servicePreferencesSettings: {
                 mode: ServicesPreferencesModeEnum.AUTO,
-                version: 1
+                version: 0
               }
             })
           );
@@ -191,7 +193,7 @@ describe("Models |> Profile", () => {
               ...updates,
               servicePreferencesSettings: {
                 mode: ServicesPreferencesModeEnum.AUTO,
-                version: 1
+                version: 0
               }
             })
           );
@@ -202,14 +204,122 @@ describe("Models |> Profile", () => {
     context.dispose();
   });
 
+  it("should increment service prefereces version", async () => {
+    const context = await createContext(PROFILE_MODEL_PK_FIELD);
+    await context.init();
+    const model = new ProfileModel(context.container);
+
+    const newDoc = {
+      kind: "INewProfile" as const,
+      ...aProfile
+    };
+
+    // create a new document
+    const created = await model
+      .create(newDoc)
+      .fold(_ => fail(`Failed to create doc, error: ${toString(_)}`), identity)
+      .run();
+
+    // update document without changing mode
+    const updated = await model
+      .update({
+        ...created,
+        servicePreferencesSettings: created.servicePreferencesSettings
+      })
+      .fold(
+        _ => fail(`Failed to update doc, error: ${toString(_)}`),
+        result => {
+          expect(result).toEqual(
+            expect.objectContaining({
+              ...aProfile,
+              servicePreferencesSettings: {
+                mode: created.servicePreferencesSettings.mode,
+                version: created.servicePreferencesSettings.version
+              }
+            })
+          );
+          return result;
+        }
+      )
+      .run();
+
+    // update document changing mode
+    const updated2 = await model
+      .update({
+        ...updated,
+        servicePreferencesSettings: {
+          mode: ServicesPreferencesModeEnum.AUTO,
+          version: (created.servicePreferencesSettings.version +
+            1) as NonNegativeInteger
+        }
+      })
+      .fold(
+        _ => fail(`Failed to update doc, error: ${toString(_)}`),
+        result => {
+          expect(result).toEqual(
+            expect.objectContaining({
+              ...aProfile,
+              servicePreferencesSettings: {
+                mode: ServicesPreferencesModeEnum.AUTO,
+                version: created.servicePreferencesSettings.version + 1
+              }
+            })
+          );
+          return result;
+        }
+      )
+      .run();
+
+    // update document without changing mode, again
+    await model
+      .update({
+        ...updated2,
+        servicePreferencesSettings:
+          // This example is just to show an uncomfortable scenario led by ServicePreferencesSettings type definition
+          // This works => servicePreferencesSettings: updated2.servicePreferencesSettings
+          //   because updated2.servicePreferencesSettings is recognized as a valid ServicePreferencesSettings already
+          // This DOES NOT work => servicePreferencesSettings: { mode:  updated2.servicePreferencesSettings.mode,  version: updated2.servicePreferencesSettings.version }
+          //   because TS fails to relate 'mode' and 'version' fields when handled separately.
+          //   To solve it, the following dummy check will help TS by narrowing possibilities on `mode` field.
+          updated2.servicePreferencesSettings.mode ===
+          ServicesPreferencesModeEnum.LEGACY
+            ? {
+                mode: updated2.servicePreferencesSettings.mode,
+                version: updated2.servicePreferencesSettings.version
+              }
+            : {
+                mode: updated2.servicePreferencesSettings.mode,
+                version: updated2.servicePreferencesSettings.version
+              }
+      })
+      .fold(
+        _ => fail(`Failed to update doc, error: ${toString(_)}`),
+        result => {
+          expect(result).toEqual(
+            expect.objectContaining({
+              ...aProfile,
+              servicePreferencesSettings: {
+                mode: updated2.servicePreferencesSettings.mode,
+                version: updated2.servicePreferencesSettings.version
+              }
+            })
+          );
+          return result;
+        }
+      )
+      .run();
+
+    context.dispose();
+  });
+
   it.each`
     mode                                  | version
-    ${ServicesPreferencesModeEnum.LEGACY} | ${1}
-    ${ServicesPreferencesModeEnum.AUTO}   | ${0}
-    ${ServicesPreferencesModeEnum.MANUAL} | ${0}
-    ${ServicesPreferencesModeEnum.MANUAL} | ${-1}
-    ${ServicesPreferencesModeEnum.LEGACY} | ${-1}
-    ${"fantasy-mode"}                     | ${1}
+    ${ServicesPreferencesModeEnum.LEGACY} | ${PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION + 1}
+    ${ServicesPreferencesModeEnum.LEGACY} | ${PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION - 1}
+    ${ServicesPreferencesModeEnum.AUTO}   | ${PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION}
+    ${ServicesPreferencesModeEnum.MANUAL} | ${PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION}
+    ${ServicesPreferencesModeEnum.MANUAL} | ${PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION - 1}
+    ${"fantasy-mode"}                     | ${1 /* any value */}
   `(
     "should fail when passing inconsistent service preferences (mode: $mode, version: $version})",
     async ({ mode, version }) => {
@@ -236,6 +346,49 @@ describe("Models |> Profile", () => {
             fail(
               `Should not have succeedeed with mode: ${mode} and version: ${version}`
             )
+        )
+        .run();
+
+      context.dispose();
+    }
+  );
+
+  it.each`
+    mode                                  | version
+    ${ServicesPreferencesModeEnum.LEGACY} | ${PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION}
+    ${ServicesPreferencesModeEnum.AUTO}   | ${PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION + 1 /* should be zero, but we do not know */}
+    ${ServicesPreferencesModeEnum.AUTO}   | ${0 /* explicitly zero */}
+    ${ServicesPreferencesModeEnum.AUTO}   | ${100 /* any positive number */}
+    ${ServicesPreferencesModeEnum.MANUAL} | ${PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION + 1 /* should be zero, but we do not know */}
+    ${ServicesPreferencesModeEnum.MANUAL} | ${0 /* explicitly zero */}
+    ${ServicesPreferencesModeEnum.MANUAL} | ${100 /* any positive number */}
+  `(
+    "should save records when passing consistent service preferences (mode: $mode, version: $version})",
+    async ({ mode, version }) => {
+      const context = await createContext(PROFILE_MODEL_PK_FIELD);
+      await context.init();
+      const model = new ProfileModel(context.container);
+
+      const withInconsistentValues = {
+        kind: "INewProfile" as const,
+        ...aProfile,
+        servicePreferencesSettings: {
+          mode,
+          version
+        }
+      };
+
+      await model
+        .create(withInconsistentValues)
+        .fold(
+          _ =>
+            fail(
+              `Should not have failed with mode: ${mode} and version: ${version}`
+            ),
+          _ => {
+            expect(_.servicePreferencesSettings.mode).toBe(mode);
+            expect(_.servicePreferencesSettings.version).toBe(version);
+          }
         )
         .run();
 
