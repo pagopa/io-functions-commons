@@ -1,4 +1,5 @@
-import { isLeft, isRight } from "fp-ts/lib/Either";
+import * as E from "fp-ts/lib/Either";
+import * as O from "fp-ts/lib/Option";
 
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
@@ -14,6 +15,7 @@ import {
 
 import { Container } from "@azure/cosmos";
 import { ServicesPreferencesModeEnum } from "../../../generated/definitions/ServicesPreferencesMode";
+import { pipe } from "fp-ts/lib/function";
 
 const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
 
@@ -25,8 +27,11 @@ const aRawProfile = {
   isWebhookEnabled: false
 };
 
-const aStoredProfile: Profile = Profile.decode(aRawProfile).getOrElseL(_ =>
-  fail(`Cannot decode aStoredProfile, error: ${readableReport(_)}`)
+const aStoredProfile: Profile = pipe(
+  Profile.decode(aRawProfile),
+  E.getOrElseW(_ =>
+    fail(`Cannot decode aStoredProfile, error: ${readableReport(_)}`)
+  )
 );
 
 const aRetrievedProfile: RetrievedProfile = {
@@ -57,12 +62,12 @@ describe("findLastVersionByModelId", () => {
 
     const model = new ProfileModel(containerMock);
 
-    const result = await model.findLastVersionByModelId([aFiscalCode]).run();
+    const result = await model.findLastVersionByModelId([aFiscalCode])();
 
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isSome()).toBeTruthy();
-      expect(result.value.toUndefined()).toEqual({
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isSome(result.right)).toBeTruthy();
+      expect(O.toUndefined(result.right)).toEqual({
         ...aRetrievedProfile,
         isEmailEnabled: true,
         isTestProfile: false,
@@ -90,11 +95,11 @@ describe("findLastVersionByModelId", () => {
 
     const model = new ProfileModel(containerMock);
 
-    const result = await model.findLastVersionByModelId([aFiscalCode]).run();
+    const result = await model.findLastVersionByModelId([aFiscalCode])();
 
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isNone()).toBeTruthy();
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isNone(result.right)).toBeTruthy();
     }
   });
 
@@ -114,11 +119,11 @@ describe("findLastVersionByModelId", () => {
 
     const model = new ProfileModel(containerMock);
 
-    const result = await model.findLastVersionByModelId([aFiscalCode]).run();
+    const result = await model.findLastVersionByModelId([aFiscalCode])();
 
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toBe("COSMOS_DECODING_ERROR");
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toBe("COSMOS_DECODING_ERROR");
     }
   });
 });
@@ -132,14 +137,17 @@ describe("Profile codec", () => {
         mode === "LEGACY"
           ? PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION
           : 0;
-      Profile.decode({
-        ...aRawProfile,
-        servicePreferencesSettings: { mode, version }
-      }).getOrElseL(_ =>
-        fail(
-          `Cannot decode profile, maybe an unhandled ServicesPreferencesMode: ${mode}, error: ${readableReport(
-            _
-          )}`
+      pipe(
+        Profile.decode({
+          ...aRawProfile,
+          servicePreferencesSettings: { mode, version }
+        }),
+        E.getOrElseW(_ =>
+          fail(
+            `Cannot decode profile, maybe an unhandled ServicesPreferencesMode: ${mode}, error: ${readableReport(
+              _
+            )}`
+          )
         )
       );
     }
