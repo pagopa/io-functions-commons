@@ -1,6 +1,7 @@
 // eslint-disable @typescript-eslint/no-explicit-any
 
-import { isLeft, isRight } from "fp-ts/lib/Either";
+import * as E from "fp-ts/lib/Either";
+import * as O from "fp-ts/lib/Option";
 import { NonNegativeNumber } from "@pagopa/ts-commons/lib/numbers";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
@@ -8,6 +9,8 @@ import { Container } from "@azure/cosmos";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { MessageStatusValueEnum } from "../../../generated/definitions/MessageStatusValue";
 import { MessageStatusModel, RetrievedMessageStatus } from "../message_status";
+import { pipe } from "fp-ts/lib/function";
+import { isSome } from "fp-ts/lib/Option";
 
 const aMessageId = "A_MESSAGE_ID" as NonEmptyString;
 
@@ -28,12 +31,13 @@ const aSerializedRetrievedMessageStatus = {
   version: 0 as NonNegativeNumber
 };
 
-const aRetrievedMessageStatus = RetrievedMessageStatus.decode(
-  aSerializedRetrievedMessageStatus
-).getOrElseL(errs => {
-  const error = readableReport(errs);
-  throw new Error("Fix MessageStatus mock: " + error);
-});
+const aRetrievedMessageStatus = pipe(
+  RetrievedMessageStatus.decode(aSerializedRetrievedMessageStatus),
+  E.getOrElseW(errs => {
+    const error = readableReport(errs);
+    throw new Error("Fix MessageStatus mock: " + error);
+  })
+);
 
 describe("findOneMessageStatusById", () => {
   it("should return an existing message status", async () => {
@@ -52,12 +56,12 @@ describe("findOneMessageStatusById", () => {
 
     const model = new MessageStatusModel(containerMock);
 
-    const result = await model.findLastVersionByModelId([aMessageId]).run();
+    const result = await model.findLastVersionByModelId([aMessageId])();
 
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isSome()).toBeTruthy();
-      expect(result.value.toUndefined()).toEqual(aRetrievedMessageStatus);
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isSome(result.right)).toBeTruthy();
+      expect(O.toUndefined(result.right)).toEqual(aRetrievedMessageStatus);
     }
   });
 
@@ -77,11 +81,11 @@ describe("findOneMessageStatusById", () => {
 
     const model = new MessageStatusModel(containerMock);
 
-    const result = await model.findLastVersionByModelId([aMessageId]).run();
+    const result = await model.findLastVersionByModelId([aMessageId])();
 
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isNone()).toBeTruthy();
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isNone(result.right)).toBeTruthy();
     }
   });
 
@@ -101,11 +105,11 @@ describe("findOneMessageStatusById", () => {
 
     const model = new MessageStatusModel(containerMock);
 
-    const result = await model.findLastVersionByModelId([aMessageId]).run();
+    const result = await model.findLastVersionByModelId([aMessageId])();
 
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toBe("COSMOS_DECODING_ERROR");
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toBe("COSMOS_DECODING_ERROR");
     }
   });
 });
