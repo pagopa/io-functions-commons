@@ -1,7 +1,8 @@
 import * as t from "io-ts";
 
-import { Option } from "fp-ts/lib/Option";
-import { fromEither, TaskEither } from "fp-ts/lib/TaskEither";
+import * as O from "fp-ts/lib/Option";
+import { TaskEither } from "fp-ts/lib/TaskEither";
+import * as TE from "fp-ts/lib/TaskEither";
 
 import {
   INonNegativeIntegerTag,
@@ -15,6 +16,7 @@ import {
   SqlQuerySpec
 } from "@azure/cosmos";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { flow, pipe } from "fp-ts/lib/function";
 import {
   BaseModel,
   CosmosdbModel,
@@ -127,8 +129,11 @@ export abstract class CosmosdbModelVersioned<
     o: TN,
     requestOptions?: RequestOptions
   ): TaskEither<CosmosErrors, TR> {
-    return this.getNextVersion(this.getSearchKey(o)).chain(nextVersion =>
-      this.createNewVersion(o, nextVersion, requestOptions)
+    return pipe(
+      this.getNextVersion(this.getSearchKey(o)),
+      TE.chain(nextVersion =>
+        this.createNewVersion(o, nextVersion, requestOptions)
+      )
     );
   }
 
@@ -169,7 +174,7 @@ export abstract class CosmosdbModelVersioned<
    */
   public findLastVersionByModelId(
     searchKey: DocumentSearchKey<T, ModelIdKey, PartitionKey>
-  ): TaskEither<CosmosErrors, Option<TR>> {
+  ): TaskEither<CosmosErrors, O.Option<TR>> {
     const [modelId, partitionKey] = searchKey;
     const q: SqlQuerySpec = {
       parameters: [
@@ -237,14 +242,19 @@ export abstract class CosmosdbModelVersioned<
    */
   private readonly getNextVersion = (
     searchKey: DocumentSearchKey<T, ModelIdKey, PartitionKey>
-  ): TaskEither<CosmosErrors, number & INonNegativeIntegerTag> =>
+  ): TaskEither<CosmosErrors, number & INonNegativeIntegerTag> => {
     // eslint-disable-next-line no-invalid-this
-    this.findLastVersionByModelId(searchKey).map(maybeLastVersion =>
-      maybeLastVersion
-        .map(_ => incVersion(_.version))
-        .getOrElse(0 as NonNegativeInteger)
+    const lastVersion = this.findLastVersionByModelId(searchKey);
+    return pipe(
+      lastVersion,
+      TE.map(
+        flow(
+          O.map(_ => incVersion(_.version)),
+          O.getOrElse(() => 0 as NonNegativeInteger)
+        )
+      )
     );
-
+  };
   /**
    * Insert a document with a specific version
    *
@@ -259,15 +269,18 @@ export abstract class CosmosdbModelVersioned<
   ): TaskEither<CosmosErrors, TR> {
     const modelId = this.getModelId(o);
     const toSave = this.beforeSave(o);
-    return fromEither(
-      t.intersection([this.newVersionedItemT, VersionedModel]).decode({
-        ...toSave,
-        id: generateVersionedModelId(modelId, version),
-        version
-      })
-    )
-      .mapLeft<CosmosErrors>(CosmosDecodingError)
-      .chain(document => super.create(document, requestOptions));
+
+    return pipe(
+      TE.fromEither(
+        t.intersection([this.newVersionedItemT, VersionedModel]).decode({
+          ...toSave,
+          id: generateVersionedModelId(modelId, version),
+          version
+        })
+      ),
+      TE.mapLeft(CosmosDecodingError),
+      TE.chain(document => super.create(document, requestOptions))
+    );
   }
 
   /**

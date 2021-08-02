@@ -1,7 +1,7 @@
 import * as t from "io-ts";
 
-import { isLeft, isRight } from "fp-ts/lib/Either";
-import { isNone } from "fp-ts/lib/Option";
+import * as E from "fp-ts/lib/Either";
+import * as O from "fp-ts/lib/Option";
 
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 
@@ -135,7 +135,7 @@ describe("upsert", () => {
 
       const model = new MyModel(container);
 
-      const result = await model.upsert(document).run();
+      const result = await model.upsert(document)();
 
       expect(containerMock.items.create).toHaveBeenCalledWith(
         {
@@ -145,9 +145,9 @@ describe("upsert", () => {
         },
         { disableAutomaticIdGeneration: true }
       );
-      expect(isRight(result));
-      if (isRight(result)) {
-        expect(result.value).toEqual({
+      expect(E.isRight(result));
+      if (E.isRight(result)) {
+        expect(result.right).toEqual({
           ...document,
           ...someMetadata,
           id: documentId(document[aModelIdField], expectedVersion),
@@ -162,12 +162,12 @@ describe("upsert", () => {
     });
     const model = new MyModel(container);
 
-    const result = await model.upsert(aMyDocument).run();
-    expect(isLeft(result));
-    if (isLeft(result)) {
-      expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");
-      if (result.value.kind === "COSMOS_ERROR_RESPONSE") {
-        expect(result.value.error.code).toBe(500);
+    const result = await model.upsert(aMyDocument)();
+    expect(E.isLeft(result));
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toBe("COSMOS_ERROR_RESPONSE");
+      if (result.left.kind === "COSMOS_ERROR_RESPONSE") {
+        expect(result.left.error.code).toBe(500);
       }
     }
   });
@@ -179,12 +179,12 @@ describe("upsert", () => {
     containerMock.items.create.mockRejectedValueOnce(errorResponse);
     const model = new MyModel(container);
 
-    const result = await model.upsert(aMyDocument).run();
-    expect(isLeft(result));
-    if (isLeft(result)) {
-      expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");
-      if (result.value.kind === "COSMOS_ERROR_RESPONSE") {
-        expect(result.value.error.code).toBe(500);
+    const result = await model.upsert(aMyDocument)();
+    expect(E.isLeft(result));
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toBe("COSMOS_ERROR_RESPONSE");
+      if (result.left.kind === "COSMOS_ERROR_RESPONSE") {
+        expect(result.left.error.code).toBe(500);
       }
     }
   });
@@ -196,7 +196,7 @@ describe("update", () => {
     const modelId = aMyDocument[aModelIdField];
     const model = new MyModel(container);
 
-    const result = await model.create(aMyDocument).run();
+    const result = await model.create(aMyDocument)();
 
     expect(containerMock.items.create).toHaveBeenCalledWith(
       {
@@ -206,9 +206,9 @@ describe("update", () => {
       },
       { disableAutomaticIdGeneration: true }
     );
-    expect(isRight(result));
-    if (isRight(result)) {
-      expect(result.value).toEqual({
+    expect(E.isRight(result));
+    if (E.isRight(result)) {
+      expect(result.right).toEqual({
         ...aMyDocument,
         ...someMetadata,
         id: documentId(modelId, expectedNextVersion),
@@ -224,7 +224,7 @@ describe("create", () => {
     const modelId = aRetrievedExistingDocument[aModelIdField];
     const model = new MyModel(container);
 
-    const result = await model.update(aRetrievedExistingDocument).run();
+    const result = await model.update(aRetrievedExistingDocument)();
 
     expect(containerMock.items.create).toHaveBeenCalledWith(
       {
@@ -234,9 +234,9 @@ describe("create", () => {
       },
       { disableAutomaticIdGeneration: true }
     );
-    expect(isRight(result));
-    if (isRight(result)) {
-      expect(result.value).toEqual({
+    expect(E.isRight(result));
+    if (E.isRight(result)) {
+      expect(result.right).toEqual({
         ...aMyDocument,
         ...someMetadata,
         id: documentId(modelId, expectedNextVersion),
@@ -249,21 +249,22 @@ describe("create", () => {
 describe("findLastVersionByModelId", () => {
   it("should return none when the document is not found", async () => {
     const model = new MyModel(container);
-    const result = await model.findLastVersionByModelId([aModelIdValue]).run();
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(isNone(result.value)).toBeTruthy();
+    const result = await model.findLastVersionByModelId([aModelIdValue])();
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isNone(result.right)).toBeTruthy();
     }
   });
 
   it("should return none when the document is not found on partitioned model", async () => {
     const model = new MyPartitionedModel(container);
-    const result = await model
-      .findLastVersionByModelId([aModelIdValue, aModelPartitionValue])
-      .run();
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(isNone(result.value)).toBeTruthy();
+    const result = await model.findLastVersionByModelId([
+      aModelIdValue,
+      aModelPartitionValue
+    ])();
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isNone(result.right)).toBeTruthy();
     }
   });
 
@@ -272,12 +273,12 @@ describe("findLastVersionByModelId", () => {
       fetchAll: () => Promise.reject(errorResponse)
     });
     const model = new MyModel(container);
-    const result = await model.findLastVersionByModelId([aModelIdValue]).run();
-    expect(isLeft(result));
-    if (isLeft(result)) {
-      expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");
-      if (result.value.kind === "COSMOS_ERROR_RESPONSE") {
-        expect(result.value.error.code).toBe(500);
+    const result = await model.findLastVersionByModelId([aModelIdValue])();
+    expect(E.isLeft(result));
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toBe("COSMOS_ERROR_RESPONSE");
+      if (result.left.kind === "COSMOS_ERROR_RESPONSE") {
+        expect(result.left.error.code).toBe(500);
       }
     }
   });
