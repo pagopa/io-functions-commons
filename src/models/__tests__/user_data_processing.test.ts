@@ -1,13 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable sonarjs/no-identical-functions */
 
-import { isLeft, isRight } from "fp-ts/lib/Either";
-import { toString } from "fp-ts/lib/function";
+import * as E from "fp-ts/lib/Either";
 
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 
-import { Container, FeedResponse, ResourceResponse, User } from "@azure/cosmos";
+import { Container, FeedResponse, ResourceResponse } from "@azure/cosmos";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { UserDataProcessingChoiceEnum } from "../../../generated/definitions/UserDataProcessingChoice";
 import { UserDataProcessingStatusEnum } from "../../../generated/definitions/UserDataProcessingStatus";
@@ -20,6 +19,7 @@ import {
   UserDataProcessingModel
 } from "../user_data_processing";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
+import { pipe } from "fp-ts/lib/function";
 
 const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
 const aUserDataProcessingChoice = UserDataProcessingChoiceEnum.DOWNLOAD;
@@ -97,28 +97,27 @@ describe("createOrUpdateByNewOne", () => {
 
     const model = new UserDataProcessingModel(containerMock);
 
-    const result = await model
-      .createOrUpdateByNewOne(aUserDataProcessing)
-      .run();
-
-    result.fold(
-      err => {
-        // @ts-ignore
-        console.log(err.error);
-        fail(
-          `Failed createOrUpdateByNewOne, kind: ${err.kind}, reason: ${
-            err.kind === "COSMOS_DECODING_ERROR"
-              ? readableReport(err.error)
-              : "unknown"
-          }`
-        );
-      },
-      value => {
-        expect(value.updatedAt).toEqual(aNewUserDataProcessing.createdAt);
-        expect(value.userDataProcessingId).toEqual(
-          `${aNewUserDataProcessing.userDataProcessingId}`
-        );
-      }
+    pipe(
+      await model.createOrUpdateByNewOne(aUserDataProcessing)(),
+      E.fold(
+        err => {
+          // @ts-ignore
+          console.log(err.error);
+          fail(
+            `Failed createOrUpdateByNewOne, kind: ${err.kind}, reason: ${
+              err.kind === "COSMOS_DECODING_ERROR"
+                ? readableReport(err.error)
+                : "unknown"
+            }`
+          );
+        },
+        value => {
+          expect(value.updatedAt).toEqual(aNewUserDataProcessing.createdAt);
+          expect(value.userDataProcessingId).toEqual(
+            `${aNewUserDataProcessing.userDataProcessingId}`
+          );
+        }
+      )
     );
   });
 
@@ -138,15 +137,13 @@ describe("createOrUpdateByNewOne", () => {
 
     const model = new UserDataProcessingModel(containerMock);
 
-    const result = await model
-      .createOrUpdateByNewOne(aNewUserDataProcessing)
-      .run();
+    const result = await model.createOrUpdateByNewOne(aNewUserDataProcessing)();
 
     expect(containerMock.items.create).toHaveBeenCalledTimes(1);
 
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toEqual("COSMOS_ERROR_RESPONSE");
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toEqual("COSMOS_ERROR_RESPONSE");
     }
   });
 });
@@ -154,11 +151,13 @@ describe("createOrUpdateByNewOne", () => {
 describe("UserDataProcessingId", () => {
   it("should decode a valid id", () => {
     const id = `${aFiscalCode}-${UserDataProcessingChoiceEnum.DELETE}`;
-    const decoded = UserDataProcessingId.decode(id)
-      .mapLeft(readableReport)
-      .getOrElseL(err =>
+    const decoded = pipe(
+      UserDataProcessingId.decode(id),
+      E.mapLeft(readableReport),
+      E.getOrElseW(err =>
         fail(`Cannot decode UserDataProcessingId, id: ${id}, err: ${err}`)
-      );
+      )
+    );
 
     expect(id).toBe(decoded);
     expect(UserDataProcessingId.is(id)).toBe(true);
@@ -173,7 +172,7 @@ describe("UserDataProcessingId", () => {
   `("should not decode an invalid id $name", ({ value }) => {
     const result = UserDataProcessingId.decode(value);
 
-    expect(result.isRight()).toBeFalsy();
+    expect(E.isRight(result)).toBeFalsy();
   });
 });
 
@@ -224,7 +223,7 @@ describe("userDataProcessing", () => {
   `("should decode valid UserDataProcessing records", ({ value }) => {
     let result = UserDataProcessing.decode(value);
 
-    expect(result.isRight()).toBeTruthy();
+    expect(E.isRight(result)).toBeTruthy();
   });
 
   const aWrongWithStringReason = {
