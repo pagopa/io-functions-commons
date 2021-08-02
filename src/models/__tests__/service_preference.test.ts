@@ -1,4 +1,5 @@
-import { isLeft, isRight } from "fp-ts/lib/Either";
+import * as E from "fp-ts/lib/Either";
+import * as O from "fp-ts/lib/Option";
 
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
@@ -73,21 +74,19 @@ describe("find", () => {
       SERVICE_PREFERENCES_COLLECTION_NAME
     );
 
-    const result = await model
-      .find([
-        makeServicesPreferencesDocumentId(
-          aFiscalCode,
-          aServiceId,
-          0 as NonNegativeInteger
-        ),
-        aFiscalCode
-      ])
-      .run();
+    const result = await model.find([
+      makeServicesPreferencesDocumentId(
+        aFiscalCode,
+        aServiceId,
+        0 as NonNegativeInteger
+      ),
+      aFiscalCode
+    ])();
 
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isSome()).toBeTruthy();
-      expect(result.value.toUndefined()).toEqual(aRetrievedServicePreference);
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isSome(result.right)).toBeTruthy();
+      expect(O.toUndefined(result.right)).toEqual(aRetrievedServicePreference);
     }
   });
 
@@ -107,20 +106,18 @@ describe("find", () => {
       SERVICE_PREFERENCES_COLLECTION_NAME
     );
 
-    const result = await model
-      .find([
-        makeServicesPreferencesDocumentId(
-          aFiscalCode,
-          aServiceId,
-          0 as NonNegativeInteger
-        ),
-        aFiscalCode
-      ])
-      .run();
+    const result = await model.find([
+      makeServicesPreferencesDocumentId(
+        aFiscalCode,
+        aServiceId,
+        0 as NonNegativeInteger
+      ),
+      aFiscalCode
+    ])();
 
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isNone()).toBeTruthy();
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isNone(result.right)).toBeTruthy();
     }
   });
 
@@ -140,20 +137,18 @@ describe("find", () => {
       SERVICE_PREFERENCES_COLLECTION_NAME
     );
 
-    const result = await model
-      .find([
-        makeServicesPreferencesDocumentId(
-          aFiscalCode,
-          aServiceId,
-          0 as NonNegativeInteger
-        ),
-        aFiscalCode
-      ])
-      .run();
+    const result = await model.find([
+      makeServicesPreferencesDocumentId(
+        aFiscalCode,
+        aServiceId,
+        0 as NonNegativeInteger
+      ),
+      aFiscalCode
+    ])();
 
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toBe("COSMOS_DECODING_ERROR");
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toBe("COSMOS_DECODING_ERROR");
     }
   });
 });
@@ -174,11 +169,11 @@ describe("create ServicePreference", () => {
       SERVICE_PREFERENCES_COLLECTION_NAME
     );
 
-    const result = await model.create(aNewServicePreference).run();
+    const result = await model.create(aNewServicePreference)();
 
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value).toEqual(aRetrievedServicePreference);
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(result.right).toEqual(aRetrievedServicePreference);
     }
   });
 });
