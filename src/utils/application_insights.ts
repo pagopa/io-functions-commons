@@ -4,7 +4,9 @@ import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { CorrelationContextManager } from "applicationinsights/out/AutoCollection/CorrelationContextManager";
 // eslint-disable-next-line import/no-internal-modules
 import Traceparent = require("applicationinsights/out/Library/Traceparent");
-import { fromNullable } from "fp-ts/lib/Option";
+import { pipe } from "fp-ts/lib/function";
+import * as O from "fp-ts/lib/Option";
+import * as E from "fp-ts/lib/Either";
 
 /**
  * Wraps a function handler with a telemetry context,
@@ -12,13 +14,19 @@ import { fromNullable } from "fp-ts/lib/Option";
  */
 export const withAppInsightsContext = <R>(context: Context, f: () => R): R => {
   // @see https://github.com/Azure/azure-functions-host/issues/5170#issuecomment-553583362
-  const traceId = fromNullable(context.traceContext).fold(
-    context.invocationId,
-    tc =>
-      NonEmptyString.decode(tc.traceparent).fold(
-        _ => context.invocationId,
-        _ => new Traceparent(_).traceId
-      )
+  const traceId = pipe(
+    O.fromNullable(context.traceContext),
+    O.fold(
+      () => context.invocationId,
+      tc =>
+        pipe(
+          NonEmptyString.decode(tc.traceparent),
+          E.fold(
+            _ => context.invocationId,
+            traceParentAsString => new Traceparent(traceParentAsString).traceId
+          )
+        )
+    )
   );
   const correlationContext = CorrelationContextManager.generateContextObject(
     traceId,
