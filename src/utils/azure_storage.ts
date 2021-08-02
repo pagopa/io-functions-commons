@@ -4,10 +4,13 @@
 import * as azureStorage from "azure-storage";
 import * as t from "io-ts";
 
-import { Either, left, right } from "fp-ts/lib/Either";
+import { Either } from "fp-ts/lib/Either";
+import * as E from "fp-ts/lib/Either";
+
 import { fromNullable, isNone, none, Option, some } from "fp-ts/lib/Option";
 
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
+import { pipe } from "fp-ts/lib/function";
 
 type Resolve<T> = (value?: T | PromiseLike<T>) => void;
 
@@ -32,9 +35,9 @@ const resolveErrorOrLeaseResult = (
   _: azureStorage.ServiceResponse
 ): void => {
   if (err) {
-    return resolve(left(err));
+    return resolve(E.left(err));
   } else {
-    return resolve(right(result));
+    return resolve(E.right(result));
   }
 };
 
@@ -110,11 +113,11 @@ export const upsertBlobFromText = (
       (err, result, __) => {
         if (err) {
           return resolve(
-            left<Error, Option<azureStorage.BlobService.BlobResult>>(err)
+            E.left<Error, Option<azureStorage.BlobService.BlobResult>>(err)
           );
         } else {
           return resolve(
-            right<Error, Option<azureStorage.BlobService.BlobResult>>(
+            E.right<Error, Option<azureStorage.BlobService.BlobResult>>(
               fromNullable(result)
             )
           );
@@ -173,11 +176,11 @@ export const getBlobAsText = (
             errorAsStorageError.code !== undefined &&
             errorAsStorageError.code === BlobNotFoundCode
           ) {
-            return resolve(right<Error, Option<string>>(none));
+            return resolve(E.right<Error, Option<string>>(none));
           }
-          return resolve(left<Error, Option<string>>(err));
+          return resolve(E.left<Error, Option<string>>(err));
         } else {
-          return resolve(right<Error, Option<string>>(fromNullable(result)));
+          return resolve(E.right<Error, Option<string>>(fromNullable(result)));
         }
       }
     );
@@ -203,22 +206,28 @@ export const getBlobAsObject = async <A, O, I>(
     blobName,
     options
   );
-  return errorOrMaybeText.chain(maybeText => {
-    if (isNone(maybeText)) {
-      return right(none);
-    }
+  return pipe(
+    errorOrMaybeText,
+    E.chain(maybeText => {
+      if (isNone(maybeText)) {
+        return E.right(none);
+      }
 
-    const text = maybeText.value;
-    try {
-      const json = JSON.parse(text);
-      return type.decode(json).fold<Either<Error, Option<A>>>(
-        err => left(new Error(readableReport(err))),
-        _ => right(some(_))
-      );
-    } catch (e) {
-      return left(e);
-    }
-  });
+      const text = maybeText.value;
+      try {
+        const json = JSON.parse(text);
+        return pipe(
+          type.decode(json),
+          E.fold(
+            err => E.left(new Error(readableReport(err))),
+            _ => E.right(some(_))
+          )
+        );
+      } catch (e) {
+        return E.left(e);
+      }
+    })
+  );
 };
 
 // TABLE STORAGE FUNCTIONS AND TYPES
@@ -291,7 +300,7 @@ export const insertTableEntity = async <T extends ITableEntity>(
   new Promise(resolve => {
     // eslint-disable-next-line sonarjs/no-identical-functions
     tableService.insertEntity<T>(tableName, entity, (err, result, _) =>
-      resolve(err ? left(err) : right(result))
+      resolve(err ? E.left(err) : E.right(result))
     );
   });
 
@@ -322,12 +331,12 @@ export const retrieveTableEntity = async (
         if (err) {
           const errorAsStorageError = err as StorageError;
           if (errorAsStorageError.code === ResourceNotFoundCode) {
-            return resolve(right(none));
+            return resolve(E.right(none));
           }
-          return resolve(left(errorAsStorageError));
+          return resolve(E.left(errorAsStorageError));
         }
 
-        return resolve(right(some(result)));
+        return resolve(E.right(some(result)));
       }
     );
   });
