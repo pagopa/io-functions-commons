@@ -44,11 +44,7 @@ stages:
 
       - job: lint_api
         steps:
-          - task: UseNode@1
-            inputs:
-              version: $(NODE_VERSION)
-            displayName: 'Set up Node.js'
-
+          - template: templates/node-job-setup/template.yaml@pagopaCommons
           - bash: |
               npx oval validate -p openapi/index.yaml
             displayName: 'Validate openAPI'
