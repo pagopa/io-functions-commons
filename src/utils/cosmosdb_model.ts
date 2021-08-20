@@ -263,6 +263,29 @@ export abstract class CosmosdbModel<
   }
 
   /**
+   * Get an iterator to process all documents returned by a specific paged query.
+   */
+  public getQueryIteratorWithPaging(
+    query: string | SqlQuerySpec,
+    options?: FeedOptions
+  ): AsyncIterable<
+    ReadonlyArray<{
+      continuationToken?: string;
+      item: t.Validation<TR>;
+    }>
+  > {
+    const iterator = this.container.items
+      .query(query, options)
+      .getAsyncIterator();
+    return mapAsyncIterable(iterator, feedResponse =>
+      feedResponse.resources.map(i => ({
+        continuationToken: feedResponse.continuationToken,
+        item: this.retrievedItemT.decode(i)
+      }))
+    );
+  }
+
+  /**
    * Fetch all documents of the collection.
    * Note that this method loads all items in memory at once, it should be used
    * only when it's not feasible to process the items incrementally with

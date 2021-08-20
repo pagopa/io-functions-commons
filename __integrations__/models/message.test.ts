@@ -17,6 +17,12 @@ import {
   asyncIterableToArray,
   flattenAsyncIterable
 } from "../../src/utils/async";
+import {
+  asyncIteratorToArray,
+  flattenAsyncIterator
+} from "../../dist/src/utils/async";
+import { failure } from "io-ts";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 
 const MESSAGE_CONTAINER_NAME = "test-message-container" as NonEmptyString;
 
@@ -241,5 +247,96 @@ describe("Models |> Message", () => {
       .run();
 
     await context.dispose();
+  });
+
+  it("should retrieve messages with continuation token", async () => {
+    const context = await createContext(MESSAGE_MODEL_PK_FIELD);
+    await context.init();
+    const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
+
+    // create a new document
+    await model
+      .create(aNewMessageWithoutContent)
+      .fold(
+        _ => fail(`Failed to create doc, error: ${toString(_)}`),
+        result => {
+          expect(result).toEqual(
+            expect.objectContaining({
+              ...aSerializedNewMessageWithoutContent
+            })
+          );
+          return result;
+        }
+      )
+      .run();
+
+    await model
+      .create({
+        ...aNewMessageWithoutContent,
+        id: "ANOTHER_MESSAGE_ID" as NonEmptyString
+      })
+      .fold(
+        _ => fail(`Failed to create doc, error: ${toString(_)}`),
+        result => {
+          return result;
+        }
+      )
+      .run();
+
+    // find all message for a fiscal code
+    let results = await model
+      .findMessages(aFiscalCode, 2 as NonNegativeInteger)
+      .map(_ => _.next().then(__ => __.value))
+      .getOrElseL(_ => fail("error"))
+      .run();
+
+    console.log(results[0].continuationToken);
+    console.log(results[0].item.value);
+    console.log(results[1].continuationToken);
+    console.log(results[1].item.value);
+    console.log(results);
+
+    await model
+      .create({
+        ...aNewMessageWithoutContent,
+        id: "ANOTHER_2_MESSAGE_ID" as NonEmptyString
+      })
+      .fold(
+        _ => fail(`Failed to create doc, error: ${toString(_)}`),
+        result => {
+          return result;
+        }
+      )
+      .run();
+
+    // find all message for a fiscal code
+    results = await model
+      .findMessages(aFiscalCode, 2 as NonNegativeInteger)
+      .map(_ => _.next().then(__ => __.value))
+      .getOrElseL(_ => fail("error"))
+      .run();
+
+    console.log(results[0].continuationToken);
+    console.log(results[0].item.value);
+    console.log(results[1].continuationToken);
+    console.log(results[1].item.value);
+    console.log(results);
+
+    // find all message for a fiscal code
+    results = await model
+      .findMessages(
+        aFiscalCode,
+        2 as NonNegativeInteger,
+        results[0].continuationToken
+      )
+      .map(_ => _.next().then(__ => __.value))
+      .getOrElseL(_ => fail("error"))
+      .run();
+
+    console.log(results[0].continuationToken);
+    console.log(results[0].item.value);
+    console.log(results);
+
+    context.dispose();
   });
 });

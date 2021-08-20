@@ -43,6 +43,7 @@ import { Timestamp } from "../../generated/definitions/Timestamp";
 import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds";
 import { getBlobAsText, upsertBlobFromObject } from "../utils/azure_storage";
 import { wrapWithKind } from "../utils/types";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 
 export const MESSAGE_COLLECTION_NAME = "messages";
 export const MESSAGE_MODEL_PK_FIELD = "fiscalCode" as const;
@@ -226,23 +227,37 @@ export class MessageModel extends CosmosdbModel<
    * @param fiscalCode The fiscal code of the recipient
    */
   public findMessages(
-    fiscalCode: FiscalCode
+    fiscalCode: FiscalCode,
+    pageSize = 100 as NonNegativeInteger,
+    continuationToken?: NonEmptyString
   ): TaskEither<
     CosmosErrors,
-    AsyncIterator<ReadonlyArray<t.Validation<RetrievedMessage>>>
+    AsyncIterator<
+      ReadonlyArray<{
+        continuationToken?: string;
+        continuation?: string;
+        item: t.Validation<RetrievedMessage>;
+      }>
+    >
   > {
     return fromEitherT(
       tryCatch2v(
         () =>
-          this.getQueryIterator({
-            parameters: [
-              {
-                name: "@fiscalCode",
-                value: fiscalCode
-              }
-            ],
-            query: `SELECT * FROM m WHERE m.${MESSAGE_MODEL_PK_FIELD} = @fiscalCode`
-          })[Symbol.asyncIterator](),
+          this.getQueryIteratorWithPaging(
+            {
+              parameters: [
+                {
+                  name: "@fiscalCode",
+                  value: fiscalCode
+                }
+              ],
+              query: `SELECT * FROM m WHERE m.${MESSAGE_MODEL_PK_FIELD} = @fiscalCode`
+            },
+            {
+              continuationToken,
+              maxItemCount: pageSize
+            }
+          )[Symbol.asyncIterator](),
         toCosmosErrorResponse
       )
     );
