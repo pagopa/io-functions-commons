@@ -269,7 +269,7 @@ export abstract class CosmosdbModel<
     const iterator = this.container.items
       .query(query, options)
       .getAsyncIterator();
-    return mapAsyncIterable(iterator, feedResponse =>
+    return mapAsyncIterable(iterator, (feedResponse: FeedResponse<TR>) =>
       feedResponse.resources.map(this.retrievedItemT.decode)
     );
   }
@@ -277,22 +277,22 @@ export abstract class CosmosdbModel<
   /**
    * Get an iterator to process all documents returned by a specific paged query.
    */
-  public getQueryIteratorWithPaging(
+  public getPagedQueryIterator(
     query: string | SqlQuerySpec,
     options?: FeedOptions
-  ): AsyncIterable<
-    ReadonlyArray<{
-      continuationToken?: string;
-      item: t.Validation<TR>;
-    }>
-  > {
+  ): AsyncIterable<DecodedFeedResponse<TR>> {
     const iterator = this.container.items
       .query(query, options)
       .getAsyncIterator();
-    return mapAsyncIterable(iterator, feedResponse =>
-      feedResponse.resources.map(i => ({
-        continuationToken: feedResponse.continuationToken,
-        item: this.retrievedItemT.decode(i)
+    return mapAsyncIterable(iterator, (feedResponse: FeedResponse<TR>) =>
+      feedResponse.resources.map((i: TR) => ({
+        ...(typeof feedResponse.continuationToken === "string"
+          ? {
+              continuationToken: feedResponse.continuationToken,
+              hasMoreResults: true
+            }
+          : { continuationToken: undefined, hasMoreResults: false }),
+        resource: this.retrievedItemT.decode(i)
       }))
     );
   }

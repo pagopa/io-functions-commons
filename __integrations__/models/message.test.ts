@@ -5,29 +5,29 @@ import { fromEither, taskEither, tryCatch } from "fp-ts/lib/TaskEither";
 import {
   MESSAGE_MODEL_PK_FIELD,
   MessageModel,
-  NewMessageWithoutContent
+  NewMessageWithoutContent,
+  RetrievedMessage
 } from "../../src/models/message";
 import { createContext } from "./cosmos_utils";
 import { fromOption } from "fp-ts/lib/Either";
 import { toString } from "fp-ts/lib/function";
 import { ServiceId } from "../../generated/definitions/ServiceId";
 import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds";
-import { toCosmosErrorResponse } from "../../src/utils/cosmosdb_model";
+import {
+  DecodedFeedResponse,
+  toCosmosErrorResponse
+} from "../../src/utils/cosmosdb_model";
 import {
   asyncIterableToArray,
   flattenAsyncIterable
 } from "../../src/utils/async";
-import {
-  asyncIteratorToArray,
-  flattenAsyncIterator
-} from "../../dist/src/utils/async";
-import { failure } from "io-ts";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 
 const MESSAGE_CONTAINER_NAME = "test-message-container" as NonEmptyString;
 
 const aFiscalCode = "RLDBSV36A78Y792X" as FiscalCode;
 const anotherFiscalCode = "TDDBSV36A78Y792X" as FiscalCode;
+
 const aSerializedNewMessageWithoutContent = {
   fiscalCode: aFiscalCode,
   id: "A_MESSAGE_ID" as NonEmptyString,
@@ -73,6 +73,20 @@ const aMessageContentEUCovidCert = {
 const aMessageContentWithNoPayment = {
   subject: "a".repeat(20),
   markdown: "a".repeat(100)
+};
+
+const createMessage = async (
+  m: MessageModel,
+  i: number
+): Promise<NewMessageWithoutContent> => {
+  const newMessage = {
+    ...aNewMessageWithoutContent,
+    id: `A_MESSAGE_ID_${i}` as NonEmptyString,
+    indexedId: "A_MESSAGE_ID_${i}" as NonEmptyString,
+    createdAt: new Date()
+  };
+  await m.create(newMessage).run();
+  return newMessage;
 };
 
 describe("Models |> Message", () => {
@@ -249,94 +263,289 @@ describe("Models |> Message", () => {
     await context.dispose();
   });
 
-  it("should retrieve messages with continuation token", async () => {
+  it("should retrieve only one page without any continuation token when the default pageSize is greater than the number of results", async () => {
     const context = await createContext(MESSAGE_MODEL_PK_FIELD);
     await context.init();
     const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
 
-    // create a new document
-    await model
-      .create(aNewMessageWithoutContent)
-      .fold(
-        _ => fail(`Failed to create doc, error: ${toString(_)}`),
-        result => {
-          expect(result).toEqual(
-            expect.objectContaining({
-              ...aSerializedNewMessageWithoutContent
-            })
-          );
-          return result;
-        }
-      )
-      .run();
+    await createMessage(model, 1);
+    await createMessage(model, 2);
 
-    await model
-      .create({
-        ...aNewMessageWithoutContent,
-        id: "ANOTHER_MESSAGE_ID" as NonEmptyString
+    // get a page of messages by fiscal code
+    let results: DecodedFeedResponse<RetrievedMessage> = await model
+      .findMessages(aFiscalCode)
+      .map((ai: AsyncIterator<DecodedFeedResponse<RetrievedMessage>>) =>
+        ai.next().then(ir => ir.value)
+      )
+      .getOrElseL(_ => {
+        throw new Error("Error");
       })
-      .fold(
-        _ => fail(`Failed to create doc, error: ${toString(_)}`),
-        result => {
-          return result;
-        }
+      .run();
+
+    expect(results.length).toEqual(2);
+    let prevMessageCreationDate = new Date();
+    results.forEach(i => {
+      expect(i.hasMoreResults).toBe(false);
+      expect(i.continuationToken).toBe(undefined);
+      expect(i.resource.isRight()).toBe(true);
+      // check that every message has a createdDate less than the previous one
+      if (i.resource.isRight()) {
+        expect(i.resource.value.createdAt < prevMessageCreationDate).toBe(true);
+        prevMessageCreationDate = i.resource.value.createdAt;
+      }
+    });
+  });
+
+  it("should retrieve only one page without any continuation token when the pageSize is greater than the number of results", async () => {
+    const context = await createContext(MESSAGE_MODEL_PK_FIELD);
+    await context.init();
+    const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
+
+    await createMessage(model, 1);
+    await createMessage(model, 2);
+
+    // get a page of messages by fiscal code
+    let results: DecodedFeedResponse<RetrievedMessage> = await model
+      .findMessages(aFiscalCode, 10 as NonNegativeInteger)
+      .map((ai: AsyncIterator<DecodedFeedResponse<RetrievedMessage>>) =>
+        ai.next().then(ir => ir.value)
       )
-      .run();
-
-    // find all message for a fiscal code
-    let results = await model
-      .findMessages(aFiscalCode, 2 as NonNegativeInteger)
-      .map(_ => _.next().then(__ => __.value))
-      .getOrElseL(_ => fail("error"))
-      .run();
-
-    console.log(results[0].continuationToken);
-    console.log(results[0].item.value);
-    console.log(results[1].continuationToken);
-    console.log(results[1].item.value);
-    console.log(results);
-
-    await model
-      .create({
-        ...aNewMessageWithoutContent,
-        id: "ANOTHER_2_MESSAGE_ID" as NonEmptyString
+      .getOrElseL(_ => {
+        throw new Error("Error");
       })
-      .fold(
-        _ => fail(`Failed to create doc, error: ${toString(_)}`),
-        result => {
-          return result;
-        }
-      )
       .run();
 
-    // find all message for a fiscal code
-    results = await model
+    expect(results.length).toEqual(2);
+    let prevMessageCreationDate = new Date();
+    results.forEach(i => {
+      expect(i.hasMoreResults).toBe(false);
+      expect(i.continuationToken).toBe(undefined);
+      expect(i.resource.isRight()).toBe(true);
+      // check that every message has a createdDate less than the previous one
+      if (i.resource.isRight()) {
+        expect(i.resource.value.createdAt < prevMessageCreationDate).toBe(true);
+        prevMessageCreationDate = i.resource.value.createdAt;
+      }
+    });
+  });
+
+  it("should retrieve only one page with a continuation token when the pageSize is less than the number of results", async () => {
+    const context = await createContext(MESSAGE_MODEL_PK_FIELD);
+    await context.init();
+    const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
+
+    await createMessage(model, 1);
+    await createMessage(model, 2);
+    await createMessage(model, 3);
+
+    // get a page of messages by fiscal code
+    let results: DecodedFeedResponse<RetrievedMessage> = await model
       .findMessages(aFiscalCode, 2 as NonNegativeInteger)
-      .map(_ => _.next().then(__ => __.value))
-      .getOrElseL(_ => fail("error"))
+      .map((ai: AsyncIterator<DecodedFeedResponse<RetrievedMessage>>) =>
+        ai.next().then(ir => ir.value)
+      )
+      .getOrElseL(_ => {
+        throw new Error("Error");
+      })
       .run();
 
-    console.log(results[0].continuationToken);
-    console.log(results[0].item.value);
-    console.log(results[1].continuationToken);
-    console.log(results[1].item.value);
-    console.log(results);
+    expect(results.length).toEqual(2);
+    let prevMessageCreationDate = new Date();
+    results.forEach(i => {
+      expect(i.hasMoreResults).toBe(true);
+      expect(i.continuationToken).not.toBe(undefined);
+      expect(i.resource.isRight()).toBe(true);
+      // check that every message has a createdDate less than the previous one
+      if (i.resource.isRight()) {
+        expect(i.resource.value.createdAt < prevMessageCreationDate).toBe(true);
+        prevMessageCreationDate = i.resource.value.createdAt;
+      }
+    });
+  });
 
-    // find all message for a fiscal code
+  it("should retrieve the next page by passing the continuation token when the pageSize is less than the number of results", async () => {
+    const context = await createContext(MESSAGE_MODEL_PK_FIELD);
+    await context.init();
+    const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
+
+    await createMessage(model, 1);
+    await createMessage(model, 2);
+    await createMessage(model, 3);
+
+    // get the first page of messages by fiscal code
+    let results: DecodedFeedResponse<RetrievedMessage> = await model
+      .findMessages(aFiscalCode, 2 as NonNegativeInteger)
+      .map((ai: AsyncIterator<DecodedFeedResponse<RetrievedMessage>>) =>
+        ai.next().then(ir => ir.value)
+      )
+      .getOrElseL(_ => {
+        throw new Error("Error");
+      })
+      .run();
+
+    expect(results.length).toEqual(2);
+    let prevMessageCreationDate = new Date();
+    let continuationToken: NonEmptyString = "" as NonEmptyString;
+    results.forEach(i => {
+      expect(i.hasMoreResults).toBe(true);
+      expect(i.continuationToken).not.toBe(undefined);
+      expect(i.resource.isRight()).toBe(true);
+      // check that every message has a createdDate less than the previous one
+      if (i.resource.isRight()) {
+        expect(i.resource.value.createdAt < prevMessageCreationDate).toBe(true);
+        prevMessageCreationDate = i.resource.value.createdAt;
+      }
+      continuationToken = i.continuationToken as NonEmptyString;
+    });
+
+    // get the second page of messages by fiscal code
     results = await model
       .findMessages(
         aFiscalCode,
         2 as NonNegativeInteger,
-        results[0].continuationToken
+        continuationToken as NonEmptyString
       )
-      .map(_ => _.next().then(__ => __.value))
-      .getOrElseL(_ => fail("error"))
+      .map((ai: AsyncIterator<DecodedFeedResponse<RetrievedMessage>>) =>
+        ai.next().then(ir => ir.value)
+      )
+      .getOrElseL(_ => {
+        throw new Error("Error");
+      })
       .run();
 
-    console.log(results[0].continuationToken);
-    console.log(results[0].item.value);
-    console.log(results);
+    expect(results.length).toEqual(1);
+    results.forEach(i => {
+      expect(i.hasMoreResults).toBe(false);
+      expect(i.continuationToken).toBe(undefined);
+      expect(i.resource.isRight()).toBe(true);
+      // check that every message has a createdDate less than the previous one
+      if (i.resource.isRight()) {
+        expect(i.resource.value.createdAt < prevMessageCreationDate).toBe(true);
+        prevMessageCreationDate = i.resource.value.createdAt;
+      }
+    });
+  });
 
-    context.dispose();
+  it("should keep the results ordering if new records are inserted before getting the second page", async () => {
+    const context = await createContext(MESSAGE_MODEL_PK_FIELD);
+    await context.init();
+    const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
+
+    await createMessage(model, 1);
+    await createMessage(model, 2);
+    await createMessage(model, 3);
+
+    // get the first page of messages by fiscal code
+    let results: DecodedFeedResponse<RetrievedMessage> = await model
+      .findMessages(aFiscalCode, 2 as NonNegativeInteger)
+      .map((ai: AsyncIterator<DecodedFeedResponse<RetrievedMessage>>) =>
+        ai.next().then(ir => ir.value)
+      )
+      .getOrElseL(_ => {
+        throw new Error("Error");
+      })
+      .run();
+
+    let prevMessageCreationDate = new Date();
+    let continuationToken: NonEmptyString = "" as NonEmptyString;
+    expect(results.length).toEqual(2);
+    results.forEach(i => {
+      expect(i.hasMoreResults).toBe(true);
+      expect(i.continuationToken).not.toBe(undefined);
+      expect(i.resource.isRight()).toBe(true);
+      // check that every message has a createdDate less than the previous one
+      if (i.resource.isRight()) {
+        expect(i.resource.value.createdAt < prevMessageCreationDate).toBe(true);
+        prevMessageCreationDate = i.resource.value.createdAt;
+      }
+      continuationToken = i.continuationToken as NonEmptyString;
+    });
+
+    // a new messages arrives before we get page 2
+    await createMessage(model, 4);
+
+    // get the second page of messages by fiscal code that should not have the message 4
+    results = await model
+      .findMessages(
+        aFiscalCode,
+        2 as NonNegativeInteger,
+        continuationToken as NonEmptyString
+      )
+      .map((ai: AsyncIterator<DecodedFeedResponse<RetrievedMessage>>) =>
+        ai.next().then(ir => ir.value)
+      )
+      .getOrElseL(_ => {
+        throw new Error("Error");
+      })
+      .run();
+
+    expect(results.length).toEqual(1);
+    results.forEach(i => {
+      expect(i.hasMoreResults).toBe(false);
+      expect(i.continuationToken).toBe(undefined);
+      expect(i.resource.isRight()).toBe(true);
+      // check that every message has a createdDate less than the previous one
+      if (i.resource.isRight()) {
+        expect(i.resource.value.createdAt < prevMessageCreationDate).toBe(true);
+        prevMessageCreationDate = i.resource.value.createdAt;
+      }
+    });
+
+    /* -------------------------------------------------------------------- */
+    /* let's now check that a newly started procedure will return message 4 */
+    /* -------------------------------------------------------------------- */
+
+    // get the first page of messages by fiscal code
+    results = await model
+      .findMessages(aFiscalCode, 2 as NonNegativeInteger)
+      .map((ai: AsyncIterator<DecodedFeedResponse<RetrievedMessage>>) =>
+        ai.next().then(ir => ir.value)
+      )
+      .getOrElseL(_ => {
+        throw new Error("Error");
+      })
+      .run();
+
+    prevMessageCreationDate = new Date();
+    continuationToken = "" as NonEmptyString;
+    expect(results.length).toEqual(2);
+    results.forEach(i => {
+      expect(i.hasMoreResults).toBe(true);
+      expect(i.continuationToken).not.toBe(undefined);
+      expect(i.resource.isRight()).toBe(true);
+      // check that every message has a createdDate less than the previous one
+      if (i.resource.isRight()) {
+        expect(i.resource.value.createdAt < prevMessageCreationDate).toBe(true);
+        prevMessageCreationDate = i.resource.value.createdAt;
+      }
+      continuationToken = i.continuationToken as NonEmptyString;
+    });
+
+    // get the second page of messages by fiscal code that should not have the message 4
+    results = await model
+      .findMessages(
+        aFiscalCode,
+        2 as NonNegativeInteger,
+        continuationToken as NonEmptyString
+      )
+      .map((ai: AsyncIterator<DecodedFeedResponse<RetrievedMessage>>) =>
+        ai.next().then(ir => ir.value)
+      )
+      .getOrElseL(_ => {
+        throw new Error("Error");
+      })
+      .run();
+
+    expect(results.length).toEqual(2);
+    results.forEach(i => {
+      expect(i.hasMoreResults).toBe(false);
+      expect(i.continuationToken).toBe(undefined);
+      expect(i.resource.isRight()).toBe(true);
+      // check that every message has a createdDate less than the previous one
+      if (i.resource.isRight()) {
+        expect(i.resource.value.createdAt < prevMessageCreationDate).toBe(true);
+        prevMessageCreationDate = i.resource.value.createdAt;
+      }
+    });
   });
 });

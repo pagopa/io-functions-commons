@@ -25,12 +25,14 @@ import {
   taskEither,
   tryCatch as tryCatchT
 } from "fp-ts/lib/TaskEither";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import {
   BaseModel,
   CosmosdbModel,
   CosmosDecodingError,
   CosmosErrors,
   CosmosResource,
+  DecodedFeedResponse,
   toCosmosErrorResponse
 } from "../utils/cosmosdb_model";
 
@@ -43,7 +45,6 @@ import { Timestamp } from "../../generated/definitions/Timestamp";
 import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds";
 import { getBlobAsText, upsertBlobFromObject } from "../utils/azure_storage";
 import { wrapWithKind } from "../utils/types";
-import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 
 export const MESSAGE_COLLECTION_NAME = "messages";
 export const MESSAGE_MODEL_PK_FIELD = "fiscalCode" as const;
@@ -232,18 +233,12 @@ export class MessageModel extends CosmosdbModel<
     continuationToken?: NonEmptyString
   ): TaskEither<
     CosmosErrors,
-    AsyncIterator<
-      ReadonlyArray<{
-        continuationToken?: string;
-        continuation?: string;
-        item: t.Validation<RetrievedMessage>;
-      }>
-    >
+    AsyncIterator<DecodedFeedResponse<RetrievedMessage>>
   > {
     return fromEitherT(
       tryCatch2v(
         () =>
-          this.getQueryIteratorWithPaging(
+          this.getPagedQueryIterator(
             {
               parameters: [
                 {
@@ -251,7 +246,7 @@ export class MessageModel extends CosmosdbModel<
                   value: fiscalCode
                 }
               ],
-              query: `SELECT * FROM m WHERE m.${MESSAGE_MODEL_PK_FIELD} = @fiscalCode`
+              query: `SELECT * FROM m WHERE m.${MESSAGE_MODEL_PK_FIELD} = @fiscalCode ORDER BY m.createdAt DESC`
             },
             {
               continuationToken,
