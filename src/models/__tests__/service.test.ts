@@ -41,20 +41,24 @@ const aRetrievedService: RetrievedService = {
   version: 0 as NonNegativeInteger
 };
 
+const mockFetchAll = jest.fn();
+
+const containerMock = ({
+  items: {
+    create: jest.fn(),
+    query: jest.fn(() => ({
+      fetchAll: mockFetchAll
+    }))
+  }
+} as unknown) as Container;
+
 describe("findOneServiceById", () => {
   it("should return an existing service", async () => {
-    const containerMock = ({
-      items: {
-        create: jest.fn(),
-        query: jest.fn(() => ({
-          fetchAll: jest.fn(() =>
-            Promise.resolve({
-              resources: [aRetrievedService]
-            })
-          )
-        }))
-      }
-    } as unknown) as Container;
+    mockFetchAll.mockImplementationOnce(() =>
+      Promise.resolve({
+        resources: [aRetrievedService]
+      })
+    );
 
     const model = new ServiceModel(containerMock);
 
@@ -71,18 +75,11 @@ describe("findOneServiceById", () => {
   });
 
   it("should resolve to an empty value if no service is found", async () => {
-    const containerMock = ({
-      items: {
-        create: jest.fn(),
-        query: jest.fn(() => ({
-          fetchAll: jest.fn(() =>
-            Promise.resolve({
-              resources: undefined
-            })
-          )
-        }))
-      }
-    } as unknown) as Container;
+    mockFetchAll.mockImplementationOnce(() =>
+      Promise.resolve({
+        resources: undefined
+      })
+    );
 
     const model = new ServiceModel(containerMock);
 
@@ -95,18 +92,11 @@ describe("findOneServiceById", () => {
   });
 
   it("should validate the retrieved object agains the model type", async () => {
-    const containerMock = ({
-      items: {
-        create: jest.fn(),
-        query: jest.fn(() => ({
-          fetchAll: jest.fn(() =>
-            Promise.resolve({
-              resources: [{}]
-            })
-          )
-        }))
-      }
-    } as unknown) as Container;
+    mockFetchAll.mockImplementationOnce(() =>
+      Promise.resolve({
+        resources: [{}]
+      })
+    );
 
     const model = new ServiceModel(containerMock);
 
@@ -115,6 +105,57 @@ describe("findOneServiceById", () => {
     expect(E.isLeft(result)).toBeTruthy();
     if (E.isLeft(result)) {
       expect(result.left.kind).toBe("COSMOS_DECODING_ERROR");
+    }
+  });
+});
+
+describe("listLastVersionServices", () => {
+  it("should return existing services", async () => {
+    const expectedService = {...aRetrievedService, version: aRetrievedService.version + 1};
+    mockFetchAll.mockImplementationOnce(() => Promise.resolve({
+      resources: [aRetrievedService, expectedService]
+    }))
+    const model = new ServiceModel(containerMock);
+
+    const result = await model.listLastVersionServices().run();
+    expect(isRight(result)).toBeTruthy();
+    if (isRight(result)) {
+      expect(result.value.isSome()).toBeTruthy();
+      // use JSON.stringify because of a jest matcher bug ref. https://github.com/facebook/jest/issues/8475
+      expect(result.value.toUndefined()).toHaveLength(1);
+      expect(JSON.stringify(result.value.toUndefined())).toEqual(JSON.stringify([expectedService]));
+    }
+  });
+  it("should resolve to an empty value if no service is found", async () => {
+    mockFetchAll.mockImplementationOnce(() =>
+      Promise.resolve({
+        resources: undefined
+      })
+    );
+
+    const model = new ServiceModel(containerMock);
+
+    const result = await model.listLastVersionServices().run();
+
+    expect(isRight(result)).toBeTruthy();
+    if (isRight(result)) {
+      expect(result.value.isNone()).toBeTruthy();
+    }
+  });
+  it("should validate the retrieved object agains the model type", async () => {
+    mockFetchAll.mockImplementationOnce(() =>
+      Promise.resolve({
+        resources: [{}, aRetrievedService]
+      })
+    );
+
+    const model = new ServiceModel(containerMock);
+
+    const result = await model.listLastVersionServices().run();
+
+    expect(isLeft(result)).toBeTruthy();
+    if (isLeft(result)) {
+      expect(result.value.kind).toBe("COSMOS_DECODING_ERROR");
     }
   });
 });

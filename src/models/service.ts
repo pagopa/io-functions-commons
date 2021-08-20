@@ -1,6 +1,6 @@
 import * as t from "io-ts";
 
-import { Option } from "fp-ts/lib/Option";
+import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
 
 import { Set } from "json-set-map";
 
@@ -10,13 +10,15 @@ import {
   OrganizationFiscalCode
 } from "@pagopa/ts-commons/lib/strings";
 
-import { Container } from "@azure/cosmos";
+import { Container, FeedResponse } from "@azure/cosmos";
 import {
   readonlyNonEmptySetType,
   readonlySetType,
   withDefault
 } from "@pagopa/ts-commons/lib/types";
-import { TaskEither } from "fp-ts/lib/TaskEither";
+import { fromEither, TaskEither } from "fp-ts/lib/TaskEither";
+import { right } from "fp-ts/lib/Either";
+import { tryCatch } from "fp-ts/lib/TaskEither";
 import { CIDR } from "../../generated/definitions/CIDR";
 import {
   CosmosdbModelVersioned,
@@ -24,7 +26,11 @@ import {
 } from "../utils/cosmosdb_model_versioned";
 import { MaxAllowedPaymentAmount } from "../../generated/definitions/MaxAllowedPaymentAmount";
 import { ServiceScope } from "../../generated/definitions/ServiceScope";
-import { CosmosErrors } from "../utils/cosmosdb_model";
+import {
+  CosmosDecodingError,
+  CosmosErrors,
+  toCosmosErrorResponse
+} from "../utils/cosmosdb_model";
 import { wrapWithKind } from "../utils/types";
 
 export const SERVICE_COLLECTION_NAME = "services";
@@ -245,5 +251,43 @@ export class ServiceModel extends CosmosdbModelVersioned<
     serviceId: NonEmptyString
   ): TaskEither<CosmosErrors, Option<RetrievedService>> {
     return super.findLastVersionByModelId([serviceId]);
+  }
+
+  public listLastVersionServices(): TaskEither<
+    CosmosErrors,
+    Option<ReadonlyArray<RetrievedService>>
+  > {
+    return tryCatch<CosmosErrors, FeedResponse<RetrievedService>>(
+      () => this.container.items.query(`SELECT * FROM c`).fetchAll(),
+      toCosmosErrorResponse
+    )
+      .map(_ => fromNullable(_.resources))
+      .chain(_ =>
+        _.isSome()
+          ? _.value.length > 0
+            ? fromEither(
+                t
+                  .readonlyArray(this.retrievedItemT)
+                  .decode(_.value)
+                  .map(services =>
+                    some(
+                      Object.values(
+                        services.reduce((prev, curr) => {
+                          const isNewer =
+                            !prev[curr.serviceId] ||
+                            curr.version > prev[curr.serviceId].version;
+                          return {
+                            ...prev,
+                            ...(isNewer ? { [curr.serviceId]: curr } : {})
+                          };
+                        }, {} as Record<string, RetrievedService>)
+                      )
+                    )
+                  )
+                  .mapLeft(CosmosDecodingError)
+              )
+            : fromEither(right(none))
+          : fromEither(right(none))
+      );
   }
 }
