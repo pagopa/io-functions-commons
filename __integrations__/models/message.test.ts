@@ -1,7 +1,12 @@
 /* eslint-disable no-console */
 import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
-import { fromEither, taskEither, tryCatch } from "fp-ts/lib/TaskEither";
+import {
+  fromEither,
+  taskEither,
+  taskEitherSeq,
+  tryCatch
+} from "fp-ts/lib/TaskEither";
 import {
   MESSAGE_MODEL_PK_FIELD,
   MessageModel,
@@ -22,6 +27,7 @@ import {
   flattenAsyncIterable
 } from "../../src/utils/async";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
+import { array } from "fp-ts/lib/Array";
 
 const MESSAGE_CONTAINER_NAME = "test-message-container" as NonEmptyString;
 
@@ -75,19 +81,15 @@ const aMessageContentWithNoPayment = {
   markdown: "a".repeat(100)
 };
 
-const createMessage = async (
-  m: MessageModel,
-  i: number
-): Promise<NewMessageWithoutContent> => {
-  const newMessage = {
-    ...aNewMessageWithoutContent,
-    id: `A_MESSAGE_ID_${i}` as NonEmptyString,
-    indexedId: "A_MESSAGE_ID_${i}" as NonEmptyString,
-    createdAt: new Date()
-  };
-  await m.create(newMessage).run();
-  return newMessage;
-};
+const withId = (
+  msg: NewMessageWithoutContent,
+  n: number
+): NewMessageWithoutContent => ({
+  ...msg,
+  id: `ID_${n}` as NonEmptyString,
+  indexedId: `ID_${n}` as NonEmptyString,
+  createdAt: new Date(new Date().getTime() + n)
+});
 
 describe("Models |> Message", () => {
   it("should save messages without content", async () => {
@@ -263,192 +265,194 @@ describe("Models |> Message", () => {
     await context.dispose();
   });
 
-  it("should retrieve only one page without any continuation token when the default pageSize is greater than the number of results", async () => {
+  it("should retrieve a hundred messages when no pageSize is given and default value is used", async () => {
     const context = await createContext(MESSAGE_MODEL_PK_FIELD);
     await context.init();
     const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
 
-    await createMessage(model, 1);
-    await createMessage(model, 2);
+    // Create 101 messages
+    const numberOfMessages = 101;
+    await array
+      .sequence(taskEitherSeq)(
+        [...Array(numberOfMessages).keys()]
+          .map(n => withId(aNewMessageWithoutContent, n))
+          .map(doc => model.create(doc))
+      )
+      .run();
 
     // get a page of messages by fiscal code
     let results: DecodedFeedResponse<RetrievedMessage> = await model
       .findMessages(aFiscalCode)
-      .map((ai: AsyncIterator<DecodedFeedResponse<RetrievedMessage>>) =>
-        ai.next().then(ir => ir.value)
-      )
+      .map(ai => ai.next().then(ir => ir.value))
       .getOrElseL(_ => {
         throw new Error("Error");
       })
       .run();
 
-    expect(results.length).toEqual(2);
-    let prevMessageCreationDate = new Date();
-    results.forEach(i => {
-      expect(i.hasMoreResults).toBe(false);
-      expect(i.continuationToken).toBe(undefined);
-      expect(i.resource.isRight()).toBe(true);
-      // check that every message has a createdDate less than the previous one
-      if (i.resource.isRight()) {
-        expect(i.resource.value.createdAt < prevMessageCreationDate).toBe(true);
-        prevMessageCreationDate = i.resource.value.createdAt;
-      }
-    });
+    // default pageSize is 100, so all the messages above that
+    // will never be returned for an app without pagination
+    const defaultPageSize = 100;
+    expect(results.length).toEqual(defaultPageSize);
+
+    await context.dispose();
   });
 
-  it("should retrieve only one page without any continuation token when the pageSize is greater than the number of results", async () => {
+  it("should retrieve a page without any continuation token when the pageSize is greater than the number of results", async () => {
     const context = await createContext(MESSAGE_MODEL_PK_FIELD);
     await context.init();
     const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
 
-    await createMessage(model, 1);
-    await createMessage(model, 2);
+    const numberOfMessages = 2;
+    await array
+      .sequence(taskEitherSeq)(
+        [...Array(numberOfMessages).keys()]
+          .map(n => withId(aNewMessageWithoutContent, n))
+          .map(doc => model.create(doc))
+      )
+      .run();
+
+    const pageSize = 10 as NonNegativeInteger;
 
     // get a page of messages by fiscal code
     let results: DecodedFeedResponse<RetrievedMessage> = await model
-      .findMessages(aFiscalCode, 10 as NonNegativeInteger)
-      .map((ai: AsyncIterator<DecodedFeedResponse<RetrievedMessage>>) =>
-        ai.next().then(ir => ir.value)
-      )
+      .findMessages(aFiscalCode, pageSize)
+      .map(ai => ai.next().then(ir => ir.value))
       .getOrElseL(_ => {
         throw new Error("Error");
       })
       .run();
 
-    expect(results.length).toEqual(2);
-    let prevMessageCreationDate = new Date();
+    expect(results.length).toEqual(numberOfMessages);
     results.forEach(i => {
       expect(i.hasMoreResults).toBe(false);
       expect(i.continuationToken).toBe(undefined);
       expect(i.resource.isRight()).toBe(true);
-      // check that every message has a createdDate less than the previous one
-      if (i.resource.isRight()) {
-        expect(i.resource.value.createdAt < prevMessageCreationDate).toBe(true);
-        prevMessageCreationDate = i.resource.value.createdAt;
-      }
     });
+
+    await context.dispose();
   });
 
-  it("should retrieve only one page with a continuation token when the pageSize is less than the number of results", async () => {
+  it("should retrieve a page with a continuation token when the pageSize is less than the number of results", async () => {
     const context = await createContext(MESSAGE_MODEL_PK_FIELD);
     await context.init();
     const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
 
-    await createMessage(model, 1);
-    await createMessage(model, 2);
-    await createMessage(model, 3);
+    const numberOfMessages = 3;
+    await array
+      .sequence(taskEitherSeq)(
+        [...Array(numberOfMessages).keys()]
+          .map(n => withId(aNewMessageWithoutContent, n))
+          .map(doc => model.create(doc))
+      )
+      .run();
+
+    const pageSize = 2 as NonNegativeInteger;
 
     // get a page of messages by fiscal code
     let results: DecodedFeedResponse<RetrievedMessage> = await model
-      .findMessages(aFiscalCode, 2 as NonNegativeInteger)
-      .map((ai: AsyncIterator<DecodedFeedResponse<RetrievedMessage>>) =>
-        ai.next().then(ir => ir.value)
-      )
+      .findMessages(aFiscalCode, pageSize)
+      .map(ai => ai.next().then(ir => ir.value))
       .getOrElseL(_ => {
         throw new Error("Error");
       })
       .run();
 
-    expect(results.length).toEqual(2);
-    let prevMessageCreationDate = new Date();
+    expect(results.length).toEqual(pageSize);
     results.forEach(i => {
       expect(i.hasMoreResults).toBe(true);
       expect(i.continuationToken).not.toBe(undefined);
       expect(i.resource.isRight()).toBe(true);
-      // check that every message has a createdDate less than the previous one
-      if (i.resource.isRight()) {
-        expect(i.resource.value.createdAt < prevMessageCreationDate).toBe(true);
-        prevMessageCreationDate = i.resource.value.createdAt;
-      }
     });
+
+    await context.dispose();
   });
 
-  it("should retrieve the next page by passing the continuation token when the pageSize is less than the number of results", async () => {
+  it("should correctly retrieve the next page when using the continuation token", async () => {
     const context = await createContext(MESSAGE_MODEL_PK_FIELD);
     await context.init();
     const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
 
-    await createMessage(model, 1);
-    await createMessage(model, 2);
-    await createMessage(model, 3);
+    const numberOfMessages = 3;
+    await array
+      .sequence(taskEitherSeq)(
+        [...Array(numberOfMessages).keys()]
+          .map(n => withId(aNewMessageWithoutContent, n))
+          .map(doc => model.create(doc))
+      )
+      .run();
+
+    const pageSize = 2 as NonNegativeInteger;
 
     // get the first page of messages by fiscal code
     let results: DecodedFeedResponse<RetrievedMessage> = await model
-      .findMessages(aFiscalCode, 2 as NonNegativeInteger)
-      .map((ai: AsyncIterator<DecodedFeedResponse<RetrievedMessage>>) =>
-        ai.next().then(ir => ir.value)
-      )
+      .findMessages(aFiscalCode, pageSize)
+      .map(ai => ai.next().then(ir => ir.value))
       .getOrElseL(_ => {
         throw new Error("Error");
       })
       .run();
 
-    expect(results.length).toEqual(2);
-    let prevMessageCreationDate = new Date();
-    let continuationToken: NonEmptyString = "" as NonEmptyString;
+    expect(results.length).toEqual(pageSize);
     results.forEach(i => {
       expect(i.hasMoreResults).toBe(true);
       expect(i.continuationToken).not.toBe(undefined);
       expect(i.resource.isRight()).toBe(true);
-      // check that every message has a createdDate less than the previous one
-      if (i.resource.isRight()) {
-        expect(i.resource.value.createdAt < prevMessageCreationDate).toBe(true);
-        prevMessageCreationDate = i.resource.value.createdAt;
-      }
-      continuationToken = i.continuationToken as NonEmptyString;
     });
+
+    // take the last continuation token
+    const continuationToken = results[results.length - 1].continuationToken;
+    expect(typeof continuationToken).toBe("string");
+    expect(continuationToken).not.toBe(undefined);
+    if (continuationToken !== undefined) {
+      expect(continuationToken.length).not.toBe(0);
+    }
 
     // get the second page of messages by fiscal code
     results = await model
-      .findMessages(
-        aFiscalCode,
-        2 as NonNegativeInteger,
-        continuationToken as NonEmptyString
-      )
-      .map((ai: AsyncIterator<DecodedFeedResponse<RetrievedMessage>>) =>
-        ai.next().then(ir => ir.value)
-      )
+      .findMessages(aFiscalCode, pageSize, continuationToken as NonEmptyString)
+      .map(ai => ai.next().then(ir => ir.value))
       .getOrElseL(_ => {
         throw new Error("Error");
       })
       .run();
 
-    expect(results.length).toEqual(1);
+    expect(results.length).toEqual(numberOfMessages - pageSize);
     results.forEach(i => {
       expect(i.hasMoreResults).toBe(false);
       expect(i.continuationToken).toBe(undefined);
       expect(i.resource.isRight()).toBe(true);
-      // check that every message has a createdDate less than the previous one
-      if (i.resource.isRight()) {
-        expect(i.resource.value.createdAt < prevMessageCreationDate).toBe(true);
-        prevMessageCreationDate = i.resource.value.createdAt;
-      }
     });
+
+    await context.dispose();
   });
 
-  it("should keep the results ordering if new records are inserted before getting the second page", async () => {
+  it("should correctly keep a descending order by date if new records are inserted before getting the second page", async () => {
     const context = await createContext(MESSAGE_MODEL_PK_FIELD);
     await context.init();
     const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
 
-    await createMessage(model, 1);
-    await createMessage(model, 2);
-    await createMessage(model, 3);
+    const numberOfMessages = 3;
+    await array
+      .sequence(taskEitherSeq)(
+        [...Array(numberOfMessages).keys()]
+          .map(n => withId(aNewMessageWithoutContent, n))
+          .map(doc => model.create(doc))
+      )
+      .run();
+
+    const pageSize = 2 as NonNegativeInteger;
 
     // get the first page of messages by fiscal code
     let results: DecodedFeedResponse<RetrievedMessage> = await model
-      .findMessages(aFiscalCode, 2 as NonNegativeInteger)
-      .map((ai: AsyncIterator<DecodedFeedResponse<RetrievedMessage>>) =>
-        ai.next().then(ir => ir.value)
-      )
+      .findMessages(aFiscalCode, pageSize)
+      .map(ai => ai.next().then(ir => ir.value))
       .getOrElseL(_ => {
         throw new Error("Error");
       })
       .run();
 
     let prevMessageCreationDate = new Date();
-    let continuationToken: NonEmptyString = "" as NonEmptyString;
-    expect(results.length).toEqual(2);
+    expect(results.length).toEqual(pageSize);
     results.forEach(i => {
       expect(i.hasMoreResults).toBe(true);
       expect(i.continuationToken).not.toBe(undefined);
@@ -458,28 +462,30 @@ describe("Models |> Message", () => {
         expect(i.resource.value.createdAt < prevMessageCreationDate).toBe(true);
         prevMessageCreationDate = i.resource.value.createdAt;
       }
-      continuationToken = i.continuationToken as NonEmptyString;
     });
 
+    // take the last continuation token
+    let continuationToken = results[results.length - 1].continuationToken;
+    expect(typeof continuationToken).toBe("string");
+    expect(continuationToken).not.toBe(undefined);
+    if (continuationToken !== undefined) {
+      expect(continuationToken.length).not.toBe(0);
+    }
+
     // a new messages arrives before we get page 2
-    await createMessage(model, 4);
+    // note ID shoudl be >=3 because we already created 0, 1, 2 above
+    await model.create(withId(aNewMessageWithoutContent, 3)).run();
 
     // get the second page of messages by fiscal code that should not have the message 4
     results = await model
-      .findMessages(
-        aFiscalCode,
-        2 as NonNegativeInteger,
-        continuationToken as NonEmptyString
-      )
-      .map((ai: AsyncIterator<DecodedFeedResponse<RetrievedMessage>>) =>
-        ai.next().then(ir => ir.value)
-      )
+      .findMessages(aFiscalCode, pageSize, continuationToken as NonEmptyString)
+      .map(ai => ai.next().then(ir => ir.value))
       .getOrElseL(_ => {
         throw new Error("Error");
       })
       .run();
 
-    expect(results.length).toEqual(1);
+    expect(results.length).toEqual(numberOfMessages - pageSize);
     results.forEach(i => {
       expect(i.hasMoreResults).toBe(false);
       expect(i.continuationToken).toBe(undefined);
@@ -497,18 +503,15 @@ describe("Models |> Message", () => {
 
     // get the first page of messages by fiscal code
     results = await model
-      .findMessages(aFiscalCode, 2 as NonNegativeInteger)
-      .map((ai: AsyncIterator<DecodedFeedResponse<RetrievedMessage>>) =>
-        ai.next().then(ir => ir.value)
-      )
+      .findMessages(aFiscalCode, pageSize)
+      .map(ai => ai.next().then(ir => ir.value))
       .getOrElseL(_ => {
         throw new Error("Error");
       })
       .run();
 
     prevMessageCreationDate = new Date();
-    continuationToken = "" as NonEmptyString;
-    expect(results.length).toEqual(2);
+    expect(results.length).toEqual(pageSize);
     results.forEach(i => {
       expect(i.hasMoreResults).toBe(true);
       expect(i.continuationToken).not.toBe(undefined);
@@ -518,25 +521,26 @@ describe("Models |> Message", () => {
         expect(i.resource.value.createdAt < prevMessageCreationDate).toBe(true);
         prevMessageCreationDate = i.resource.value.createdAt;
       }
-      continuationToken = i.continuationToken as NonEmptyString;
     });
+
+    // take the last continuation token
+    continuationToken = results[results.length - 1].continuationToken;
+    expect(typeof continuationToken).toBe("string");
+    expect(continuationToken).not.toBe(undefined);
+    if (continuationToken !== undefined) {
+      expect(continuationToken.length).not.toBe(0);
+    }
 
     // get the second page of messages by fiscal code that should not have the message 4
     results = await model
-      .findMessages(
-        aFiscalCode,
-        2 as NonNegativeInteger,
-        continuationToken as NonEmptyString
-      )
-      .map((ai: AsyncIterator<DecodedFeedResponse<RetrievedMessage>>) =>
-        ai.next().then(ir => ir.value)
-      )
+      .findMessages(aFiscalCode, pageSize, continuationToken as NonEmptyString)
+      .map(ai => ai.next().then(ir => ir.value))
       .getOrElseL(_ => {
         throw new Error("Error");
       })
       .run();
 
-    expect(results.length).toEqual(2);
+    expect(results.length).toEqual(pageSize);
     results.forEach(i => {
       expect(i.hasMoreResults).toBe(false);
       expect(i.continuationToken).toBe(undefined);
@@ -547,5 +551,7 @@ describe("Models |> Message", () => {
         prevMessageCreationDate = i.resource.value.createdAt;
       }
     });
+
+    await context.dispose();
   });
 });

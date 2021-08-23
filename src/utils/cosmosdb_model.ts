@@ -284,7 +284,7 @@ export abstract class CosmosdbModel<
     const iterator = this.container.items
       .query(query, options)
       .getAsyncIterator();
-    return mapAsyncIterable(iterator, (feedResponse: FeedResponse<TR>) =>
+    return mapAsyncIterable(iterator, feedResponse =>
       feedResponse.resources.map((i: TR) => ({
         ...(typeof feedResponse.continuationToken === "string"
           ? {
