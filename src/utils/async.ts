@@ -36,7 +36,6 @@ export const mapAsyncIterable = <T, V>(
   const iter = source[Symbol.asyncIterator]();
   const iterMapped = mapAsyncIterator(iter, f);
   return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [Symbol.asyncIterator]: (): AsyncIterator<V, V, undefined> => iterMapped
   };
 };
@@ -148,8 +147,7 @@ export const flattenAsyncIterable = <T>(
 ): AsyncIterable<T> => {
   const iter = source[Symbol.asyncIterator]();
   return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [Symbol.asyncIterator]: (): AsyncIterator<T, any, undefined> =>
+    [Symbol.asyncIterator]: (): AsyncIterator<T, T, undefined> =>
       flattenAsyncIterator(iter)
   };
 };
