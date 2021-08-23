@@ -71,7 +71,9 @@ describe("findMessages", () => {
   it("should return the messages for a fiscal code", async () => {
     const iteratorMock = {
       next: jest.fn(() =>
-        Promise.resolve(right([right(aRetrievedMessageWithContent)]))
+        Promise.resolve(
+          right([{ resource: right(aRetrievedMessageWithContent) }])
+        )
       )
     };
 
@@ -102,9 +104,9 @@ describe("findMessages", () => {
     expect(isRight(errorsOrResultIterator)).toBeTruthy();
     if (isRight(errorsOrResultIterator)) {
       const result = await errorsOrResultIterator.value.next();
-      expect(isRight(result.value[0])).toBeTruthy();
-      if (isRight(result.value[0])) {
-        const item = result.value[0].value;
+      expect(isRight(result.value[0].resource)).toBeTruthy();
+      if (isRight(result.value[0].resource)) {
+        const item = result.value[0].resource.value;
         expect(item).toEqual(aRetrievedMessageWithContent);
       }
     }

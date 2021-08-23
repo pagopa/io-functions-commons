@@ -24,7 +24,9 @@ import {
 } from "../../src/utils/cosmosdb_model";
 import {
   asyncIterableToArray,
-  flattenAsyncIterable
+  asyncIteratorToArray,
+  flattenAsyncIterable,
+  flattenAsyncIterator
 } from "../../src/utils/async";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { array } from "fp-ts/lib/Array";
@@ -168,41 +170,24 @@ describe("Models |> Message", () => {
       .run();
 
     // find all message for a fiscal code
-    await tryCatch(
-      () =>
-        asyncIterableToArray(
-          flattenAsyncIterable(
-            model.getQueryIterator({
-              parameters: [
-                {
-                  name: "@fiscalCode",
-                  value: aFiscalCode
-                }
-              ],
-              query: `SELECT * FROM m WHERE m.fiscalCode = @fiscalCode`
-            })
-          )
-        ),
-      toCosmosErrorResponse
-    )
-      .fold(
-        _ => fail(`Failed to read all docs, error: ${toString(_)}`),
-        results => {
-          expect(results).toEqual(expect.any(Array));
-          expect(results).toHaveLength(1);
-          results[0].fold(
-            _ => fail(`Failed to validate , error: ${toString(_)}`),
-            result => {
-              expect(result).toEqual(
-                expect.objectContaining({
-                  ...aSerializedNewMessageWithoutContent
-                })
-              );
-            }
-          );
-        }
-      )
+    const results = await model
+      .findMessages(aFiscalCode)
+      .map(asyncIteratorToPagedResults)
+      .getOrElseL(_ => {
+        throw new Error("Error");
+      })
       .run();
+
+    expect(results).toEqual(expect.any(Array));
+    expect(results).toHaveLength(1);
+    expect(results[0].resource.isRight()).toBe(true);
+    if (results[0].resource.isRight()) {
+      expect(results[0].resource.value).toEqual(
+        expect.objectContaining({
+          ...aSerializedNewMessageWithoutContent
+        })
+      );
+    }
 
     context.dispose();
   });
@@ -287,7 +272,7 @@ describe("Models |> Message", () => {
     // get a page of messages by fiscal code
     let results = await model
       .findMessages(aFiscalCode)
-      .map(ai => ai.next().then(_ => _.value))
+      .map(asyncIteratorToPagedResults)
       .getOrElseL(_ => {
         throw new Error("Error");
       })

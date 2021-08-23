@@ -273,28 +273,6 @@ export abstract class CosmosdbModel<
   }
 
   /**
-   * Maps an iterator of FeedResponse to an Iterable of DecodedFeedResponse.
-   */
-  private toDecodedFeedResponse(
-    iterator: AsyncIterable<FeedResponse<TR>>
-  ): AsyncIterable<DecodedFeedResponse<TR>, DecodedFeedResponse<TR>> {
-    return mapAsyncIterable(iterator, (feedResponse: FeedResponse<TR>) =>
-      feedResponse.resources.map((i: TR) => ({
-        ...(typeof feedResponse.continuationToken === "string"
-          ? {
-              continuationToken: feedResponse.continuationToken,
-              hasMoreResults: true
-            }
-          : {
-              continuationToken: undefined,
-              hasMoreResults: false
-            }),
-        resource: this.retrievedItemT.decode(i)
-      }))
-    );
-  }
-
-  /**
    * Fetch all documents of the collection.
    * Note that this method loads all items in memory at once, it should be used
    * only when it's not feasible to process the items incrementally with
@@ -335,5 +313,27 @@ export abstract class CosmosdbModel<
             : fromEither(right(none))
           : fromEither(right(none))
       );
+  }
+
+  /**
+   * Maps an iterator of FeedResponse to an Iterable of DecodedFeedResponse.
+   */
+  private toDecodedFeedResponse(
+    iterator: AsyncIterable<FeedResponse<TR>>
+  ): AsyncIterable<DecodedFeedResponse<TR>, DecodedFeedResponse<TR>> {
+    return mapAsyncIterable(iterator, (feedResponse: FeedResponse<TR>) =>
+      feedResponse.resources.map((i: TR) => ({
+        ...(typeof feedResponse.continuationToken === "string"
+          ? {
+              continuationToken: feedResponse.continuationToken,
+              hasMoreResults: true
+            }
+          : {
+              continuationToken: undefined,
+              hasMoreResults: false
+            }),
+        resource: this.retrievedItemT.decode(i)
+      }))
+    );
   }
 }
