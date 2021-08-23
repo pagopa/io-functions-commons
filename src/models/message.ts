@@ -238,7 +238,7 @@ export class MessageModel extends CosmosdbModel<
     return fromEitherT(
       tryCatch2v(
         () =>
-          this.getPagedQueryIterator(
+          this.getQueryIterator(
             {
               parameters: [
                 {

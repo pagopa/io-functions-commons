@@ -91,6 +91,10 @@ const withId = (
   createdAt: new Date(new Date().getTime() + n)
 });
 
+const asyncIteratorToPagedResults = <T>(source: AsyncIterator<T>) => {
+  return source.next().then(ir => ir.value as T);
+};
+
 describe("Models |> Message", () => {
   it("should save messages without content", async () => {
     const context = await createContext(MESSAGE_MODEL_PK_FIELD);
@@ -314,9 +318,9 @@ describe("Models |> Message", () => {
     const pageSize = 10 as NonNegativeInteger;
 
     // get a page of messages by fiscal code
-    let results: DecodedFeedResponse<RetrievedMessage> = await model
+    let results = await model
       .findMessages(aFiscalCode, pageSize)
-      .map(ai => ai.next().then(ir => ir.value))
+      .map(asyncIteratorToPagedResults)
       .getOrElseL(_ => {
         throw new Error("Error");
       })
@@ -349,9 +353,9 @@ describe("Models |> Message", () => {
     const pageSize = 2 as NonNegativeInteger;
 
     // get a page of messages by fiscal code
-    let results: DecodedFeedResponse<RetrievedMessage> = await model
+    let results = await model
       .findMessages(aFiscalCode, pageSize)
-      .map(ai => ai.next().then(ir => ir.value))
+      .map(asyncIteratorToPagedResults)
       .getOrElseL(_ => {
         throw new Error("Error");
       })
@@ -384,9 +388,9 @@ describe("Models |> Message", () => {
     const pageSize = 2 as NonNegativeInteger;
 
     // get the first page of messages by fiscal code
-    let results: DecodedFeedResponse<RetrievedMessage> = await model
+    let results = await model
       .findMessages(aFiscalCode, pageSize)
-      .map(ai => ai.next().then(ir => ir.value))
+      .map(asyncIteratorToPagedResults)
       .getOrElseL(_ => {
         throw new Error("Error");
       })
@@ -410,7 +414,7 @@ describe("Models |> Message", () => {
     // get the second page of messages by fiscal code
     results = await model
       .findMessages(aFiscalCode, pageSize, continuationToken as NonEmptyString)
-      .map(ai => ai.next().then(ir => ir.value))
+      .map(asyncIteratorToPagedResults)
       .getOrElseL(_ => {
         throw new Error("Error");
       })
@@ -443,9 +447,9 @@ describe("Models |> Message", () => {
     const pageSize = 2 as NonNegativeInteger;
 
     // get the first page of messages by fiscal code
-    let results: DecodedFeedResponse<RetrievedMessage> = await model
+    let results = await model
       .findMessages(aFiscalCode, pageSize)
-      .map(ai => ai.next().then(ir => ir.value))
+      .map(asyncIteratorToPagedResults)
       .getOrElseL(_ => {
         throw new Error("Error");
       })

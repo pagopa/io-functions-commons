@@ -252,11 +252,11 @@ export abstract class CosmosdbModel<
    */
   public getCollectionIterator(
     options?: FeedOptions
-  ): AsyncIterable<ReadonlyArray<t.Validation<TR>>> {
-    const iterator = this.container.items.readAll(options).getAsyncIterator();
-    return mapAsyncIterable(iterator, feedResponse =>
-      feedResponse.resources.map(this.retrievedItemT.decode)
-    );
+  ): AsyncIterable<DecodedFeedResponse<TR>> {
+    const iterator = this.container.items
+      .readAll<TR>(options)
+      .getAsyncIterator();
+    return this.toDecodedFeedResponse(iterator);
   }
 
   /**
@@ -265,25 +265,19 @@ export abstract class CosmosdbModel<
   public getQueryIterator(
     query: string | SqlQuerySpec,
     options?: FeedOptions
-  ): AsyncIterable<ReadonlyArray<t.Validation<TR>>> {
-    const iterator = this.container.items
-      .query(query, options)
-      .getAsyncIterator();
-    return mapAsyncIterable(iterator, (feedResponse: FeedResponse<TR>) =>
-      feedResponse.resources.map(this.retrievedItemT.decode)
-    );
-  }
-
-  /**
-   * Get an iterator to process all documents returned by a specific paged query.
-   */
-  public getPagedQueryIterator(
-    query: string | SqlQuerySpec,
-    options?: FeedOptions
   ): AsyncIterable<DecodedFeedResponse<TR>> {
     const iterator = this.container.items
       .query(query, options)
       .getAsyncIterator();
+    return this.toDecodedFeedResponse(iterator);
+  }
+
+  /**
+   * Maps an iterator of FeedResponse to an Iterable of DecodedFeedResponse.
+   */
+  private toDecodedFeedResponse(
+    iterator: AsyncIterable<FeedResponse<TR>>
+  ): AsyncIterable<DecodedFeedResponse<TR>> {
     return mapAsyncIterable(iterator, feedResponse =>
       feedResponse.resources.map((i: TR) => ({
         ...(typeof feedResponse.continuationToken === "string"
