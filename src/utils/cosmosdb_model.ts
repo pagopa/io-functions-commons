@@ -20,7 +20,7 @@ import {
 } from "@azure/cosmos";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { mapAsyncIterable } from "./async";
+import { mapAsyncIterable, AsyncIterable } from "./async";
 import { isDefined } from "./types";
 
 export const CosmosDocumentIdKey = "id" as const;
@@ -277,15 +277,18 @@ export abstract class CosmosdbModel<
    */
   private toDecodedFeedResponse(
     iterator: AsyncIterable<FeedResponse<TR>>
-  ): AsyncIterable<DecodedFeedResponse<TR>> {
-    return mapAsyncIterable(iterator, feedResponse =>
+  ): AsyncIterable<DecodedFeedResponse<TR>, DecodedFeedResponse<TR>> {
+    return mapAsyncIterable(iterator, (feedResponse: FeedResponse<TR>) =>
       feedResponse.resources.map((i: TR) => ({
         ...(typeof feedResponse.continuationToken === "string"
           ? {
               continuationToken: feedResponse.continuationToken,
               hasMoreResults: true
             }
-          : { continuationToken: undefined, hasMoreResults: false }),
+          : {
+              continuationToken: undefined,
+              hasMoreResults: false
+            }),
         resource: this.retrievedItemT.decode(i)
       }))
     );

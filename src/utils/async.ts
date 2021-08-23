@@ -1,4 +1,14 @@
 /**
+ * Ovverride the default type declaration for AsyncIterable as it do not allow to define a custom TReturn.
+ * This is needed, otherwise every AsyncIterable would have elements of type "any".
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/naming-convention
+export interface AsyncIterable<T, TReturn = any, TNext = undefined> {
+  // eslint-disable-next-line functional/no-method-signature
+  [Symbol.asyncIterator](): AsyncIterator<T, TReturn, TNext>;
+}
+
+/**
  * Maps over an AsyncIterator
  */
 export const mapAsyncIterator = <T, V>(
@@ -27,7 +37,7 @@ export const mapAsyncIterable = <T, V>(
   const iterMapped = mapAsyncIterator(iter, f);
   return {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [Symbol.asyncIterator]: (): AsyncIterator<V, any, undefined> => iterMapped
+    [Symbol.asyncIterator]: (): AsyncIterator<V, V, undefined> => iterMapped
   };
 };
 

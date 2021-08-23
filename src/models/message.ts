@@ -233,7 +233,10 @@ export class MessageModel extends CosmosdbModel<
     continuationToken?: NonEmptyString
   ): TaskEither<
     CosmosErrors,
-    AsyncIterator<DecodedFeedResponse<RetrievedMessage>>
+    AsyncIterator<
+      DecodedFeedResponse<RetrievedMessage>,
+      DecodedFeedResponse<RetrievedMessage>
+    >
   > {
     return fromEitherT(
       tryCatch2v(

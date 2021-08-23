@@ -285,14 +285,13 @@ describe("Models |> Message", () => {
       .run();
 
     // get a page of messages by fiscal code
-    let results: DecodedFeedResponse<RetrievedMessage> = await model
+    let results = await model
       .findMessages(aFiscalCode)
-      .map(ai => ai.next().then(ir => ir.value))
+      .map(ai => ai.next().then(_ => _.value))
       .getOrElseL(_ => {
         throw new Error("Error");
       })
       .run();
-
     // default pageSize is 100, so all the messages above that
     // will never be returned for an app without pagination
     const defaultPageSize = 100;
