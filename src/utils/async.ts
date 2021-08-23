@@ -32,7 +32,7 @@ export const mapAsyncIterator = <T, V>(
 export const mapAsyncIterable = <T, V>(
   source: AsyncIterable<T>,
   f: (t: T) => V
-): AsyncIterable<V> => {
+): AsyncIterable<V, V> => {
   const iter = source[Symbol.asyncIterator]();
   const iterMapped = mapAsyncIterator(iter, f);
   return {
