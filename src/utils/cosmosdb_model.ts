@@ -20,7 +20,7 @@ import {
 } from "@azure/cosmos";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { mapAsyncIterable } from "./async";
+import { mapAsyncIterable, AsyncIterable } from "./async";
 import { isDefined } from "./types";
 
 export const CosmosDocumentIdKey = "id" as const;
@@ -280,7 +280,7 @@ export abstract class CosmosdbModel<
   public getPagedQueryIterator(
     query: string | SqlQuerySpec,
     options?: FeedOptions
-  ): AsyncIterable<DecodedFeedResponse<TR>> {
+  ): AsyncIterable<DecodedFeedResponse<TR>, DecodedFeedResponse<TR>> {
     const iterator = this.container.items
       .query(query, options)
       .getAsyncIterator();
@@ -291,7 +291,10 @@ export abstract class CosmosdbModel<
               continuationToken: feedResponse.continuationToken,
               hasMoreResults: true
             }
-          : { continuationToken: undefined, hasMoreResults: false }),
+          : {
+              continuationToken: undefined,
+              hasMoreResults: false
+            }),
         resource: this.retrievedItemT.decode(i)
       }))
     );
