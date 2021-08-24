@@ -270,6 +270,10 @@ export class ServiceModel extends CosmosdbModelVersioned<
                 .decode(_.value)
                 .map(services =>
                   some(
+                    // Remap an array of services to a Record with serviceId as key and
+                    // the entire service as value, the value is updated only if the
+                    // processing service is a newer version.
+                    // From that Record we keep only the values (last version of each service).
                     Object.values(
                       services.reduce((prev, curr) => {
                         const isNewer =
