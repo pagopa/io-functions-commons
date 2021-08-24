@@ -263,30 +263,28 @@ export class ServiceModel extends CosmosdbModelVersioned<
     )
       .map(_ => fromNullable(_.resources))
       .chain(_ =>
-        _.isSome()
-          ? _.value.length > 0
-            ? fromEither(
-                t
-                  .readonlyArray(this.retrievedItemT)
-                  .decode(_.value)
-                  .map(services =>
-                    some(
-                      Object.values(
-                        services.reduce((prev, curr) => {
-                          const isNewer =
-                            !prev[curr.serviceId] ||
-                            curr.version > prev[curr.serviceId].version;
-                          return {
-                            ...prev,
-                            ...(isNewer ? { [curr.serviceId]: curr } : {})
-                          };
-                        }, {} as Record<string, RetrievedService>)
-                      )
+        _.isSome() && _.value.length > 0
+          ? fromEither(
+              t
+                .readonlyArray(this.retrievedItemT)
+                .decode(_.value)
+                .map(services =>
+                  some(
+                    Object.values(
+                      services.reduce((prev, curr) => {
+                        const isNewer =
+                          !prev[curr.serviceId] ||
+                          curr.version > prev[curr.serviceId].version;
+                        return {
+                          ...prev,
+                          ...(isNewer ? { [curr.serviceId]: curr } : {})
+                        };
+                      }, {} as Record<string, RetrievedService>)
                     )
                   )
-                  .mapLeft(CosmosDecodingError)
-              )
-            : fromEither(right(none))
+                )
+                .mapLeft(CosmosDecodingError)
+            )
           : fromEither(right(none))
       );
   }
