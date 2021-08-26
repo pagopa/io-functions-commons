@@ -1,6 +1,7 @@
+/* eslint-disable spaced-comment */
 import * as t from "io-ts";
 
-import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
+import { none, Option, some } from "fp-ts/lib/Option";
 
 import { Set } from "json-set-map";
 
@@ -10,14 +11,14 @@ import {
   OrganizationFiscalCode
 } from "@pagopa/ts-commons/lib/strings";
 
-import { Container, FeedResponse } from "@azure/cosmos";
+import { Container } from "@azure/cosmos";
 import {
   readonlyNonEmptySetType,
   readonlySetType,
   withDefault
 } from "@pagopa/ts-commons/lib/types";
-import { fromEither, TaskEither } from "fp-ts/lib/TaskEither";
-import { right } from "fp-ts/lib/Either";
+import { fromEither, taskEither, TaskEither } from "fp-ts/lib/TaskEither";
+import { isLeft, right } from "fp-ts/lib/Either";
 import { tryCatch } from "fp-ts/lib/TaskEither";
 import { CIDR } from "../../generated/definitions/CIDR";
 import {
@@ -26,12 +27,9 @@ import {
 } from "../utils/cosmosdb_model_versioned";
 import { MaxAllowedPaymentAmount } from "../../generated/definitions/MaxAllowedPaymentAmount";
 import { ServiceScope } from "../../generated/definitions/ServiceScope";
-import {
-  CosmosDecodingError,
-  CosmosErrors,
-  toCosmosErrorResponse
-} from "../utils/cosmosdb_model";
+import { CosmosDecodingError, CosmosErrors } from "../utils/cosmosdb_model";
 import { wrapWithKind } from "../utils/types";
+import { mapAsyncIterable, reduceAsyncIterator } from "../utils/async";
 
 export const SERVICE_COLLECTION_NAME = "services";
 export const SERVICE_MODEL_ID_FIELD = "serviceId" as const;
@@ -257,39 +255,38 @@ export class ServiceModel extends CosmosdbModelVersioned<
     CosmosErrors,
     Option<ReadonlyArray<RetrievedService>>
   > {
-    return tryCatch<CosmosErrors, FeedResponse<RetrievedService>>(
-      () => this.container.items.query(`SELECT * FROM c`).fetchAll(),
-      toCosmosErrorResponse
-    )
-      .map(_ => fromNullable(_.resources))
-      .chain(_ =>
-        _.isSome() && _.value.length > 0
-          ? fromEither(
-              t
-                .readonlyArray(this.retrievedItemT)
-                .decode(_.value)
-                .map(services =>
-                  some(
-                    // Remap an array of services to a Record with serviceId as key and
-                    // the entire service as value, the value is updated only if the
-                    // processing service is a newer version.
-                    // From that Record we keep only the values (last version of each service).
-                    Object.values(
-                      services.reduce((prev, curr) => {
-                        const isNewer =
-                          !prev[curr.serviceId] ||
-                          curr.version > prev[curr.serviceId].version;
-                        return {
-                          ...prev,
-                          ...(isNewer ? { [curr.serviceId]: curr } : {})
-                        };
-                      }, {} as Record<string, RetrievedService>)
-                    )
-                  )
-                )
-                .mapLeft(CosmosDecodingError)
-            )
-          : fromEither(right(none))
-      );
+    return tryCatch(
+      () =>
+        // Reduce all the services to a Record with serviceId as key
+        // and the last version of the service as value.
+        reduceAsyncIterator(
+          mapAsyncIterable(this.getCollectionIterator(), _ => {
+            if (_.some(isLeft)) {
+              throw _.filter(isLeft)[0].value;
+            }
+            return _.map(s => s.value) as ReadonlyArray<RetrievedService>;
+          })[Symbol.asyncIterator](),
+          (prev, curr) => {
+            // Reducer function
+            const isNewer =
+              !prev[curr.serviceId] ||
+              curr.version > prev[curr.serviceId].version;
+            return {
+              ...prev,
+              ...(isNewer ? { [curr.serviceId]: curr } : {})
+            };
+          },
+          {} as Record<string, RetrievedService>
+        ),
+      err => CosmosDecodingError(err as t.Errors)
+    ).chain(servicesMap => {
+      // Receive a Record with serviceId as key and
+      // the last version service as value.
+      // From that Record we keep only the values.
+      const services = Object.values(servicesMap);
+      return services.length > 0
+        ? taskEither.of(some(services))
+        : fromEither(right(none));
+    });
   }
 }

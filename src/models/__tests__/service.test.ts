@@ -42,9 +42,14 @@ const aRetrievedService: RetrievedService = {
 };
 
 const mockFetchAll = jest.fn();
+const mockGetAsyncIterator = jest.fn();
 
 const containerMock = ({
   items: {
+    readAll: jest.fn(() => ({
+      fetchAll: mockFetchAll,
+      getAsyncIterator: mockGetAsyncIterator
+    })),
     create: jest.fn(),
     query: jest.fn(() => ({
       fetchAll: mockFetchAll
@@ -109,12 +114,23 @@ describe("findOneServiceById", () => {
   });
 });
 
+const getAsyncIterable = <T>(pages: ReadonlyArray<ReadonlyArray<T>>) =>
+  ({
+    [Symbol.asyncIterator]: async function* asyncGenerator() {
+      var array = pages.map(_ => Promise.resolve(_));
+      while (array.length) {
+        yield {resources: await array.shift()};
+      }
+    }
+  });
+
 describe("listLastVersionServices", () => {
   it("should return existing services", async () => {
-    const expectedService = {...aRetrievedService, version: aRetrievedService.version + 1};
-    mockFetchAll.mockImplementationOnce(() => Promise.resolve({
-      resources: [aRetrievedService, expectedService]
-    }))
+    const nextServiceVersion = {...aRetrievedService, version: aRetrievedService.version + 1}
+    const anotherService = {...aRetrievedService, serviceId: "anotherServiceId"};
+    const expectedService = {...nextServiceVersion, version: nextServiceVersion.version + 1};
+    const asyncIterable = getAsyncIterable([[aRetrievedService, expectedService], [anotherService, nextServiceVersion]])
+    mockGetAsyncIterator.mockReturnValueOnce(asyncIterable);
     const model = new ServiceModel(containerMock);
 
     const result = await model.listLastVersionServices().run();
@@ -122,16 +138,13 @@ describe("listLastVersionServices", () => {
     if (isRight(result)) {
       expect(result.value.isSome()).toBeTruthy();
       // use JSON.stringify because of a jest matcher bug ref. https://github.com/facebook/jest/issues/8475
-      expect(result.value.toUndefined()).toHaveLength(1);
-      expect(JSON.stringify(result.value.toUndefined())).toEqual(JSON.stringify([expectedService]));
+      expect(result.value.toUndefined()).toHaveLength(2);
+      expect(JSON.stringify(result.value.toUndefined())).toEqual(JSON.stringify([expectedService, anotherService]));
     }
   });
   it("should resolve to an empty value if no service is found", async () => {
-    mockFetchAll.mockImplementationOnce(() =>
-      Promise.resolve({
-        resources: undefined
-      })
-    );
+    const asyncIterable = getAsyncIterable([[]])
+    mockGetAsyncIterator.mockReturnValueOnce(asyncIterable);
 
     const model = new ServiceModel(containerMock);
 
@@ -143,11 +156,8 @@ describe("listLastVersionServices", () => {
     }
   });
   it("should validate the retrieved object agains the model type", async () => {
-    mockFetchAll.mockImplementationOnce(() =>
-      Promise.resolve({
-        resources: [{}, aRetrievedService]
-      })
-    );
+    const asyncIterable = getAsyncIterable([[{}, aRetrievedService]]);
+    mockGetAsyncIterator.mockReturnValueOnce(asyncIterable);
 
     const model = new ServiceModel(containerMock);
 
