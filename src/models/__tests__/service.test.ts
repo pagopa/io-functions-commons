@@ -117,7 +117,7 @@ describe("findOneServiceById", () => {
 const getAsyncIterable = <T>(pages: ReadonlyArray<ReadonlyArray<T>>) =>
   ({
     [Symbol.asyncIterator]: async function* asyncGenerator() {
-      var array = pages.map(_ => Promise.resolve(_));
+      let array = pages.map(_ => Promise.resolve(_));
       while (array.length) {
         yield {resources: await array.shift()};
       }
