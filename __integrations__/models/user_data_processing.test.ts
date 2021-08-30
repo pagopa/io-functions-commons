@@ -14,8 +14,8 @@ import {
 import { createContext } from "./cosmos_utils";
 import { fromOption } from "fp-ts/lib/Either";
 import { INonNegativeIntegerTag } from "@pagopa/ts-commons/lib/numbers";
-import * as e from "fp-ts/lib/Either";
-import * as te from "fp-ts/lib/TaskEither";
+import * as E from "fp-ts/lib/Either";
+import * as TE from "fp-ts/lib/TaskEither";
 import { pipe } from "fp-ts/lib/function";
 
 const aUserDataProcessing: UserDataProcessing = pipe(
@@ -29,7 +29,7 @@ const aUserDataProcessing: UserDataProcessing = pipe(
       `RLDBSV36A78Y792X` as FiscalCode
     )
   }),
-  e.getOrElseW(() => {
+  E.getOrElseW(() => {
     throw new Error("Cannot decode userdataprocessing payload.");
   })
 );
@@ -48,7 +48,7 @@ describe("Models |> UserDataProcessing", () => {
     // create a new document
     const created = await pipe(
       model.create(newDoc),
-      te.bimap(
+      TE.bimap(
         _ => fail(`Failed to create doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
@@ -60,14 +60,14 @@ describe("Models |> UserDataProcessing", () => {
           return result;
         }
       ),
-      te.toUnion
+      TE.toUnion
     )();
 
     // update document
     const updates = { status: UserDataProcessingStatusEnum.WIP };
     await pipe(
       model.update({ ...created, ...updates }),
-      te.bimap(
+      TE.bimap(
         _ => fail(`Failed to update doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
@@ -84,14 +84,14 @@ describe("Models |> UserDataProcessing", () => {
     // read latest version of the document
     await pipe(
       taskEither.of<any, void>(void 0),
-      te.chainW(_ =>
+      TE.chainW(_ =>
         model.findLastVersionByModelId([
           newDoc[USER_DATA_PROCESSING_MODEL_ID_FIELD],
           newDoc[USER_DATA_PROCESSING_MODEL_PK_FIELD]
         ])
       ),
-      te.chain(_ => fromEither(fromOption(() => "It's none")(_))),
-      te.bimap(
+      TE.chain(_ => fromEither(fromOption(() => "It's none")(_))),
+      TE.bimap(
         _ => fail(`Failed to read doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
@@ -114,7 +114,7 @@ describe("Models |> UserDataProcessing", () => {
     };
     await pipe(
       model.upsert(toUpsert),
-      te.bimap(
+      TE.bimap(
         _ => fail(`Failed to upsert doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
@@ -131,7 +131,7 @@ describe("Models |> UserDataProcessing", () => {
     // createOrUpdateByNewOne
     await pipe(
       model.createOrUpdateByNewOne(aUserDataProcessing),
-      te.bimap(
+      TE.bimap(
         _ => fail(`Failed to upsert doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
@@ -162,7 +162,7 @@ describe("Models |> UserDataProcessing", () => {
     // create a new document
     const created = await pipe(
       model.create(newDoc),
-      te.bimap(
+      TE.bimap(
         _ => fail(`Failed to create doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
@@ -176,7 +176,7 @@ describe("Models |> UserDataProcessing", () => {
           return result;
         }
       ),
-      te.toUnion
+      TE.toUnion
     )();
 
     // update document
@@ -186,7 +186,7 @@ describe("Models |> UserDataProcessing", () => {
     };
     await pipe(
       model.update({ ...created, ...updates }),
-      te.bimap(
+      TE.bimap(
         _ => fail(`Failed to update doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
@@ -211,7 +211,7 @@ describe("Models |> UserDataProcessing", () => {
         ...updatesToFailed,
         version: (created.version + 1) as number & INonNegativeIntegerTag
       }),
-      te.bimap(
+      TE.bimap(
         _ => fail(`Failed to update doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
@@ -232,7 +232,7 @@ describe("Models |> UserDataProcessing", () => {
     };
     await pipe(
       model.upsert(toUpsert),
-      te.bimap(
+      TE.bimap(
         _ => fail(`Failed to upsert doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(

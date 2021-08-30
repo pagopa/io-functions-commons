@@ -1,36 +1,21 @@
 /* eslint-disable no-console */
 import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-
-import {
-  bimap,
-  chain,
-  chainW,
-  fold,
-  foldW,
-  fromEither,
-  taskEither,
-  of,
-  toUnion,
-  tryCatch
-} from "fp-ts/lib/TaskEither";
 import {
   MESSAGE_MODEL_PK_FIELD,
   MessageModel,
-  NewMessageWithoutContent
+  NewMessageWithoutContent,
+  RetrievedMessage
 } from "../../src/models/message";
 import { createContext } from "./cosmos_utils";
 import { fromOption } from "fp-ts/lib/Either";
 import { ServiceId } from "../../generated/definitions/ServiceId";
 import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds";
-import { toCosmosErrorResponse } from "../../src/utils/cosmosdb_model";
-import {
-  asyncIterableToArray,
-  flattenAsyncIterable
-} from "../../src/utils/async";
 import { pipe } from "fp-ts/lib/function";
-
-import * as e from "fp-ts/lib/Either";
+import * as TE from "fp-ts/lib/TaskEither";
 import { isSome } from "fp-ts/lib/Option";
+import { CosmosErrors } from "../../src/utils/cosmosdb_model";
+import { Validation } from "io-ts";
+import * as E from "fp-ts/lib/Either";
 
 const MESSAGE_CONTAINER_NAME = "test-message-container" as NonEmptyString;
 
@@ -83,6 +68,20 @@ const aMessageContentWithNoPayment = {
   markdown: "a".repeat(100)
 };
 
+const withId = (
+  msg: NewMessageWithoutContent,
+  n: number
+): NewMessageWithoutContent => ({
+  ...msg,
+  id: `ID_${n}` as NonEmptyString,
+  indexedId: `ID_${n}` as NonEmptyString,
+  createdAt: new Date(new Date().getTime() + n)
+});
+
+const asyncIteratorToPagedResults = <T>(source: AsyncIterator<T>) => {
+  return source.next().then(ir => ir.value as T);
+};
+
 describe("Models |> Message", () => {
   it("should save messages without content", async () => {
     const context = await createContext(MESSAGE_MODEL_PK_FIELD);
@@ -93,7 +92,7 @@ describe("Models |> Message", () => {
     const created = await pipe(
       model.create(aNewMessageWithoutContent),
       x => x,
-      bimap(
+      TE.bimap(
         _ => fail(`Failed to create doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
@@ -104,13 +103,13 @@ describe("Models |> Message", () => {
           return result;
         }
       ),
-      toUnion
+      TE.toUnion
     )();
 
     // find the message by query
     await pipe(
-      of<any, void>(void 0),
-      chainW(_ =>
+      TE.of<any, void>(void 0),
+      TE.chainW(_ =>
         model.findOneByQuery({
           parameters: [
             {
@@ -121,8 +120,8 @@ describe("Models |> Message", () => {
           query: `SELECT * FROM m WHERE m.id = @id`
         })
       ),
-      chain(_ => fromEither(fromOption(() => "It's none")(_))),
-      bimap(
+      TE.chain(_ => TE.fromEither(fromOption(() => "It's none")(_))),
+      TE.bimap(
         _ => fail(`Failed to read single doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
@@ -136,15 +135,15 @@ describe("Models |> Message", () => {
 
     // find the message by recipient
     await pipe(
-      of<any, void>(void 0),
-      chainW(_ =>
+      TE.of<any, void>(void 0),
+      TE.chainW(_ =>
         model.find([
           aNewMessageWithoutContent.id,
           aNewMessageWithoutContent.fiscalCode
         ])
       ),
-      chain(_ => fromEither(fromOption(() => "It's none")(_))),
-      bimap(
+      TE.chain(_ => TE.fromEither(fromOption(() => "It's none")(_))),
+      TE.bimap(
         _ => fail(`Failed to find one doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
@@ -158,46 +157,26 @@ describe("Models |> Message", () => {
     )();
 
     // find all message for a fiscal code
-    await pipe(
-      tryCatch(
-        () =>
-          asyncIterableToArray(
-            flattenAsyncIterable(
-              model.getQueryIterator({
-                parameters: [
-                  {
-                    name: "@fiscalCode",
-                    value: aFiscalCode
-                  }
-                ],
-                query: `SELECT * FROM m WHERE m.fiscalCode = @fiscalCode`
-              })
-            )
-          ),
-        toCosmosErrorResponse
-      ),
-      bimap(
-        _ => fail(`Failed to read all docs, error: ${JSON.stringify(_)}`),
-        results => {
-          expect(results).toEqual(expect.any(Array));
-          expect(results).toHaveLength(1);
-          pipe(
-            results[0],
-            e.bimap(
-              _ => fail(`Failed to validate , error: ${JSON.stringify(_)}`),
-              result => {
-                expect(result).toEqual(
-                  expect.objectContaining({
-                    ...aSerializedNewMessageWithoutContent
-                  })
-                );
-              }
-            ),
-            e.toUnion
-          );
+    const results = await pipe(
+      model.findMessages(aFiscalCode),
+      TE.map(asyncIteratorToPagedResults),
+      TE.getOrElseW<CosmosErrors, ReadonlyArray<Validation<RetrievedMessage>>>(
+        _ => {
+          throw new Error("Error");
         }
       )
     )();
+
+    expect(results).toEqual(expect.any(Array));
+    expect(results).toHaveLength(1);
+    expect(E.isRight(results[0])).toBe(true);
+    if (E.isRight(results[0])) {
+      expect(results[0].right).toEqual(
+        expect.objectContaining({
+          ...aSerializedNewMessageWithoutContent
+        })
+      );
+    }
 
     context.dispose();
   });
@@ -220,7 +199,7 @@ describe("Models |> Message", () => {
 
     await pipe(
       model.storeContentAsBlob(context.storage, aFakeMessageId, value),
-      bimap(
+      TE.bimap(
         _ => fail(`Failed to store content, error: ${JSON.stringify(_)}`),
         result => {
           expect(isSome(result)).toBe(true);
@@ -231,8 +210,10 @@ describe("Models |> Message", () => {
 
     await pipe(
       model.getContentFromBlob(context.storage, aFakeMessageId),
-      chain(_ => fromEither(fromOption(() => new Error(`Blob not found`))(_))),
-      bimap(
+      TE.chain(_ =>
+        TE.fromEither(fromOption(() => new Error(`Blob not found`))(_))
+      ),
+      TE.bimap(
         _ => fail(`Failed to get content, error: ${JSON.stringify(_)}`),
         result => {
           // check the output contains the values stored before
