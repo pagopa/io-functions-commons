@@ -25,6 +25,7 @@ import {
   taskEither,
   tryCatch as tryCatchT
 } from "fp-ts/lib/TaskEither";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import {
   BaseModel,
   CosmosdbModel,
@@ -221,31 +222,75 @@ export class MessageModel extends CosmosdbModel<
   }
 
   /**
-   * Returns the messages for the provided fiscal code
+   * Returns the messages for the provided fiscal code, with id based pagination capabilities
    *
    * @param fiscalCode The fiscal code of the recipient
+   * @param pageSize The requested pageSize
+   * @param nextMessageId The message ID that can be used to filter next messages (older)
+   * @param prevMessageId The message ID that can be used to filter previous messages (newest)
    */
   public findMessages(
-    fiscalCode: FiscalCode
+    fiscalCode: FiscalCode,
+    pageSize = 100 as NonNegativeInteger,
+    nextMessageId?: NonEmptyString,
+    prevMessageId?: NonEmptyString
   ): TaskEither<
     CosmosErrors,
-    AsyncIterator<ReadonlyArray<t.Validation<RetrievedMessage>>>
+    AsyncIterator<
+      ReadonlyArray<t.Validation<RetrievedMessage>>,
+      ReadonlyArray<t.Validation<RetrievedMessage>>
+    >
   > {
-    return fromEitherT(
-      tryCatch2v(
-        () =>
-          this.getQueryIterator({
-            parameters: [
-              {
-                name: "@fiscalCode",
-                value: fiscalCode
-              }
-            ],
-            query: `SELECT * FROM m WHERE m.${MESSAGE_MODEL_PK_FIELD} = @fiscalCode`
-          })[Symbol.asyncIterator](),
-        toCosmosErrorResponse
-      )
-    );
+    const commonQuerySpec = {
+      parameters: [
+        {
+          name: "@fiscalCode",
+          value: fiscalCode
+        }
+      ],
+      query: `SELECT * FROM m WHERE m.${MESSAGE_MODEL_PK_FIELD} = @fiscalCode`
+    };
+    const emptyMessageParameter = {
+      condition: "",
+      param: []
+    };
+    return taskEither
+      .of({
+        nextMessagesParams: fromNullable(nextMessageId).foldL(
+          () => emptyMessageParameter,
+          _ => ({
+            condition: ` AND m.id < @nextId`,
+            param: [{ name: "@nextId", value: _ }]
+          })
+        ),
+        prevMessagesParams: fromNullable(prevMessageId).foldL(
+          () => emptyMessageParameter,
+          _ => ({
+            condition: `AND m.id > @prevId`,
+            param: [{ name: "@prevId", value: _ }]
+          })
+        )
+      })
+      .mapLeft(toCosmosErrorResponse)
+      .map(({ nextMessagesParams, prevMessagesParams }) => ({
+        parameters: [
+          ...commonQuerySpec.parameters,
+          ...nextMessagesParams.param,
+          ...prevMessagesParams.param
+        ],
+        query: `${commonQuerySpec.query} ${nextMessagesParams.condition} ${prevMessagesParams.condition} ORDER BY m.id DESC`
+      }))
+      .chain(querySpec =>
+        fromEitherT(
+          tryCatch2v(
+            () =>
+              this.getQueryIterator(querySpec, { maxItemCount: pageSize })[
+                Symbol.asyncIterator
+              ](),
+            toCosmosErrorResponse
+          )
+        )
+      );
   }
 
   /**
