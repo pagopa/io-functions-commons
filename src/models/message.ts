@@ -265,7 +265,7 @@ export class MessageModel extends CosmosdbModel<
         ),
         prevMessagesParams: fromNullable(prevMessageId).foldL(
           () => emptyMessageParameter,
-          _ => ({
+          minimumId => ({
             condition: ` AND m.id > @prevId`,
             param: [{ name: "@prevId", value: _ }]
           })
