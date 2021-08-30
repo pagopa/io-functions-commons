@@ -21,7 +21,7 @@ describe("RequiredBodyPayloadMiddleware", () => {
 
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
-      expect<any>(result.value).toEqual({
+      expect<any>(result.right).toEqual({
         foo: "hello"
       });
     }
@@ -34,7 +34,7 @@ describe("RequiredBodyPayloadMiddleware", () => {
 
     expect(isLeft(result)).toBeTruthy();
     if (isLeft(result)) {
-      expect(result.value.kind).toBe("IResponseErrorValidation");
+      expect(result.left.kind).toBe("IResponseErrorValidation");
     }
   });
 });

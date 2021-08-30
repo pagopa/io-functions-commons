@@ -18,9 +18,9 @@ describe("ClientIpMiddleware", () => {
         const res = await ClientIpMiddleware(mockRequest as any);
         expect(isRight(res)).toBeTruthy();
         if (isRight(res)) {
-          expect(isSome(res.value)).toBeTruthy();
-          if (isSome(res.value)) {
-            expect(res.value.value).toEqual("5.90.26.229");
+          expect(isSome(res.right)).toBeTruthy();
+          if (isSome(res.right)) {
+            expect(res.right.value).toEqual("5.90.26.229");
           }
         }
       })
@@ -36,7 +36,7 @@ describe("ClientIpMiddleware", () => {
         const res = await ClientIpMiddleware(mockRequest as any);
         expect(isRight(res)).toBeTruthy();
         if (isRight(res)) {
-          expect(isNone(res.value)).toBeTruthy();
+          expect(isNone(res.right)).toBeTruthy();
         }
       })
     );

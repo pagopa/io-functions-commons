@@ -1,4 +1,6 @@
 import * as t from "io-ts";
+import * as E from "fp-ts/lib/Either";
+import { pipe } from "fp-ts/lib/function";
 
 // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
 export function isDefined<T>(o: T | undefined | null): o is T {
@@ -27,10 +29,13 @@ export const wrapWithKind = <C extends t.Any, K extends string>(
     kind,
     (a: unknown): a is t.TypeOf<C> => codec.is(a) && a.kind === kind,
     (i: t.InputOf<C>, context: t.Context) =>
-      codec.validate(i, context).map(_ => ({
-        ..._,
-        kind
-      })),
+      pipe(
+        codec.validate(i, context),
+        E.map(_ => ({
+          ..._,
+          kind
+        }))
+      ),
     (a: t.TypeOf<C>) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-unnecessary-type-assertion
       const { kind: _, ...o } = codec.encode(a) as t.OutputOf<C>;

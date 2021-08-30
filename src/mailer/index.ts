@@ -13,7 +13,8 @@ import {
 } from "@pagopa/ts-commons/lib/fetch";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { Millisecond } from "@pagopa/ts-commons/lib/units";
-import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
+import { Option } from "fp-ts/lib/Option";
+import * as O from "fp-ts/lib/Option";
 
 import {
   MailerConfig,
@@ -65,13 +66,13 @@ export const getMailerTransporter = (
         readonly secure: boolean;
       }
   > = SendgridMailerConfig.is(config)
-    ? some(
+    ? O.some(
         NodeMailerSendgrid({
           apiKey: config.SENDGRID_API_KEY
         })
       )
     : MailupMailerConfig.is(config)
-    ? some(
+    ? O.some(
         MailUpTransport({
           creds: {
             Secret: config.MAILUP_SECRET,
@@ -82,24 +83,26 @@ export const getMailerTransporter = (
         })
       )
     : MultiTrasnsportMailerConfig.is(config)
-    ? fromNullable(
+    ? O.fromNullable(
         MultiTransport(
           getTransportsForConnections(config.MAIL_TRANSPORTS, fetchAgent)
         )
       )
     : MailhogMailerConfig.is(config)
-    ? some({
+    ? O.some({
         host: config.MAILHOG_HOSTNAME,
         port: 1025,
         secure: false
       })
-    : defaultNever(config, none);
+    : defaultNever(config, O.none);
 
-  return maybeTransportOpts.map(createMailTransporter).getOrElseL(() => {
+  if (O.isSome(maybeTransportOpts)) {
+    return createMailTransporter(maybeTransportOpts.value);
+  } else {
     throw new Error(
       "Failed to choose a mail transport based on provided configuration"
     );
-  });
+  }
 };
 
 // expose inner stuff as public module interface

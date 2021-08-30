@@ -14,7 +14,7 @@ describe("FiscalCodeMiddleware", () => {
     return FiscalCodeMiddleware(mockRequest as any).then(result => {
       expect(isLeft(result)).toBeTruthy();
       if (isLeft(result)) {
-        expect(result.value.kind).toBe("IResponseErrorValidation");
+        expect(result.left.kind).toBe("IResponseErrorValidation");
       }
     });
   });
@@ -29,7 +29,7 @@ describe("FiscalCodeMiddleware", () => {
     return FiscalCodeMiddleware(mockRequest as any).then(result => {
       expect(isRight(result)).toBeTruthy();
       if (isRight(result)) {
-        expect<any>(result.value).toEqual(mockRequest.params.fiscalcode);
+        expect<any>(result.right).toEqual(mockRequest.params.fiscalcode);
       }
     });
   });

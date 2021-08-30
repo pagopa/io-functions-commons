@@ -3,6 +3,7 @@ import * as t from "io-ts";
 import { withDefault } from "@pagopa/ts-commons/lib/types";
 
 import { Container } from "@azure/cosmos";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import {
   CosmosdbModelVersioned,
   RetrievedVersionedModel
@@ -17,6 +18,7 @@ import { IsEmailValidated } from "../../generated/definitions/IsEmailValidated";
 import { IsInboxEnabled } from "../../generated/definitions/IsInboxEnabled";
 import { IsTestProfile } from "../../generated/definitions/IsTestProfile";
 import { IsWebhookEnabled } from "../../generated/definitions/IsWebhookEnabled";
+import { ServicesPreferencesModeEnum } from "../../generated/definitions/ServicesPreferencesMode";
 import { PreferredLanguages } from "../../generated/definitions/PreferredLanguages";
 
 import { wrapWithKind } from "../utils/types";
@@ -24,13 +26,52 @@ import { wrapWithKind } from "../utils/types";
 export const PROFILE_COLLECTION_NAME = "profiles";
 export const PROFILE_MODEL_PK_FIELD = "fiscalCode" as const;
 
+// The placeholder value to be assigned to servicePreferencesSettings.version when servicePreferencesSettings.mode=LEGACY
+// As such value will never be used in LEGACY scenario and would not make much sense, it could be anything
+// For convenience, is -1 as it could be incremented and become 0 (which is a valid NonNegativeInteger)
+export const PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION = -1 as const;
+
+/**
+ * A value object that describes how the Citizen wants to handle service subscriptions.
+ * This mechanism replaces what used to do by only using 'blockedInboxOrChannels' field,
+ *   as the latter lacks some features to be fully GDPR-compliant.
+ * For this reasaon, we mapped a LEGACY mode which refers to Citizens whose profile didn't switch to new mechanism yet.
+ */
+type ServicePreferencesSettings = t.TypeOf<typeof ServicePreferencesSettings>;
+const ServicePreferencesSettings = t.union([
+  t.interface({
+    mode: t.union([
+      // A Citizen is subscribed to every service, then they can cerry-picking specific services to unsubscribe from
+      t.literal(ServicesPreferencesModeEnum.AUTO),
+      // A Citizen is not subscribed to any service, then they can cerry-picking specific services to subscribe to
+      t.literal(ServicesPreferencesModeEnum.MANUAL)
+    ]),
+    // Every time mode is changed, version should be incremented.
+    // This is because specific service preferences, which are bound to a settings version, will be invalidated
+    version: NonNegativeInteger
+  }),
+  // LEGACY mode is valid only with version equals to -1
+  // and is the default value retrieved from an existing profile
+  t.interface({
+    mode: t.literal(ServicesPreferencesModeEnum.LEGACY),
+    version: t.literal(PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION)
+  })
+]);
+
 /**
  * Base interface for Profile objects
  */
 export const Profile = t.intersection([
   t.interface({
     // the fiscal code of the citized associated to this profile
-    fiscalCode: FiscalCode
+    fiscalCode: FiscalCode,
+
+    // how the citizen prefers to handle subscriptions to Services
+    // default value is needed to handle citizens that didn't make the choice yet
+    servicePreferencesSettings: withDefault(ServicePreferencesSettings, {
+      mode: ServicesPreferencesModeEnum.LEGACY,
+      version: PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION
+    })
   }),
   t.partial({
     // Notification channels blocked by the user;

@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable sonarjs/no-identical-functions */
 
-import { isLeft, isRight } from "fp-ts/lib/Either";
+import * as E from "fp-ts/lib/Either";
+import * as O from "fp-ts/lib/Option";
 
 import { Container } from "@azure/cosmos";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
@@ -57,12 +58,15 @@ describe("findOneServiceById", () => {
 
     const model = new ServiceModel(containerMock);
 
-    const result = await model.findOneByServiceId("id" as NonEmptyString).run();
+    const result = await model.findOneByServiceId("id" as NonEmptyString)();
 
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isSome()).toBeTruthy();
-      expect(result.value.toUndefined()).toEqual(aRetrievedService);
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isSome(result.right)).toBeTruthy();
+      // use JSON.stringify because of a jest matcher bug ref. https://github.com/facebook/jest/issues/8475
+      expect(JSON.stringify(O.toUndefined(result.right))).toEqual(
+        JSON.stringify(aRetrievedService)
+      );
     }
   });
 
@@ -82,11 +86,11 @@ describe("findOneServiceById", () => {
 
     const model = new ServiceModel(containerMock);
 
-    const result = await model.findOneByServiceId("id" as NonEmptyString).run();
+    const result = await model.findOneByServiceId("id" as NonEmptyString)();
 
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isNone()).toBeTruthy();
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isNone(result.right)).toBeTruthy();
     }
   });
 
@@ -106,11 +110,11 @@ describe("findOneServiceById", () => {
 
     const model = new ServiceModel(containerMock);
 
-    const result = await model.findOneByServiceId("id" as NonEmptyString).run();
+    const result = await model.findOneByServiceId("id" as NonEmptyString)();
 
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toBe("COSMOS_DECODING_ERROR");
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toBe("COSMOS_DECODING_ERROR");
     }
   });
 });

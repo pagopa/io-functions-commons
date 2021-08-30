@@ -4,7 +4,8 @@ import {
   IResponse,
   ResponseErrorFromValidationErrors
 } from "@pagopa/ts-commons/lib/responses";
-import { Either } from "fp-ts/lib/Either";
+import * as E from "fp-ts/lib/Either";
+import { pipe } from "fp-ts/lib/function";
 import { IRequestMiddleware } from "../request_middleware";
 
 /**
@@ -19,7 +20,8 @@ export const RequiredQueryParamMiddleware = <S, A>(
   type: t.Type<A, S>
 ): IRequestMiddleware<"IResponseErrorValidation", A> => async (
   request
-): Promise<Either<IResponse<"IResponseErrorValidation">, A>> =>
-  type
-    .decode(request.query[name])
-    .mapLeft(ResponseErrorFromValidationErrors(type));
+): Promise<E.Either<IResponse<"IResponseErrorValidation">, A>> =>
+  pipe(
+    type.decode(request.query[name]),
+    E.mapLeft(ResponseErrorFromValidationErrors(type))
+  );

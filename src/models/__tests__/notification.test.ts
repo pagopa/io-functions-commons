@@ -1,6 +1,7 @@
 // eslint-disable @typescript-eslint/no-explicit-any
 
-import { isLeft, isRight } from "fp-ts/lib/Either";
+import * as E from "fp-ts/lib/Either";
+import * as O from "fp-ts/lib/Option";
 
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 
@@ -58,15 +59,15 @@ describe("findNotificationByMessage", () => {
 
     const model = new NotificationModel(containerMock);
 
-    const result = await model
-      .findNotificationForMessage(aRetrievedNotification.messageId)
-      .run();
+    const result = await model.findNotificationForMessage(
+      aRetrievedNotification.messageId
+    )();
 
     expect(containerMock.items.query).toHaveBeenCalledTimes(1);
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isSome()).toBeTruthy();
-      expect(result.value.toUndefined()).toEqual(aRetrievedNotification);
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isSome(result.right)).toBeTruthy();
+      expect(O.toUndefined(result.right)).toEqual(aRetrievedNotification);
     }
   });
 
@@ -86,13 +87,13 @@ describe("findNotificationByMessage", () => {
 
     const model = new NotificationModel(containerMock);
 
-    const result = await model
-      .findNotificationForMessage(aRetrievedNotification.messageId)
-      .run();
+    const result = await model.findNotificationForMessage(
+      aRetrievedNotification.messageId
+    )();
 
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isNone()).toBeTruthy();
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isNone(result.right)).toBeTruthy();
     }
   });
 
@@ -108,13 +109,13 @@ describe("findNotificationByMessage", () => {
 
     const model = new NotificationModel(containerMock);
 
-    const result = await model
-      .findNotificationForMessage(aRetrievedNotification.messageId)
-      .run();
+    const result = await model.findNotificationForMessage(
+      aRetrievedNotification.messageId
+    )();
 
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toEqual("COSMOS_ERROR_RESPONSE");
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toEqual("COSMOS_ERROR_RESPONSE");
     }
   });
 
@@ -134,13 +135,13 @@ describe("findNotificationByMessage", () => {
 
     const model = new NotificationModel(containerMock);
 
-    const result = await model
-      .findNotificationForMessage(aRetrievedNotification.messageId)
-      .run();
+    const result = await model.findNotificationForMessage(
+      aRetrievedNotification.messageId
+    )();
 
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toBe("COSMOS_DECODING_ERROR");
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toBe("COSMOS_DECODING_ERROR");
     }
   });
 });

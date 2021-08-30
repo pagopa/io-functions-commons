@@ -5,6 +5,8 @@ import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { Container } from "@azure/cosmos";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { TaskEither } from "fp-ts/lib/TaskEither";
+import * as E from "fp-ts/lib/Either";
+import { pipe } from "fp-ts/lib/function";
 import {
   CosmosdbModelVersioned,
   RetrievedVersionedModel
@@ -36,8 +38,8 @@ export const UserDataProcessingId = t.brand(
     // enforce pattern {fiscalCode-Choice}
     const [fiscalCode, choice] = s.split("-");
     return (
-      FiscalCode.decode(fiscalCode).isRight() &&
-      UserDataProcessingChoice.decode(choice).isRight()
+      E.isRight(FiscalCode.decode(fiscalCode)) &&
+      E.isRight(UserDataProcessingChoice.decode(choice))
     );
   },
   "IUserDataProcessingIdTag"
@@ -97,11 +99,14 @@ export const makeUserDataProcessingId = (
   choice: UserDataProcessingChoice,
   fiscalCode: FiscalCode
 ): UserDataProcessingId =>
-  UserDataProcessingId.decode(`${fiscalCode}-${choice}`).getOrElseL(errors => {
-    throw new Error(
-      `Invalid User Data Processing id, reason: ${readableReport(errors)}`
-    );
-  });
+  pipe(
+    UserDataProcessingId.decode(`${fiscalCode}-${choice}`),
+    E.getOrElseW(errors => {
+      throw new Error(
+        `Invalid User Data Processing id, reason: ${readableReport(errors)}`
+      );
+    })
+  );
 
 /**
  * A model for handling UserDataProcessing

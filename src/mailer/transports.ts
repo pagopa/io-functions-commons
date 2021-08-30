@@ -9,7 +9,7 @@
 
 import { promisify } from "util";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { catOptions } from "fp-ts/lib/Array";
+import * as A from "fp-ts/lib/Array";
 import { toError } from "fp-ts/lib/Either";
 import { none, Option, some } from "fp-ts/lib/Option";
 import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
@@ -120,7 +120,7 @@ const getTransportsForConnections = (
     // default ignore
     return none;
   };
-  return catOptions(configs.map(fn));
+  return A.compact(configs.map(fn));
 };
 
 /**

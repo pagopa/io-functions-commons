@@ -3,7 +3,7 @@
  */
 import * as winston from "winston";
 
-import { Either, isLeft, left, right } from "fp-ts/lib/Either";
+import * as E from "fp-ts/lib/Either";
 
 import { isNone } from "fp-ts/lib/Option";
 
@@ -56,7 +56,7 @@ export const AzureUserAttributesMiddleware = (
 > => async (
   request
 ): Promise<
-  Either<
+  E.Either<
     IResponse<
       | "IResponseErrorInternal"
       | "IResponseErrorQuery"
@@ -69,56 +69,56 @@ export const AzureUserAttributesMiddleware = (
     request.header(HEADER_USER_EMAIL)
   );
 
-  if (isLeft(errorOrUserEmail)) {
-    return left<IResponse<"IResponseErrorInternal">, IAzureUserAttributes>(
+  if (E.isLeft(errorOrUserEmail)) {
+    return E.left<IResponse<"IResponseErrorInternal">, IAzureUserAttributes>(
       ResponseErrorInternal(
         `Missing, empty or invalid ${HEADER_USER_EMAIL} header`
       )
     );
   }
 
-  const userEmail = errorOrUserEmail.value;
+  const userEmail = errorOrUserEmail.right;
 
   const errorOrUserSubscriptionId = NonEmptyString.decode(
     request.header(HEADER_USER_SUBSCRIPTION_KEY)
   );
 
-  if (isLeft(errorOrUserSubscriptionId)) {
-    return left<IResponse<"IResponseErrorInternal">, IAzureUserAttributes>(
+  if (E.isLeft(errorOrUserSubscriptionId)) {
+    return E.left<IResponse<"IResponseErrorInternal">, IAzureUserAttributes>(
       ResponseErrorInternal(
         `Missing or empty ${HEADER_USER_SUBSCRIPTION_KEY} header`
       )
     );
   }
 
-  const subscriptionId = errorOrUserSubscriptionId.value;
+  const subscriptionId = errorOrUserSubscriptionId.right;
 
   // serviceId equals subscriptionId
-  const errorOrMaybeService = await serviceModel
-    .findLastVersionByModelId([subscriptionId])
-    .run();
+  const errorOrMaybeService = await serviceModel.findLastVersionByModelId([
+    subscriptionId
+  ])();
 
-  if (isLeft(errorOrMaybeService)) {
+  if (E.isLeft(errorOrMaybeService)) {
     winston.error(
       `No service found for subscription|${subscriptionId}|${JSON.stringify(
-        errorOrMaybeService.value
+        errorOrMaybeService.left
       )}`
     );
-    return left<IResponse<"IResponseErrorQuery">, IAzureUserAttributes>(
+    return E.left<IResponse<"IResponseErrorQuery">, IAzureUserAttributes>(
       ResponseErrorQuery(
         `Error while retrieving the service tied to the provided subscription id`,
-        errorOrMaybeService.value
+        errorOrMaybeService.left
       )
     );
   }
 
-  const maybeService = errorOrMaybeService.value;
+  const maybeService = errorOrMaybeService.right;
 
   if (isNone(maybeService)) {
     winston.error(
       `AzureUserAttributesMiddleware|Service not found|${subscriptionId}`
     );
-    return left<
+    return E.left<
       IResponse<"IResponseErrorForbiddenNotAuthorized">,
       IAzureUserAttributes
     >(ResponseErrorForbiddenNotAuthorized);
@@ -130,7 +130,7 @@ export const AzureUserAttributesMiddleware = (
     service: maybeService.value
   };
 
-  return right<
+  return E.right<
     IResponse<
       | "IResponseErrorForbiddenNotAuthorized"
       | "IResponseErrorQuery"
