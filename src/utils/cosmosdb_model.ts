@@ -151,6 +151,18 @@ const wrapCreate = <TN, TR>(
 };
 
 /**
+ * Define a FeedResponse in which the type fof the resource is strictly enforced through validation
+ */
+export type DecodedFeedResponse<TResource> = ReadonlyArray<
+  {
+    readonly resource: t.Validation<TResource>;
+  } & (
+    | { readonly hasMoreResults: true; readonly continuationToken: string }
+    | { readonly hasMoreResults: false; readonly continuationToken: undefined }
+  )
+>;
+
+/**
  * A persisted data model backed by a CosmosDB client: this base class
  * abstracts the semantics of the CosmosDB API, by providing the shared code
  * for persisting, retrieving and updating a document model.

@@ -12,7 +12,7 @@ import { fromNullable, isNone, none, Option, some } from "fp-ts/lib/Option";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { pipe } from "fp-ts/lib/function";
 
-type Resolve<T> = (value?: T | PromiseLike<T>) => void;
+type Resolve<T> = (value: T | PromiseLike<T>) => void;
 
 export type StorageError = Error & {
   readonly code?: string;
