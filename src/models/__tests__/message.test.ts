@@ -25,6 +25,8 @@ import { MessageSubject } from "../../../generated/definitions/MessageSubject";
 import { ServiceId } from "../../../generated/definitions/ServiceId";
 import { TimeToLiveSeconds } from "../../../generated/definitions/TimeToLiveSeconds";
 import * as azureStorageUtils from "../../utils/azure_storage";
+import { elem } from "fp-ts/lib/Foldable";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 
 beforeEach(() => {
   jest.resetAllMocks();
@@ -67,13 +69,15 @@ const aRetrievedMessageWithContent: RetrievedMessageWithContent = {
   kind: "IRetrievedMessageWithContent"
 };
 
+const iteratorGenMock = async function*(arr: any[]) {
+  for (let a of arr) yield a;
+};
+
 describe("findMessages", () => {
   it("should return the messages for a fiscal code", async () => {
-    const iteratorMock = {
-      next: jest.fn(() =>
-        Promise.resolve(right([right(aRetrievedMessageWithContent)]))
-      )
-    };
+    const iteratorMock = iteratorGenMock([
+      [right(aRetrievedMessageWithContent)]
+    ]);
 
     const asyncIteratorSpy = jest
       .spyOn(asyncI, "mapAsyncIterable")
@@ -111,9 +115,7 @@ describe("findMessages", () => {
   });
 
   it("should return an empty iterator if fiscalCode doesn't match", async () => {
-    const iteratorMock = {
-      next: jest.fn(() => Promise.resolve(right([])))
-    };
+    const iteratorMock = iteratorGenMock([[]]);
 
     const asyncIteratorSpy = jest
       .spyOn(asyncI, "mapAsyncIterable")
@@ -146,6 +148,197 @@ describe("findMessages", () => {
       expect(result.value).toMatchObject([]);
     }
   });
+});
+
+it("should return an iterator containing results page of correct pageSize", async () => {
+  const iteratorMock = iteratorGenMock([
+    [right(aRetrievedMessageWithContent), right(aRetrievedMessageWithContent)],
+    [right(aRetrievedMessageWithContent)]
+  ]);
+
+  const asyncIteratorSpy = jest
+    .spyOn(asyncI, "mapAsyncIterable")
+    // eslint-disable-next-line sonarjs/no-identical-functions
+    .mockImplementation(() => {
+      return {
+        [Symbol.asyncIterator]: () => iteratorMock
+      };
+    });
+
+  const containerMock = ({
+    items: {
+      query: jest.fn(() => ({
+        getAsyncIterator: jest.fn(() => iteratorMock)
+      }))
+    }
+  } as unknown) as Container;
+
+  const model = new MessageModel(containerMock, MESSAGE_CONTAINER_NAME);
+
+  const errorsOrResultIterator = await model
+    .findMessages(
+      aRetrievedMessageWithContent.fiscalCode,
+      2 as NonNegativeInteger
+    )
+    .run();
+
+  expect(asyncIteratorSpy).toHaveBeenCalledTimes(1);
+  expect(containerMock.items.query).toHaveBeenCalledTimes(1);
+  expect(containerMock.items.query).toHaveBeenCalledWith(
+    {
+      parameters: [
+        { name: "@fiscalCode", value: aRetrievedMessageWithContent.fiscalCode }
+      ],
+      query: "SELECT * FROM m WHERE m.fiscalCode = @fiscalCode ORDER BY m.id DESC"
+    },
+    { maxItemCount: 2 }
+  );
+  expect(isRight(errorsOrResultIterator)).toBeTruthy();
+  if (isRight(errorsOrResultIterator)) {
+    const iterator = errorsOrResultIterator.value;
+    const result = await iterator.next();
+    expect(result.value).toMatchObject([
+      right(aRetrievedMessageWithContent),
+      right(aRetrievedMessageWithContent)
+    ]);
+    const result2 = await iterator.next();
+    expect(result2.value).toMatchObject([right(aRetrievedMessageWithContent)]);
+  }
+});
+
+it("should construct the correct query with nextId param", async () => {
+  const iteratorMock = iteratorGenMock([[]]);
+
+  const asyncIteratorSpy = jest
+    .spyOn(asyncI, "mapAsyncIterable")
+    // eslint-disable-next-line sonarjs/no-identical-functions
+    .mockImplementation(() => {
+      return {
+        [Symbol.asyncIterator]: () => iteratorMock
+      };
+    });
+
+  const containerMock = ({
+    items: {
+      query: jest.fn(() => ({
+        getAsyncIterator: jest.fn(() => iteratorMock)
+      }))
+    }
+  } as unknown) as Container;
+
+  const model = new MessageModel(containerMock, MESSAGE_CONTAINER_NAME);
+
+  await model
+    .findMessages(
+      aRetrievedMessageWithContent.fiscalCode,
+      2 as NonNegativeInteger,
+      "A_MESSAGE_ID" as NonEmptyString
+    )
+    .run();
+
+  expect(asyncIteratorSpy).toHaveBeenCalledTimes(1);
+  expect(containerMock.items.query).toHaveBeenCalledTimes(1);
+  expect(containerMock.items.query).toHaveBeenCalledWith(
+    {
+      parameters: [
+        { name: "@fiscalCode", value: aRetrievedMessageWithContent.fiscalCode },
+        { name: "@nextId", value: "A_MESSAGE_ID" }
+      ],
+      query: "SELECT * FROM m WHERE m.fiscalCode = @fiscalCode AND m.id < @nextId ORDER BY m.id DESC"
+    },
+    { maxItemCount: 2 }
+  );
+});
+
+it("should construct the correct query with prevId param", async () => {
+  const iteratorMock = iteratorGenMock([[]]);
+
+  const asyncIteratorSpy = jest
+    .spyOn(asyncI, "mapAsyncIterable")
+    // eslint-disable-next-line sonarjs/no-identical-functions
+    .mockImplementation(() => {
+      return {
+        [Symbol.asyncIterator]: () => iteratorMock
+      };
+    });
+
+  const containerMock = ({
+    items: {
+      query: jest.fn(() => ({
+        getAsyncIterator: jest.fn(() => iteratorMock)
+      }))
+    }
+  } as unknown) as Container;
+
+  const model = new MessageModel(containerMock, MESSAGE_CONTAINER_NAME);
+
+  await model
+    .findMessages(
+      aRetrievedMessageWithContent.fiscalCode,
+      2 as NonNegativeInteger,
+      undefined,
+      "A_MESSAGE_ID" as NonEmptyString
+    )
+    .run();
+
+  expect(asyncIteratorSpy).toHaveBeenCalledTimes(1);
+  expect(containerMock.items.query).toHaveBeenCalledTimes(1);
+  expect(containerMock.items.query).toHaveBeenCalledWith(
+    {
+      parameters: [
+        { name: "@fiscalCode", value: aRetrievedMessageWithContent.fiscalCode },
+        { name: "@prevId", value: "A_MESSAGE_ID" }
+      ],
+      query: "SELECT * FROM m WHERE m.fiscalCode = @fiscalCode AND m.id > @prevId ORDER BY m.id DESC"
+    },
+    { maxItemCount: 2 }
+  );
+});
+
+it("should return an iterator with correct done definition", async () => {
+  const iteratorMock = iteratorGenMock([
+    [right(aRetrievedMessageWithContent), right(aRetrievedMessageWithContent)]
+  ]);
+
+  const asyncIteratorSpy = jest
+    .spyOn(asyncI, "mapAsyncIterable")
+    // eslint-disable-next-line sonarjs/no-identical-functions
+    .mockImplementation(() => {
+      return {
+        [Symbol.asyncIterator]: () => iteratorMock
+      };
+    });
+
+  const containerMock = ({
+    items: {
+      query: jest.fn(() => ({
+        getAsyncIterator: jest.fn(() => iteratorMock)
+      }))
+    }
+  } as unknown) as Container;
+
+  const model = new MessageModel(containerMock, MESSAGE_CONTAINER_NAME);
+
+  const errorsOrResultIterator = await model
+    .findMessages(
+      aRetrievedMessageWithContent.fiscalCode,
+      2 as NonNegativeInteger
+    )
+    .run();
+
+  expect(asyncIteratorSpy).toHaveBeenCalledTimes(1);
+  expect(containerMock.items.query).toHaveBeenCalledTimes(1);
+  expect(isRight(errorsOrResultIterator)).toBeTruthy();
+  if (isRight(errorsOrResultIterator)) {
+    const iterator = errorsOrResultIterator.value;
+    const result = await iterator.next();
+    expect(result.value).toMatchObject([
+      right(aRetrievedMessageWithContent),
+      right(aRetrievedMessageWithContent)
+    ]);
+    const result2 = await iterator.next();
+    expect(result2.done).toBe(true);
+  }
 });
 
 describe("findMessageForRecipient", () => {

@@ -266,7 +266,7 @@ export class MessageModel extends CosmosdbModel<
         prevMessagesParams: fromNullable(prevMessageId).foldL(
           () => emptyMessageParameter,
           _ => ({
-            condition: `AND m.id > @prevId`,
+            condition: ` AND m.id > @prevId`,
             param: [{ name: "@prevId", value: _ }]
           })
         )
@@ -278,7 +278,7 @@ export class MessageModel extends CosmosdbModel<
           ...nextMessagesParams.param,
           ...prevMessagesParams.param
         ],
-        query: `${commonQuerySpec.query} ${nextMessagesParams.condition} ${prevMessagesParams.condition} ORDER BY m.id DESC`
+        query: `${commonQuerySpec.query}${nextMessagesParams.condition}${prevMessagesParams.condition} ORDER BY m.id DESC`
       }))
       .chain(querySpec =>
         fromEitherT(
