@@ -206,7 +206,7 @@ it("should return an iterator containing results page of correct pageSize", asyn
   }
 });
 
-it("should construct the correct query with nextId param", async () => {
+it("should construct the correct query with maximumMessageId param", async () => {
   const iteratorMock = iteratorGenMock([[]]);
 
   const asyncIteratorSpy = jest
@@ -250,7 +250,7 @@ it("should construct the correct query with nextId param", async () => {
   );
 });
 
-it("should construct the correct query with prevId param", async () => {
+it("should construct the correct query with minimumMessageId param", async () => {
   const iteratorMock = iteratorGenMock([[]]);
 
   const asyncIteratorSpy = jest
