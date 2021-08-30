@@ -11,23 +11,12 @@ import {
   MESSAGE_MODEL_PK_FIELD,
   MessageModel,
   NewMessageWithoutContent,
-  RetrievedMessage
 } from "../../src/models/message";
 import { createContext } from "./cosmos_utils";
 import { fromOption } from "fp-ts/lib/Either";
 import { toString } from "fp-ts/lib/function";
 import { ServiceId } from "../../generated/definitions/ServiceId";
 import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds";
-import {
-  DecodedFeedResponse,
-  toCosmosErrorResponse
-} from "../../src/utils/cosmosdb_model";
-import {
-  asyncIterableToArray,
-  asyncIteratorToArray,
-  flattenAsyncIterable,
-  flattenAsyncIterator
-} from "../../src/utils/async";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { array } from "fp-ts/lib/Array";
 
