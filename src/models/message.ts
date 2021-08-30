@@ -258,7 +258,7 @@ export class MessageModel extends CosmosdbModel<
       .of({
         nextMessagesParams: fromNullable(nextMessageId).foldL(
           () => emptyMessageParameter,
-          _ => ({
+          maximumId => ({
             condition: ` AND m.id < @nextId`,
             param: [{ name: "@nextId", value: _ }]
           })
