@@ -226,14 +226,14 @@ export class MessageModel extends CosmosdbModel<
    *
    * @param fiscalCode The fiscal code of the recipient
    * @param pageSize The requested pageSize
-   * @param nextMessageId The message ID that can be used to filter next messages (older)
-   * @param prevMessageId The message ID that can be used to filter previous messages (newest)
+   * @param maximumMessageId The message ID that can be used to filter next messages (older)
+   * @param minimumMessageId The message ID that can be used to filter previous messages (newest)
    */
   public findMessages(
     fiscalCode: FiscalCode,
     pageSize = 100 as NonNegativeInteger,
-    nextMessageId?: NonEmptyString,
-    prevMessageId?: NonEmptyString
+    maximumMessageId?: NonEmptyString,
+    minimumMessageId?: NonEmptyString
   ): TaskEither<
     CosmosErrors,
     AsyncIterator<
@@ -256,18 +256,18 @@ export class MessageModel extends CosmosdbModel<
     };
     return taskEither
       .of({
-        nextMessagesParams: fromNullable(nextMessageId).foldL(
+        nextMessagesParams: fromNullable(maximumMessageId).foldL(
           () => emptyMessageParameter,
           maximumId => ({
-            condition: ` AND m.id < @nextId`,
-            param: [{ name: "@nextId", value: _ }]
+            condition: ` AND m.id < @maxId`,
+            param: [{ name: "@maxId", value: maximumId }]
           })
         ),
-        prevMessagesParams: fromNullable(prevMessageId).foldL(
+        prevMessagesParams: fromNullable(minimumMessageId).foldL(
           () => emptyMessageParameter,
           minimumId => ({
-            condition: ` AND m.id > @prevId`,
-            param: [{ name: "@prevId", value: _ }]
+            condition: ` AND m.id > @minId`,
+            param: [{ name: "@minId", value: minimumId }]
           })
         )
       })

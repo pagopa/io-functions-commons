@@ -242,9 +242,9 @@ it("should construct the correct query with nextId param", async () => {
     {
       parameters: [
         { name: "@fiscalCode", value: aRetrievedMessageWithContent.fiscalCode },
-        { name: "@nextId", value: "A_MESSAGE_ID" }
+        { name: "@maxId", value: "A_MESSAGE_ID" }
       ],
-      query: "SELECT * FROM m WHERE m.fiscalCode = @fiscalCode AND m.id < @nextId ORDER BY m.id DESC"
+      query: "SELECT * FROM m WHERE m.fiscalCode = @fiscalCode AND m.id < @maxId ORDER BY m.id DESC"
     },
     { maxItemCount: 2 }
   );
@@ -287,9 +287,9 @@ it("should construct the correct query with prevId param", async () => {
     {
       parameters: [
         { name: "@fiscalCode", value: aRetrievedMessageWithContent.fiscalCode },
-        { name: "@prevId", value: "A_MESSAGE_ID" }
+        { name: "@minId", value: "A_MESSAGE_ID" }
       ],
-      query: "SELECT * FROM m WHERE m.fiscalCode = @fiscalCode AND m.id > @prevId ORDER BY m.id DESC"
+      query: "SELECT * FROM m WHERE m.fiscalCode = @fiscalCode AND m.id > @minId ORDER BY m.id DESC"
     },
     { maxItemCount: 2 }
   );
