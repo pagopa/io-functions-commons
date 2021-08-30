@@ -96,10 +96,10 @@ describe("filterAsyncIterator utils", () => {
       expectedReturnValue
     );
 
-    const outputIterator: AsyncIterator<Right<
-      Error,
-      number
-    >> = filterAsyncIterator(inputIterator, isRight);
+    const outputIterator: AsyncIterator<Right<number>> = filterAsyncIterator(
+      inputIterator,
+      isRight
+    );
 
     expect(await outputIterator.next()).toEqual({
       done: false,
@@ -220,7 +220,6 @@ describe("Scenarios", () => {
     ]);
 
     const filteredIterator: AsyncIterator<Right<
-      string,
       ModelType
     >> = filterAsyncIterator(iterator, isRight);
 
@@ -257,12 +256,11 @@ describe("Scenarios", () => {
       ModelType
     >> = flattenAsyncIterator(iterator);
     const fiteredIterator: AsyncIterator<Right<
-      string,
       ModelType
     >> = filterAsyncIterator(flattenIterator, isRight);
     const mappedIterator: AsyncIterator<ModelType> = mapAsyncIterator(
       fiteredIterator,
-      e => e.value
+      e => e.right
     );
 
     const result1 = await mappedIterator.next();
@@ -316,7 +314,6 @@ describe("Scenarios", () => {
     ]);
 
     const filteredIterator: AsyncIterator<Right<
-      string,
       ModelType
     >> = filterAsyncIterator(iterator, isRight);
 
@@ -353,12 +350,11 @@ describe("Scenarios", () => {
       ModelType
     >> = flattenAsyncIterator(iterator);
     const fiteredIterator: AsyncIterator<Right<
-      string,
       ModelType
     >> = filterAsyncIterator(flattenIterator, isRight);
     const mappedIterator: AsyncIterator<ModelType> = mapAsyncIterator(
       fiteredIterator,
-      e => e.value
+      e => e.right
     );
 
     const result1 = await mappedIterator.next();

@@ -18,7 +18,7 @@ describe("OptionalParamMiddleware", () => {
     expect(isRight(result)).toBeTruthy();
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
-      const maybeValue = result.value;
+      const maybeValue = result.right;
       expect(isNone(maybeValue)).toBeTruthy();
     }
   });
@@ -32,7 +32,7 @@ describe("OptionalParamMiddleware", () => {
 
     expect(isLeft(result)).toBeTruthy();
     if (isLeft(result)) {
-      expect(result.value.kind).toBe("IResponseErrorValidation");
+      expect(result.left.kind).toBe("IResponseErrorValidation");
     }
   });
 
@@ -45,7 +45,7 @@ describe("OptionalParamMiddleware", () => {
 
     expect(isRight(result)).toBeTruthy();
     if (isRight(result)) {
-      const maybeValue = result.value;
+      const maybeValue = result.right;
       expect(isSome(maybeValue)).toBeTruthy();
       if (isSome(maybeValue)) {
         const value = maybeValue.value;

@@ -4,11 +4,11 @@
 
 jest.mock("winston");
 
-import { none, some } from "fp-ts/lib/Option";
+import * as O from "fp-ts/lib/Option";
 
-import { fromEither, fromLeft } from "fp-ts/lib/TaskEither";
+import * as TE from "fp-ts/lib/TaskEither";
 
-import { isLeft, isRight, left, right } from "fp-ts/lib/Either";
+import * as E from "fp-ts/lib/Either";
 
 import { Service, toAuthorizedCIDRs } from "../../../models/service";
 
@@ -63,9 +63,9 @@ describe("AzureUserAttributesMiddleware", () => {
     const result = await middleware(mockRequest as any);
     expect(mockRequest.header).toHaveBeenCalledTimes(1);
     expect(mockRequest.header).toHaveBeenCalledWith("x-user-email");
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toEqual("IResponseErrorInternal");
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toEqual("IResponseErrorInternal");
     }
   });
 
@@ -85,9 +85,9 @@ describe("AzureUserAttributesMiddleware", () => {
     const result = await middleware(mockRequest as any);
     expect(mockRequest.header).toHaveBeenCalledTimes(1);
     expect(mockRequest.header).toHaveBeenCalledWith("x-user-email");
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toEqual("IResponseErrorInternal");
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toEqual("IResponseErrorInternal");
     }
   });
 
@@ -109,15 +109,15 @@ describe("AzureUserAttributesMiddleware", () => {
     const result = await middleware(mockRequest as any);
     expect(mockRequest.header.mock.calls[0][0]).toBe("x-user-email");
     expect(mockRequest.header.mock.calls[1][0]).toBe("x-subscription-id");
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toEqual("IResponseErrorInternal");
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toEqual("IResponseErrorInternal");
     }
   });
 
   it("should fail if the user service does not exist", async () => {
     const serviceModel = {
-      findLastVersionByModelId: jest.fn(() => fromEither(right(none)))
+      findLastVersionByModelId: jest.fn(() => TE.fromEither(E.right(O.none)))
     };
 
     const headers: IHeaders = {
@@ -138,15 +138,17 @@ describe("AzureUserAttributesMiddleware", () => {
     expect(serviceModel.findLastVersionByModelId).toHaveBeenCalledWith([
       mockRequest.header("x-subscription-id")
     ]);
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toEqual("IResponseErrorForbiddenNotAuthorized");
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toEqual("IResponseErrorForbiddenNotAuthorized");
     }
   });
 
   it("should fetch and return the user service from the custom attributes", async () => {
     const serviceModel = {
-      findLastVersionByModelId: jest.fn(() => fromEither(right(some(aService))))
+      findLastVersionByModelId: jest.fn(() =>
+        TE.fromEither(E.right(O.some(aService)))
+      )
     };
 
     const headers: IHeaders = {
@@ -166,9 +168,9 @@ describe("AzureUserAttributesMiddleware", () => {
     expect(serviceModel.findLastVersionByModelId).toHaveBeenCalledWith([
       mockRequest.header("x-subscription-id")
     ]);
-    expect(isRight(result));
-    if (isRight(result)) {
-      const attributes = result.value;
+    expect(E.isRight(result));
+    if (E.isRight(result)) {
+      const attributes = result.right;
       expect(attributes.service).toEqual({
         ...aService,
         authorizedRecipients: new Set<FiscalCode>()
@@ -178,7 +180,7 @@ describe("AzureUserAttributesMiddleware", () => {
 
   it("should fail in case of error when fetching the user service", async () => {
     const serviceModel = {
-      findLastVersionByModelId: jest.fn(() => fromLeft(new Error("error")))
+      findLastVersionByModelId: jest.fn(() => TE.left(new Error("error")))
     };
 
     const headers: IHeaders = {
@@ -198,9 +200,9 @@ describe("AzureUserAttributesMiddleware", () => {
     expect(serviceModel.findLastVersionByModelId).toHaveBeenCalledWith([
       mockRequest.header("x-subscription-id")
     ]);
-    expect(isLeft(result));
-    if (isLeft(result)) {
-      expect(result.value.kind).toEqual("IResponseErrorQuery");
+    expect(E.isLeft(result));
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toEqual("IResponseErrorQuery");
     }
   });
 });

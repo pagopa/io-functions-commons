@@ -1,6 +1,7 @@
 // eslint-disable sonarjs/no-duplicate-string
 
-import { fromNullable } from "fp-ts/lib/Option";
+import * as O from "fp-ts/lib/Option";
+import * as E from "fp-ts/lib/Either";
 import {
   createMailTransporter,
   MailerTransporter,
@@ -8,6 +9,7 @@ import {
   sendMail,
   Transport
 } from "../transports";
+import { pipe } from "fp-ts/lib/function";
 
 // format required by nodemailer
 const anEmailMessage: MailerTransporter.Options = {
@@ -33,9 +35,10 @@ describe("MultiTransport", () => {
       send: jest.fn((mail, cb) => cb(null, { ok: true })),
       version: "0.1"
     };
-    const transport = fromNullable(
-      MultiTransport([oneTransport])
-    ).getOrElseL(() => fail("cannot create multi transport"));
+    const transport = pipe(
+      O.fromNullable(MultiTransport([oneTransport])),
+      O.getOrElseW(() => fail("cannot create multi transport"))
+    );
     const multi = createMailTransporter(transport);
 
     const result = await Promise.all(
@@ -73,9 +76,10 @@ describe("MultiTransport", () => {
       version: "0.1"
     };
 
-    const transport = fromNullable(
-      MultiTransport([t1, t2, t3])
-    ).getOrElseL(() => fail("cannot create multi transport"));
+    const transport = pipe(
+      O.fromNullable(MultiTransport([t1, t2, t3])),
+      O.getOrElseW(() => fail("cannot create multi transport"))
+    );
     const multi = createMailTransporter(transport);
 
     const result = await Promise.all(
@@ -95,9 +99,10 @@ describe("MultiTransport", () => {
       version: "0.1"
     };
 
-    const transport = fromNullable(
-      MultiTransport([oneTransport])
-    ).getOrElseL(() => fail("cannot create multi transport"));
+    const transport = pipe(
+      O.fromNullable(MultiTransport([oneTransport])),
+      O.getOrElseW(() => fail("cannot create multi transport"))
+    );
     const multi = createMailTransporter(transport);
 
     const result = await multi.sendMail(anEmailMessage);
@@ -121,7 +126,7 @@ describe("sendMail", () => {
       from: "email@example.com"
     };
 
-    await sendMail(transporterMock, options).run();
+    await sendMail(transporterMock, options)();
 
     expect(transporterMock.sendMail).toBeCalledWith(
       options,
@@ -132,19 +137,19 @@ describe("sendMail", () => {
   it("should return the error returned by transporter.sendMail", async () => {
     sendMailMock.mockImplementationOnce((_, f) => f(aSendMailError, undefined));
 
-    const result = await sendMail(transporterMock, {}).run();
+    const result = await sendMail(transporterMock, {})();
 
-    expect(result.isLeft()).toBe(true);
+    expect(E.isLeft(result)).toBe(true);
   });
 
   it("should return the value returned by transporter.sendMail", async () => {
     sendMailMock.mockImplementationOnce((_, f) => f(null, aSentMessageInfo));
 
-    const result = await sendMail(transporterMock, {}).run();
+    const result = await sendMail(transporterMock, {})();
 
-    expect(result.isRight()).toBe(true);
-    if (result.isRight()) {
-      expect(result.value).toEqual(aSentMessageInfo);
+    expect(E.isRight(result)).toBe(true);
+    if (E.isRight(result)) {
+      expect(result.right).toEqual(aSentMessageInfo);
     }
   });
 });

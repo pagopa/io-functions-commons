@@ -1,6 +1,7 @@
 // eslint-disable @typescript-eslint/no-explicit-any
 
-import { isLeft, isRight } from "fp-ts/lib/Either";
+import * as E from "fp-ts/lib/Either";
+import * as O from "fp-ts/lib/Option";
 
 import { NonNegativeNumber } from "@pagopa/ts-commons/lib/numbers";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
@@ -15,6 +16,7 @@ import {
   NotificationStatusModel,
   RetrievedNotificationStatus
 } from "../notification_status";
+import { pipe } from "fp-ts/lib/function";
 
 afterEach(() => {
   jest.clearAllMocks();
@@ -43,12 +45,13 @@ const aSerializedRetrievedNotificationStatus = {
   version: 0 as NonNegativeNumber
 };
 
-const aRetrievedNotificationStatus = RetrievedNotificationStatus.decode(
-  aSerializedRetrievedNotificationStatus
-).getOrElseL(errs => {
-  const error = readableReport(errs);
-  throw new Error("Fix NotificationStatus mock: " + error);
-});
+const aRetrievedNotificationStatus = pipe(
+  RetrievedNotificationStatus.decode(aSerializedRetrievedNotificationStatus),
+  E.getOrElseW(errs => {
+    const error = readableReport(errs);
+    throw new Error("Fix NotificationStatus mock: " + error);
+  })
+);
 
 describe("findOneNotificationStatusByNotificationChannel", () => {
   it("should return a NotificationStatus by notification channel", async () => {
@@ -67,17 +70,15 @@ describe("findOneNotificationStatusByNotificationChannel", () => {
 
     const model = new NotificationStatusModel(containerMock);
 
-    const result = await model
-      .findOneNotificationStatusByNotificationChannel(
-        "A_NOTIFICATION_ID" as NonEmptyString,
-        NotificationChannelEnum.EMAIL
-      )
-      .run();
+    const result = await model.findOneNotificationStatusByNotificationChannel(
+      "A_NOTIFICATION_ID" as NonEmptyString,
+      NotificationChannelEnum.EMAIL
+    )();
 
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isSome()).toBeTruthy();
-      expect(result.value.toUndefined()).toEqual(aRetrievedNotificationStatus);
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isSome(result.right)).toBeTruthy();
+      expect(O.toUndefined(result.right)).toEqual(aRetrievedNotificationStatus);
     }
   });
 
@@ -97,16 +98,14 @@ describe("findOneNotificationStatusByNotificationChannel", () => {
 
     const model = new NotificationStatusModel(containerMock);
 
-    const result = await model
-      .findOneNotificationStatusByNotificationChannel(
-        "A_NOTIFICATION_ID" as NonEmptyString,
-        NotificationChannelEnum.EMAIL
-      )
-      .run();
+    const result = await model.findOneNotificationStatusByNotificationChannel(
+      "A_NOTIFICATION_ID" as NonEmptyString,
+      NotificationChannelEnum.EMAIL
+    )();
 
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isNone()).toBeTruthy();
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isNone(result.right)).toBeTruthy();
     }
   });
 
@@ -126,16 +125,14 @@ describe("findOneNotificationStatusByNotificationChannel", () => {
 
     const model = new NotificationStatusModel(containerMock);
 
-    const result = await model
-      .findOneNotificationStatusByNotificationChannel(
-        "A_NOTIFICATION_ID" as NonEmptyString,
-        NotificationChannelEnum.EMAIL
-      )
-      .run();
+    const result = await model.findOneNotificationStatusByNotificationChannel(
+      "A_NOTIFICATION_ID" as NonEmptyString,
+      NotificationChannelEnum.EMAIL
+    )();
 
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toBe("COSMOS_DECODING_ERROR");
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toBe("COSMOS_DECODING_ERROR");
     }
   });
 });

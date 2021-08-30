@@ -1,5 +1,3 @@
-import { readableReport } from "@pagopa/ts-commons/lib/reporters";
-import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { BlobService } from "azure-storage";
 import { array } from "fp-ts/lib/Array";
 import {
@@ -7,10 +5,11 @@ import {
   fromOption,
   parseJSON,
   right,
-  toError,
-  tryCatch2v
+  toError
 } from "fp-ts/lib/Either";
+import * as E from "fp-ts/lib/Either";
 import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
+import * as O from "fp-ts/lib/Option";
 import * as t from "io-ts";
 import {
   Container,
@@ -20,11 +19,13 @@ import {
 } from "@azure/cosmos";
 import {
   fromEither as fromEitherT,
-  fromLeft,
-  TaskEither,
-  taskEither,
-  tryCatch as tryCatchT
+  left as fromLeft,
+  TaskEither
 } from "fp-ts/lib/TaskEither";
+import * as TE from "fp-ts/lib/TaskEither";
+import { pipe } from "fp-ts/lib/function";
+import { readableReport } from "@pagopa/ts-commons/lib/reporters";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import {
   BaseModel,
   CosmosdbModel,
@@ -215,8 +216,14 @@ export class MessageModel extends CosmosdbModel<
     fiscalCode: FiscalCode,
     messageId: NonEmptyString
   ): TaskEither<CosmosErrors, Option<RetrievedMessage>> {
-    return this.find([messageId, fiscalCode]).map(maybeMessage =>
-      maybeMessage.filter(m => m.fiscalCode === fiscalCode)
+    return pipe(
+      this.find([messageId, fiscalCode]),
+      TE.map(maybeMessage =>
+        pipe(
+          maybeMessage,
+          O.filter(m => m.fiscalCode === fiscalCode)
+        )
+      )
     );
   }
 
@@ -231,8 +238,8 @@ export class MessageModel extends CosmosdbModel<
     CosmosErrors,
     AsyncIterator<ReadonlyArray<t.Validation<RetrievedMessage>>>
   > {
-    return fromEitherT(
-      tryCatch2v(
+    return TE.fromEither(
+      E.tryCatch(
         () =>
           this.getQueryIterator({
             parameters: [
@@ -258,30 +265,34 @@ export class MessageModel extends CosmosdbModel<
     CosmosErrors,
     Option<ReadonlyArray<RetrievedMessageWithoutContent>>
   > {
-    return tryCatchT<
-      CosmosErrors,
-      // eslint-disable-next-line @typescript-eslint/array-type
-      FeedResponse<readonly RetrievedMessageWithoutContent[]>
-    >(
-      () =>
-        this.container.items
-          // eslint-disable-next-line @typescript-eslint/array-type
-          .query<readonly RetrievedMessageWithoutContent[]>(query, options)
-          .fetchAll(),
-      toCosmosErrorResponse
-    )
-      .map(_ => fromNullable(_.resources))
-      .chain(_ =>
-        _.isSome()
-          ? fromEitherT(
-              array.sequence(either)(
-                _.value.map(RetrievedMessageWithoutContent.decode)
-              )
+    return pipe(
+      TE.tryCatch<
+        CosmosErrors,
+        // eslint-disable-next-line @typescript-eslint/array-type
+        FeedResponse<readonly RetrievedMessageWithoutContent[]>
+      >(
+        () =>
+          this.container.items
+            // eslint-disable-next-line @typescript-eslint/array-type
+            .query<readonly RetrievedMessageWithoutContent[]>(query, options)
+            .fetchAll(),
+        toCosmosErrorResponse
+      ),
+      TE.map(_ => fromNullable(_.resources)),
+      TE.chain(_ =>
+        O.isSome(_)
+          ? pipe(
+              TE.fromEither(
+                array.sequence(either)(
+                  _.value.map(RetrievedMessageWithoutContent.decode)
+                )
+              ),
+              TE.map(some),
+              TE.mapLeft(CosmosDecodingError)
             )
-              .map(some)
-              .mapLeft(CosmosDecodingError)
-          : fromEitherT(right(none))
-      );
+          : TE.fromEither(right(none))
+      )
+    );
   }
 
   /**
@@ -300,16 +311,19 @@ export class MessageModel extends CosmosdbModel<
     const blobName = blobIdFromMessageId(messageId);
 
     // Store message content in blob storage
-    return tryCatchT(
-      () =>
-        upsertBlobFromObject<MessageContent>(
-          blobService,
-          this.containerName,
-          blobName,
-          messageContent
-        ),
-      toError
-    ).chain(fromEitherT);
+    return pipe(
+      TE.tryCatch(
+        () =>
+          upsertBlobFromObject<MessageContent>(
+            blobService,
+            this.containerName,
+            blobName,
+            messageContent
+          ),
+        toError
+      ),
+      TE.chain(TE.fromEither)
+    );
   }
 
   /**
@@ -325,29 +339,34 @@ export class MessageModel extends CosmosdbModel<
     const blobId = blobIdFromMessageId(messageId);
 
     // Retrieve blob content and deserialize
-    return (
-      tryCatchT(
+    return pipe(
+      TE.tryCatch(
         () => getBlobAsText(blobService, this.containerName, blobId),
-        toError
-      )
-        .chain(fromEitherT)
-        .chain(maybeContentAsText =>
-          fromEitherT(
-            fromOption(
-              // Blob exists but the content is empty
-              new Error("Cannot get stored message content from blob")
-            )(maybeContentAsText)
-          )
+        E.toError
+      ),
+      TE.chain(fromEitherT),
+      TE.chain(maybeContentAsText =>
+        fromEitherT(
+          fromOption(
+            // Blob exists but the content is empty
+            () => new Error("Cannot get stored message content from blob")
+          )(maybeContentAsText)
         )
-        // Try to decode the MessageContent
-        .chain(contentAsText =>
-          parseJSON(contentAsText, toError).fold(
+      ),
+      // Try to decode the MessageContent
+      TE.chain(contentAsText =>
+        pipe(
+          parseJSON(contentAsText, toError),
+          E.fold(
             _ => fromLeft(new Error(`Cannot parse content text into object`)),
-            _ => taskEither.of(_)
+            _ => TE.of(_)
           )
         )
-        .chain(undecodedContent =>
-          MessageContent.decode(undecodedContent).fold(
+      ),
+      TE.chain(undecodedContent =>
+        pipe(
+          MessageContent.decode(undecodedContent),
+          E.fold(
             errors =>
               fromLeft(
                 new Error(
@@ -356,9 +375,10 @@ export class MessageModel extends CosmosdbModel<
                   )}`
                 )
               ),
-            (content: MessageContent) => taskEither.of(some(content))
+            (content: MessageContent) => TE.of(some(content))
           )
         )
+      )
     );
   }
 }

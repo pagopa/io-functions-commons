@@ -1,8 +1,10 @@
-import { catOptions } from "fp-ts/lib/Array";
-import { none, some } from "fp-ts/lib/Option";
+import * as A from "fp-ts/lib/Array";
+import * as O from "fp-ts/lib/Option";
+import * as E from "fp-ts/lib/Either";
 import * as t from "io-ts";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { pipe } from "fp-ts/lib/function";
 
 /**
  * Describes a nodemailer transport connection
@@ -37,7 +39,7 @@ export type MailMultiTransportConnections = t.TypeOf<
 const parseMultiProviderConnection = (
   conn: string
 ): MailMultiTransportConnections =>
-  catOptions(
+  A.compact(
     conn.split(";").map(providerStr => {
       const [transport, username, password] = providerStr.split(":");
       if (
@@ -45,13 +47,13 @@ const parseMultiProviderConnection = (
         username !== undefined && // allow empty username
         password !== undefined // allow empty password
       ) {
-        return some({
+        return O.some({
           password,
           transport,
           username
         });
       }
-      return none;
+      return O.none;
     })
   );
 
@@ -67,9 +69,12 @@ export const MailMultiTransportConnectionsFromString = new t.Type<
   "MailMultiTransportConnectionsFromString",
   MailMultiTransportConnections.is,
   (u, c) =>
-    t.string.validate(u, c).chain(s => {
-      const conns = parseMultiProviderConnection(s);
-      return conns.length === 0 ? t.failure(u, c) : t.success(conns);
-    }),
+    pipe(
+      t.string.validate(u, c),
+      E.chain(s => {
+        const conns = parseMultiProviderConnection(s);
+        return conns.length === 0 ? t.failure(u, c) : t.success(conns);
+      })
+    ),
   () => "NOT_IMPLEMENTED"
 );
