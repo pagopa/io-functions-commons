@@ -7,7 +7,8 @@ import {
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { withoutUndefinedValues } from "@pagopa/ts-commons/lib/types";
 import * as express from "express";
-import { fromNullable } from "fp-ts/lib/Option";
+import { pipe } from "fp-ts/lib/function";
+import * as O from "fp-ts/lib/Option";
 import { asyncIteratorToArray } from "./async";
 import { CosmosErrors } from "./cosmosdb_model";
 import { fillPage } from "./paging";
@@ -77,12 +78,18 @@ export function ResponsePageIdBasedIterator<
             next:
               page.done === true
                 ? undefined
-                : fromNullable(kindlessDocuments[kindlessDocuments.length - 1])
-                    .map(e => e.id)
-                    .toUndefined(),
-            prev: fromNullable(kindlessDocuments[0])
-              .map(e => e.id)
-              .toUndefined()
+                : pipe(
+                    O.fromNullable(
+                      kindlessDocuments[kindlessDocuments.length - 1]
+                    ),
+                    O.map(e => e.id),
+                    O.toUndefined
+                  ),
+            prev: pipe(
+              O.fromNullable(kindlessDocuments[0]),
+              O.map(e => e.id),
+              O.toUndefined
+            )
           })
         );
       }),

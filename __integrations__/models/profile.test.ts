@@ -10,21 +10,26 @@ import {
 } from "../../src/models/profile";
 import { createContext } from "./cosmos_utils";
 import { fromOption } from "fp-ts/lib/Either";
-import { identity, toString } from "fp-ts/lib/function";
+import { identity, pipe } from "fp-ts/lib/function";
 import { ServicesPreferencesModeEnum } from "../../generated/definitions/ServicesPreferencesMode";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
+import * as e from "fp-ts/lib/Either";
+import * as te from "fp-ts/lib/TaskEither";
 
-const aProfile: Profile = Profile.decode({
-  acceptedTosVersion: 1,
-  email: "email@example.com",
-  fiscalCode: "AAAAAA00A00A000A",
-  isEmailEnabled: true,
-  isEmailValidated: true,
-  isInboxEnabled: true,
-  isWebhookEnabled: true
-}).getOrElseL(() => {
-  throw new Error("Cannot decode profile payload.");
-});
+const aProfile: Profile = pipe(
+  Profile.decode({
+    acceptedTosVersion: 1,
+    email: "email@example.com",
+    fiscalCode: "AAAAAA00A00A000A",
+    isEmailEnabled: true,
+    isEmailValidated: true,
+    isInboxEnabled: true,
+    isWebhookEnabled: true
+  }),
+  e.getOrElseW(() => {
+    throw new Error("Cannot decode profile payload.");
+  })
+);
 describe("Models |> Profile", () => {
   it("should save documents with correct versioning", async () => {
     const context = await createContext(PROFILE_MODEL_PK_FIELD);
@@ -37,10 +42,10 @@ describe("Models |> Profile", () => {
     };
 
     // create a new document
-    const created = await model
-      .create(newDoc)
-      .fold(
-        _ => fail(`Failed to create doc, error: ${toString(_)}`),
+    const created = await pipe(
+      model.create(newDoc),
+      te.bimap(
+        _ => fail(`Failed to create doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -50,15 +55,16 @@ describe("Models |> Profile", () => {
           );
           return result;
         }
-      )
-      .run();
+      ),
+      te.toUnion
+    )();
 
     // update document
     const updates = { email: "emailUpdated@example.com" as EmailString };
-    await model
-      .update({ ...created, ...updates })
-      .fold(
-        _ => fail(`Failed to update doc, error: ${toString(_)}`),
+    await pipe(
+      model.update({ ...created, ...updates }),
+      te.bimap(
+        _ => fail(`Failed to update doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -68,18 +74,19 @@ describe("Models |> Profile", () => {
             })
           );
         }
-      )
-      .run();
+      ),
+      te.toUnion
+    )();
 
     // read latest version of the document
-    await taskEither
-      .of<any, void>(void 0)
-      .chain(_ =>
+    await pipe(
+      taskEither.of<any, void>(void 0),
+      te.chainW(_ =>
         model.findLastVersionByModelId([newDoc[PROFILE_MODEL_PK_FIELD]])
-      )
-      .chain(_ => fromEither(fromOption("It's none")(_)))
-      .fold(
-        _ => fail(`Failed to read doc, error: ${toString(_)}`),
+      ),
+      te.chain(_ => fromEither(fromOption(() => "It's none")(_))),
+      te.bimap(
+        _ => fail(`Failed to read doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -90,7 +97,7 @@ describe("Models |> Profile", () => {
           );
         }
       )
-      .run();
+    )();
 
     // upsert new version
     const upserts = {
@@ -101,10 +108,10 @@ describe("Models |> Profile", () => {
       ...aProfile,
       ...upserts
     };
-    await model
-      .upsert(toUpsert)
-      .fold(
-        _ => fail(`Failed to upsert doc, error: ${toString(_)}`),
+    await pipe(
+      model.upsert(toUpsert),
+      te.bimap(
+        _ => fail(`Failed to upsert doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -115,7 +122,7 @@ describe("Models |> Profile", () => {
           );
         }
       )
-      .run();
+    )();
 
     context.dispose();
   });
@@ -131,10 +138,10 @@ describe("Models |> Profile", () => {
     };
 
     // create a new document
-    const created = await model
-      .create(newDoc)
-      .fold(
-        _ => fail(`Failed to create doc, error: ${toString(_)}`),
+    const created = await pipe(
+      model.create(newDoc),
+      te.bimap(
+        _ => fail(`Failed to create doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -148,8 +155,9 @@ describe("Models |> Profile", () => {
           );
           return result;
         }
-      )
-      .run();
+      ),
+      te.toUnion
+    )();
 
     // update document
     const updates = {
@@ -158,10 +166,10 @@ describe("Models |> Profile", () => {
         version: 0 as NonNegativeInteger
       }
     };
-    await model
-      .update({ ...created, ...updates })
-      .fold(
-        _ => fail(`Failed to update doc, error: ${toString(_)}`),
+    await pipe(
+      model.update({ ...created, ...updates }),
+      te.bimap(
+        _ => fail(`Failed to update doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -175,17 +183,17 @@ describe("Models |> Profile", () => {
           );
         }
       )
-      .run();
+    )();
 
     // read latest version of the document
-    await taskEither
-      .of<any, void>(void 0)
-      .chain(_ =>
+    await pipe(
+      taskEither.of<any, void>(void 0),
+      te.chainW(_ =>
         model.findLastVersionByModelId([newDoc[PROFILE_MODEL_PK_FIELD]])
-      )
-      .chain(_ => fromEither(fromOption("It's none")(_)))
-      .fold(
-        _ => fail(`Failed to read doc, error: ${toString(_)}`),
+      ),
+      te.chain(_ => fromEither(fromOption(() => "It's none")(_))),
+      te.bimap(
+        _ => fail(`Failed to read doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -199,7 +207,7 @@ describe("Models |> Profile", () => {
           );
         }
       )
-      .run();
+    )();
 
     context.dispose();
   });
@@ -215,19 +223,23 @@ describe("Models |> Profile", () => {
     };
 
     // create a new document
-    const created = await model
-      .create(newDoc)
-      .fold(_ => fail(`Failed to create doc, error: ${toString(_)}`), identity)
-      .run();
+    const created = await pipe(
+      model.create(newDoc),
+      te.bimap(
+        _ => fail(`Failed to create doc, error: ${JSON.stringify(_)}`),
+        identity
+      ),
+      te.toUnion
+    )();
 
     // update document without changing mode
-    const updated = await model
-      .update({
+    const updated = await pipe(
+      model.update({
         ...created,
         servicePreferencesSettings: created.servicePreferencesSettings
-      })
-      .fold(
-        _ => fail(`Failed to update doc, error: ${toString(_)}`),
+      }),
+      te.bimap(
+        _ => fail(`Failed to update doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -240,21 +252,22 @@ describe("Models |> Profile", () => {
           );
           return result;
         }
-      )
-      .run();
+      ),
+      te.toUnion
+    )();
 
     // update document changing mode
-    const updated2 = await model
-      .update({
+    const updated2 = await pipe(
+      model.update({
         ...updated,
         servicePreferencesSettings: {
           mode: ServicesPreferencesModeEnum.AUTO,
           version: (created.servicePreferencesSettings.version +
             1) as NonNegativeInteger
         }
-      })
-      .fold(
-        _ => fail(`Failed to update doc, error: ${toString(_)}`),
+      }),
+      te.bimap(
+        _ => fail(`Failed to update doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -267,12 +280,13 @@ describe("Models |> Profile", () => {
           );
           return result;
         }
-      )
-      .run();
+      ),
+      te.toUnion
+    )();
 
     // update document without changing mode, again
-    await model
-      .update({
+    await pipe(
+      model.update({
         ...updated2,
         servicePreferencesSettings:
           // This example is just to show an uncomfortable scenario led by ServicePreferencesSettings type definition
@@ -291,9 +305,9 @@ describe("Models |> Profile", () => {
                 mode: updated2.servicePreferencesSettings.mode,
                 version: updated2.servicePreferencesSettings.version
               }
-      })
-      .fold(
-        _ => fail(`Failed to update doc, error: ${toString(_)}`),
+      }),
+      te.bimap(
+        _ => fail(`Failed to update doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -306,8 +320,9 @@ describe("Models |> Profile", () => {
           );
           return result;
         }
-      )
-      .run();
+      ),
+      te.toUnion
+    )();
 
     context.dispose();
   });
@@ -336,9 +351,9 @@ describe("Models |> Profile", () => {
         }
       };
 
-      await model
-        .create(withInconsistentValues)
-        .fold(
+      await pipe(
+        model.create(withInconsistentValues),
+        te.bimap(
           _ => {
             expect(_.kind).toBe("COSMOS_DECODING_ERROR");
           },
@@ -347,7 +362,7 @@ describe("Models |> Profile", () => {
               `Should not have succeedeed with mode: ${mode} and version: ${version}`
             )
         )
-        .run();
+      )();
 
       context.dispose();
     }
@@ -378,9 +393,9 @@ describe("Models |> Profile", () => {
         }
       };
 
-      await model
-        .create(withInconsistentValues)
-        .fold(
+      await pipe(
+        model.create(withInconsistentValues),
+        te.bimap(
           _ =>
             fail(
               `Should not have failed with mode: ${mode} and version: ${version}`
@@ -390,7 +405,7 @@ describe("Models |> Profile", () => {
             expect(_.servicePreferencesSettings.version).toBe(version);
           }
         )
-        .run();
+      )();
 
       context.dispose();
     }

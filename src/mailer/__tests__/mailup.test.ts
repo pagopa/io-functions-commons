@@ -2,6 +2,8 @@
 
 jest.mock("winston");
 
+import * as E from "fp-ts/lib/Either";
+
 // eslint-disable-next-line import/no-internal-modules
 import Mail = require("nodemailer/lib/mailer");
 
@@ -12,6 +14,7 @@ import {
   SEND_TRANSACTIONAL_MAIL_ENDPOINT,
   SmtpAuthInfo
 } from "../mailup";
+import { pipe } from "fp-ts/lib/function";
 
 afterEach(() => {
   jest.restoreAllMocks();
@@ -42,12 +45,15 @@ const anEmailPayload = {
   To: [{ Email: "bar@example.com", Name: "bar" }]
 };
 
-const someCreds = SmtpAuthInfo.decode({
-  Secret: "secret",
-  Username: "username"
-}).getOrElseL(() => {
-  throw new Error("Invalid SMTP credentials");
-});
+const someCreds = pipe(
+  SmtpAuthInfo.decode({
+    Secret: "secret",
+    Username: "username"
+  }),
+  E.getOrElseW(() => {
+    throw new Error("Invalid SMTP credentials");
+  })
+);
 
 const aResponsePayload = {
   Code: "0",

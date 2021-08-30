@@ -5,8 +5,14 @@ import { Container, Database, CosmosClient } from "@azure/cosmos";
 import { BlobService } from "azure-storage";
 
 import { PromiseType } from "@pagopa/ts-commons/lib/types";
-import { toString } from "fp-ts/lib/function";
-import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
+import { pipe } from "fp-ts/lib/function";
+import {
+  chain,
+  getOrElseW,
+  map,
+  TaskEither,
+  tryCatch
+} from "fp-ts/lib/TaskEither";
 import {
   CosmosErrors,
   toCosmosErrorResponse
@@ -23,41 +29,47 @@ export const cosmosDatabaseName = getRequiredStringEnv(
 );
 
 const createDatabase = (dbName: string): TaskEither<CosmosErrors, Database> =>
-  tryCatch<
-    CosmosErrors,
-    PromiseType<ReturnType<typeof client.databases.createIfNotExists>>
-  >(
-    () => client.databases.createIfNotExists({ id: dbName }),
-    toCosmosErrorResponse
-  ).map(databaseResponse => databaseResponse.database);
+  pipe(
+    tryCatch<
+      CosmosErrors,
+      PromiseType<ReturnType<typeof client.databases.createIfNotExists>>
+    >(
+      () => client.databases.createIfNotExists({ id: dbName }),
+      toCosmosErrorResponse
+    ),
+    map(databaseResponse => databaseResponse.database)
+  );
 
 const createContainer = (
   db: Database,
   containerName: string,
   partitionKey: string
 ): TaskEither<CosmosErrors, Container> =>
-  tryCatch<
-    CosmosErrors,
-    PromiseType<ReturnType<typeof db.containers.createIfNotExists>>
-  >(
-    () =>
-      db.containers.createIfNotExists({
-        id: containerName,
-        partitionKey: `/${partitionKey}`
-      }),
-    toCosmosErrorResponse
-  ).map(containerResponse => containerResponse.container);
+  pipe(
+    tryCatch<
+      CosmosErrors,
+      PromiseType<ReturnType<typeof db.containers.createIfNotExists>>
+    >(
+      () =>
+        db.containers.createIfNotExists({
+          id: containerName,
+          partitionKey: `/${partitionKey}`
+        }),
+      toCosmosErrorResponse
+    ),
+    map(containerResponse => containerResponse.container)
+  );
 
 const deleteContainer = (
   db: Database,
   containerName: string
 ): TaskEither<CosmosErrors, Container> =>
-  tryCatch<
+  pipe(tryCatch<
     CosmosErrors,
     PromiseType<ReturnType<typeof db.containers.createIfNotExists>>
-  >(() => db.container(containerName).delete(), toCosmosErrorResponse).map(
+  >(() => db.container(containerName).delete(), toCosmosErrorResponse), map(
     containerResponse => containerResponse.container
-  );
+  ));
 
 const makeRandomContainerName = (): string => {
   const result = [];
@@ -80,19 +92,23 @@ export const createContext = (partitionKey: string, hasStorage = false) => {
   let container: Container;
   return {
     async init() {
-      const r = await createDatabase(cosmosDatabaseName)
-        .chain(db =>
-          createContainer(db, containerName, partitionKey).map(container => ({
-            db,
-            container
-          }))
-        )
-        .getOrElseL(_ =>
+      const r = await pipe(
+        createDatabase(cosmosDatabaseName),
+        chain(db =>
+          pipe(
+            createContainer(db, containerName, partitionKey),
+            map(container => ({
+              db,
+              container
+            }))
+          )
+        ),
+        getOrElseW<CosmosErrors, { db: Database; container: Container }>(_ =>
           fail(
-            `Cannot init, container: ${containerName}, error: ${toString(_)}`
+            `Cannot init, container: ${containerName}, error: ${JSON.stringify(_)}`
           )
         )
-        .run();
+      )();
       if (hasStorage) {
         storage = new BlobService(storageConnectionString);
         await new Promise((resolve, reject) => {

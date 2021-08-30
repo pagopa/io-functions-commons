@@ -1,8 +1,10 @@
 // eslint-disable @typescript-eslint/member-ordering
 
-import { right } from "fp-ts/lib/Either";
-import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
-import { fromEither, TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
+import * as E from "fp-ts/lib/Either";
+import { Option } from "fp-ts/lib/Option";
+import * as O from "fp-ts/lib/Option";
+import * as TE from "fp-ts/lib/TaskEither";
+import { TaskEither } from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 
 import { PromiseType } from "@pagopa/ts-commons/lib/types";
@@ -20,6 +22,7 @@ import {
 } from "@azure/cosmos";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { pipe } from "fp-ts/lib/function";
 import { mapAsyncIterable } from "./async";
 import { isDefined } from "./types";
 
@@ -121,8 +124,9 @@ const wrapCreate = <TN, TR>(
   options?: RequestOptions
 ): TaskEither<CosmosErrors, TR> => {
   const item = newItemT.encode(newDocument);
-  return (
-    tryCatch<CosmosErrors, PromiseType<ReturnType<typeof createItem>>>(
+
+  return pipe(
+    TE.tryCatch<CosmosErrors, PromiseType<ReturnType<typeof createItem>>>(
       () =>
         createItem(item, {
           // we never want the SDK to generate an ID for us, the item ID must
@@ -131,13 +135,18 @@ const wrapCreate = <TN, TR>(
           ...options
         }),
       toCosmosErrorResponse
-    )
-      .map(_ => _.resource)
-      // FIXME: not sure whether an undefined resource should be an error
-      .filterOrElse(isDefined, CosmosEmptyResponse)
-      .chain(_ =>
-        fromEither(retrievedItemT.decode(_).mapLeft(CosmosDecodingError))
+    ),
+    TE.map(createResponse => createResponse.resource),
+    // FIXME: not sure whether an undefined resource should be an error
+    TE.filterOrElseW(isDefined, () => CosmosEmptyResponse),
+    TE.chainW(retrievedItem =>
+      TE.fromEither(
+        pipe(
+          retrievedItemT.decode(retrievedItem),
+          E.mapLeft(CosmosDecodingError)
+        )
       )
+    )
   );
 };
 
@@ -214,25 +223,26 @@ export abstract class CosmosdbModel<
   ): TaskEither<CosmosErrors, Option<TR>> {
     // documentId must be always valued,
     // meanwhile partitionKey might be undefined
-    const [documentId, partitionKey] = searchKey;
-    return tryCatch<CosmosErrors, ItemResponse<TR>>(
-      () =>
-        this.container
-          .item(documentId, partitionKey ?? documentId)
-          .read(options),
-      toCosmosErrorResponse
-    )
-      .map(_ => fromNullable(_.resource))
-      .chain(_ =>
-        _.isSome()
-          ? fromEither(
-              this.retrievedItemT
-                .decode(_.value)
-                .map(some)
-                .mapLeft(CosmosDecodingError)
+    const documentId = searchKey[0];
+    const partitionKey = searchKey[1] || documentId;
+    return pipe(
+      TE.tryCatch<CosmosErrors, ItemResponse<TR>>(
+        () => this.container.item(documentId, partitionKey).read(options),
+        toCosmosErrorResponse
+      ),
+      TE.map(_ => O.fromNullable(_.resource)),
+      TE.chain(maybeDocument =>
+        O.isSome(maybeDocument)
+          ? TE.fromEither(
+              pipe(
+                this.retrievedItemT.decode(maybeDocument.value),
+                E.map(O.some),
+                E.mapLeft(CosmosDecodingError)
+              )
             )
-          : fromEither(right(none))
-      );
+          : TE.fromEither(E.right(O.none))
+      )
+    );
   }
 
   /**
@@ -271,10 +281,13 @@ export abstract class CosmosdbModel<
   public getCollection(
     options?: FeedOptions
   ): TaskEither<CosmosErrors, ReadonlyArray<t.Validation<TR>>> {
-    return tryCatch<CosmosErrors, FeedResponse<ItemDefinition>>(
-      () => this.container.items.readAll(options).fetchAll(),
-      toCosmosErrorResponse
-    ).map(_ => _.resources.map(this.retrievedItemT.decode));
+    return pipe(
+      TE.tryCatch<CosmosErrors, FeedResponse<ItemDefinition>>(
+        () => this.container.items.readAll(options).fetchAll(),
+        toCosmosErrorResponse
+      ),
+      TE.map(_ => _.resources.map(this.retrievedItemT.decode))
+    );
   }
 
   /**
@@ -286,22 +299,25 @@ export abstract class CosmosdbModel<
     query: string | SqlQuerySpec,
     options?: FeedOptions
   ): TaskEither<CosmosErrors, Option<TR>> {
-    return tryCatch<CosmosErrors, FeedResponse<TR>>(
-      () => this.container.items.query<TR>(query, options).fetchAll(),
-      toCosmosErrorResponse
-    )
-      .map(_ => fromNullable(_.resources))
-      .chain(_ =>
-        _.isSome()
-          ? _.value.length > 0
-            ? fromEither(
-                this.retrievedItemT
-                  .decode(_.value[0])
-                  .map(some)
-                  .mapLeft(CosmosDecodingError)
+    return pipe(
+      TE.tryCatch<CosmosErrors, FeedResponse<TR>>(
+        () => this.container.items.query<TR>(query, options).fetchAll(),
+        toCosmosErrorResponse
+      ),
+      TE.map(_ => O.fromNullable(_.resources)),
+      TE.chain(maybeDocuments =>
+        O.isSome(maybeDocuments)
+          ? maybeDocuments.value.length > 0
+            ? TE.fromEither(
+                pipe(
+                  this.retrievedItemT.decode(maybeDocuments.value[0]),
+                  E.map(O.some),
+                  E.mapLeft(CosmosDecodingError)
+                )
               )
-            : fromEither(right(none))
-          : fromEither(right(none))
-      );
+            : TE.fromEither(E.right(O.none))
+          : TE.fromEither(E.right(O.none))
+      )
+    );
   }
 }

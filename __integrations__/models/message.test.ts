@@ -1,7 +1,18 @@
 /* eslint-disable no-console */
 import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
-import { fromEither, taskEither, tryCatch } from "fp-ts/lib/TaskEither";
+import {
+  bimap,
+  chain,
+  chainW,
+  fold,
+  foldW,
+  fromEither,
+  taskEither,
+  of,
+  toUnion,
+  tryCatch
+} from "fp-ts/lib/TaskEither";
 import {
   MESSAGE_MODEL_PK_FIELD,
   MessageModel,
@@ -9,7 +20,6 @@ import {
 } from "../../src/models/message";
 import { createContext } from "./cosmos_utils";
 import { fromOption } from "fp-ts/lib/Either";
-import { toString } from "fp-ts/lib/function";
 import { ServiceId } from "../../generated/definitions/ServiceId";
 import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds";
 import { toCosmosErrorResponse } from "../../src/utils/cosmosdb_model";
@@ -17,6 +27,10 @@ import {
   asyncIterableToArray,
   flattenAsyncIterable
 } from "../../src/utils/async";
+import { pipe } from "fp-ts/lib/function";
+
+import * as e from "fp-ts/lib/Either";
+import { isSome } from "fp-ts/lib/Option";
 
 const MESSAGE_CONTAINER_NAME = "test-message-container" as NonEmptyString;
 
@@ -76,10 +90,11 @@ describe("Models |> Message", () => {
     const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
 
     // create a new document
-    const created = await model
-      .create(aNewMessageWithoutContent)
-      .fold(
-        _ => fail(`Failed to create doc, error: ${toString(_)}`),
+    const created = await pipe(
+      model.create(aNewMessageWithoutContent),
+      x => x,
+      bimap(
+        _ => fail(`Failed to create doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -88,13 +103,14 @@ describe("Models |> Message", () => {
           );
           return result;
         }
-      )
-      .run();
+      ),
+      toUnion
+    )();
 
     // find the message by query
-    await taskEither
-      .of<any, void>(void 0)
-      .chain(_ =>
+    await pipe(
+      of<any, void>(void 0),
+      chainW(_ =>
         model.findOneByQuery({
           parameters: [
             {
@@ -104,10 +120,10 @@ describe("Models |> Message", () => {
           ],
           query: `SELECT * FROM m WHERE m.id = @id`
         })
-      )
-      .chain(_ => fromEither(fromOption("It's none")(_)))
-      .fold(
-        _ => fail(`Failed to read single doc, error: ${toString(_)}`),
+      ),
+      chain(_ => fromEither(fromOption(() => "It's none")(_))),
+      bimap(
+        _ => fail(`Failed to read single doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -116,20 +132,20 @@ describe("Models |> Message", () => {
           );
         }
       )
-      .run();
+    )();
 
     // find the message by recipient
-    await taskEither
-      .of<any, void>(void 0)
-      .chain(_ =>
+    await pipe(
+      of<any, void>(void 0),
+      chainW(_ =>
         model.find([
           aNewMessageWithoutContent.id,
           aNewMessageWithoutContent.fiscalCode
         ])
-      )
-      .chain(_ => fromEither(fromOption("It's none")(_)))
-      .fold(
-        _ => fail(`Failed to find one doc, error: ${toString(_)}`),
+      ),
+      chain(_ => fromEither(fromOption(() => "It's none")(_))),
+      bimap(
+        _ => fail(`Failed to find one doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -139,44 +155,49 @@ describe("Models |> Message", () => {
           return result;
         }
       )
-      .run();
+    )();
 
     // find all message for a fiscal code
-    await tryCatch(
-      () =>
-        asyncIterableToArray(
-          flattenAsyncIterable(
-            model.getQueryIterator({
-              parameters: [
-                {
-                  name: "@fiscalCode",
-                  value: aFiscalCode
-                }
-              ],
-              query: `SELECT * FROM m WHERE m.fiscalCode = @fiscalCode`
-            })
-          )
-        ),
-      toCosmosErrorResponse
-    )
-      .fold(
-        _ => fail(`Failed to read all docs, error: ${toString(_)}`),
+    await pipe(
+      tryCatch(
+        () =>
+          asyncIterableToArray(
+            flattenAsyncIterable(
+              model.getQueryIterator({
+                parameters: [
+                  {
+                    name: "@fiscalCode",
+                    value: aFiscalCode
+                  }
+                ],
+                query: `SELECT * FROM m WHERE m.fiscalCode = @fiscalCode`
+              })
+            )
+          ),
+        toCosmosErrorResponse
+      ),
+      bimap(
+        _ => fail(`Failed to read all docs, error: ${JSON.stringify(_)}`),
         results => {
           expect(results).toEqual(expect.any(Array));
           expect(results).toHaveLength(1);
-          results[0].fold(
-            _ => fail(`Failed to validate , error: ${toString(_)}`),
-            result => {
-              expect(result).toEqual(
-                expect.objectContaining({
-                  ...aSerializedNewMessageWithoutContent
-                })
-              );
-            }
+          pipe(
+            results[0],
+            e.bimap(
+              _ => fail(`Failed to validate , error: ${JSON.stringify(_)}`),
+              result => {
+                expect(result).toEqual(
+                  expect.objectContaining({
+                    ...aSerializedNewMessageWithoutContent
+                  })
+                );
+              }
+            ),
+            e.toUnion
           );
         }
       )
-      .run();
+    )();
 
     context.dispose();
   });
@@ -197,22 +218,22 @@ describe("Models |> Message", () => {
 
     const aFakeMessageId = "fakemessageid";
 
-    await model
-      .storeContentAsBlob(context.storage, aFakeMessageId, value)
-      .fold(
-        _ => fail(`Failed to store content, error: ${toString(_)}`),
+    await pipe(
+      model.storeContentAsBlob(context.storage, aFakeMessageId, value),
+      bimap(
+        _ => fail(`Failed to store content, error: ${JSON.stringify(_)}`),
         result => {
-          expect(result.isSome()).toBe(true);
+          expect(isSome(result)).toBe(true);
           return result;
         }
       )
-      .run();
+    )();
 
-    await model
-      .getContentFromBlob(context.storage, aFakeMessageId)
-      .chain(_ => fromEither(fromOption(new Error(`Blob not found`))(_)))
-      .fold(
-        _ => fail(`Failed to get content, error: ${toString(_)}`),
+    await pipe(
+      model.getContentFromBlob(context.storage, aFakeMessageId),
+      chain(_ => fromEither(fromOption(() => new Error(`Blob not found`))(_))),
+      bimap(
+        _ => fail(`Failed to get content, error: ${JSON.stringify(_)}`),
         result => {
           // check the output contains the values stored before
           expect(result.due_date).toEqual(value.due_date);
@@ -238,7 +259,7 @@ describe("Models |> Message", () => {
           );
         }
       )
-      .run();
+    )();
 
     await context.dispose();
   });

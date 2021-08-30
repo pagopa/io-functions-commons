@@ -13,5 +13,5 @@ export const getRequiredStringEnv = (k: string): NonEmptyString => {
     throw new Error(`${k} must be defined and non-empty`);
   }
 
-  return maybeValue.value;
+  return maybeValue.right;
 };

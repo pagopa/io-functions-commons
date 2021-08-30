@@ -1,6 +1,7 @@
 // eslint-disable no-empty, no-empty-function
 
 import { Either } from "fp-ts/lib/Either";
+import * as E from "fp-ts/lib/Either";
 import {
   MailerConfig,
   MailhogMailerConfig,
@@ -8,22 +9,27 @@ import {
   MultiTrasnsportMailerConfig,
   SendgridMailerConfig
 } from "../config";
+import { pipe } from "fp-ts/lib/function";
 
 const aMailFrom = "example@test.com";
 
 const noop = () => {};
 const expectRight = <L, R>(e: Either<L, R>, t: (r: R) => void = noop) =>
-  e.fold(
-    _ =>
-      fail(`Expecting right, received left. Value: ${JSON.stringify(e.value)}`),
-    _ => t(_)
+  pipe(
+    e,
+    E.fold(
+      l => fail(`Expecting right, received left. Value: ${JSON.stringify(l)}`),
+      r => t(r)
+    )
   );
 
 const expectLeft = <L, R>(e: Either<L, R>, t: (l: L) => void = noop) =>
-  e.fold(
-    _ => t(_),
-    _ =>
-      fail(`Expecting left, received right. Value: ${JSON.stringify(e.value)}`)
+  pipe(
+    e,
+    E.fold(
+      l => t(l),
+      r => fail(`Expecting left, received right. Value: ${JSON.stringify(r)}`)
+    )
   );
 
 const aSendgridConf1 = {

@@ -7,12 +7,14 @@
  */
 import { EmailString, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { isLeft, isRight } from "fp-ts/lib/Either";
+import * as E from "fp-ts/lib/Either";
 import {
   fromEither,
   fromPredicate,
   TaskEither,
   tryCatch
 } from "fp-ts/lib/TaskEither";
+import * as TE from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 import nodeFetch from "node-fetch";
 
@@ -25,6 +27,8 @@ import * as winston from "winston";
 
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { fromNullable, Option } from "fp-ts/lib/Option";
+import * as O from "fp-ts/lib/Option";
+import { pipe } from "fp-ts/lib/function";
 
 export const SEND_TRANSACTIONAL_MAIL_ENDPOINT =
   "https://send.mailup.com/API/v2.0/messages/sendmessage";
@@ -124,42 +128,46 @@ const sendTransactionalMail = (
   payload: EmailPayload,
   fetchAgent: typeof fetch
 ): TaskEither<Error, ApiResponse> =>
-  tryCatch(
-    () =>
-      fetchAgent(SEND_TRANSACTIONAL_MAIL_ENDPOINT, {
-        body: JSON.stringify({ ...payload, User: creds }),
-        headers: {
-          "Content-Type": "application/json"
-        },
-        method: "POST"
-      }),
-    err => new Error(`Error posting to MailUp: ${err}`)
-  )
-    .chain(
+  pipe(
+    tryCatch(
+      () =>
+        fetchAgent(SEND_TRANSACTIONAL_MAIL_ENDPOINT, {
+          body: JSON.stringify({ ...payload, User: creds }),
+          headers: {
+            "Content-Type": "application/json"
+          },
+          method: "POST"
+        }),
+      err => new Error(`Error posting to MailUp: ${err}`)
+    ),
+    TE.chain(
       fromPredicate<Error, Response>(
         r => r.ok,
         r => new Error(`Error returned from MailUp API: ${r.status}`)
       )
-    )
-    .chain(response =>
+    ),
+    TE.chain(response =>
       tryCatch(
         () => response.json(),
         err => new Error(`Error getting MailUp API payload: ${err}`)
       )
-    )
-    .chain(json =>
+    ),
+    TE.chain(json =>
       fromEither(
-        ApiResponse.decode(json).mapLeft(
-          errors =>
-            new Error(
-              `Error while decoding response from MailUp: ${readableReport(
-                errors
-              )})`
-            )
+        pipe(
+          ApiResponse.decode(json),
+          E.mapLeft(
+            errors =>
+              new Error(
+                `Error while decoding response from MailUp: ${readableReport(
+                  errors
+                )})`
+              )
+          )
         )
       )
-    )
-    .chain(
+    ),
+    TE.chain(
       fromPredicate(
         ar => ar.Code === "0",
         ar =>
@@ -167,7 +175,8 @@ const sendTransactionalMail = (
             `Error sending email using MailUp: ${ar.Code}:${ar.Message}`
           )
       )
-    );
+    )
+  );
 /* eslint-enable @typescript-eslint/naming-convention */
 
 /**
@@ -178,13 +187,16 @@ const toMailupAddresses = (
   addresses: ReadonlyArray<NodemailerAddress>
 ): ReadonlyArray<Address> =>
   addresses.map((address: NodemailerAddress) => ({
-    Email: EmailString.decode(address.address).getOrElseL(() => {
-      // this never happens as nodemailer has already parsed
-      // the email address (so it's a valid one)
-      throw new Error(
-        `Error while parsing email address (toMailupAddresses): invalid format '${address.address}'.`
-      );
-    }),
+    Email: pipe(
+      EmailString.decode(address.address),
+      E.getOrElseW(() => {
+        // this never happens as nodemailer has already parsed
+        // the email address (so it's a valid one)
+        throw new Error(
+          `Error while parsing email address (toMailupAddresses): invalid format '${address.address}'.`
+        );
+      })
+    ),
     Name: address.name || address.address
   }));
 
@@ -268,34 +280,44 @@ export const MailUpTransport = (
       }));
 
       const emailPayload = {
-        Bcc: fromNullable(addresses.bcc)
-          .map(toMailupAddresses)
-          .toUndefined(),
-        Cc: fromNullable(addresses.cc)
-          .map(toMailupAddresses)
-          .toUndefined(),
+        Bcc: pipe(
+          fromNullable(addresses.bcc),
+          O.map(toMailupAddresses),
+          O.toUndefined
+        ),
+        Cc: pipe(
+          fromNullable(addresses.cc),
+          O.map(toMailupAddresses),
+          O.toUndefined
+        ),
         ExtendedHeaders: headers,
-        From: fromNullable(addresses.from)
-          .chain(toMailupAddress)
-          .toUndefined(),
+        From: pipe(
+          fromNullable(addresses.from),
+          O.chain(toMailupAddress),
+          O.toUndefined
+        ),
         Html: {
           Body: mail.data.html
         },
-        ReplyTo: fromNullable(addresses["reply-to"])
-          .chain(toMailupAddress)
-          .map(addr => addr.Email)
-          .toUndefined(),
+        ReplyTo: pipe(
+          fromNullable(addresses["reply-to"]),
+          O.chain(toMailupAddress),
+          O.map(addr => addr.Email),
+          O.toUndefined
+        ),
         Subject: mail.data.subject,
         Text: mail.data.text,
-        To: fromNullable(addresses.to)
-          .map(toMailupAddresses)
-          .toUndefined()
+        To: pipe(
+          fromNullable(addresses.to),
+          O.map(toMailupAddresses),
+          O.toUndefined
+        )
       };
 
       const errorOrEmail = EmailPayload.decode(emailPayload);
 
       if (isLeft(errorOrEmail)) {
-        const errors = readableReport(errorOrEmail.value);
+        const errors = readableReport(errorOrEmail.left);
         winston.error("MailUpTransport|errors", errors);
         return callback(
           new Error(`Invalid email payload: ${errors}`),
@@ -303,18 +325,17 @@ export const MailUpTransport = (
         );
       }
 
-      const email = errorOrEmail.value;
+      const email = errorOrEmail.right;
 
-      sendTransactionalMail(options.creds, email, fetchAgent)
-        .run()
+      sendTransactionalMail(options.creds, email, fetchAgent)()
         .then(errorOrResponse => {
           if (isRight(errorOrResponse)) {
             return callback(null, {
-              ...errorOrResponse.value,
+              ...errorOrResponse.right,
               messageId: mail.data.messageId
             });
           } else {
-            return callback(errorOrResponse.value, undefined);
+            return callback(errorOrResponse.left, undefined);
           }
         })
         .catch(e => callback(e, undefined));

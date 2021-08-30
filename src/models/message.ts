@@ -1,16 +1,9 @@
-import { readableReport } from "@pagopa/ts-commons/lib/reporters";
-import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { BlobService } from "azure-storage";
 import { array } from "fp-ts/lib/Array";
-import {
-  either,
-  fromOption,
-  parseJSON,
-  right,
-  toError,
-  tryCatch2v
-} from "fp-ts/lib/Either";
+import * as E from "fp-ts/lib/Either";
 import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
+import * as O from "fp-ts/lib/Option";
+import * as TE from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 import {
   Container,
@@ -18,14 +11,10 @@ import {
   FeedResponse,
   SqlQuerySpec
 } from "@azure/cosmos";
-import {
-  fromEither as fromEitherT,
-  fromLeft,
-  TaskEither,
-  taskEither,
-  tryCatch as tryCatchT
-} from "fp-ts/lib/TaskEither";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
+import { pipe } from "fp-ts/lib/function";
+import { readableReport } from "@pagopa/ts-commons/lib/reporters";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import {
   BaseModel,
   CosmosdbModel,
@@ -215,9 +204,15 @@ export class MessageModel extends CosmosdbModel<
   public findMessageForRecipient(
     fiscalCode: FiscalCode,
     messageId: NonEmptyString
-  ): TaskEither<CosmosErrors, Option<RetrievedMessage>> {
-    return this.find([messageId, fiscalCode]).map(maybeMessage =>
-      maybeMessage.filter(m => m.fiscalCode === fiscalCode)
+  ): TE.TaskEither<CosmosErrors, Option<RetrievedMessage>> {
+    return pipe(
+      this.find([messageId, fiscalCode]),
+      TE.map(maybeMessage =>
+        pipe(
+          maybeMessage,
+          O.filter(m => m.fiscalCode === fiscalCode)
+        )
+      )
     );
   }
 
@@ -234,7 +229,7 @@ export class MessageModel extends CosmosdbModel<
     pageSize = 100 as NonNegativeInteger,
     maximumMessageId?: NonEmptyString,
     minimumMessageId?: NonEmptyString
-  ): TaskEither<
+  ): TE.TaskEither<
     CosmosErrors,
     AsyncIterator<
       ReadonlyArray<t.Validation<RetrievedMessage>>,
@@ -254,35 +249,41 @@ export class MessageModel extends CosmosdbModel<
       condition: "",
       param: []
     };
-    return taskEither
-      .of({
-        nextMessagesParams: fromNullable(maximumMessageId).foldL(
-          () => emptyMessageParameter,
-          maximumId => ({
-            condition: ` AND m.id < @maxId`,
-            param: [{ name: "@maxId", value: maximumId }]
-          })
+    return pipe(
+      TE.of({
+        nextMessagesParams: pipe(
+          fromNullable(maximumMessageId),
+          O.foldW(
+            () => emptyMessageParameter,
+            maximumId => ({
+              condition: ` AND m.id < @maxId`,
+              param: [{ name: "@maxId", value: maximumId }]
+            })
+          )
         ),
-        prevMessagesParams: fromNullable(minimumMessageId).foldL(
-          () => emptyMessageParameter,
-          minimumId => ({
-            condition: ` AND m.id > @minId`,
-            param: [{ name: "@minId", value: minimumId }]
-          })
+        prevMessagesParams: pipe(
+          fromNullable(minimumMessageId),
+          O.foldW(
+            () => emptyMessageParameter,
+            minimumId => ({
+              condition: ` AND m.id > @minId`,
+              param: [{ name: "@minId", value: minimumId }]
+            })
+          )
         )
-      })
-      .mapLeft(toCosmosErrorResponse)
-      .map(({ nextMessagesParams, prevMessagesParams }) => ({
+      }),
+      TE.mapLeft(toCosmosErrorResponse),
+      TE.map(({ nextMessagesParams, prevMessagesParams }) => ({
         parameters: [
           ...commonQuerySpec.parameters,
           ...nextMessagesParams.param,
           ...prevMessagesParams.param
         ],
         query: `${commonQuerySpec.query}${nextMessagesParams.condition}${prevMessagesParams.condition} ORDER BY m.id DESC`
-      }))
-      .chain(querySpec =>
-        fromEitherT(
-          tryCatch2v(
+      })),
+      TE.chain(querySpec =>
+        TE.fromEither(
+          E.tryCatch(
             () =>
               this.getQueryIterator(querySpec, { maxItemCount: pageSize })[
                 Symbol.asyncIterator
@@ -290,7 +291,8 @@ export class MessageModel extends CosmosdbModel<
             toCosmosErrorResponse
           )
         )
-      );
+      )
+    );
   }
 
   /**
@@ -299,34 +301,38 @@ export class MessageModel extends CosmosdbModel<
   public findAllByQuery(
     query: string | SqlQuerySpec,
     options?: FeedOptions
-  ): TaskEither<
+  ): TE.TaskEither<
     CosmosErrors,
     Option<ReadonlyArray<RetrievedMessageWithoutContent>>
   > {
-    return tryCatchT<
-      CosmosErrors,
-      // eslint-disable-next-line @typescript-eslint/array-type
-      FeedResponse<readonly RetrievedMessageWithoutContent[]>
-    >(
-      () =>
-        this.container.items
-          // eslint-disable-next-line @typescript-eslint/array-type
-          .query<readonly RetrievedMessageWithoutContent[]>(query, options)
-          .fetchAll(),
-      toCosmosErrorResponse
-    )
-      .map(_ => fromNullable(_.resources))
-      .chain(_ =>
-        _.isSome()
-          ? fromEitherT(
-              array.sequence(either)(
-                _.value.map(RetrievedMessageWithoutContent.decode)
-              )
+    return pipe(
+      TE.tryCatch<
+        CosmosErrors,
+        // eslint-disable-next-line @typescript-eslint/array-type
+        FeedResponse<readonly RetrievedMessageWithoutContent[]>
+      >(
+        () =>
+          this.container.items
+            // eslint-disable-next-line @typescript-eslint/array-type
+            .query<readonly RetrievedMessageWithoutContent[]>(query, options)
+            .fetchAll(),
+        toCosmosErrorResponse
+      ),
+      TE.map(_ => fromNullable(_.resources)),
+      TE.chain(_ =>
+        O.isSome(_)
+          ? pipe(
+              TE.fromEither(
+                array.sequence(E.either)(
+                  _.value.map(RetrievedMessageWithoutContent.decode)
+                )
+              ),
+              TE.map(some),
+              TE.mapLeft(CosmosDecodingError)
             )
-              .map(some)
-              .mapLeft(CosmosDecodingError)
-          : fromEitherT(right(none))
-      );
+          : TE.fromEither(E.right(none))
+      )
+    );
   }
 
   /**
@@ -340,21 +346,24 @@ export class MessageModel extends CosmosdbModel<
     blobService: BlobService,
     messageId: string,
     messageContent: MessageContent
-  ): TaskEither<Error, Option<BlobService.BlobResult>> {
+  ): TE.TaskEither<Error, Option<BlobService.BlobResult>> {
     // Set the blob name
     const blobName = blobIdFromMessageId(messageId);
 
     // Store message content in blob storage
-    return tryCatchT(
-      () =>
-        upsertBlobFromObject<MessageContent>(
-          blobService,
-          this.containerName,
-          blobName,
-          messageContent
-        ),
-      toError
-    ).chain(fromEitherT);
+    return pipe(
+      TE.tryCatch(
+        () =>
+          upsertBlobFromObject<MessageContent>(
+            blobService,
+            this.containerName,
+            blobName,
+            messageContent
+          ),
+        E.toError
+      ),
+      TE.chain(TE.fromEither)
+    );
   }
 
   /**
@@ -366,44 +375,50 @@ export class MessageModel extends CosmosdbModel<
   public getContentFromBlob(
     blobService: BlobService,
     messageId: string
-  ): TaskEither<Error, Option<MessageContent>> {
+  ): TE.TaskEither<Error, Option<MessageContent>> {
     const blobId = blobIdFromMessageId(messageId);
 
     // Retrieve blob content and deserialize
-    return (
-      tryCatchT(
+    return pipe(
+      TE.tryCatch(
         () => getBlobAsText(blobService, this.containerName, blobId),
-        toError
-      )
-        .chain(fromEitherT)
-        .chain(maybeContentAsText =>
-          fromEitherT(
-            fromOption(
-              // Blob exists but the content is empty
-              new Error("Cannot get stored message content from blob")
-            )(maybeContentAsText)
+        E.toError
+      ),
+      TE.chain(TE.fromEither),
+      TE.chain(maybeContentAsText =>
+        TE.fromEither(
+          E.fromOption(
+            // Blob exists but the content is empty
+            () => new Error("Cannot get stored message content from blob")
+          )(maybeContentAsText)
+        )
+      ),
+      // Try to decode the MessageContent
+      TE.chain(contentAsText =>
+        pipe(
+          E.parseJSON(contentAsText, E.toError),
+          E.fold(
+            _ => TE.left(new Error(`Cannot parse content text into object`)),
+            _ => TE.of(_)
           )
         )
-        // Try to decode the MessageContent
-        .chain(contentAsText =>
-          parseJSON(contentAsText, toError).fold(
-            _ => fromLeft(new Error(`Cannot parse content text into object`)),
-            _ => taskEither.of(_)
-          )
-        )
-        .chain(undecodedContent =>
-          MessageContent.decode(undecodedContent).fold(
+      ),
+      TE.chain(undecodedContent =>
+        pipe(
+          MessageContent.decode(undecodedContent),
+          E.fold(
             errors =>
-              fromLeft(
+              TE.left(
                 new Error(
                   `Cannot deserialize stored message content: ${readableReport(
                     errors
                   )}`
                 )
               ),
-            (content: MessageContent) => taskEither.of(some(content))
+            (content: MessageContent) => TE.of(some(content))
           )
         )
+      )
     );
   }
 }

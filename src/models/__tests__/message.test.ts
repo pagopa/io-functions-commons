@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as azureStorage from "azure-storage";
-import { isLeft, isRight, left, right } from "fp-ts/lib/Either";
-import { isSome } from "fp-ts/lib/Option";
+import * as E from "fp-ts/lib/Either";
+import * as O from "fp-ts/lib/Option";
 import * as asyncI from "../../utils/async";
 
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
@@ -25,8 +25,8 @@ import { MessageSubject } from "../../../generated/definitions/MessageSubject";
 import { ServiceId } from "../../../generated/definitions/ServiceId";
 import { TimeToLiveSeconds } from "../../../generated/definitions/TimeToLiveSeconds";
 import * as azureStorageUtils from "../../utils/azure_storage";
-import { elem } from "fp-ts/lib/Foldable";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
+import { pipe } from "fp-ts/lib/function";
 
 beforeEach(() => {
   jest.resetAllMocks();
@@ -76,7 +76,7 @@ const iteratorGenMock = async function*(arr: any[]) {
 describe("findMessages", () => {
   it("should return the messages for a fiscal code", async () => {
     const iteratorMock = iteratorGenMock([
-      [right(aRetrievedMessageWithContent)]
+      [E.right(aRetrievedMessageWithContent)]
     ]);
 
     const asyncIteratorSpy = jest
@@ -97,18 +97,18 @@ describe("findMessages", () => {
 
     const model = new MessageModel(containerMock, MESSAGE_CONTAINER_NAME);
 
-    const errorsOrResultIterator = await model
-      .findMessages(aRetrievedMessageWithContent.fiscalCode)
-      .run();
+    const errorsOrResultIterator = await model.findMessages(
+      aRetrievedMessageWithContent.fiscalCode
+    )();
 
     expect(asyncIteratorSpy).toHaveBeenCalledTimes(1);
     expect(containerMock.items.query).toHaveBeenCalledTimes(1);
-    expect(isRight(errorsOrResultIterator)).toBeTruthy();
-    if (isRight(errorsOrResultIterator)) {
-      const result = await errorsOrResultIterator.value.next();
-      expect(isRight(result.value[0])).toBeTruthy();
-      if (isRight(result.value[0])) {
-        const item = result.value[0].value;
+    expect(E.isRight(errorsOrResultIterator)).toBeTruthy();
+    if (E.isRight(errorsOrResultIterator)) {
+      const result = await errorsOrResultIterator.right.next();
+      expect(E.isRight(result.value[0])).toBeTruthy();
+      if (E.isRight(result.value[0])) {
+        const item = result.value[0].right;
         expect(item).toEqual(aRetrievedMessageWithContent);
       }
     }
@@ -136,15 +136,15 @@ describe("findMessages", () => {
 
     const model = new MessageModel(containerMock, MESSAGE_CONTAINER_NAME);
 
-    const errorsOrResultIterator = await model
-      .findMessages(aRetrievedMessageWithContent.fiscalCode)
-      .run();
+    const errorsOrResultIterator = await model.findMessages(
+      aRetrievedMessageWithContent.fiscalCode
+    )();
 
     expect(asyncIteratorSpy).toHaveBeenCalledTimes(1);
     expect(containerMock.items.query).toHaveBeenCalledTimes(1);
-    expect(isRight(errorsOrResultIterator)).toBeTruthy();
-    if (isRight(errorsOrResultIterator)) {
-      const result = await errorsOrResultIterator.value.next();
+    expect(E.isRight(errorsOrResultIterator)).toBeTruthy();
+    if (E.isRight(errorsOrResultIterator)) {
+      const result = await errorsOrResultIterator.right.next();
       expect(result.value).toMatchObject([]);
     }
   });
@@ -152,8 +152,8 @@ describe("findMessages", () => {
 
 it("should return an iterator containing results page of correct pageSize", async () => {
   const iteratorMock = iteratorGenMock([
-    [right(aRetrievedMessageWithContent), right(aRetrievedMessageWithContent)],
-    [right(aRetrievedMessageWithContent)]
+    [E.right(aRetrievedMessageWithContent), E.right(aRetrievedMessageWithContent)],
+    [E.right(aRetrievedMessageWithContent)]
   ]);
 
   const asyncIteratorSpy = jest
@@ -180,7 +180,7 @@ it("should return an iterator containing results page of correct pageSize", asyn
       aRetrievedMessageWithContent.fiscalCode,
       2 as NonNegativeInteger
     )
-    .run();
+    ();
 
   expect(asyncIteratorSpy).toHaveBeenCalledTimes(1);
   expect(containerMock.items.query).toHaveBeenCalledTimes(1);
@@ -193,16 +193,16 @@ it("should return an iterator containing results page of correct pageSize", asyn
     },
     { maxItemCount: 2 }
   );
-  expect(isRight(errorsOrResultIterator)).toBeTruthy();
-  if (isRight(errorsOrResultIterator)) {
-    const iterator = errorsOrResultIterator.value;
+  expect(E.isRight(errorsOrResultIterator)).toBeTruthy();
+  if (E.isRight(errorsOrResultIterator)) {
+    const iterator = errorsOrResultIterator.right;
     const result = await iterator.next();
     expect(result.value).toMatchObject([
-      right(aRetrievedMessageWithContent),
-      right(aRetrievedMessageWithContent)
+      E.right(aRetrievedMessageWithContent),
+      E.right(aRetrievedMessageWithContent)
     ]);
     const result2 = await iterator.next();
-    expect(result2.value).toMatchObject([right(aRetrievedMessageWithContent)]);
+    expect(result2.value).toMatchObject([E.right(aRetrievedMessageWithContent)]);
   }
 });
 
@@ -234,7 +234,7 @@ it("should construct the correct query with maximumMessageId param", async () =>
       2 as NonNegativeInteger,
       "A_MESSAGE_ID" as NonEmptyString
     )
-    .run();
+    ();
 
   expect(asyncIteratorSpy).toHaveBeenCalledTimes(1);
   expect(containerMock.items.query).toHaveBeenCalledTimes(1);
@@ -279,7 +279,7 @@ it("should construct the correct query with minimumMessageId param", async () =>
       undefined,
       "A_MESSAGE_ID" as NonEmptyString
     )
-    .run();
+    ();
 
   expect(asyncIteratorSpy).toHaveBeenCalledTimes(1);
   expect(containerMock.items.query).toHaveBeenCalledTimes(1);
@@ -297,7 +297,7 @@ it("should construct the correct query with minimumMessageId param", async () =>
 
 it("should return an iterator with correct done definition", async () => {
   const iteratorMock = iteratorGenMock([
-    [right(aRetrievedMessageWithContent), right(aRetrievedMessageWithContent)]
+    [E.right(aRetrievedMessageWithContent), E.right(aRetrievedMessageWithContent)]
   ]);
 
   const asyncIteratorSpy = jest
@@ -324,17 +324,17 @@ it("should return an iterator with correct done definition", async () => {
       aRetrievedMessageWithContent.fiscalCode,
       2 as NonNegativeInteger
     )
-    .run();
+    ();
 
   expect(asyncIteratorSpy).toHaveBeenCalledTimes(1);
   expect(containerMock.items.query).toHaveBeenCalledTimes(1);
-  expect(isRight(errorsOrResultIterator)).toBeTruthy();
-  if (isRight(errorsOrResultIterator)) {
-    const iterator = errorsOrResultIterator.value;
+  expect(E.isRight(errorsOrResultIterator)).toBeTruthy();
+  if (E.isRight(errorsOrResultIterator)) {
+    const iterator = errorsOrResultIterator.right;
     const result = await iterator.next();
     expect(result.value).toMatchObject([
-      right(aRetrievedMessageWithContent),
-      right(aRetrievedMessageWithContent)
+      E.right(aRetrievedMessageWithContent),
+      E.right(aRetrievedMessageWithContent)
     ]);
     const result2 = await iterator.next();
     expect(result2.done).toBe(true);
@@ -359,18 +359,16 @@ describe("findMessageForRecipient", () => {
 
     const model = new MessageModel(containerMock, MESSAGE_CONTAINER_NAME);
 
-    const result = await model
-      .findMessageForRecipient(
-        aRetrievedMessageWithContent.fiscalCode,
-        aRetrievedMessageWithContent.id
-      )
-      .run();
+    const result = await model.findMessageForRecipient(
+      aRetrievedMessageWithContent.fiscalCode,
+      aRetrievedMessageWithContent.id
+    )();
 
     expect(containerMock.item).toHaveBeenCalledTimes(1);
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isSome()).toBeTruthy();
-      expect(result.value.toUndefined()).toEqual({
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isSome(result.right)).toBeTruthy();
+      expect(O.toUndefined(result.right)).toEqual({
         ...aRetrievedMessageWithContent
       });
     }
@@ -386,17 +384,15 @@ describe("findMessageForRecipient", () => {
 
     const model = new MessageModel(containerMock, MESSAGE_CONTAINER_NAME);
 
-    const result = await model
-      .findMessageForRecipient(
-        "FRLFRC73E04B157I" as FiscalCode,
-        aRetrievedMessageWithContent.id
-      )
-      .run();
+    const result = await model.findMessageForRecipient(
+      "FRLFRC73E04B157I" as FiscalCode,
+      aRetrievedMessageWithContent.id
+    )();
 
     expect(containerMock.item).toHaveBeenCalledTimes(1);
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isNone()).toBeTruthy();
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isNone(result.right)).toBeTruthy();
     }
   });
 
@@ -408,17 +404,15 @@ describe("findMessageForRecipient", () => {
 
     const model = new MessageModel(containerMock, MESSAGE_CONTAINER_NAME);
 
-    const result = await model
-      .findMessageForRecipient(
-        "FRLFRC73E04B157I" as FiscalCode,
-        aRetrievedMessageWithContent.id
-      )
-      .run();
+    const result = await model.findMessageForRecipient(
+      "FRLFRC73E04B157I" as FiscalCode,
+      aRetrievedMessageWithContent.id
+    )();
 
     expect(containerMock.item).toHaveBeenCalledTimes(1);
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toEqual("COSMOS_ERROR_RESPONSE");
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toEqual("COSMOS_ERROR_RESPONSE");
     }
   });
 });
@@ -436,11 +430,13 @@ describe("storeContentAsBlob", () => {
 
     const upsertBlobFromObjectSpy = jest
       .spyOn(azureStorageUtils, "upsertBlobFromObject")
-      .mockReturnValueOnce(Promise.resolve(right(fromNullable(aBlobResult))));
+      .mockReturnValueOnce(Promise.resolve(E.right(fromNullable(aBlobResult))));
 
-    const blob = await model
-      .storeContentAsBlob(blobServiceMock as any, aMessageId, aMessageContent)
-      .run();
+    const blob = await model.storeContentAsBlob(
+      blobServiceMock as any,
+      aMessageId,
+      aMessageContent
+    )();
 
     expect(upsertBlobFromObjectSpy).toBeCalledWith(
       blobServiceMock,
@@ -448,9 +444,14 @@ describe("storeContentAsBlob", () => {
       expect.any(String),
       aMessageContent
     );
-    expect(isRight(blob)).toBeTruthy();
-    if (isRight(blob)) {
-      expect(blob.value.map(b => expect(b).toEqual(aBlobResult)));
+    expect(E.isRight(blob)).toBeTruthy();
+    if (E.isRight(blob)) {
+      expect(
+        pipe(
+          blob.right,
+          O.map(b => expect(b).toEqual(aBlobResult))
+        )
+      );
     }
 
     upsertBlobFromObjectSpy.mockReset();
@@ -467,23 +468,24 @@ describe("getContentFromBlob", () => {
     const getBlobAsTextSpy = jest
       .spyOn(azureStorageUtils, "getBlobAsText")
       .mockReturnValueOnce(
-        Promise.resolve(right(some(JSON.stringify(aMessageContent))))
+        Promise.resolve(E.right(some(JSON.stringify(aMessageContent))))
       );
 
-    const errorOrMaybeMessageContent = await model
-      .getContentFromBlob(blobServiceMock as any, aMessageId)
-      .run();
+    const errorOrMaybeMessageContent = await model.getContentFromBlob(
+      blobServiceMock as any,
+      aMessageId
+    )();
 
     expect(getBlobAsTextSpy).toBeCalledWith(
       blobServiceMock,
       expect.any(String), // Container name
       `${aMessageId}.json`
     );
-    expect(isRight(errorOrMaybeMessageContent)).toBeTruthy();
-    if (isRight(errorOrMaybeMessageContent)) {
-      const maybeMessageContent = errorOrMaybeMessageContent.value;
-      expect(isSome(maybeMessageContent)).toBeTruthy();
-      if (isSome(maybeMessageContent)) {
+    expect(E.isRight(errorOrMaybeMessageContent)).toBeTruthy();
+    if (E.isRight(errorOrMaybeMessageContent)) {
+      const maybeMessageContent = errorOrMaybeMessageContent.right;
+      expect(O.isSome(maybeMessageContent)).toBeTruthy();
+      if (O.isSome(maybeMessageContent)) {
         expect(maybeMessageContent.value).toEqual(aMessageContent);
       }
     }
@@ -495,14 +497,17 @@ describe("getContentFromBlob", () => {
     const err = Error();
     const getBlobAsTextSpy = jest
       .spyOn(azureStorageUtils, "getBlobAsText")
-      .mockReturnValueOnce(Promise.resolve(left(err)));
+      .mockReturnValueOnce(Promise.resolve(E.left(err)));
 
-    const errorOrMaybeMessageContent = await model
-      .getContentFromBlob(blobServiceMock as any, aMessageId)
-      .run();
+    const errorOrMaybeMessageContent = await model.getContentFromBlob(
+      blobServiceMock as any,
+      aMessageId
+    )();
 
-    expect(isLeft(errorOrMaybeMessageContent)).toBeTruthy();
-    expect(errorOrMaybeMessageContent.value).toEqual(err);
+    expect(E.isLeft(errorOrMaybeMessageContent)).toBeTruthy();
+    if (E.isLeft(errorOrMaybeMessageContent)) {
+      expect(errorOrMaybeMessageContent.left).toEqual(err);
+    }
 
     getBlobAsTextSpy.mockReset();
   });
@@ -510,14 +515,17 @@ describe("getContentFromBlob", () => {
   it("should fail with an error when the retrieved blob is empty", async () => {
     const getBlobAsTextSpy = jest
       .spyOn(azureStorageUtils, "getBlobAsText")
-      .mockResolvedValueOnce(right(none));
+      .mockResolvedValueOnce(E.right(none));
 
-    const errorOrMaybeMessageContent = await model
-      .getContentFromBlob(blobServiceMock as any, aMessageId)
-      .run();
+    const errorOrMaybeMessageContent = await model.getContentFromBlob(
+      blobServiceMock as any,
+      aMessageId
+    )();
 
-    expect(isLeft(errorOrMaybeMessageContent)).toBeTruthy();
-    expect(errorOrMaybeMessageContent.value).toBeInstanceOf(Error);
+    expect(E.isLeft(errorOrMaybeMessageContent)).toBeTruthy();
+    if (E.isLeft(errorOrMaybeMessageContent)) {
+      expect(errorOrMaybeMessageContent.left).toBeInstanceOf(Error);
+    }
 
     getBlobAsTextSpy.mockReset();
   });
@@ -527,15 +535,18 @@ describe("getContentFromBlob", () => {
     const getBlobAsTextSpy = jest
       .spyOn(azureStorageUtils, "getBlobAsText")
       .mockResolvedValueOnce(
-        right(some(JSON.stringify(invalidMessageContent)))
+        E.right(some(JSON.stringify(invalidMessageContent)))
       );
 
-    const errorOrMaybeMessageContent = await model
-      .getContentFromBlob(blobServiceMock as any, aMessageId)
-      .run();
+    const errorOrMaybeMessageContent = await model.getContentFromBlob(
+      blobServiceMock as any,
+      aMessageId
+    )();
 
-    expect(isLeft(errorOrMaybeMessageContent)).toBeTruthy();
-    expect(errorOrMaybeMessageContent.value).toBeInstanceOf(Error);
+    expect(E.isLeft(errorOrMaybeMessageContent)).toBeTruthy();
+    if (E.isLeft(errorOrMaybeMessageContent)) {
+      expect(errorOrMaybeMessageContent.left).toBeInstanceOf(Error);
+    }
 
     getBlobAsTextSpy.mockReset();
   });

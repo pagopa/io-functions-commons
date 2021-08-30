@@ -9,23 +9,27 @@ import {
   SERVICE_MODEL_ID_FIELD
 } from "../../src/models/service";
 import { createContext } from "./cosmos_utils";
-import { fromOption } from "fp-ts/lib/Either";
-import { toString } from "fp-ts/lib/function";
+import * as e from "fp-ts/lib/Either";
+import * as te from "fp-ts/lib/TaskEither";
+import { pipe } from "fp-ts/lib/function";
 
-const aService: Service = Service.decode({
-  authorizedCIDRs: [],
-  authorizedRecipients: [],
-  departmentName: "Deparment Name",
-  isVisible: true,
-  maxAllowedPaymentAmount: 100000,
-  organizationFiscalCode: "01234567890",
-  organizationName: "Organization name",
-  requireSecureChannels: false,
-  serviceId: "aServiceId" as NonEmptyString,
-  serviceName: "MyServiceName"
-}).getOrElseL(() => {
-  throw new Error("Cannot decode service payload.");
-});
+const aService: Service = pipe(
+  Service.decode({
+    authorizedCIDRs: [],
+    authorizedRecipients: [],
+    departmentName: "Deparment Name",
+    isVisible: true,
+    maxAllowedPaymentAmount: 100000,
+    organizationFiscalCode: "01234567890",
+    organizationName: "Organization name",
+    requireSecureChannels: false,
+    serviceId: "aServiceId" as NonEmptyString,
+    serviceName: "MyServiceName"
+  }),
+  e.getOrElseW(() => {
+    throw new Error("Cannot decode service payload.");
+  })
+);
 
 describe("Models |> Service", () => {
   it("should save documents with correct versioning", async () => {
@@ -39,10 +43,10 @@ describe("Models |> Service", () => {
     };
 
     // create a new document
-    const created = await model
-      .create(newDoc)
-      .fold(
-        _ => fail(`Failed to create doc, error: ${toString(_)}`),
+    const created = await pipe(
+      model.create(newDoc),
+      te.bimap(
+        _ => fail(`Failed to create doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -52,15 +56,16 @@ describe("Models |> Service", () => {
           );
           return result;
         }
-      )
-      .run();
+      ),
+      te.toUnion
+    )();
 
     // update document
     const updates = { serviceName: "anUpdatedServiceName" as NonEmptyString };
-    await model
-      .update({ ...created, ...updates })
-      .fold(
-        _ => fail(`Failed to update doc, error: ${toString(_)}`),
+    await pipe(
+      model.update({ ...created, ...updates }),
+      te.bimap(
+        _ => fail(`Failed to update doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -71,17 +76,17 @@ describe("Models |> Service", () => {
           );
         }
       )
-      .run();
+    )();
 
     // read latest version of the document
-    await taskEither
-      .of<any, void>(void 0)
-      .chain(_ =>
+    await pipe(
+      taskEither.of<any, void>(void 0),
+      te.chainW(_ =>
         model.findLastVersionByModelId([newDoc[SERVICE_MODEL_ID_FIELD]])
-      )
-      .chain(_ => fromEither(fromOption("It's none")(_)))
-      .fold(
-        _ => fail(`Failed to read doc, error: ${toString(_)}`),
+      ),
+      te.chain(_ => fromEither(e.fromOption(() => "It's none")(_))),
+      te.bimap(
+        _ => fail(`Failed to read doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -92,7 +97,7 @@ describe("Models |> Service", () => {
           );
         }
       )
-      .run();
+    )();
 
     // upsert new version
     const upserts = {
@@ -103,10 +108,10 @@ describe("Models |> Service", () => {
       ...aService,
       ...upserts
     };
-    await model
-      .upsert(toUpsert)
-      .fold(
-        _ => fail(`Failed to upsert doc, error: ${toString(_)}`),
+    await pipe(
+      model.upsert(toUpsert),
+      te.bimap(
+        _ => fail(`Failed to upsert doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -117,7 +122,7 @@ describe("Models |> Service", () => {
           );
         }
       )
-      .run();
+    )();
 
     context.dispose();
   });

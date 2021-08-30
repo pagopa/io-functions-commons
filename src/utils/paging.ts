@@ -1,6 +1,7 @@
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { fromNullable } from "fp-ts/lib/Option";
+import { pipe } from "fp-ts/lib/function";
+import * as O from "fp-ts/lib/Option";
 import * as t from "io-ts";
 
 export const PageResults = t.intersection([
@@ -22,9 +23,11 @@ export const fillPage = async <T extends { readonly id: NonEmptyString }>(
   const { value, done } = await iter.next();
   const results = [
     ...acc,
-    ...fromNullable(value)
-      .map(v => [v])
-      .getOrElse([])
+    ...pipe(
+      O.fromNullable(value),
+      O.map(v => [v]),
+      O.getOrElseW(() => [])
+    )
   ];
   return results.length === expectedPageSize || done === true
     ? { done, values: results }

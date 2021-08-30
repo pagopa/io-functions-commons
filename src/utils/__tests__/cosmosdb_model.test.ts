@@ -1,6 +1,7 @@
 import * as t from "io-ts";
 
-import { isLeft, isRight } from "fp-ts/lib/Either";
+import * as E from "fp-ts/lib/Either";
+import * as O from "fp-ts/lib/Option";
 
 import { Container, ErrorResponse, ResourceResponse } from "@azure/cosmos";
 
@@ -94,13 +95,13 @@ describe("create", () => {
       )
     );
     const model = new MyModel(container);
-    const result = await model.create(aDocument).run();
+    const result = await model.create(aDocument)();
     expect(containerMock.items.create).toHaveBeenCalledWith(aDocument, {
       disableAutomaticIdGeneration: true
     });
-    expect(isRight(result));
-    if (isRight(result)) {
-      expect(result.value).toEqual({
+    expect(E.isRight(result));
+    if (E.isRight(result)) {
+      expect(result.right).toEqual({
         ...aDocument,
         ...someMetadata
       });
@@ -111,12 +112,12 @@ describe("create", () => {
     containerMock.items.create.mockRejectedValueOnce(errorResponse);
     const model = new MyModel(container);
 
-    const result = await model.create(aDocument).run();
-    expect(isLeft(result));
-    if (isLeft(result)) {
-      expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");
-      if (result.value.kind === "COSMOS_ERROR_RESPONSE") {
-        expect(result.value.error.code).toBe(500);
+    const result = await model.create(aDocument)();
+    expect(E.isLeft(result));
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toBe("COSMOS_ERROR_RESPONSE");
+      if (result.left.kind === "COSMOS_ERROR_RESPONSE") {
+        expect(result.left.error.code).toBe(500);
       }
     }
   });
@@ -125,10 +126,10 @@ describe("create", () => {
     containerMock.items.create.mockResolvedValueOnce({});
     const model = new MyModel(container);
 
-    const result = await model.create(aDocument).run();
-    expect(isLeft(result));
-    if (isLeft(result)) {
-      expect(result.value).toEqual({ kind: "COSMOS_EMPTY_RESPONSE" });
+    const result = await model.create(aDocument)();
+    expect(E.isLeft(result));
+    if (E.isLeft(result)) {
+      expect(result.left).toEqual({ kind: "COSMOS_EMPTY_RESPONSE" });
     }
   });
 });
@@ -137,7 +138,7 @@ describe("upsert", () => {
   it("should create a document", async () => {
     containerMock.items.upsert.mockResolvedValueOnce({});
     const model = new MyModel(container);
-    await model.upsert(aDocument).run();
+    await model.upsert(aDocument)();
     expect(containerMock.items.upsert).toHaveBeenCalledWith(aDocument, {
       disableAutomaticIdGeneration: true
     });
@@ -147,12 +148,12 @@ describe("upsert", () => {
     containerMock.items.upsert.mockRejectedValueOnce(errorResponse);
     const model = new MyModel(container);
 
-    const result = await model.upsert(aDocument).run();
-    expect(isLeft(result));
-    if (isLeft(result)) {
-      expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");
-      if (result.value.kind === "COSMOS_ERROR_RESPONSE") {
-        expect(result.value.error.code).toBe(500);
+    const result = await model.upsert(aDocument)();
+    expect(E.isLeft(result));
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toBe("COSMOS_ERROR_RESPONSE");
+      if (result.left.kind === "COSMOS_ERROR_RESPONSE") {
+        expect(result.left.error.code).toBe(500);
       }
     }
   });
@@ -161,10 +162,10 @@ describe("upsert", () => {
     containerMock.items.upsert.mockResolvedValueOnce({});
     const model = new MyModel(container);
 
-    const result = await model.upsert(aDocument).run();
-    expect(isLeft(result));
-    if (isLeft(result)) {
-      expect(result.value).toEqual({ kind: "COSMOS_EMPTY_RESPONSE" });
+    const result = await model.upsert(aDocument)();
+    expect(E.isLeft(result));
+    if (E.isLeft(result)) {
+      expect(result.left).toEqual({ kind: "COSMOS_EMPTY_RESPONSE" });
     }
   });
 
@@ -182,10 +183,10 @@ describe("upsert", () => {
     );
     const model = new MyModel(container);
 
-    const result = await model.upsert(aDocument).run();
-    expect(isRight(result));
-    if (isRight(result)) {
-      expect(result.value).toEqual({
+    const result = await model.upsert(aDocument)();
+    expect(E.isRight(result));
+    if (E.isRight(result)) {
+      expect(result.right).toEqual({
         ...aDocument,
         ...someMetadata
       });
@@ -211,13 +212,13 @@ describe("find", () => {
     containerMock.item.mockReturnValue({ read: readMock });
     const model = new MyModel(container);
 
-    const result = await model.find([testId]).run();
+    const result = await model.find([testId])();
 
     expect(containerMock.item).toHaveBeenCalledWith(testId, testId);
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isSome()).toBeTruthy();
-      expect(result.value.toUndefined()).toEqual({
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isSome(result.right)).toBeTruthy();
+      expect(O.toUndefined(result.right)).toEqual({
         ...aDocument,
         ...someMetadata
       });
@@ -239,13 +240,13 @@ describe("find", () => {
     containerMock.item.mockReturnValue({ read: readMock });
     const model = new MyPartitionedModel(container);
 
-    const result = await model.find([testId, testPartition]).run();
+    const result = await model.find([testId, testPartition])();
 
     expect(containerMock.item).toHaveBeenCalledWith(testId, testPartition);
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isSome()).toBeTruthy();
-      expect(result.value.toUndefined()).toEqual({
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isSome(result.right)).toBeTruthy();
+      expect(O.toUndefined(result.right)).toEqual({
         ...aDocument,
         ...someMetadata
       });
@@ -260,11 +261,11 @@ describe("find", () => {
     containerMock.item.mockReturnValue({ read: readMock });
     const model = new MyModel(container);
 
-    const result = await model.find([testId]).run();
+    const result = await model.find([testId])();
 
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isNone()).toBeTruthy();
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isNone(result.right)).toBeTruthy();
     }
   });
 
@@ -276,13 +277,13 @@ describe("find", () => {
     containerMock.item.mockReturnValue({ read: readMock });
     const model = new MyModel(container);
 
-    const result = await model.find([testId]).run();
+    const result = await model.find([testId])();
 
-    expect(isLeft(result));
-    if (isLeft(result)) {
-      expect(result.value.kind).toBe("COSMOS_ERROR_RESPONSE");
-      if (result.value.kind === "COSMOS_ERROR_RESPONSE") {
-        expect(result.value.error.code).toBe(500);
+    expect(E.isLeft(result));
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toBe("COSMOS_ERROR_RESPONSE");
+      if (result.left.kind === "COSMOS_ERROR_RESPONSE") {
+        expect(result.left.error.code).toBe(500);
       }
     }
   });
