@@ -134,9 +134,9 @@ describe("listLastVersionServices", () => {
 
     const result = await model.listLastVersionServices()();
     expect(E.isRight(result)).toBeTruthy();
-    if (E.isRight(result) && O.isSome(result.right)) {
-      expect(result.right.value).toHaveLength(2);
-      expect(result.right.value).toMatchObject([expectedService, anotherService]);
+    if (E.isRight(result)) {
+      expect(O.toUndefined(result.right)).toHaveLength(2);
+      expect(O.toUndefined(result.right)).toMatchObject([expectedService, anotherService]);
     }
   });
   it("should resolve to an empty value if no service is found", async () => {
