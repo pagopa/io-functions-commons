@@ -1,5 +1,4 @@
 import { BlobService } from "azure-storage";
-import { array } from "fp-ts/lib/Array";
 import * as E from "fp-ts/lib/Either";
 import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
 import * as O from "fp-ts/lib/Option";
@@ -175,6 +174,11 @@ const blobIdFromMessageId = (messageId: string): string =>
   `${messageId}${MESSAGE_BLOB_STORAGE_SUFFIX}`;
 
 /**
+ * This is the default page size for cosmos queries
+ */
+export const defaultPageSize = 100 as NonNegativeInteger;
+
+/**
  * A model for handling Messages
  */
 export class MessageModel extends CosmosdbModel<
@@ -226,7 +230,7 @@ export class MessageModel extends CosmosdbModel<
    */
   public findMessages(
     fiscalCode: FiscalCode,
-    pageSize = 100 as NonNegativeInteger,
+    pageSize = defaultPageSize,
     maximumMessageId?: NonEmptyString,
     minimumMessageId?: NonEmptyString
   ): TE.TaskEither<
@@ -323,7 +327,7 @@ export class MessageModel extends CosmosdbModel<
         O.isSome(_)
           ? pipe(
               TE.fromEither(
-                array.sequence(E.either)(
+                E.sequenceArray(
                   _.value.map(RetrievedMessageWithoutContent.decode)
                 )
               ),

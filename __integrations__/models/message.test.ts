@@ -4,7 +4,8 @@ import {
   MESSAGE_MODEL_PK_FIELD,
   MessageModel,
   NewMessageWithoutContent,
-  RetrievedMessage
+  RetrievedMessage,
+  defaultPageSize
 } from "../../src/models/message";
 import { createContext } from "./cosmos_utils";
 import { fromOption } from "fp-ts/lib/Either";
@@ -16,6 +17,7 @@ import { isSome } from "fp-ts/lib/Option";
 import { CosmosErrors } from "../../src/utils/cosmosdb_model";
 import { Validation } from "io-ts";
 import * as E from "fp-ts/lib/Either";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 
 const MESSAGE_CONTAINER_NAME = "test-message-container" as NonEmptyString;
 
@@ -68,17 +70,19 @@ const aMessageContentWithNoPayment = {
   markdown: "a".repeat(100)
 };
 
+const with8ZeroPadding = (n: number): NonEmptyString =>
+  n.toString().padStart(8, "0") as NonEmptyString;
+
 const withId = (
   msg: NewMessageWithoutContent,
   n: number
 ): NewMessageWithoutContent => ({
   ...msg,
-  id: `ID_${n}` as NonEmptyString,
-  indexedId: `ID_${n}` as NonEmptyString,
-  createdAt: new Date(new Date().getTime() + n)
+  id: `${with8ZeroPadding(n)}` as NonEmptyString,
+  indexedId: `${with8ZeroPadding(n)}` as NonEmptyString
 });
 
-const asyncIteratorToPagedResults = <T>(source: AsyncIterator<T>) => {
+const asyncIteratorToPageOfResults = <T>(source: AsyncIterator<T>) => {
   return source.next().then(ir => ir.value as T);
 };
 
@@ -91,7 +95,6 @@ describe("Models |> Message", () => {
     // create a new document
     const created = await pipe(
       model.create(aNewMessageWithoutContent),
-      x => x,
       TE.bimap(
         _ => fail(`Failed to create doc, error: ${JSON.stringify(_)}`),
         result => {
@@ -159,7 +162,7 @@ describe("Models |> Message", () => {
     // find all message for a fiscal code
     const results = await pipe(
       model.findMessages(aFiscalCode),
-      TE.map(asyncIteratorToPagedResults),
+      TE.map(asyncIteratorToPageOfResults),
       TE.getOrElseW<CosmosErrors, ReadonlyArray<Validation<RetrievedMessage>>>(
         _ => {
           throw new Error("Error");
@@ -243,5 +246,236 @@ describe("Models |> Message", () => {
     )();
 
     await context.dispose();
+  });
+
+  it("should retrieve a page with all messages when they are less than default page size and no parameter is passed to query", async () => {
+    const context = await createContext(MESSAGE_MODEL_PK_FIELD);
+    await context.init();
+    const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
+
+    // create 20 messages
+    const numberOfMessages = 20;
+    await pipe(
+      TE.sequenceArray(
+        [...Array(numberOfMessages).keys()]
+          .map(n => withId(aNewMessageWithoutContent, n))
+          .map(doc => model.create(doc))
+      )
+    )();
+
+    // get a default sized page of messages for a fiscal code
+    const pageOfResults = await pipe(
+      model.findMessages(aFiscalCode),
+      TE.map(asyncIteratorToPageOfResults),
+      TE.getOrElseW<CosmosErrors, ReadonlyArray<Validation<RetrievedMessage>>>(
+        _ => {
+          throw new Error("Error");
+        }
+      )
+    )();
+
+    expect(pageOfResults).toEqual(expect.any(Array));
+    // expect a page of numberOfMessages=20 results
+    expect(pageOfResults).toHaveLength(numberOfMessages);
+    pageOfResults.map(mv => {
+      expect(E.isRight(mv)).toBe(true);
+    });
+
+    context.dispose();
+  });
+
+  it("should have a done iterator after all results have been given", async () => {
+    const context = await createContext(MESSAGE_MODEL_PK_FIELD);
+    await context.init();
+    const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
+
+    // create 20 messages
+    const numberOfMessages = 20;
+    await pipe(
+      TE.sequenceArray(
+        [...Array(numberOfMessages).keys()]
+          .map(n => withId(aNewMessageWithoutContent, n))
+          .map(doc => model.create(doc))
+      )
+    )();
+
+    // get a default sized page of messages for a fiscal code
+    const iterator = await pipe(
+      model.findMessages(aFiscalCode),
+      TE.getOrElseW<
+        CosmosErrors,
+        AsyncIterator<
+          ReadonlyArray<Validation<RetrievedMessage>>,
+          ReadonlyArray<Validation<RetrievedMessage>>
+        >
+      >(_ => {
+        throw new Error("Error");
+      })
+    )();
+
+    const firstPageOfResults = await asyncIteratorToPageOfResults(iterator);
+
+    expect(firstPageOfResults).toEqual(expect.any(Array));
+    // expect a whole page of numberOfMessages=20 results
+    expect(firstPageOfResults).toHaveLength(numberOfMessages);
+    expect((await iterator.next()).done).toBe(true);
+
+    context.dispose();
+  });
+
+  it("should retrieve a page of maximum default page size number of records when no parameter is passed to query", async () => {
+    const context = await createContext(MESSAGE_MODEL_PK_FIELD);
+    await context.init();
+    const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
+
+    // create 10 messages more than defaultPageSize
+    const numberOfMessages = defaultPageSize + 10;
+    await pipe(
+      TE.sequenceArray(
+        [...Array(numberOfMessages).keys()]
+          .map(n => withId(aNewMessageWithoutContent, n))
+          .map(doc => model.create(doc))
+      )
+    )();
+
+    // get a default sized page of messages for a fiscal code
+    const pageOfResults = await pipe(
+      model.findMessages(aFiscalCode),
+      TE.map(asyncIteratorToPageOfResults),
+      TE.getOrElseW<CosmosErrors, ReadonlyArray<Validation<RetrievedMessage>>>(
+        _ => {
+          throw new Error("Error");
+        }
+      )
+    )();
+
+    expect(pageOfResults).toEqual(expect.any(Array));
+    // expect a page of defaultPageSize=100 results
+    expect(pageOfResults).toHaveLength(defaultPageSize);
+    pageOfResults.map(mv => {
+      expect(E.isRight(mv)).toBe(true);
+    });
+
+    context.dispose();
+  });
+
+  it("should retrieve a page with all ids greater than minimumId", async () => {
+    const context = await createContext(MESSAGE_MODEL_PK_FIELD);
+    await context.init();
+    const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
+
+    // create some messages
+    const numberOfMessages = 20;
+    await pipe(
+      TE.sequenceArray(
+        [...Array(numberOfMessages).keys()]
+          .map(n => withId(aNewMessageWithoutContent, n))
+          .map(doc => model.create(doc))
+      )
+    )();
+
+    // get a page of 10 messages for a fiscal code above minimumId
+    const minimumId = with8ZeroPadding(5);
+    const pageSize = 10 as NonNegativeInteger;
+    const pageOfResults = await pipe(
+      model.findMessages(aFiscalCode, pageSize, undefined, minimumId),
+      TE.map(asyncIteratorToPageOfResults),
+      TE.getOrElseW<CosmosErrors, ReadonlyArray<Validation<RetrievedMessage>>>(
+        _ => {
+          throw new Error("Error");
+        }
+      )
+    )();
+
+    expect(pageOfResults).toEqual(expect.any(Array));
+    expect(pageOfResults).toHaveLength(pageSize);
+    pageOfResults.map(mv => {
+      expect(E.isRight(mv)).toBe(true);
+      if (E.isRight(mv)) {
+        expect(mv.right.id > minimumId).toBe(true);
+      }
+    });
+
+    context.dispose();
+  });
+
+  it("should retrieve a page with all ids smaller than maximumId", async () => {
+    const context = await createContext(MESSAGE_MODEL_PK_FIELD);
+    await context.init();
+    const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
+
+    // create some messages
+    const numberOfMessages = 20;
+    await pipe(
+      TE.sequenceArray(
+        [...Array(numberOfMessages).keys()]
+          .map(n => withId(aNewMessageWithoutContent, n))
+          .map(doc => model.create(doc))
+      )
+    )();
+
+    // get a page of 10 messages for a fiscal code below maximum id
+    const maximumId = with8ZeroPadding(15);
+    const pageSize = 10 as NonNegativeInteger;
+    const pageOfResults = await pipe(
+      model.findMessages(aFiscalCode, pageSize, maximumId),
+      TE.map(asyncIteratorToPageOfResults),
+      TE.getOrElseW<CosmosErrors, ReadonlyArray<Validation<RetrievedMessage>>>(
+        _ => {
+          throw new Error("Error");
+        }
+      )
+    )();
+
+    expect(pageOfResults).toEqual(expect.any(Array));
+    expect(pageOfResults).toHaveLength(pageSize);
+    pageOfResults.map(mv => {
+      expect(E.isRight(mv)).toBe(true);
+      if (E.isRight(mv)) {
+        expect(mv.right.id < maximumId).toBe(true);
+      }
+    });
+
+    context.dispose();
+  });
+
+  it("should correctly keep a descending order", async () => {
+    const context = await createContext(MESSAGE_MODEL_PK_FIELD);
+    await context.init();
+    const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
+
+    // create some messages
+    const numberOfMessages = 20;
+    await pipe(
+      TE.sequenceArray(
+        [...Array(numberOfMessages).keys()]
+          .map(n => withId(aNewMessageWithoutContent, n))
+          .map(doc => model.create(doc))
+      )
+    )();
+
+    // get a default sized page of messages for a fiscal code
+    const pageOfResults = await pipe(
+      model.findMessages(aFiscalCode),
+      TE.map(asyncIteratorToPageOfResults),
+      TE.getOrElseW<CosmosErrors, ReadonlyArray<Validation<RetrievedMessage>>>(
+        _ => {
+          throw new Error("Error");
+        }
+      )
+    )();
+
+    expect(pageOfResults).toEqual(expect.any(Array));
+    expect(pageOfResults).toHaveLength(numberOfMessages);
+    let topIdCheck = with8ZeroPadding(numberOfMessages + 1);
+    pageOfResults.map(mv => {
+      expect(E.isRight(mv)).toBe(true);
+      if (E.isRight(mv)) {
+        expect(mv.right.id < topIdCheck).toBe(true);
+        topIdCheck = mv.right.id;
+      }
+    });
+
+    context.dispose();
   });
 });
