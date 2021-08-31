@@ -72,9 +72,8 @@ describe("findOneServiceById", () => {
     expect(E.isRight(result)).toBeTruthy();
     if (E.isRight(result)) {
       expect(O.isSome(result.right)).toBeTruthy();
-      // use JSON.stringify because of a jest matcher bug ref. https://github.com/facebook/jest/issues/8475
-      expect(JSON.stringify(O.toUndefined(result.right))).toEqual(
-        JSON.stringify(aRetrievedService)
+      expect(O.toUndefined(result.right)).toMatchObject(
+        aRetrievedService
       );
     }
   });
@@ -133,13 +132,11 @@ describe("listLastVersionServices", () => {
     mockGetAsyncIterator.mockReturnValueOnce(asyncIterable);
     const model = new ServiceModel(containerMock);
 
-    const result = await model.listLastVersionServices().run();
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isSome()).toBeTruthy();
-      // use JSON.stringify because of a jest matcher bug ref. https://github.com/facebook/jest/issues/8475
-      expect(result.value.toUndefined()).toHaveLength(2);
-      expect(JSON.stringify(result.value.toUndefined())).toEqual(JSON.stringify([expectedService, anotherService]));
+    const result = await model.listLastVersionServices()();
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result) && O.isSome(result.right)) {
+      expect(result.right.value).toHaveLength(2);
+      expect(result.right.value).toMatchObject([expectedService, anotherService]);
     }
   });
   it("should resolve to an empty value if no service is found", async () => {
@@ -148,11 +145,11 @@ describe("listLastVersionServices", () => {
 
     const model = new ServiceModel(containerMock);
 
-    const result = await model.listLastVersionServices().run();
+    const result = await model.listLastVersionServices()();
 
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isNone()).toBeTruthy();
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isNone(result.right)).toBeTruthy();
     }
   });
   it("should validate the retrieved object agains the model type", async () => {
@@ -161,11 +158,11 @@ describe("listLastVersionServices", () => {
 
     const model = new ServiceModel(containerMock);
 
-    const result = await model.listLastVersionServices().run();
+    const result = await model.listLastVersionServices()();
 
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toBe("COSMOS_DECODING_ERROR");
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toBe("COSMOS_DECODING_ERROR");
     }
   });
 });

@@ -17,9 +17,10 @@ import {
   readonlySetType,
   withDefault
 } from "@pagopa/ts-commons/lib/types";
-import { fromEither, taskEither, TaskEither } from "fp-ts/lib/TaskEither";
-import { isLeft, right } from "fp-ts/lib/Either";
-import { tryCatch } from "fp-ts/lib/TaskEither";
+import * as TE from "fp-ts/lib/TaskEither";
+import { isRight } from "fp-ts/lib/Either";
+import { pipe } from "fp-ts/lib/function";
+import { Tuple2 } from "@pagopa/ts-commons/lib/tuples";
 import { CIDR } from "../../generated/definitions/CIDR";
 import {
   CosmosdbModelVersioned,
@@ -247,46 +248,58 @@ export class ServiceModel extends CosmosdbModelVersioned<
    */
   public findOneByServiceId(
     serviceId: NonEmptyString
-  ): TaskEither<CosmosErrors, Option<RetrievedService>> {
+  ): TE.TaskEither<CosmosErrors, Option<RetrievedService>> {
     return super.findLastVersionByModelId([serviceId]);
   }
 
-  public listLastVersionServices(): TaskEither<
+  public listLastVersionServices(): TE.TaskEither<
     CosmosErrors,
     Option<ReadonlyArray<RetrievedService>>
   > {
-    return tryCatch(
-      () =>
-        // Reduce all the services to a Record with serviceId as key
-        // and the last version of the service as value.
-        reduceAsyncIterator(
-          mapAsyncIterable(this.getCollectionIterator(), _ => {
-            if (_.some(isLeft)) {
-              throw _.filter(isLeft)[0].value;
-            }
-            return _.map(s => s.value) as ReadonlyArray<RetrievedService>;
-          })[Symbol.asyncIterator](),
-          (prev, curr) => {
-            // Reducer function
-            const isNewer =
-              !prev[curr.serviceId] ||
-              curr.version > prev[curr.serviceId].version;
-            return {
-              ...prev,
-              ...(isNewer ? { [curr.serviceId]: curr } : {})
-            };
-          },
-          {} as Record<string, RetrievedService>
-        ),
-      err => CosmosDecodingError(err as t.Errors)
-    ).chain(servicesMap => {
-      // Receive a Record with serviceId as key and
-      // the last version service as value.
-      // From that Record we keep only the values.
-      const services = Object.values(servicesMap);
-      return services.length > 0
-        ? taskEither.of(some(services))
-        : fromEither(right(none));
-    });
+    return pipe(
+      TE.tryCatch<CosmosErrors, Record<string, RetrievedService>>(
+        () =>
+          // Reduce all the services to a Record with serviceId as key
+          // and the last version of the service as value.
+          reduceAsyncIterator(
+            mapAsyncIterable(this.getCollectionIterator(), _ => {
+              const elementSelector = _.reduce((acc, el) => {
+                if (isRight(el)) {
+                  return Tuple2([...acc.e1, el.right], acc.e2);
+                }
+                return Tuple2(acc.e1, [...acc.e2, el.left]);
+              }, Tuple2<ReadonlyArray<RetrievedService>, ReadonlyArray<t.Errors>>([], []));
+              if (elementSelector.e2.length > 0) {
+                // If at least one element is left we throw the first error
+                throw elementSelector.e2[0];
+              }
+              return elementSelector.e1;
+            })[Symbol.asyncIterator](),
+            (prev, curr) => {
+              // Reducer function
+              const isNewer =
+                !prev[curr.serviceId] ||
+                curr.version > prev[curr.serviceId].version;
+              return {
+                ...prev,
+                ...(isNewer ? { [curr.serviceId]: curr } : {})
+              };
+            },
+            {} as Record<string, RetrievedService>
+          ),
+        err => CosmosDecodingError(err as t.Errors)
+      ),
+      TE.chain<
+        CosmosErrors,
+        Record<string, RetrievedService>,
+        Option<ReadonlyArray<RetrievedService>>
+      >(servicesMap => {
+        // Receive a Record with serviceId as key and
+        // the last version service as value.
+        // From that Record we keep only the values.
+        const services = Object.values(servicesMap);
+        return services.length > 0 ? TE.of(some(services)) : TE.of(none);
+      })
+    );
   }
 }
