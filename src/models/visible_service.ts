@@ -7,7 +7,8 @@
 import * as t from "io-ts";
 
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
-// import { collect, StrMap } from "fp-ts/lib/StrMap";
+import { collect } from "fp-ts/lib/ReadonlyMap";
+import { Ord } from "fp-ts/lib/string";
 import {
   NotificationChannel,
   NotificationChannelEnum
@@ -15,6 +16,8 @@ import {
 import { ServicePublic } from "../../generated/definitions/ServicePublic";
 import { BaseModel } from "../utils/cosmosdb_model";
 import { toApiServiceMetadata } from "../utils/service_metadata";
+import { ServiceTuple } from "../../generated/definitions/ServiceTuple";
+import { ServiceScopeEnum } from "../../generated/definitions/ServiceScope";
 import { Service, ServiceMetadata } from "./service";
 
 // This is not a CosmosDB model, but entities are stored into blob storage
@@ -88,21 +91,19 @@ export const toServicePublic = (
 });
 /* eslint-enable @typescript-eslint/naming-convention */
 
-/* FIXME: StrMap do not exists anymore: without a use case, this method can not be migrated  */
-// export const toServicesPublic = (
-//   visibleServices: StrMap<VisibleService>
-// ): ReadonlyArray<ServicePublic> =>
-//   collect(visibleServices, (_, v) => toServicePublic(v));
+export const toServicesPublic = (
+  visibleServices: ReadonlyMap<string, VisibleService>
+): ReadonlyArray<ServicePublic> =>
+  collect(Ord)((_, v: VisibleService) => toServicePublic(v))(visibleServices);
 
-/* FIXME: StrMap do not exists anymore: without a use case, this method can not be migrated  */
-// export const toServicesTuple = (
-//   visibleServices: StrMap<VisibleService>
-// ): ReadonlyArray<ServiceTuple> =>
-//   collect(visibleServices, (_, v) => ({
-//     scope:
-//       v.serviceMetadata && v.serviceMetadata.scope === ServiceScopeEnum.LOCAL
-//         ? ServiceScopeEnum.LOCAL
-//         : ServiceScopeEnum.NATIONAL,
-//     service_id: v.serviceId,
-//     version: v.version
-//   }));
+export const toServicesTuple = (
+  visibleServices: ReadonlyMap<string, VisibleService>
+): ReadonlyArray<ServiceTuple> =>
+  collect(Ord)((_, v: VisibleService) => ({
+    scope:
+      v.serviceMetadata && v.serviceMetadata.scope === ServiceScopeEnum.LOCAL
+        ? ServiceScopeEnum.LOCAL
+        : ServiceScopeEnum.NATIONAL,
+    service_id: v.serviceId,
+    version: v.version
+  }))(visibleServices);
