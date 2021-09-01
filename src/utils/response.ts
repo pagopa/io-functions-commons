@@ -7,8 +7,6 @@ import {
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { withoutUndefinedValues } from "@pagopa/ts-commons/lib/types";
 import * as express from "express";
-import { pipe } from "fp-ts/lib/function";
-import * as O from "fp-ts/lib/Option";
 import { asyncIteratorToArray } from "./async";
 import { CosmosErrors } from "./cosmosdb_model";
 import { fillPage } from "./paging";
@@ -70,26 +68,11 @@ export function ResponsePageIdBasedIterator<
     // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
     apply: res =>
       fillPage(i, requestedPageSize).then(page => {
-        const kindlessDocuments = page.values;
+        const kindlessDocuments = page.items;
         return res.status(200).json(
           withoutUndefinedValues({
-            items: kindlessDocuments,
-            items_size: kindlessDocuments.length,
-            next:
-              page.done === true
-                ? undefined
-                : pipe(
-                    O.fromNullable(
-                      kindlessDocuments[kindlessDocuments.length - 1]
-                    ),
-                    O.map(e => e.id),
-                    O.toUndefined
-                  ),
-            prev: pipe(
-              O.fromNullable(kindlessDocuments[0]),
-              O.map(e => e.id),
-              O.toUndefined
-            )
+            ...page,
+            items_size: kindlessDocuments.length
           })
         );
       }),

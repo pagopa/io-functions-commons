@@ -1,94 +1,11 @@
-import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { MessageBodyMarkdown } from "../../../generated/definitions/MessageBodyMarkdown";
-import { MessageContent } from "../../../generated/definitions/MessageContent";
-import { MessageSubject } from "../../../generated/definitions/MessageSubject";
-import { ServiceId } from "../../../generated/definitions/ServiceId";
-import { TimeToLiveSeconds } from "../../../generated/definitions/TimeToLiveSeconds";
-import {
-  NewMessageWithContent,
-  RetrievedMessageWithContent
-} from "../../models/message";
-import * as E from "fp-ts/lib/Either";
-import * as TE from "fp-ts/lib/TaskEither";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import * as P from "../paging";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
-import { CosmosErrors, toCosmosErrorResponse } from "../cosmosdb_model";
-import { pipe } from "fp-ts/lib/function";
 import {
-  filterAsyncIterator,
-  flattenAsyncIterator,
-  mapAsyncIterator
-} from "../async";
-import { Validation } from "io-ts";
+  flattenAsyncIterator} from "../async";
 
-const aMessageBodyMarkdown = "test".repeat(80) as MessageBodyMarkdown;
-
-const aMessageContent: MessageContent = {
-  markdown: aMessageBodyMarkdown,
-  subject: "test".repeat(10) as MessageSubject
-};
-
-const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
-
-const aSerializedNewMessageWithContent = {
-  content: aMessageContent,
-  createdAt: new Date().toISOString(),
-  fiscalCode: aFiscalCode,
-  id: "A_MESSAGE_ID" as NonEmptyString,
-  indexedId: "A_MESSAGE_ID" as NonEmptyString,
-  senderServiceId: "agid" as ServiceId,
-  senderUserId: "u123" as NonEmptyString,
-  timeToLiveSeconds: 3600 as TimeToLiveSeconds
-};
-
-const aNewMessageWithContent: NewMessageWithContent = {
-  ...aSerializedNewMessageWithContent,
-  createdAt: new Date(),
-  kind: "INewMessageWithContent"
-};
-
-const aRetrievedMessageWithContent: RetrievedMessageWithContent = {
-  _etag: "_etag",
-  _rid: "_rid",
-  _self: "_self",
-  _ts: 1,
-  ...aNewMessageWithContent,
-  kind: "IRetrievedMessageWithContent"
-};
-
-const with8ZeroPadding = (n: number): NonEmptyString =>
-  n.toString().padStart(8, "0") as NonEmptyString;
-
-const withId = (
-  msg: RetrievedMessageWithContent,
-  n: number,
-  isPending: boolean
-): RetrievedMessageWithContent => ({
-  ...msg,
-  id: `${with8ZeroPadding(n)}` as NonEmptyString,
-  indexedId: `${with8ZeroPadding(n)}` as NonEmptyString,
-  isPending
-});
-
-const pagedDescendingOrderMessagesList = (
-  numberOfPages: number,
-  pageSize: number,
-  aPendingMessageEvery: number
-) => {
-  const totalMessages = numberOfPages * pageSize;
-  let counter = 0;
-  return [...Array(numberOfPages).keys()].map(n => {
-    return [...Array(pageSize).keys()].map(m => {
-      const numericId = totalMessages - counter;
-      const message = withId(
-        aRetrievedMessageWithContent,
-        numericId,
-        numericId % aPendingMessageEvery == 0
-      );
-      counter = counter + 1;
-      return E.right(message);
-    });
-  });
+const anIdBasedModel = {
+  id: "AAAAA" as NonEmptyString
 };
 
 const iteratorGenMock = async function*<T>(arr: T[]) {
@@ -100,61 +17,78 @@ describe("Paging", () => {
     jest.resetAllMocks();
   });
 
-  it("should fill a page from a filtered async iterator", async () => {
-    const pages = 10 as NonNegativeInteger;
-    const pageSize = 10 as NonNegativeInteger;
-    const aPendingMessageEvery = 5;
+  it("should return a result page with the correct number of elements", async () => {
+    const pageSize = 3 as NonNegativeInteger;
 
-    // create a fake query result that comprehend some pending messages
-    const pagedMessages = pagedDescendingOrderMessagesList(
-      pages,
-      pageSize,
-      aPendingMessageEvery
+    const iteratorMock = iteratorGenMock([anIdBasedModel, anIdBasedModel, anIdBasedModel, {id: "BBBB" as NonEmptyString}]);
+    const results = await P.fillPage(iteratorMock as any, pageSize)
+    expect(results).toMatchObject(
+      {
+        hasMoreResults: true,
+        items: [anIdBasedModel, anIdBasedModel, anIdBasedModel],
+        next: anIdBasedModel.id,
+        prev: anIdBasedModel.id
+      }
     );
+  });
 
-    // check that there are pending messages that will be filtered
-    pagedMessages.map(page =>
-      page.map(messageValidation => {
-        if (E.isRight(messageValidation)) {
-          const message = messageValidation.right;
-          const numericId = parseInt(message.id);
-          expect(message.isPending == true).toBe(
-            numericId % aPendingMessageEvery == 0
-          );
-        }
-      })
+  it("should return an empty page if requested pageSize is 0", async () => {
+    const pageSize = 0 as NonNegativeInteger;
+
+    const iteratorMock = iteratorGenMock([anIdBasedModel, anIdBasedModel, anIdBasedModel, {id: "BBBB" as NonEmptyString}]);
+    const results = await P.fillPage(iteratorMock as any, pageSize)
+    expect(results).toMatchObject(
+      {
+        hasMoreResults: true,
+        items: [],
+        next: undefined,
+        prev: undefined
+      }
     );
+  });
 
-    // get an iterator over the paged messages
-    const iteratorMock = iteratorGenMock(pagedMessages);
+  it("should return an empty page if there are no results", async () => {
+    const pageSize = 5 as NonNegativeInteger;
 
-    // process the paged iterator results to get a flattened and filtered async iterator
-    const asyncIteratorMock = await pipe(
-      TE.tryCatch(
-        async () => iteratorMock[Symbol.asyncIterator](),
-        toCosmosErrorResponse
-      ),
-      TE.map(flattenAsyncIterator),
-      TE.map(_ => filterAsyncIterator(_, E.isRight)),
-      TE.map(_ => mapAsyncIterator(_, e => e.right)),
-      TE.map(_ => filterAsyncIterator(_, m => m.isPending == false)),
-      TE.getOrElseW<
-        CosmosErrors,
-        AsyncIterator<ReadonlyArray<Validation<RetrievedMessageWithContent>>>
-      >(_ => {
-        throw new Error("Error");
-      })
-    )();
+    const iteratorMock = iteratorGenMock([]);
+    const results = await P.fillPage(iteratorMock as any, pageSize)
+    expect(results).toMatchObject(
+      {
+        hasMoreResults: false,
+        items: [],
+        next: undefined,
+        prev: undefined
+      }
+    );
+  });
 
-    const aPage = await P.fillPage(asyncIteratorMock, pageSize);
+  it("should fill result page with elements of different pages while pageSize is not reached", async () => {
+    const pageSize = 3 as NonNegativeInteger;
 
-    expect(P.PageResults.is(aPage)).toBe(true);
-    expect(aPage.values).toEqual(expect.any(Array));
-    expect(aPage.values.length).toEqual(pageSize);
-    // check that there are not pending messages
-    aPage.values.map(pageResult => {
-      const message = pageResult as RetrievedMessageWithContent;
-      expect(message.isPending).toBe(false);
-    });
+    const iteratorMock = flattenAsyncIterator(iteratorGenMock([[anIdBasedModel], [anIdBasedModel, {id: "BBBB" as NonEmptyString}]]));
+    const results = await P.fillPage(iteratorMock as any, pageSize)
+    expect(results).toMatchObject(
+      {
+        hasMoreResults: false,
+        items: [anIdBasedModel, anIdBasedModel, {id: "BBBB" as NonEmptyString}],
+        next: undefined,
+        prev: anIdBasedModel.id
+      }
+    );
+  });
+
+  it("should fill result page with all elements if pageSize is greater than result's size", async () => {
+    const pageSize = 6 as NonNegativeInteger;
+
+    const iteratorMock = flattenAsyncIterator(iteratorGenMock([[anIdBasedModel, anIdBasedModel]]));
+    const results = await P.fillPage(iteratorMock as any, pageSize)
+    expect(results).toMatchObject(
+      {
+        hasMoreResults: false,
+        items: [anIdBasedModel, anIdBasedModel],
+        next: undefined,
+        prev: anIdBasedModel.id
+      }
+    );
   });
 });
