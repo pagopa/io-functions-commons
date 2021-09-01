@@ -1,15 +1,8 @@
 import { BlobService } from "azure-storage";
-import { array } from "fp-ts/lib/Array";
-import {
-  either,
-  fromOption,
-  parseJSON,
-  right,
-  toError
-} from "fp-ts/lib/Either";
 import * as E from "fp-ts/lib/Either";
 import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
 import * as O from "fp-ts/lib/Option";
+import * as TE from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 import {
   Container,
@@ -17,12 +10,7 @@ import {
   FeedResponse,
   SqlQuerySpec
 } from "@azure/cosmos";
-import {
-  fromEither as fromEitherT,
-  left as fromLeft,
-  TaskEither
-} from "fp-ts/lib/TaskEither";
-import * as TE from "fp-ts/lib/TaskEither";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { pipe } from "fp-ts/lib/function";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
@@ -186,6 +174,11 @@ const blobIdFromMessageId = (messageId: string): string =>
   `${messageId}${MESSAGE_BLOB_STORAGE_SUFFIX}`;
 
 /**
+ * This is the default page size for cosmos queries
+ */
+export const defaultPageSize = 100 as NonNegativeInteger;
+
+/**
  * A model for handling Messages
  */
 export class MessageModel extends CosmosdbModel<
@@ -215,7 +208,7 @@ export class MessageModel extends CosmosdbModel<
   public findMessageForRecipient(
     fiscalCode: FiscalCode,
     messageId: NonEmptyString
-  ): TaskEither<CosmosErrors, Option<RetrievedMessage>> {
+  ): TE.TaskEither<CosmosErrors, Option<RetrievedMessage>> {
     return pipe(
       this.find([messageId, fiscalCode]),
       TE.map(maybeMessage =>
@@ -228,29 +221,80 @@ export class MessageModel extends CosmosdbModel<
   }
 
   /**
-   * Returns the messages for the provided fiscal code
+   * Returns the messages for the provided fiscal code, with id based pagination capabilities
    *
    * @param fiscalCode The fiscal code of the recipient
+   * @param pageSize The requested pageSize
+   * @param maximumMessageId The message ID that can be used to filter next messages (older)
+   * @param minimumMessageId The message ID that can be used to filter previous messages (newest)
    */
   public findMessages(
-    fiscalCode: FiscalCode
-  ): TaskEither<
+    fiscalCode: FiscalCode,
+    pageSize = defaultPageSize,
+    maximumMessageId?: NonEmptyString,
+    minimumMessageId?: NonEmptyString
+  ): TE.TaskEither<
     CosmosErrors,
-    AsyncIterator<ReadonlyArray<t.Validation<RetrievedMessage>>>
+    AsyncIterator<
+      ReadonlyArray<t.Validation<RetrievedMessage>>,
+      ReadonlyArray<t.Validation<RetrievedMessage>>
+    >
   > {
-    return TE.fromEither(
-      E.tryCatch(
-        () =>
-          this.getQueryIterator({
-            parameters: [
-              {
-                name: "@fiscalCode",
-                value: fiscalCode
-              }
-            ],
-            query: `SELECT * FROM m WHERE m.${MESSAGE_MODEL_PK_FIELD} = @fiscalCode`
-          })[Symbol.asyncIterator](),
-        toCosmosErrorResponse
+    const commonQuerySpec = {
+      parameters: [
+        {
+          name: "@fiscalCode",
+          value: fiscalCode
+        }
+      ],
+      query: `SELECT * FROM m WHERE m.${MESSAGE_MODEL_PK_FIELD} = @fiscalCode`
+    };
+    const emptyMessageParameter = {
+      condition: "",
+      param: []
+    };
+    return pipe(
+      TE.of({
+        nextMessagesParams: pipe(
+          fromNullable(maximumMessageId),
+          O.foldW(
+            () => emptyMessageParameter,
+            maximumId => ({
+              condition: ` AND m.id < @maxId`,
+              param: [{ name: "@maxId", value: maximumId }]
+            })
+          )
+        ),
+        prevMessagesParams: pipe(
+          fromNullable(minimumMessageId),
+          O.foldW(
+            () => emptyMessageParameter,
+            minimumId => ({
+              condition: ` AND m.id > @minId`,
+              param: [{ name: "@minId", value: minimumId }]
+            })
+          )
+        )
+      }),
+      TE.mapLeft(toCosmosErrorResponse),
+      TE.map(({ nextMessagesParams, prevMessagesParams }) => ({
+        parameters: [
+          ...commonQuerySpec.parameters,
+          ...nextMessagesParams.param,
+          ...prevMessagesParams.param
+        ],
+        query: `${commonQuerySpec.query}${nextMessagesParams.condition}${prevMessagesParams.condition} ORDER BY m.id DESC`
+      })),
+      TE.chain(querySpec =>
+        TE.fromEither(
+          E.tryCatch(
+            () =>
+              this.getQueryIterator(querySpec, { maxItemCount: pageSize })[
+                Symbol.asyncIterator
+              ](),
+            toCosmosErrorResponse
+          )
+        )
       )
     );
   }
@@ -261,7 +305,7 @@ export class MessageModel extends CosmosdbModel<
   public findAllByQuery(
     query: string | SqlQuerySpec,
     options?: FeedOptions
-  ): TaskEither<
+  ): TE.TaskEither<
     CosmosErrors,
     Option<ReadonlyArray<RetrievedMessageWithoutContent>>
   > {
@@ -283,14 +327,14 @@ export class MessageModel extends CosmosdbModel<
         O.isSome(_)
           ? pipe(
               TE.fromEither(
-                array.sequence(either)(
+                E.sequenceArray(
                   _.value.map(RetrievedMessageWithoutContent.decode)
                 )
               ),
               TE.map(some),
               TE.mapLeft(CosmosDecodingError)
             )
-          : TE.fromEither(right(none))
+          : TE.fromEither(E.right(none))
       )
     );
   }
@@ -306,7 +350,7 @@ export class MessageModel extends CosmosdbModel<
     blobService: BlobService,
     messageId: string,
     messageContent: MessageContent
-  ): TaskEither<Error, Option<BlobService.BlobResult>> {
+  ): TE.TaskEither<Error, Option<BlobService.BlobResult>> {
     // Set the blob name
     const blobName = blobIdFromMessageId(messageId);
 
@@ -320,7 +364,7 @@ export class MessageModel extends CosmosdbModel<
             blobName,
             messageContent
           ),
-        toError
+        E.toError
       ),
       TE.chain(TE.fromEither)
     );
@@ -335,7 +379,7 @@ export class MessageModel extends CosmosdbModel<
   public getContentFromBlob(
     blobService: BlobService,
     messageId: string
-  ): TaskEither<Error, Option<MessageContent>> {
+  ): TE.TaskEither<Error, Option<MessageContent>> {
     const blobId = blobIdFromMessageId(messageId);
 
     // Retrieve blob content and deserialize
@@ -344,10 +388,10 @@ export class MessageModel extends CosmosdbModel<
         () => getBlobAsText(blobService, this.containerName, blobId),
         E.toError
       ),
-      TE.chain(fromEitherT),
+      TE.chain(TE.fromEither),
       TE.chain(maybeContentAsText =>
-        fromEitherT(
-          fromOption(
+        TE.fromEither(
+          E.fromOption(
             // Blob exists but the content is empty
             () => new Error("Cannot get stored message content from blob")
           )(maybeContentAsText)
@@ -356,9 +400,9 @@ export class MessageModel extends CosmosdbModel<
       // Try to decode the MessageContent
       TE.chain(contentAsText =>
         pipe(
-          parseJSON(contentAsText, toError),
+          E.parseJSON(contentAsText, E.toError),
           E.fold(
-            _ => fromLeft(new Error(`Cannot parse content text into object`)),
+            _ => TE.left(new Error(`Cannot parse content text into object`)),
             _ => TE.of(_)
           )
         )
@@ -368,7 +412,7 @@ export class MessageModel extends CosmosdbModel<
           MessageContent.decode(undecodedContent),
           E.fold(
             errors =>
-              fromLeft(
+              TE.left(
                 new Error(
                   `Cannot deserialize stored message content: ${readableReport(
                     errors

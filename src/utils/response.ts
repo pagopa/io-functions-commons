@@ -1,17 +1,28 @@
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import {
   HttpStatusCodeEnum,
   IResponse,
   ResponseErrorGeneric
 } from "@pagopa/ts-commons/lib/responses";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { withoutUndefinedValues } from "@pagopa/ts-commons/lib/types";
 import * as express from "express";
 import { asyncIteratorToArray } from "./async";
 import { CosmosErrors } from "./cosmosdb_model";
+import { fillPage } from "./paging";
 
 /**
  * Interface for a successful response returning a json object.
  */
 export interface IResponseSuccessJsonIterator<T>
   extends IResponse<"IResponseSuccessJsonIterator"> {
+  readonly value: T; // needed to discriminate from other T subtypes
+  readonly apply: (
+    response: express.Response
+  ) => Promise<void | IResponseErrorQuery | express.Response>;
+}
+export interface IResponseSuccessPageIdBasedIterator<T>
+  extends IResponse<"IResponseSuccessPageIdBasedIterator"> {
   readonly value: T; // needed to discriminate from other T subtypes
   readonly apply: (
     response: express.Response
@@ -42,6 +53,30 @@ export function ResponseJsonIterator<T>(
         });
       }),
     kind: "IResponseSuccessJsonIterator",
+    value: {} as T
+  };
+}
+
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions
+export function ResponsePageIdBasedIterator<
+  T extends { readonly id: NonEmptyString }
+>(
+  i: AsyncIterator<T, T>,
+  requestedPageSize: NonNegativeInteger
+): IResponseSuccessPageIdBasedIterator<T> {
+  return {
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    apply: res =>
+      fillPage(i, requestedPageSize).then(page => {
+        const kindlessDocuments = page.items;
+        return res.status(200).json(
+          withoutUndefinedValues({
+            ...page,
+            items_size: kindlessDocuments.length
+          })
+        );
+      }),
+    kind: "IResponseSuccessPageIdBasedIterator",
     value: {} as T
   };
 }
