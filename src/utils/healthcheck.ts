@@ -19,7 +19,8 @@ import fetch from "node-fetch";
 
 import * as t from "io-ts";
 
-type ProblemSource = "AzureCosmosDB" | "AzureStorage" | "Config" | "Url";
+export type ProblemSource = "AzureCosmosDB" | "AzureStorage" | "Config" | "Url";
+
 // eslint-disable-next-line
 export type HealthProblem<S extends ProblemSource> = string & { __source: S };
 export type HealthCheck<
