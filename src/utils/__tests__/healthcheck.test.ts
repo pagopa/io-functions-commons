@@ -121,7 +121,6 @@ describe("healthcheck - config health", () => {
         done();
       }),
       TE.mapLeft(errors => {
-        console.log(errors);
         expect(true).toBeTruthy();
         expect(errors[0]).toEqual(
           "Config|value [undefined] at [root.value1] is not a valid [non empty string]"
@@ -211,7 +210,6 @@ describe("healthcheck - cosmos db", () => {
         done();
       }),
       TE.mapLeft(_ => {
-        console.log(_);
         expect(true).toBeFalsy();
         done();
       })
@@ -230,7 +228,6 @@ describe("healthcheck - cosmos db", () => {
         done();
       }),
       TE.mapLeft(_ => {
-        console.log(_);
         expect(true).toBeTruthy();
         done();
       })
@@ -258,7 +255,6 @@ describe("healthcheck - url health", () => {
         done();
       }),
       TE.mapLeft(_ => {
-        console.log(_);
         expect(true).toBeTruthy();
         done();
       })
@@ -266,7 +262,7 @@ describe("healthcheck - url health", () => {
   });
 });
 
-describe("checkApplicationHealth - multiple errors - ", () => {
+describe("checkApplicationHealth - multiple errors", () => {
   beforeAll(() => {
     jest.clearAllMocks();
     mockCosmosClient();
