@@ -367,7 +367,7 @@ PaginationResponse:
       example: "first_id_of_the_page"
     next:
       type: string
-      description: Contains a value usefull to get the next page
+      description: Contains a value useful to get the next page
       example: "last_id_of_the_page"
 CreatedMessageWithoutContentCollection:
   description: A collection of messages
