@@ -363,7 +363,7 @@ PaginationResponse:
       example: true
     prev:
       type: string
-      description: Contains a value usefull to get the previous page
+      description: Contains a value useful to get the previous page
       example: "first_id_of_the_page"
     next:
       type: string
