@@ -247,6 +247,30 @@ CreatedMessageWithoutContent:
     - fiscal_code
     - created_at
     - sender_service_id
+EnrichedMessage:
+  type: object
+  properties:
+    id:
+      type: string
+    fiscal_code:
+      $ref: "#/FiscalCode"
+    time_to_live:
+      $ref: "#/TimeToLiveSeconds"
+    created_at:
+      $ref: "#/Timestamp"
+    sender_service_id:
+      $ref: "#/ServiceId"
+    service_name:
+      type: string
+    organization_name:
+      type: string
+    message_title:
+      type: string
+  required:
+    - id
+    - fiscal_code
+    - created_at
+    - sender_service_id
 MessageResponseNotificationStatus:
   type: object
   properties:
@@ -359,6 +383,21 @@ PaginatedCreatedMessageWithoutContentCollection:
   description: A paginated collection of messages
   allOf:
     - $ref: "#/CreatedMessageWithoutContentCollection"
+    - $ref: "#/PaginationResponse"
+EnrichedMessageCollection:
+  description: A collection of messages
+  type: object
+  properties:
+    items:
+      type: array
+      items:
+        $ref: "#/EnrichedMessage"
+  required:
+    - items
+PaginatedEnrichedMessageCollection:
+  description: A paginated collection of messages
+  allOf:
+    - $ref: "#/EnrichedMessageCollection"
     - $ref: "#/PaginationResponse"
 BlockedInboxOrChannels:
   type: object
