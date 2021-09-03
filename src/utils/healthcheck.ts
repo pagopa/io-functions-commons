@@ -46,9 +46,7 @@ const toHealthProblems = <S extends ProblemSource>(source: S) => (
  *
  * @returns either true or an array of error messages
  */
-export const checkConfigHealth: <IConfig>(
-  ConfigCodec: t.Type<IConfig>
-) => (value: unknown) => HealthCheck<"Config", IConfig> = <IConfig>(
+export const checkConfigHealth = <IConfig>(
   ConfigCodec: t.Type<IConfig>
 ) => (value: unknown): HealthCheck<"Config", IConfig> =>
   pipe(
