@@ -143,3 +143,34 @@ export const flattenAsyncIterable = <T>(
       flattenAsyncIterator(iter)
   };
 };
+
+/**
+ * Reduces over an AsyncIterator
+ *
+ * @param iter The iterator we want to reduce
+ * @param f The reducer function
+ * @param a It is used as the initial value to start the accumulation.
+ */
+export const reduceAsyncIterator = async <T, V>(
+  iter: AsyncIterator<ReadonlyArray<T>>,
+  f: (p: V, t: T) => V,
+  a: V
+): Promise<V> => {
+  // eslint-disable-next-line functional/no-let
+  let acc = a;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const {
+      done,
+      value
+    }: {
+      readonly done?: boolean;
+      readonly value: ReadonlyArray<T>;
+    } = await iter.next();
+    if (done) {
+      return value ? value.reduce(f, acc) : acc;
+    }
+    // eslint-disable-next-line functional/immutable-data
+    acc = value.reduce(f, acc);
+  }
+};
