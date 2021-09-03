@@ -55,7 +55,7 @@
   },
   "dependencies": {
     "@azure/cosmos": "^3.11.5",
-    "@pagopa/ts-commons": "^10.0.0",
+    "@pagopa/ts-commons": "^10.0.1",
     "applicationinsights": "^1.8.10",
     "azure-storage": "^2.10.4",
     "cidr-matcher": "^2.1.1",

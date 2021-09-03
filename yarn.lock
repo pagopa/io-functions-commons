@@ -679,6 +679,20 @@
     node-fetch "^2.6.0"
     validator "^10.1.0"
 
+"@pagopa/ts-commons@^10.0.1":
+  version "10.0.1"
+  resolved "https://registry.yarnpkg.com/@pagopa/ts-commons/-/ts-commons-10.0.1.tgz#086ae8067405f7d95802e6727a93167698ee3525"
+  integrity sha512-Hl4dEpXjqSniXxpGxPaYhzgV2MeDxYa1PeHt4Wsg9vctjzkb2KHkSlegQtdyPMnV3wKHx01HqepOxEXt0uGoKA==
+  dependencies:
+    abort-controller "^3.0.0"
+    agentkeepalive "^4.1.4"
+    applicationinsights "^1.8.10"
+    fp-ts "^2.10.5"
+    io-ts "^2.2.16"
+    json-set-map "^1.1.2"
+    node-fetch "^2.6.0"
+    validator "^10.1.0"
+
 "@sendgrid/client@^6.5.5":
   version "6.5.5"
   resolved "https://registry.yarnpkg.com/@sendgrid/client/-/client-6.5.5.tgz#66cf569445d98a795998a894bb432a9939ead7c3"

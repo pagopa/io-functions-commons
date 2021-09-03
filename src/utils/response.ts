@@ -72,7 +72,7 @@ export function ResponsePageIdBasedIterator<
         return res.status(200).json(
           withoutUndefinedValues({
             ...page,
-            items_size: kindlessDocuments.length
+            page_size: kindlessDocuments.length
           })
         );
       }),
