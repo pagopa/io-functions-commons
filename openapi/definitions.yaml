@@ -357,7 +357,7 @@ PaginationResponse:
       minimum: 1
       description: Number of items returned for each page.
       example: 2
-    hasMoreResults:
+    has_more_results:
       type: boolean
       description: This value indicates if there are more results.
       example: true
