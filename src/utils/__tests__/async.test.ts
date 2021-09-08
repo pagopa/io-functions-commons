@@ -1,6 +1,9 @@
 import { Either, isRight, left, right, Right } from "fp-ts/lib/Either";
+import { pipe } from "fp-ts/lib/function";
+import * as TE from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 import {
+  asyncMapAsyncIterator,
   filterAsyncIterator,
   flattenAsyncIterator,
   mapAsyncIterator
@@ -284,6 +287,29 @@ describe("Scenarios", () => {
       done: true,
       value: undefined
     });
+  });
+
+  it("should filter Right on Either", async () => {
+    const iterator = createMockIterator([aModel, anotherModel]);
+
+    const functor = (m: ModelType) =>
+      pipe(
+        m,
+        TE.of,
+        TE.chain(
+          TE.fromPredicate(
+            _ => _.fieldA === "foo",
+            () => new Error("Not a foo")
+          )
+        )
+      )();
+
+    const mappedIterator = asyncMapAsyncIterator(iterator, functor);
+
+    const result = await mappedIterator.next();
+    const result2 = await mappedIterator.next();
+    console.log(result);
+    console.log(result2);
   });
 });
 
