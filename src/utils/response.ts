@@ -59,7 +59,7 @@ export function ResponseJsonIterator<T>(
 
 // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
 export function ResponsePageIdBasedIterator<
-  T extends { readonly id: NonEmptyString }
+  T extends { readonly id: string }
 >(
   i: AsyncIterator<T, T>,
   requestedPageSize: NonNegativeInteger
