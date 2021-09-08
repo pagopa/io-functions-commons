@@ -1,4 +1,6 @@
-import { Either, isRight, left, right, Right } from "fp-ts/lib/Either";
+import { Either, isLeft, isRight, left, right, Right } from "fp-ts/lib/Either";
+import { pipe } from "fp-ts/lib/function";
+import * as TE from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 import {
   filterAsyncIterator,
@@ -285,8 +287,33 @@ describe("Scenarios", () => {
       value: undefined
     });
   });
-});
 
+  it("should map iterator elements over an async functor", async () => {
+    const iterator = createMockIterator([aModel, anotherModel]);
+
+    const functor = (m: ModelType) =>
+      pipe(
+        m,
+        TE.of,
+        TE.chain(
+          TE.fromPredicate(
+            _ => _.fieldA === "foo",
+            () => new Error("Not a foo")
+          )
+        )
+      )();
+
+    const mappedIterator = mapAsyncIterator(iterator, functor);
+
+    const result = await mappedIterator.next();
+    const result2 = await mappedIterator.next();
+    expect(result).toEqual({
+      done: false,
+      value: right(aModel)
+    });
+    expect(isLeft(result2.value)).toBeTruthy();
+  });
+});
 describe("Scenarios", () => {
   type ModelType = t.TypeOf<typeof ModelType>;
   // eslint-disable-next-line sonar/no-dead-store
