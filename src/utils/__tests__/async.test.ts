@@ -3,7 +3,6 @@ import { pipe } from "fp-ts/lib/function";
 import * as TE from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 import {
-  asyncMapAsyncIterator,
   filterAsyncIterator,
   flattenAsyncIterator,
   mapAsyncIterator
@@ -290,33 +289,28 @@ describe("Scenarios", () => {
   });
 
   it("should map iterator elements over an async functor", async () => {
-    const iterator = createMockIterator([
-      aModel,
-      anotherModel
-    ]);
+    const iterator = createMockIterator([aModel, anotherModel]);
 
-    const functor = (m: ModelType) => 
+    const functor = (m: ModelType) =>
       pipe(
-        m, 
-        TE.of, 
+        m,
+        TE.of,
         TE.chain(
           TE.fromPredicate(
-            _ => _.fieldA === "foo", 
+            _ => _.fieldA === "foo",
             () => new Error("Not a foo")
           )
         )
       )();
 
-    const mappedIterator = asyncMapAsyncIterator(iterator, functor);
-    
+    const mappedIterator = mapAsyncIterator(iterator, functor);
+
     const result = await mappedIterator.next();
     const result2 = await mappedIterator.next();
-    expect(result).toEqual(
-      {
-        done: false,
-        value: right(aModel)
-      }
-    );
+    expect(result).toEqual({
+      done: false,
+      value: right(aModel)
+    });
     expect(isLeft(result2.value)).toBeTruthy();
   });
 });
