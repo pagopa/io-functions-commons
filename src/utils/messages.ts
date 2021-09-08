@@ -14,6 +14,8 @@ import { taskEither, TaskEither } from "fp-ts/lib/TaskEither";
 import * as TE from "fp-ts/lib/TaskEither";
 
 import { pipe } from "fp-ts/lib/function";
+import { BlobService } from "azure-storage";
+import * as E from "fp-ts/lib/Either";
 import { MessageModel, RetrievedMessage } from "../models/message";
 import { NotificationModel } from "../models/notification";
 import { NotificationStatusModel } from "../models/notification_status";
@@ -23,9 +25,7 @@ import { NotificationChannelEnum } from "../../generated/definitions/Notificatio
 import { NotificationChannelStatusValueEnum } from "../../generated/definitions/NotificationChannelStatusValue";
 import { Service, ServiceModel } from "../models/service";
 import { EnrichedMessage } from "../../generated/definitions/EnrichedMessage";
-import { BlobService } from "azure-storage";
 import { MessageContent } from "../../generated/definitions/MessageContent";
-import * as E from "fp-ts/lib/Either";
 
 /**
  * Convenience structure to hold notification channels
@@ -152,7 +152,7 @@ export const retrievedMessageToPublic = (
 /**
  * This function enrich a CreatedMessageWithoutContent with
  * service's details and message's subject.
- * 
+ *
  * @param messageModel
  * @param serviceModel
  * @param blobService
@@ -181,9 +181,9 @@ export const enrichMessageData = (
       const service = O.getOrElse(() => ({} as Service))(x.service);
       return {
         ...message,
-        service_name: service.serviceName,
+        message_title: content.subject,
         organization_name: service.organizationName,
-        message_title: content.subject
+        service_name: service.serviceName
       };
     })
   )();

@@ -19,7 +19,7 @@ export const mapAsyncIterator = <T, V>(
 /**
  * Async maps over an AsyncIterator
  */
- export const asyncMapAsyncIterator = <T, V>(
+export const asyncMapAsyncIterator = <T, V>(
   iter: AsyncIterator<T>,
   f: (t: T) => Promise<V>
 ): AsyncIterator<V> => ({
