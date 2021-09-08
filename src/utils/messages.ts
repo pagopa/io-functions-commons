@@ -138,7 +138,6 @@ export const getMessageNotificationStatuses = (
 /**
  * Converts a retrieved message to a message that can be shared via API
  */
-/* eslint-disable @typescript-eslint/naming-convention */
 export const retrievedMessageToPublic = (
   retrievedMessage: RetrievedMessage
 ): CreatedMessageWithoutContent => ({
@@ -147,43 +146,3 @@ export const retrievedMessageToPublic = (
   id: retrievedMessage.id,
   sender_service_id: retrievedMessage.senderServiceId
 });
-/* eslint-enable @typescript-eslint/naming-convention */
-
-/**
- * This function enrich a CreatedMessageWithoutContent with
- * service's details and message's subject.
- *
- * @param messageModel
- * @param serviceModel
- * @param blobService
- * @returns
- */
-export const enrichMessageData = (
-  messageModel: MessageModel,
-  serviceModel: ServiceModel,
-  blobService: BlobService
-) => (
-  message: CreatedMessageWithoutContent
-): Promise<E.Either<Error, EnrichedMessage>> =>
-  pipe(
-    TE.Do,
-    TE.bind("service", () =>
-      serviceModel.findLastVersionByModelId([message.sender_service_id])
-    ),
-    TE.mapLeft(E.toError),
-    TE.bind("messageContent", () =>
-      messageModel.getContentFromBlob(blobService, message.id)
-    ),
-    TE.map(x => {
-      const content = O.getOrElse(() => ({} as MessageContent))(
-        x.messageContent
-      );
-      const service = O.getOrElse(() => ({} as Service))(x.service);
-      return {
-        ...message,
-        message_title: content.subject,
-        organization_name: service.organizationName,
-        service_name: service.serviceName
-      };
-    })
-  )();
