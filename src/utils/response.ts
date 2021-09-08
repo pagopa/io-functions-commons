@@ -4,7 +4,6 @@ import {
   IResponse,
   ResponseErrorGeneric
 } from "@pagopa/ts-commons/lib/responses";
-import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { withoutUndefinedValues } from "@pagopa/ts-commons/lib/types";
 import * as express from "express";
 import { asyncIteratorToArray } from "./async";
@@ -58,9 +57,7 @@ export function ResponseJsonIterator<T>(
 }
 
 // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
-export function ResponsePageIdBasedIterator<
-  T extends { readonly id: string }
->(
+export function ResponsePageIdBasedIterator<T extends { readonly id: string }>(
   i: AsyncIterator<T, T>,
   requestedPageSize: NonNegativeInteger
 ): IResponseSuccessPageIdBasedIterator<T> {
