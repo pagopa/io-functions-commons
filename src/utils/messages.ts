@@ -14,13 +14,18 @@ import { taskEither, TaskEither } from "fp-ts/lib/TaskEither";
 import * as TE from "fp-ts/lib/TaskEither";
 
 import { pipe } from "fp-ts/lib/function";
-import { RetrievedMessage } from "../models/message";
+import { MessageModel, RetrievedMessage } from "../models/message";
 import { NotificationModel } from "../models/notification";
 import { NotificationStatusModel } from "../models/notification_status";
 
 import { CreatedMessageWithoutContent } from "../../generated/definitions/CreatedMessageWithoutContent";
 import { NotificationChannelEnum } from "../../generated/definitions/NotificationChannel";
 import { NotificationChannelStatusValueEnum } from "../../generated/definitions/NotificationChannelStatusValue";
+import { Service, ServiceModel } from "../models/service";
+import { EnrichedMessage } from "../../generated/definitions/EnrichedMessage";
+import { BlobService } from "azure-storage";
+import { MessageContent } from "../../generated/definitions/MessageContent";
+import * as E from "fp-ts/lib/Either";
 
 /**
  * Convenience structure to hold notification channels
@@ -143,3 +148,42 @@ export const retrievedMessageToPublic = (
   sender_service_id: retrievedMessage.senderServiceId
 });
 /* eslint-enable @typescript-eslint/naming-convention */
+
+/**
+ * This function enrich a CreatedMessageWithoutContent with
+ * service's details and message's subject.
+ * 
+ * @param messageModel
+ * @param serviceModel
+ * @param blobService
+ * @returns
+ */
+export const enrichMessageData = (
+  messageModel: MessageModel,
+  serviceModel: ServiceModel,
+  blobService: BlobService
+) => (
+  message: CreatedMessageWithoutContent
+): Promise<E.Either<Error, EnrichedMessage>> =>
+  pipe(
+    TE.Do,
+    TE.bind("service", () =>
+      serviceModel.findLastVersionByModelId([message.sender_service_id])
+    ),
+    TE.mapLeft(E.toError),
+    TE.bind("messageContent", () =>
+      messageModel.getContentFromBlob(blobService, message.id)
+    ),
+    TE.map(x => {
+      const content = O.getOrElse(() => ({} as MessageContent))(
+        x.messageContent
+      );
+      const service = O.getOrElse(() => ({} as Service))(x.service);
+      return {
+        ...message,
+        service_name: service.serviceName,
+        organization_name: service.organizationName,
+        message_title: content.subject
+      };
+    })
+  )();

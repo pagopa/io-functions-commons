@@ -17,6 +17,24 @@ export const mapAsyncIterator = <T, V>(
 });
 
 /**
+ * Async maps over an AsyncIterator
+ */
+ export const asyncMapAsyncIterator = <T, V>(
+  iter: AsyncIterator<T>,
+  f: (t: T) => Promise<V>
+): AsyncIterator<V> => ({
+  next: (): Promise<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    IteratorReturnResult<any> | { readonly done: boolean; readonly value: V }
+  > =>
+    iter.next().then(async (result: IteratorResult<T>) =>
+      // IteratorResult defines that when done=true, then value=undefined
+      // that is, when the iterator is done there is no value to be procesed
+      result.done ? result : { done: false, value: await f(result.value) }
+    )
+});
+
+/**
  * Maps over an AsyncIterable
  */
 export const mapAsyncIterable = <T, V>(

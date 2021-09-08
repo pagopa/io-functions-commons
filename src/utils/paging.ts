@@ -1,5 +1,4 @@
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
-import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { pipe } from "fp-ts/lib/function";
 import * as O from "fp-ts/lib/Option";
 import * as t from "io-ts";
@@ -7,17 +6,17 @@ import * as t from "io-ts";
 export const PageResults = t.intersection([
   t.interface({
     hasMoreResults: t.boolean,
-    items: t.readonlyArray(t.interface({ id: NonEmptyString }))
+    items: t.readonlyArray(t.interface({ id: t.string }))
   }),
   t.partial({
-    next: NonEmptyString,
-    prev: NonEmptyString
+    next: t.string,
+    prev: t.string
   })
 ]);
 
 export type PageResults = t.TypeOf<typeof PageResults>;
 
-export const fillPage = async <T extends { readonly id: NonEmptyString }>(
+export const fillPage = async <T extends { readonly id: string }>(
   iter: AsyncIterator<T, T>,
   expectedPageSize: NonNegativeInteger
 ): Promise<PageResults> => {
