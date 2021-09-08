@@ -14,18 +14,13 @@ import { taskEither, TaskEither } from "fp-ts/lib/TaskEither";
 import * as TE from "fp-ts/lib/TaskEither";
 
 import { pipe } from "fp-ts/lib/function";
-import { BlobService } from "azure-storage";
-import * as E from "fp-ts/lib/Either";
-import { MessageModel, RetrievedMessage } from "../models/message";
+import { RetrievedMessage } from "../models/message";
 import { NotificationModel } from "../models/notification";
 import { NotificationStatusModel } from "../models/notification_status";
 
 import { CreatedMessageWithoutContent } from "../../generated/definitions/CreatedMessageWithoutContent";
 import { NotificationChannelEnum } from "../../generated/definitions/NotificationChannel";
 import { NotificationChannelStatusValueEnum } from "../../generated/definitions/NotificationChannelStatusValue";
-import { Service, ServiceModel } from "../models/service";
-import { EnrichedMessage } from "../../generated/definitions/EnrichedMessage";
-import { MessageContent } from "../../generated/definitions/MessageContent";
 
 /**
  * Convenience structure to hold notification channels
