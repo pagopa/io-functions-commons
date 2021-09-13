@@ -53,7 +53,7 @@ export const toHealthProblems = <S extends ProblemSource>(source: S) => (
  */
 export const checkConfigHealth = <IConfig extends t.Mixed>(
   ConfigCodec: IConfig
-) => (value: unknown): HealthCheck<"Config", t.OutputOf<IConfig>> =>
+) => (value: unknown): HealthCheck<"Config", t.TypeOf<IConfig>> =>
   pipe(
     value,
     ConfigCodec.decode,
