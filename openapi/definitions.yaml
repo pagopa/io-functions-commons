@@ -271,6 +271,9 @@ EnrichedMessage:
     - fiscal_code
     - created_at
     - sender_service_id
+    - service_name
+    - organization_name
+    - message_title
 MessageResponseNotificationStatus:
   type: object
   properties:
@@ -384,7 +387,7 @@ PaginatedCreatedMessageWithoutContentCollection:
   allOf:
     - $ref: "#/CreatedMessageWithoutContentCollection"
     - $ref: "#/PaginationResponse"
-EnrichedMessageCollection:
+MessagesCollection:
   description: A collection of messages
   type: object
   properties:
@@ -394,10 +397,10 @@ EnrichedMessageCollection:
         $ref: "#/EnrichedMessage"
   required:
     - items
-PaginatedEnrichedMessageCollection:
+PaginatedMessagesCollection:
   description: A paginated collection of messages
   allOf:
-    - $ref: "#/EnrichedMessageCollection"
+    - $ref: "#/MessagesCollection"
     - $ref: "#/PaginationResponse"
 BlockedInboxOrChannels:
   type: object

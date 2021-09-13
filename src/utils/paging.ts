@@ -26,14 +26,17 @@ export const fillPage = async <T extends { readonly id: string }>(
   let hasMoreResults: boolean = true;
   // eslint-disable-next-line no-constant-condition
   while (true) {
+    if (items.length === expectedPageSize) {
+      break;
+    }
+
     const { done, value } = await iter.next();
+
     if (done) {
       hasMoreResults = false;
       break;
     }
-    if (items.length === expectedPageSize) {
-      break;
-    }
+
     // eslint-disable-next-line functional/immutable-data
     items.push(value);
   }
@@ -52,3 +55,4 @@ export const fillPage = async <T extends { readonly id: string }>(
   );
   return { hasMoreResults, items, next, prev };
 };
+
