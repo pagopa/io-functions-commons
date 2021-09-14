@@ -55,4 +55,3 @@ export const fillPage = async <T extends { readonly id: string }>(
   );
   return { hasMoreResults, items, next, prev };
 };
-
