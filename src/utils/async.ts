@@ -1,3 +1,5 @@
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
+
 /**
  * Maps over an AsyncIterator
  */
@@ -173,4 +175,41 @@ export const reduceAsyncIterator = async <T, V>(
     // eslint-disable-next-line functional/immutable-data
     acc = value.reduce(f, acc);
   }
+};
+
+export interface IPage<T> {
+  readonly results: ReadonlyArray<T>;
+  readonly hasMoreResults: boolean;
+}
+
+/**
+ * Maps over an async iterator to get a page of desired size
+ *
+ * @param iter The iterator we want to reduce
+ * @param pageSize The desired page size
+ * @returns an IPage result { results: ReadonlyArray<T>; hasMoreResults: boolean; }
+ */
+export const asyncIteratorToPage = async <T>(
+  iter: AsyncIterator<T | Promise<T>>,
+  pageSize: NonNegativeInteger
+): Promise<IPage<T>> => {
+  const acc = Array<T>();
+  // eslint-disable-next-line functional/no-let
+  let hasMoreResults: boolean = true;
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const next = await iter.next();
+    if (next.done === true) {
+      hasMoreResults = false;
+      break;
+    }
+    if (acc.length === pageSize) {
+      break;
+    }
+    // eslint-disable-next-line functional/immutable-data
+    acc.push(await next.value);
+  }
+
+  return { hasMoreResults, results: acc };
 };

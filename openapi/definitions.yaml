@@ -360,15 +360,6 @@ PaginationResponse:
   type: object
   description: Pagination response parameters.
   properties:
-    page_size:
-      type: integer
-      minimum: 1
-      description: Number of items returned for each page.
-      example: 2
-    has_more_results:
-      type: boolean
-      description: This value indicates if there are more results.
-      example: true
     prev:
       type: string
       description: Contains a value useful to get the previous page
