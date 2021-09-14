@@ -19,7 +19,12 @@ import fetch from "node-fetch";
 
 import * as t from "io-ts";
 
-export type ProblemSource = "AzureCosmosDB" | "AzureStorage" | "Config" | "Url";
+export type ProblemSource =
+  | "Config"
+  | "Url"
+  | "AzureCosmosDB"
+  | "AzureStorage"
+  | "AzureNotificationHub";
 
 // eslint-disable-next-line
 export type HealthProblem<S extends ProblemSource> = string & { __source: S };
@@ -35,7 +40,7 @@ const formatProblem = <S extends ProblemSource>(
 ): HealthProblem<S> => `${source}|${message}` as HealthProblem<S>;
 
 // utility to format an unknown error to an arry of HealthProblem
-const toHealthProblems = <S extends ProblemSource>(source: S) => (
+export const toHealthProblems = <S extends ProblemSource>(source: S) => (
   e: unknown
 ): ReadonlyArray<HealthProblem<S>> => [
   formatProblem(source, E.toError(e).message)
@@ -46,9 +51,9 @@ const toHealthProblems = <S extends ProblemSource>(source: S) => (
  *
  * @returns either true or an array of error messages
  */
-export const checkConfigHealth = <IConfig>(ConfigCodec: t.Type<IConfig>) => (
-  value: unknown
-): HealthCheck<"Config", IConfig> =>
+export const checkConfigHealth = <IConfig extends t.Mixed>(
+  ConfigCodec: IConfig
+) => (value: unknown): HealthCheck<"Config", t.TypeOf<IConfig>> =>
   pipe(
     value,
     ConfigCodec.decode,
@@ -157,9 +162,12 @@ export const checkUrlHealth = (url: string): HealthCheck<"Url", true> =>
  *
  * @returns either true or an array of error messages
  */
-export const checkApplicationHealth = <IConfig, S extends ProblemSource>(
-  ConfigCodec: t.Type<IConfig>,
-  checks: ReadonlyArray<(c: IConfig) => HealthCheck<S, true>>
+export const checkApplicationHealth = <
+  IConfig extends t.Mixed,
+  S extends ProblemSource
+>(
+  ConfigCodec: IConfig,
+  checks: ReadonlyArray<(c: t.TypeOf<IConfig>) => HealthCheck<S, true>>
 ) => (config: unknown): HealthCheck<ProblemSource, true> => {
   const applicativeValidation = TE.getApplicativeTaskValidation(
     T.ApplicativePar,
