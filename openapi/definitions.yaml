@@ -274,6 +274,11 @@ EnrichedMessage:
     - service_name
     - organization_name
     - message_title
+PublicMessage:
+  x-one-of: true
+  allOf:
+    - $ref: "#/CreatedMessageWithoutContent" 
+    - $ref: "#/EnrichedMessage" 
 MessageResponseNotificationStatus:
   type: object
   properties:
@@ -371,7 +376,7 @@ PaginationResponse:
     next:
       type: string
       description: Contains a value useful to get the next page
-      example: "last_id_of_the_page"
+      example: "last_id_of_the_page"  
 CreatedMessageWithoutContentCollection:
   description: A collection of messages
   type: object
@@ -387,20 +392,20 @@ PaginatedCreatedMessageWithoutContentCollection:
   allOf:
     - $ref: "#/CreatedMessageWithoutContentCollection"
     - $ref: "#/PaginationResponse"
-MessagesCollection:
+PublicMessagesCollection:
   description: A collection of messages
   type: object
   properties:
     items:
       type: array
       items:
-        $ref: "#/EnrichedMessage"
+        $ref: "#/PublicMessage"
   required:
     - items
-PaginatedMessagesCollection:
+PaginatedPublicMessagesCollection:
   description: A paginated collection of messages
   allOf:
-    - $ref: "#/MessagesCollection"
+    - $ref: "#/PublicMessagesCollection"
     - $ref: "#/PaginationResponse"
 BlockedInboxOrChannels:
   type: object
