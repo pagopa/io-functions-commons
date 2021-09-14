@@ -26,19 +26,29 @@ export const fillPage = async <T extends { readonly id: string }>(
   let hasMoreResults: boolean = true;
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    if (items.length === expectedPageSize) {
-      break;
+    try {
+      // next could throw an error
+      const { done, value } = await iter.next();
+
+      if (done) {
+        hasMoreResults = false;
+        break;
+      }
+
+      if (items.length === expectedPageSize) {
+        break;
+      }
+
+      // eslint-disable-next-line functional/immutable-data
+      items.push(value);
+    } catch (e) {
+      if (items.length === expectedPageSize) {
+        // do not throw if we made at least a page of results
+        break;
+      }
+
+      throw e;
     }
-
-    const { done, value } = await iter.next();
-
-    if (done) {
-      hasMoreResults = false;
-      break;
-    }
-
-    // eslint-disable-next-line functional/immutable-data
-    items.push(value);
   }
 
   const next = hasMoreResults
