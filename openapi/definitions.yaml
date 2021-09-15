@@ -271,6 +271,14 @@ EnrichedMessage:
     - fiscal_code
     - created_at
     - sender_service_id
+    - service_name
+    - organization_name
+    - message_title
+PublicMessage:
+  x-one-of: true
+  allOf:
+    - $ref: "#/CreatedMessageWithoutContent" 
+    - $ref: "#/EnrichedMessage" 
 MessageResponseNotificationStatus:
   type: object
   properties:
@@ -352,15 +360,6 @@ PaginationResponse:
   type: object
   description: Pagination response parameters.
   properties:
-    page_size:
-      type: integer
-      minimum: 1
-      description: Number of items returned for each page.
-      example: 2
-    has_more_results:
-      type: boolean
-      description: This value indicates if there are more results.
-      example: true
     prev:
       type: string
       description: Contains a value useful to get the previous page
@@ -368,7 +367,7 @@ PaginationResponse:
     next:
       type: string
       description: Contains a value useful to get the next page
-      example: "last_id_of_the_page"
+      example: "last_id_of_the_page"  
 CreatedMessageWithoutContentCollection:
   description: A collection of messages
   type: object
@@ -384,20 +383,20 @@ PaginatedCreatedMessageWithoutContentCollection:
   allOf:
     - $ref: "#/CreatedMessageWithoutContentCollection"
     - $ref: "#/PaginationResponse"
-EnrichedMessageCollection:
+PublicMessagesCollection:
   description: A collection of messages
   type: object
   properties:
     items:
       type: array
       items:
-        $ref: "#/EnrichedMessage"
+        $ref: "#/PublicMessage"
   required:
     - items
-PaginatedEnrichedMessageCollection:
+PaginatedPublicMessagesCollection:
   description: A paginated collection of messages
   allOf:
-    - $ref: "#/EnrichedMessageCollection"
+    - $ref: "#/PublicMessagesCollection"
     - $ref: "#/PaginationResponse"
 BlockedInboxOrChannels:
   type: object
