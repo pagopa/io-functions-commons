@@ -189,7 +189,7 @@ export interface IPage<T> {
  * @param pageSize The desired page size
  * @returns an IPage result { results: ReadonlyArray<T>; hasMoreResults: boolean; }
  */
-export const asyncIteratorToPage = async <T>(
+export const asyncIteratorToPageArray = async <T>(
   iter: AsyncIterator<T | Promise<T>>,
   pageSize: NonNegativeInteger
 ): Promise<IPage<T>> => {
@@ -212,4 +212,12 @@ export const asyncIteratorToPage = async <T>(
   }
 
   return { hasMoreResults, results: acc };
+};
+
+export const asyncIterableToPageArray = async <T>(
+  source: AsyncIterable<T | Promise<T>>,
+  pageSize: NonNegativeInteger
+): Promise<IPage<T>> => {
+  const iter = source[Symbol.asyncIterator]();
+  return asyncIteratorToPageArray(iter, pageSize);
 };

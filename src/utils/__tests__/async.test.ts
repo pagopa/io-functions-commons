@@ -4,7 +4,7 @@ import { pipe } from "fp-ts/lib/function";
 import * as TE from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 import {
-  asyncIteratorToPage,
+  asyncIteratorToPageArray,
   filterAsyncIterator,
   flattenAsyncIterator,
   mapAsyncIterator
@@ -320,7 +320,7 @@ describe("Scenarios", () => {
     const iterator = createMockIterator([aModel, anotherModel]);
 
     const pageSize = 1 as NonNegativeInteger;
-    const page = await asyncIteratorToPage(iterator, pageSize);
+    const page = await asyncIteratorToPageArray(iterator, pageSize);
 
     expect(page).toEqual({
       results: [aModel],
@@ -332,7 +332,7 @@ describe("Scenarios", () => {
     const iterator = createMockIterator([aModel, anotherModel]);
 
     const pageSize = 2 as NonNegativeInteger;
-    const page = await asyncIteratorToPage(iterator, pageSize);
+    const page = await asyncIteratorToPageArray(iterator, pageSize);
 
     expect(page).toEqual({
       results: [aModel, anotherModel],
