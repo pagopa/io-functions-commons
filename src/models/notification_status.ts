@@ -6,6 +6,8 @@ import { Container } from "@azure/cosmos";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { Option } from "fp-ts/lib/Option";
 import { TaskEither } from "fp-ts/lib/TaskEither";
+import * as E from "fp-ts/lib/Either";
+import { pipe } from "fp-ts/lib/function";
 import {
   CosmosdbModelVersioned,
   RetrievedVersionedModel
@@ -68,9 +70,12 @@ export const makeStatusId = (
   notificationId: NonEmptyString,
   channel: NotificationChannel
 ): NotificationStatusId =>
-  NotificationStatusId.decode(`${notificationId}:${channel}`).getOrElseL(() => {
-    throw new Error("Invalid Notification Status id");
-  });
+  pipe(
+    NotificationStatusId.decode(`${notificationId}:${channel}`),
+    E.getOrElseW(() => {
+      throw new Error("Invalid Notification Status id");
+    })
+  );
 
 export type NotificationStatusUpdater = (
   status: NotificationChannelStatusValueEnum

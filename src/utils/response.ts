@@ -17,6 +17,13 @@ export interface IResponseSuccessJsonIterator<T>
     response: express.Response
   ) => Promise<void | IResponseErrorQuery | express.Response>;
 }
+export interface IResponseSuccessPageIdBasedIterator<T>
+  extends IResponse<"IResponseSuccessPageIdBasedIterator"> {
+  readonly value: T; // needed to discriminate from other T subtypes
+  readonly apply: (
+    response: express.Response
+  ) => Promise<void | IResponseErrorQuery | express.Response>;
+}
 
 /**
  * A response that consumes and return the Cosmosdb iterator as a json array

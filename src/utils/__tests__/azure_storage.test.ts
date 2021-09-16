@@ -35,7 +35,7 @@ describe("getBlobAsText", () => {
 
     expect(isRight(errorOrMaybeText)).toBe(true);
     if (isRight(errorOrMaybeText)) {
-      const maybeText = errorOrMaybeText.value;
+      const maybeText = errorOrMaybeText.right;
       expect(isNone(maybeText)).toBe(true);
     }
   });
@@ -52,7 +52,7 @@ describe("getBlobAsObject", () => {
 
     expect(isRight(errorOrMaybeObject)).toBe(true);
     if (isRight(errorOrMaybeObject)) {
-      const maybeObject = errorOrMaybeObject.value;
+      const maybeObject = errorOrMaybeObject.right;
       expect(isNone(maybeObject)).toEqual(true);
     }
   });

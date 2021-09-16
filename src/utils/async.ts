@@ -1,18 +1,20 @@
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
+
 /**
  * Maps over an AsyncIterator
  */
 export const mapAsyncIterator = <T, V>(
   iter: AsyncIterator<T>,
-  f: (t: T) => V
+  f: (t: T) => V | Promise<V>
 ): AsyncIterator<V> => ({
   next: (): Promise<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     IteratorReturnResult<any> | { readonly done: boolean; readonly value: V }
   > =>
-    iter.next().then((result: IteratorResult<T>) =>
+    iter.next().then(async (result: IteratorResult<T>) =>
       // IteratorResult defines that when done=true, then value=undefined
       // that is, when the iterator is done there is no value to be procesed
-      result.done ? result : { done: false, value: f(result.value) }
+      result.done ? result : { done: false, value: await f(result.value) }
     )
 });
 
@@ -142,4 +144,80 @@ export const flattenAsyncIterable = <T>(
     [Symbol.asyncIterator]: (): AsyncIterator<T, any, undefined> =>
       flattenAsyncIterator(iter)
   };
+};
+
+/**
+ * Reduces over an AsyncIterator
+ *
+ * @param iter The iterator we want to reduce
+ * @param f The reducer function
+ * @param a It is used as the initial value to start the accumulation.
+ */
+export const reduceAsyncIterator = async <T, V>(
+  iter: AsyncIterator<ReadonlyArray<T>>,
+  f: (p: V, t: T) => V,
+  a: V
+): Promise<V> => {
+  // eslint-disable-next-line functional/no-let
+  let acc = a;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const {
+      done,
+      value
+    }: {
+      readonly done?: boolean;
+      readonly value: ReadonlyArray<T>;
+    } = await iter.next();
+    if (done) {
+      return value ? value.reduce(f, acc) : acc;
+    }
+    // eslint-disable-next-line functional/immutable-data
+    acc = value.reduce(f, acc);
+  }
+};
+
+export interface IPage<T> {
+  readonly results: ReadonlyArray<T>;
+  readonly hasMoreResults: boolean;
+}
+
+/**
+ * Maps over an async iterator to get a page of desired size
+ *
+ * @param iter The iterator we want to reduce
+ * @param pageSize The desired page size
+ * @returns an IPage result { results: ReadonlyArray<T>; hasMoreResults: boolean; }
+ */
+export const asyncIteratorToPageArray = async <T>(
+  iter: AsyncIterator<T | Promise<T>>,
+  pageSize: NonNegativeInteger
+): Promise<IPage<T>> => {
+  const acc = Array<T>();
+  // eslint-disable-next-line functional/no-let
+  let hasMoreResults: boolean = true;
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const next = await iter.next();
+    if (next.done === true) {
+      hasMoreResults = false;
+      break;
+    }
+    if (acc.length === pageSize) {
+      break;
+    }
+    // eslint-disable-next-line functional/immutable-data
+    acc.push(await next.value);
+  }
+
+  return { hasMoreResults, results: acc };
+};
+
+export const asyncIterableToPageArray = async <T>(
+  source: AsyncIterable<T | Promise<T>>,
+  pageSize: NonNegativeInteger
+): Promise<IPage<T>> => {
+  const iter = source[Symbol.asyncIterator]();
+  return asyncIteratorToPageArray(iter, pageSize);
 };

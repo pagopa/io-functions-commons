@@ -4,15 +4,19 @@
 # variable and set it with a GitHub access token (scope public_repo); otherwise 
 # set its value to 'skip' without marking it secret: 
 # - DANGER_GITHUB_API_TOKEN
-# 
-
-variables:
-  NODE_VERSION: '10.14.1'
-  YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
+#
 
 # Automatically triggered on PR
 # https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=azure-devops&tabs=schema%2Cparameter-schema#pr-trigger
 trigger: none
+
+resources:
+  repositories:
+    - repository: pagopaCommons
+      type: github
+      name: pagopa/azure-pipeline-templates
+      ref: refs/tags/v15
+      endpoint: 'io-azure-devops-github-ro'
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -23,7 +27,7 @@ stages:
     jobs:
       - job: make_build
         steps:
-          - template: azure-templates/setup-project.yml
+          - template: templates/node-job-setup/template.yaml@pagopaCommons
           - script: |
               yarn build
             displayName: 'Build'
@@ -33,18 +37,14 @@ stages:
     jobs:          
       - job: lint
         steps:
-          - template: azure-templates/setup-project.yml
+          - template: templates/node-job-setup/template.yaml@pagopaCommons
           - script: |
               yarn lint
             displayName: 'Lint'
 
       - job: lint_api
         steps:
-          - task: UseNode@1
-            inputs:
-              version: $(NODE_VERSION)
-            displayName: 'Set up Node.js'
-
+          - template: templates/node-job-setup/template.yaml@pagopaCommons
           - bash: |
               npx oval validate -p openapi/index.yaml
             displayName: 'Validate openAPI'
@@ -59,7 +59,7 @@ stages:
             )
           )
         steps:
-          - template: azure-templates/setup-project.yml
+          - template: templates/node-job-setup/template.yaml@pagopaCommons
           - bash: |
               yarn danger ci
             env:
@@ -71,7 +71,7 @@ stages:
     jobs:
       - job: unit_tests
         steps:
-          - template: azure-templates/setup-project.yml
+          - template: templates/node-job-setup/template.yaml@pagopaCommons
 
           - script: |
               yarn generate:definitions
@@ -90,10 +90,10 @@ stages:
     jobs:
       - job: integrations_tests
         steps:
-          - template: azure-templates/setup-project.yml
+          - template: templates/node-job-setup/template.yaml@pagopaCommons
 
           - bash: |
-              docker run -d -p 1025:1025 -p 8025:8025 --name mailhog mailhog/mailhog
+              docker run -d -p 1025:1025 -p 8025:8025 --name mailhog --rm mailhog/mailhog
             displayName: 'Start mailhog'
 
           - bash: |
@@ -102,9 +102,14 @@ stages:
             displayName: 'Start mock CosmosDB'
 
           - bash: |
+              docker run -d --rm -p 10000:10000 mcr.microsoft.com/azure-storage/azurite azurite-blob --blobHost 0.0.0.0
+            displayName: 'Start mock Azure Storage'
+
+          - bash: |
               MAILHOG_HOSTNAME=localhost \
               COSMOSDB_URI=https://localhost:3000/ \
               COSMOSDB_KEY="dummy key" \
               COSMOSDB_DATABASE_NAME=integration-tests \
+              STORAGE_CONN_STRING="DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;" \
               yarn test:integration
             displayName: 'Integrations tests exec'

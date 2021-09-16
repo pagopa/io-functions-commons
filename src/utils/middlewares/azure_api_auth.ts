@@ -1,4 +1,5 @@
-import { Either, isLeft, left, right } from "fp-ts/lib/Either";
+import * as t from "io-ts";
+import * as E from "fp-ts/lib/Either";
 import { fromNullable, isSome, Option, Some } from "fp-ts/lib/Option";
 
 import {
@@ -11,6 +12,7 @@ import {
   ResponseErrorForbiddenNotAuthorized
 } from "@pagopa/ts-commons/lib/responses";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { pipe } from "fp-ts/lib/function";
 import { IRequestMiddleware } from "../request_middleware";
 
 /*
@@ -72,7 +74,10 @@ export enum UserGroup {
   ApiInfoRead = "ApiInfoRead",
 
   // debug endpoint
-  ApiDebugRead = "ApiDebugRead"
+  ApiDebugRead = "ApiDebugRead",
+
+  // messages: send messages with EU Covid Certificate access data
+  ApiMessageWriteEUCovidCert = "ApiMessageWriteEUCovidCert"
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
@@ -133,7 +138,7 @@ export const AzureApiAuthMiddleware = (
 > => (
   request
 ): Promise<
-  Either<
+  E.Either<
     IResponse<
       | "IResponseErrorForbiddenNotAuthorized"
       | "IResponseErrorForbiddenAnonymousUser"
@@ -151,18 +156,18 @@ export const AzureApiAuthMiddleware = (
       request.header("x-subscription-id")
     );
 
-    if (isLeft(errorOrUserId) || isLeft(errorOrSubscriptionId)) {
+    if (E.isLeft(errorOrUserId) || E.isLeft(errorOrSubscriptionId)) {
       // we cannot proceed unless we cannot associate the request to a
       // valid user and a subscription
       return resolve(
-        left<AzureApiAuthMiddlewareErrorResponses, IAzureApiAuthorization>(
+        E.left<AzureApiAuthMiddlewareErrorResponses, IAzureApiAuthorization>(
           ResponseErrorForbiddenAnonymousUser
         )
       );
     }
 
-    const userId = errorOrUserId.value;
-    const subscriptionId = errorOrSubscriptionId.value;
+    const userId = errorOrUserId.right;
+    const subscriptionId = errorOrSubscriptionId.right;
 
     // to correctly process the request, we must associate the correct
     // authorizations to the user that made the request; to do so, we
@@ -174,12 +179,12 @@ export const AzureApiAuthMiddleware = (
     );
 
     // extract the groups from the header
-    const maybeGroups = errorOrGroupsHeader.map(getGroupsFromHeader);
+    const maybeGroups = pipe(errorOrGroupsHeader, E.map(getGroupsFromHeader));
 
-    if (isLeft(maybeGroups) || maybeGroups.value.size === 0) {
+    if (E.isLeft(maybeGroups) || maybeGroups.right.size === 0) {
       // the user as no valid authorization groups assigned
       return resolve(
-        left<
+        E.left<
           | IResponseErrorForbiddenNotAuthorized
           | IResponseErrorForbiddenAnonymousUser
           | IResponseErrorForbiddenNoAuthorizationGroups,
@@ -189,7 +194,7 @@ export const AzureApiAuthMiddleware = (
     }
 
     // now we have some valid groups that the users is part of
-    const groups = maybeGroups.value;
+    const groups = maybeGroups.right;
 
     // helper that checks whether the user is part of a specific group
     const userHasOneGroup = (name: UserGroup): boolean => groups.has(name);
@@ -201,7 +206,7 @@ export const AzureApiAuthMiddleware = (
     if (!userHasAnyAllowedGroup) {
       // the user is not allowed here
       return resolve(
-        left<AzureApiAuthMiddlewareErrorResponses, IAzureApiAuthorization>(
+        E.left<AzureApiAuthMiddlewareErrorResponses, IAzureApiAuthorization>(
           ResponseErrorForbiddenNotAuthorized
         )
       );
@@ -216,8 +221,64 @@ export const AzureApiAuthMiddleware = (
     };
 
     resolve(
-      right<AzureApiAuthMiddlewareErrorResponses, IAzureApiAuthorization>(
+      E.right<AzureApiAuthMiddlewareErrorResponses, IAzureApiAuthorization>(
         authInfo
       )
     );
   });
+
+type AzureAllowBodyPayloadMiddlewareErrorResponses =
+  | IResponseErrorForbiddenNoAuthorizationGroups
+  | IResponseErrorForbiddenNotAuthorized;
+
+/**
+ * A middleware that allow a specific payload to be provided only by a specific set of user groups
+ *
+ * The middleware expects the following headers:
+ *
+ *   x-user-groups:   A comma separated list of names of Azure API Groups
+ *
+ * On success, the middleware just lets the request to continue,
+ * on failure it triggers a ResponseErrorForbidden.
+ *
+ * @param pattern a codec that matches the payload pattern to restrict access to
+ * @param allowedGroups a set of user groups to allow provided payload
+ *
+ */
+export const AzureAllowBodyPayloadMiddleware = <S, A>(
+  pattern: t.Type<A, S>,
+  allowedGroups: ReadonlySet<UserGroup>
+): IRequestMiddleware<
+  | "IResponseErrorForbiddenNotAuthorized"
+  | "IResponseErrorForbiddenNoAuthorizationGroups",
+  void
+> => async (
+  request
+): Promise<E.Either<AzureAllowBodyPayloadMiddlewareErrorResponses, void>> =>
+  pipe(
+    E.of<AzureAllowBodyPayloadMiddlewareErrorResponses, unknown>(request.body),
+    E.chain(payload =>
+      pipe(
+        pattern.decode(payload),
+        E.fold(
+          // if pattern does not match payload, just skip the middleware
+          _ => E.right(void 0),
+          _ =>
+            pipe(
+              NonEmptyString.decode(request.header("x-user-groups")),
+              E.mapLeft(_errors => ResponseErrorForbiddenNoAuthorizationGroups),
+              E.map(getGroupsFromHeader),
+              // check if current user belongs to at least one of the allowed groups
+              E.map(userGroups =>
+                Array.from(allowedGroups).some(e => userGroups.has(e))
+              ),
+              E.chainW(isInGroup =>
+                isInGroup
+                  ? E.right(void 0)
+                  : E.left(ResponseErrorForbiddenNotAuthorized)
+              )
+            )
+        )
+      )
+    )
+  );

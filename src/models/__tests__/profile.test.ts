@@ -1,28 +1,38 @@
-import { isLeft, isRight } from "fp-ts/lib/Either";
-import { isSome } from "fp-ts/lib/Option";
+import * as E from "fp-ts/lib/Either";
+import * as O from "fp-ts/lib/Option";
 
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
-import { EmailString, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { readableReport } from "@pagopa/ts-commons/lib/reporters";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 
 import {
-  NewProfile,
   Profile,
   ProfileModel,
+  PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION,
   RetrievedProfile
 } from "../profile";
 
 import { Container } from "@azure/cosmos";
+import { ServicesPreferencesModeEnum } from "../../../generated/definitions/ServicesPreferencesMode";
+import { pipe } from "fp-ts/lib/function";
 
 const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
 
-const aStoredProfile: Profile = {
+const aRawProfile = {
   acceptedTosVersion: 1,
   fiscalCode: aFiscalCode,
   isEmailValidated: false,
   isInboxEnabled: false,
   isWebhookEnabled: false
 };
+
+const aStoredProfile: Profile = pipe(
+  Profile.decode(aRawProfile),
+  E.getOrElseW(_ =>
+    fail(`Cannot decode aStoredProfile, error: ${readableReport(_)}`)
+  )
+);
 
 const aRetrievedProfile: RetrievedProfile = {
   _etag: "_etag",
@@ -52,15 +62,19 @@ describe("findLastVersionByModelId", () => {
 
     const model = new ProfileModel(containerMock);
 
-    const result = await model.findLastVersionByModelId([aFiscalCode]).run();
+    const result = await model.findLastVersionByModelId([aFiscalCode])();
 
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isSome()).toBeTruthy();
-      expect(result.value.toUndefined()).toEqual({
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isSome(result.right)).toBeTruthy();
+      expect(O.toUndefined(result.right)).toEqual({
         ...aRetrievedProfile,
         isEmailEnabled: true,
-        isTestProfile: false
+        isTestProfile: false,
+        servicePreferencesSettings: {
+          mode: ServicesPreferencesModeEnum.LEGACY,
+          version: PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION
+        }
       });
     }
   });
@@ -81,11 +95,11 @@ describe("findLastVersionByModelId", () => {
 
     const model = new ProfileModel(containerMock);
 
-    const result = await model.findLastVersionByModelId([aFiscalCode]).run();
+    const result = await model.findLastVersionByModelId([aFiscalCode])();
 
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.isNone()).toBeTruthy();
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isNone(result.right)).toBeTruthy();
     }
   });
 
@@ -105,11 +119,37 @@ describe("findLastVersionByModelId", () => {
 
     const model = new ProfileModel(containerMock);
 
-    const result = await model.findLastVersionByModelId([aFiscalCode]).run();
+    const result = await model.findLastVersionByModelId([aFiscalCode])();
 
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toBe("COSMOS_DECODING_ERROR");
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toBe("COSMOS_DECODING_ERROR");
+    }
+  });
+});
+
+describe("Profile codec", () => {
+  it("should consider all possible ServicesPreferencesMode values", async () => {
+    // This is a safe-guard to programmatically ensure all possible values of ServicesPreferencesModeEnum are considered
+
+    for (const mode in ServicesPreferencesModeEnum) {
+      const version =
+        mode === "LEGACY"
+          ? PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION
+          : 0;
+      pipe(
+        Profile.decode({
+          ...aRawProfile,
+          servicePreferencesSettings: { mode, version }
+        }),
+        E.getOrElseW(_ =>
+          fail(
+            `Cannot decode profile, maybe an unhandled ServicesPreferencesMode: ${mode}, error: ${readableReport(
+              _
+            )}`
+          )
+        )
+      );
     }
   });
 });

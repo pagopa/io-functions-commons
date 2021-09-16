@@ -3,6 +3,8 @@ import { CreatedMessageWithoutContent } from "../../generated/definitions/Create
 import { HiddenServicePayload } from "../../generated/definitions/HiddenServicePayload";
 import { ServicePayload } from "../../generated/definitions/ServicePayload";
 import { VisibleServicePayload } from "../../generated/definitions/VisibleServicePayload";
+import * as E from "fp-ts/lib/Either";
+import { isLeft } from "fp-ts/lib/Either";
 
 import { toString } from "fp-ts/lib/function";
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
@@ -81,9 +83,9 @@ describe("ServicePayload definition", () => {
     const visibleServiceTest = VisibleServicePayload.decode(visibleService);
     const hiddenServiceTest = HiddenServicePayload.decode(visibleService);
 
-    expect(servicePayloadTest.isRight()).toBe(true);
-    expect(visibleServiceTest.isRight()).toBe(true);
-    expect(hiddenServiceTest.isLeft()).toBe(true);
+    expect(E.isRight(servicePayloadTest)).toBe(true);
+    expect(E.isRight(visibleServiceTest)).toBe(true);
+    expect(E.isLeft(hiddenServiceTest)).toBe(true);
   });
 
   it("should decode hiddenService with HiddenService and ServicePayload", () => {
@@ -91,9 +93,9 @@ describe("ServicePayload definition", () => {
     const visibleServiceTest = VisibleServicePayload.decode(hiddenService);
     const hiddenServiceTest = HiddenServicePayload.decode(hiddenService);
 
-    expect(servicePayloadTest.isRight()).toBe(true);
-    expect(visibleServiceTest.isLeft()).toBe(true);
-    expect(hiddenServiceTest.isRight()).toBe(true);
+    expect(E.isRight(servicePayloadTest)).toBe(true);
+    expect(E.isLeft(visibleServiceTest)).toBe(true);
+    expect(E.isRight(hiddenServiceTest)).toBe(true);
   });
 
   it("should not decode invalidService with HiddenService, ServicePayload and VisibleServicePayload", () => {
@@ -101,9 +103,9 @@ describe("ServicePayload definition", () => {
     const visibleServiceTest = VisibleServicePayload.decode(invalidService);
     const hiddenServiceTest = HiddenServicePayload.decode(invalidService);
 
-    expect(servicePayloadTest.isLeft()).toBe(true);
-    expect(visibleServiceTest.isLeft()).toBe(true);
-    expect(hiddenServiceTest.isLeft()).toBe(true);
+    expect(E.isLeft(servicePayloadTest)).toBe(true);
+    expect(E.isLeft(visibleServiceTest)).toBe(true);
+    expect(E.isLeft(hiddenServiceTest)).toBe(true);
   });
 
   it("should decode hiddenServiceWithoutIsVisible with HiddenService and ServicePayload", () => {
@@ -117,9 +119,9 @@ describe("ServicePayload definition", () => {
       hiddenServiceWithoutIsVisible
     );
 
-    expect(servicePayloadTest.isRight()).toBe(true);
-    expect(visibleServiceTest.isLeft()).toBe(true);
-    expect(hiddenServiceTest.isRight()).toBe(true);
+    expect(E.isRight(servicePayloadTest)).toBe(true);
+    expect(E.isLeft(visibleServiceTest)).toBe(true);
+    expect(E.isRight(hiddenServiceTest)).toBe(true);
   });
 });
 

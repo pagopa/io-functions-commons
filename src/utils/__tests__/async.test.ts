@@ -1,6 +1,10 @@
-import { Either, isRight, left, right, Right } from "fp-ts/lib/Either";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
+import { Either, isLeft, isRight, left, right, Right } from "fp-ts/lib/Either";
+import { pipe } from "fp-ts/lib/function";
+import * as TE from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 import {
+  asyncIteratorToPageArray,
   filterAsyncIterator,
   flattenAsyncIterator,
   mapAsyncIterator
@@ -96,10 +100,10 @@ describe("filterAsyncIterator utils", () => {
       expectedReturnValue
     );
 
-    const outputIterator: AsyncIterator<Right<
-      Error,
-      number
-    >> = filterAsyncIterator(inputIterator, isRight);
+    const outputIterator: AsyncIterator<Right<number>> = filterAsyncIterator(
+      inputIterator,
+      isRight
+    );
 
     expect(await outputIterator.next()).toEqual({
       done: false,
@@ -220,7 +224,6 @@ describe("Scenarios", () => {
     ]);
 
     const filteredIterator: AsyncIterator<Right<
-      string,
       ModelType
     >> = filterAsyncIterator(iterator, isRight);
 
@@ -257,12 +260,11 @@ describe("Scenarios", () => {
       ModelType
     >> = flattenAsyncIterator(iterator);
     const fiteredIterator: AsyncIterator<Right<
-      string,
       ModelType
     >> = filterAsyncIterator(flattenIterator, isRight);
     const mappedIterator: AsyncIterator<ModelType> = mapAsyncIterator(
       fiteredIterator,
-      e => e.value
+      e => e.right
     );
 
     const result1 = await mappedIterator.next();
@@ -287,100 +289,54 @@ describe("Scenarios", () => {
       value: undefined
     });
   });
-});
 
-describe("Scenarios", () => {
-  type ModelType = t.TypeOf<typeof ModelType>;
-  // eslint-disable-next-line sonar/no-dead-store
-  const ModelType = t.interface({
-    fieldA: t.string,
-    fieldB: t.number
-  });
+  it("should map iterator elements over an async functor", async () => {
+    const iterator = createMockIterator([aModel, anotherModel]);
 
-  const aModel: ModelType = {
-    fieldA: "foo",
-    fieldB: 123
-  };
-  const anotherModel: ModelType = {
-    fieldA: "bar",
-    fieldB: 789
-  };
-  it("should filter Right on Either", async () => {
-    const iterator: AsyncIterator<Either<
-      string,
-      ModelType
-    >> = createMockIterator([
-      right(aModel),
-      left("error"),
-      right(anotherModel)
-    ]);
+    const functor = (m: ModelType) =>
+      pipe(
+        m,
+        TE.of,
+        TE.chain(
+          TE.fromPredicate(
+            _ => _.fieldA === "foo",
+            () => new Error("Not a foo")
+          )
+        )
+      )();
 
-    const filteredIterator: AsyncIterator<Right<
-      string,
-      ModelType
-    >> = filterAsyncIterator(iterator, isRight);
+    const mappedIterator = mapAsyncIterator(iterator, functor);
 
-    const result1 = await filteredIterator.next();
-    const result2 = await filteredIterator.next();
-    const result3 = await filteredIterator.next();
-
-    expect(result1).toEqual({
+    const result = await mappedIterator.next();
+    const result2 = await mappedIterator.next();
+    expect(result).toEqual({
       done: false,
       value: right(aModel)
     });
-    expect(result2).toEqual({
-      done: false,
-      value: right(anotherModel)
-    });
-    expect(result3).toEqual({
-      done: true,
-      value: undefined
+    expect(isLeft(result2.value)).toBeTruthy();
+  });
+
+  it("should unroll an async iterator to a page of desired size", async () => {
+    const iterator = createMockIterator([aModel, anotherModel]);
+
+    const pageSize = 1 as NonNegativeInteger;
+    const page = await asyncIteratorToPageArray(iterator, pageSize);
+
+    expect(page).toEqual({
+      results: [aModel],
+      hasMoreResults: true
     });
   });
 
-  it("should extract right values from array of either", async () => {
-    const iterator: AsyncIterator<ReadonlyArray<
-      Either<string, ModelType>
-    >> = createMockIterator([
-      [right(aModel), right(aModel)],
-      [left("error")],
-      [],
-      [right(anotherModel), left("error")]
-    ]);
+  it("should unroll an async iterator to a page of desired size and tell it's finished", async () => {
+    const iterator = createMockIterator([aModel, anotherModel]);
 
-    const flattenIterator: AsyncIterator<Either<
-      string,
-      ModelType
-    >> = flattenAsyncIterator(iterator);
-    const fiteredIterator: AsyncIterator<Right<
-      string,
-      ModelType
-    >> = filterAsyncIterator(flattenIterator, isRight);
-    const mappedIterator: AsyncIterator<ModelType> = mapAsyncIterator(
-      fiteredIterator,
-      e => e.value
-    );
+    const pageSize = 2 as NonNegativeInteger;
+    const page = await asyncIteratorToPageArray(iterator, pageSize);
 
-    const result1 = await mappedIterator.next();
-    const result2 = await mappedIterator.next();
-    const result3 = await mappedIterator.next();
-    const result4 = await mappedIterator.next();
-
-    expect(result1).toEqual({
-      done: false,
-      value: aModel
-    });
-    expect(result2).toEqual({
-      done: false,
-      value: aModel
-    });
-    expect(result3).toEqual({
-      done: false,
-      value: anotherModel
-    });
-    expect(result4).toEqual({
-      done: true,
-      value: undefined
+    expect(page).toEqual({
+      results: [aModel, anotherModel],
+      hasMoreResults: false
     });
   });
 });

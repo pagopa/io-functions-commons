@@ -13,21 +13,26 @@ import {
 } from "../../src/models/user_data_processing";
 import { createContext } from "./cosmos_utils";
 import { fromOption } from "fp-ts/lib/Either";
-import { toString } from "fp-ts/lib/function";
 import { INonNegativeIntegerTag } from "@pagopa/ts-commons/lib/numbers";
+import * as E from "fp-ts/lib/Either";
+import * as TE from "fp-ts/lib/TaskEither";
+import { pipe } from "fp-ts/lib/function";
 
-const aUserDataProcessing: UserDataProcessing = UserDataProcessing.decode({
-  choice: UserDataProcessingChoiceEnum.DOWNLOAD,
-  createdAt: new Date(),
-  fiscalCode: `RLDBSV36A78Y792X` as FiscalCode,
-  status: UserDataProcessingStatusEnum.PENDING,
-  userDataProcessingId: makeUserDataProcessingId(
-    UserDataProcessingChoiceEnum.DOWNLOAD,
-    `RLDBSV36A78Y792X` as FiscalCode
-  )
-}).getOrElseL(() => {
-  throw new Error("Cannot decode userdataprocessing payload.");
-});
+const aUserDataProcessing: UserDataProcessing = pipe(
+  UserDataProcessing.decode({
+    choice: UserDataProcessingChoiceEnum.DOWNLOAD,
+    createdAt: new Date(),
+    fiscalCode: `RLDBSV36A78Y792X` as FiscalCode,
+    status: UserDataProcessingStatusEnum.PENDING,
+    userDataProcessingId: makeUserDataProcessingId(
+      UserDataProcessingChoiceEnum.DOWNLOAD,
+      `RLDBSV36A78Y792X` as FiscalCode
+    )
+  }),
+  E.getOrElseW(() => {
+    throw new Error("Cannot decode userdataprocessing payload.");
+  })
+);
 
 describe("Models |> UserDataProcessing", () => {
   it("should save documents with correct versioning", async () => {
@@ -41,10 +46,10 @@ describe("Models |> UserDataProcessing", () => {
     };
 
     // create a new document
-    const created = await model
-      .create(newDoc)
-      .fold(
-        _ => fail(`Failed to create doc, error: ${toString(_)}`),
+    const created = await pipe(
+      model.create(newDoc),
+      TE.bimap(
+        _ => fail(`Failed to create doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -54,15 +59,16 @@ describe("Models |> UserDataProcessing", () => {
           );
           return result;
         }
-      )
-      .run();
+      ),
+      TE.toUnion
+    )();
 
     // update document
     const updates = { status: UserDataProcessingStatusEnum.WIP };
-    await model
-      .update({ ...created, ...updates })
-      .fold(
-        _ => fail(`Failed to update doc, error: ${toString(_)}`),
+    await pipe(
+      model.update({ ...created, ...updates }),
+      TE.bimap(
+        _ => fail(`Failed to update doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -73,20 +79,20 @@ describe("Models |> UserDataProcessing", () => {
           );
         }
       )
-      .run();
+    )();
 
     // read latest version of the document
-    await taskEither
-      .of<any, void>(void 0)
-      .chain(_ =>
+    await pipe(
+      taskEither.of<any, void>(void 0),
+      TE.chainW(_ =>
         model.findLastVersionByModelId([
           newDoc[USER_DATA_PROCESSING_MODEL_ID_FIELD],
           newDoc[USER_DATA_PROCESSING_MODEL_PK_FIELD]
         ])
-      )
-      .chain(_ => fromEither(fromOption("It's none")(_)))
-      .fold(
-        _ => fail(`Failed to read doc, error: ${toString(_)}`),
+      ),
+      TE.chain(_ => fromEither(fromOption(() => "It's none")(_))),
+      TE.bimap(
+        _ => fail(`Failed to read doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -97,7 +103,7 @@ describe("Models |> UserDataProcessing", () => {
           );
         }
       )
-      .run();
+    )();
 
     // upsert new version
     const upserts = { status: UserDataProcessingStatusEnum.CLOSED };
@@ -106,10 +112,10 @@ describe("Models |> UserDataProcessing", () => {
       ...aUserDataProcessing,
       ...upserts
     };
-    await model
-      .upsert(toUpsert)
-      .fold(
-        _ => fail(`Failed to upsert doc, error: ${toString(_)}`),
+    await pipe(
+      model.upsert(toUpsert),
+      TE.bimap(
+        _ => fail(`Failed to upsert doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -120,13 +126,13 @@ describe("Models |> UserDataProcessing", () => {
           );
         }
       )
-      .run();
+    )();
 
     // createOrUpdateByNewOne
-    await model
-      .createOrUpdateByNewOne(aUserDataProcessing)
-      .fold(
-        _ => fail(`Failed to upsert doc, error: ${toString(_)}`),
+    await pipe(
+      model.createOrUpdateByNewOne(aUserDataProcessing),
+      TE.bimap(
+        _ => fail(`Failed to upsert doc, error: ${JSON.stringify(_)}`),
         result => {
           expect(result).toEqual(
             expect.objectContaining({
@@ -136,7 +142,108 @@ describe("Models |> UserDataProcessing", () => {
           );
         }
       )
-      .run();
+    )();
+
+    context.dispose();
+  });
+
+  it("should save reason only for FAILED docs", async () => {
+    const context = await createContext(USER_DATA_PROCESSING_MODEL_PK_FIELD);
+    await context.init();
+    const model = new UserDataProcessingModel(context.container);
+
+    const newDoc = {
+      kind: "INewUserDataProcessing" as const,
+      ...aUserDataProcessing,
+      status: UserDataProcessingStatusEnum.WIP,
+      reason: "should not be saved" as NonEmptyString
+    };
+
+    // create a new document
+    const created = await pipe(
+      model.create(newDoc),
+      TE.bimap(
+        _ => fail(`Failed to create doc, error: ${JSON.stringify(_)}`),
+        result => {
+          expect(result).toEqual(
+            expect.objectContaining({
+              ...aUserDataProcessing,
+              status: UserDataProcessingStatusEnum.WIP,
+              version: 0
+            })
+          );
+          expect(result.reason).not.toBeDefined();
+          return result;
+        }
+      ),
+      TE.toUnion
+    )();
+
+    // update document
+    const updates = {
+      status: UserDataProcessingStatusEnum.ABORTED,
+      reason: "should not be saved" as NonEmptyString
+    };
+    await pipe(
+      model.update({ ...created, ...updates }),
+      TE.bimap(
+        _ => fail(`Failed to update doc, error: ${JSON.stringify(_)}`),
+        result => {
+          expect(result).toEqual(
+            expect.objectContaining({
+              ...aUserDataProcessing,
+              status: UserDataProcessingStatusEnum.ABORTED
+            })
+          );
+          expect(result.reason).not.toBeDefined();
+        }
+      )
+    )();
+
+    // update document with FAILED
+    const updatesToFailed = {
+      status: UserDataProcessingStatusEnum.FAILED,
+      reason: "should be saved" as NonEmptyString
+    };
+    await pipe(
+      model.update({
+        ...created,
+        ...updatesToFailed,
+        version: (created.version + 1) as number & INonNegativeIntegerTag
+      }),
+      TE.bimap(
+        _ => fail(`Failed to update doc, error: ${JSON.stringify(_)}`),
+        result => {
+          expect(result).toEqual(
+            expect.objectContaining({
+              ...aUserDataProcessing,
+              status: UserDataProcessingStatusEnum.FAILED,
+              reason: "should be saved"
+            })
+          );
+        }
+      )
+    )();
+
+    // upsert should not have reason
+    const toUpsert = {
+      kind: "INewUserDataProcessing" as const,
+      ...aUserDataProcessing
+    };
+    await pipe(
+      model.upsert(toUpsert),
+      TE.bimap(
+        _ => fail(`Failed to upsert doc, error: ${JSON.stringify(_)}`),
+        result => {
+          expect(result).toEqual(
+            expect.objectContaining({
+              ...aUserDataProcessing
+            })
+          );
+          expect(result.reason).not.toBeDefined();
+        }
+      )
+    )();
 
     context.dispose();
   });

@@ -5,6 +5,8 @@ import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { Container } from "@azure/cosmos";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { TaskEither } from "fp-ts/lib/TaskEither";
+import * as E from "fp-ts/lib/Either";
+import { pipe } from "fp-ts/lib/function";
 import {
   CosmosdbModelVersioned,
   RetrievedVersionedModel
@@ -36,8 +38,8 @@ export const UserDataProcessingId = t.brand(
     // enforce pattern {fiscalCode-Choice}
     const [fiscalCode, choice] = s.split("-");
     return (
-      FiscalCode.decode(fiscalCode).isRight() &&
-      UserDataProcessingChoice.decode(choice).isRight()
+      E.isRight(FiscalCode.decode(fiscalCode)) &&
+      E.isRight(UserDataProcessingChoice.decode(choice))
     );
   },
   "IUserDataProcessingIdTag"
@@ -97,11 +99,14 @@ export const makeUserDataProcessingId = (
   choice: UserDataProcessingChoice,
   fiscalCode: FiscalCode
 ): UserDataProcessingId =>
-  UserDataProcessingId.decode(`${fiscalCode}-${choice}`).getOrElseL(errors => {
-    throw new Error(
-      `Invalid User Data Processing id, reason: ${readableReport(errors)}`
-    );
-  });
+  pipe(
+    UserDataProcessingId.decode(`${fiscalCode}-${choice}`),
+    E.getOrElseW(errors => {
+      throw new Error(
+        `Invalid User Data Processing id, reason: ${readableReport(errors)}`
+      );
+    })
+  );
 
 /**
  * A model for handling UserDataProcessing
@@ -132,27 +137,32 @@ export class UserDataProcessingModel extends CosmosdbModelVersioned<
   public createOrUpdateByNewOne(
     // omit userDataProcessingId from new documents as we create it from the
     // provided object
-    {
-      reason,
-      ...userDataProcessing
-    }: Omit<UserDataProcessing, typeof USER_DATA_PROCESSING_MODEL_ID_FIELD>
+    userDataProcessing: Omit<
+      UserDataProcessing,
+      typeof USER_DATA_PROCESSING_MODEL_ID_FIELD
+    >
   ): TaskEither<CosmosErrors, RetrievedUserDataProcessing> {
     const newId = makeUserDataProcessingId(
       userDataProcessing.choice,
       userDataProcessing.fiscalCode
     );
 
-    //
-
     const toUpdate: NewUserDataProcessing = {
       ...userDataProcessing,
       // In order to keep data clean, we skim reason field if status is different than FAILED
-      ...(userDataProcessing.status === UserDataProcessingStatusEnum.FAILED
-        ? { reason }
-        : {}),
       [USER_DATA_PROCESSING_MODEL_ID_FIELD]: newId,
       kind: "INewUserDataProcessing"
     };
     return this.upsert(toUpdate);
+  }
+
+  protected beforeSave(o: UserDataProcessing): UserDataProcessing {
+    const { reason, status, ...rest } = o;
+    return {
+      ...rest,
+      status,
+      // In order to keep data clean, we skim reason field if status is different than FAILED
+      ...(status === UserDataProcessingStatusEnum.FAILED ? { reason } : {})
+    };
   }
 }

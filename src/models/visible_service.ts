@@ -1,3 +1,5 @@
+/* eslint-disable extra-rules/no-commented-out-code */
+
 /**
  * Represents a VisibleService entity used to cache a list of
  * services, taken from CosmosDB, that have is_visible flag set to true.
@@ -5,16 +7,17 @@
 import * as t from "io-ts";
 
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
-import { collect, StrMap } from "fp-ts/lib/StrMap";
+import { collect } from "fp-ts/lib/ReadonlyMap";
+import { Ord } from "fp-ts/lib/string";
 import {
   NotificationChannel,
   NotificationChannelEnum
 } from "../../generated/definitions/NotificationChannel";
 import { ServicePublic } from "../../generated/definitions/ServicePublic";
-import { ServiceScopeEnum } from "../../generated/definitions/ServiceScope";
-import { ServiceTuple } from "../../generated/definitions/ServiceTuple";
 import { BaseModel } from "../utils/cosmosdb_model";
 import { toApiServiceMetadata } from "../utils/service_metadata";
+import { ServiceTuple } from "../../generated/definitions/ServiceTuple";
+import { ServiceScopeEnum } from "../../generated/definitions/ServiceScope";
 import { Service, ServiceMetadata } from "./service";
 
 // This is not a CosmosDB model, but entities are stored into blob storage
@@ -89,18 +92,18 @@ export const toServicePublic = (
 /* eslint-enable @typescript-eslint/naming-convention */
 
 export const toServicesPublic = (
-  visibleServices: StrMap<VisibleService>
+  visibleServices: ReadonlyMap<string, VisibleService>
 ): ReadonlyArray<ServicePublic> =>
-  collect(visibleServices, (_, v) => toServicePublic(v));
+  collect(Ord)((_, v: VisibleService) => toServicePublic(v))(visibleServices);
 
 export const toServicesTuple = (
-  visibleServices: StrMap<VisibleService>
+  visibleServices: ReadonlyMap<string, VisibleService>
 ): ReadonlyArray<ServiceTuple> =>
-  collect(visibleServices, (_, v) => ({
+  collect(Ord)((_, v: VisibleService) => ({
     scope:
       v.serviceMetadata && v.serviceMetadata.scope === ServiceScopeEnum.LOCAL
         ? ServiceScopeEnum.LOCAL
         : ServiceScopeEnum.NATIONAL,
     service_id: v.serviceId,
     version: v.version
-  }));
+  }))(visibleServices);

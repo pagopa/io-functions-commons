@@ -5,14 +5,14 @@ import * as t from "io-ts";
 import { isLeft, isRight } from "fp-ts/lib/Either";
 import { isNone, isSome } from "fp-ts/lib/Option";
 
-import { OptionalParamMiddleware } from "../optional_param";
+import { OptionalQueryParamMiddleware } from "../optional_query_param";
 
-const middleware = OptionalParamMiddleware("param", t.string);
+const middleware = OptionalQueryParamMiddleware("param", t.string);
 
-describe("OptionalParamMiddleware", () => {
-  it("should respond with none if the parameter is missing", async () => {
+describe("OptionalQueryParamMiddleware", () => {
+  it("should respond with none if the query parameter is missing", async () => {
     const result = await middleware({
-      params: {}
+      query: {}
     } as any);
 
     expect(isRight(result)).toBeTruthy();
@@ -23,9 +23,9 @@ describe("OptionalParamMiddleware", () => {
     }
   });
 
-  it("should respond with a validation error if the parameter is present but is NOT valid", async () => {
+  it("should respond with a validation error if the query parameter is present but is NOT valid", async () => {
     const result = await middleware({
-      params: {
+      query: {
         param: 5
       }
     } as any);
@@ -36,9 +36,9 @@ describe("OptionalParamMiddleware", () => {
     }
   });
 
-  it("should extract the parameter if is present and valid", async () => {
+  it("should extract the query parameter if is present and valid", async () => {
     const result = await middleware({
-      params: {
+      query: {
         param: "hello"
       }
     } as any);

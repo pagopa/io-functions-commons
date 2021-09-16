@@ -3,9 +3,15 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable sonarjs/no-identical-functions */
 
-import { isLeft, isRight } from "fp-ts/lib/Either";
+import * as E from "fp-ts/lib/Either";
+import { pipe } from "fp-ts/lib/function";
+import * as t from "io-ts";
 
-import { AzureApiAuthMiddleware, UserGroup } from "../azure_api_auth";
+import {
+  AzureAllowBodyPayloadMiddleware,
+  AzureApiAuthMiddleware,
+  UserGroup
+} from "../azure_api_auth";
 
 const anAllowedGroupSet = new Set([UserGroup.ApiMessageWrite]);
 
@@ -37,9 +43,9 @@ describe("AzureApiAuthMiddleware", () => {
 
     const result = await middleware(mockRequest as any);
     expect(mockRequest.header).toHaveBeenCalledWith("x-user-id");
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toEqual("IResponseErrorForbiddenAnonymousUser");
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toEqual("IResponseErrorForbiddenAnonymousUser");
     }
   });
 
@@ -56,9 +62,9 @@ describe("AzureApiAuthMiddleware", () => {
 
     const result = await middleware(mockRequest as any);
     expect(mockRequest.header).toHaveBeenCalledWith("x-user-id");
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toEqual("IResponseErrorForbiddenAnonymousUser");
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toEqual("IResponseErrorForbiddenAnonymousUser");
     }
   });
 
@@ -75,9 +81,9 @@ describe("AzureApiAuthMiddleware", () => {
 
     const result = await middleware(mockRequest as any);
     expect(mockRequest.header).toHaveBeenCalledWith("x-subscription-id");
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toEqual("IResponseErrorForbiddenAnonymousUser");
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toEqual("IResponseErrorForbiddenAnonymousUser");
     }
   });
 
@@ -94,9 +100,9 @@ describe("AzureApiAuthMiddleware", () => {
 
     const result = await middleware(mockRequest as any);
     expect(mockRequest.header).toHaveBeenCalledWith("x-subscription-id");
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toEqual("IResponseErrorForbiddenAnonymousUser");
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toEqual("IResponseErrorForbiddenAnonymousUser");
     }
   });
 
@@ -113,9 +119,9 @@ describe("AzureApiAuthMiddleware", () => {
 
     const result = await middleware(mockRequest as any);
     expect(mockRequest.header).toHaveBeenCalledWith("x-user-groups");
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toEqual(
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toEqual(
         "IResponseErrorForbiddenNoAuthorizationGroups"
       );
     }
@@ -135,9 +141,9 @@ describe("AzureApiAuthMiddleware", () => {
 
     const result = await middleware(mockRequest as any);
     expect(mockRequest.header).toHaveBeenCalledWith("x-user-groups");
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toEqual(
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toEqual(
         "IResponseErrorForbiddenNoAuthorizationGroups"
       );
     }
@@ -157,9 +163,9 @@ describe("AzureApiAuthMiddleware", () => {
 
     const result = await middleware(mockRequest as any);
     expect(mockRequest.header).toHaveBeenCalledWith("x-user-groups");
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toEqual(
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toEqual(
         "IResponseErrorForbiddenNoAuthorizationGroups"
       );
     }
@@ -179,9 +185,9 @@ describe("AzureApiAuthMiddleware", () => {
 
     const result = await middleware(mockRequest as any);
     expect(mockRequest.header).toHaveBeenCalledWith("x-user-groups");
-    expect(isLeft(result)).toBeTruthy();
-    if (isLeft(result)) {
-      expect(result.value.kind).toEqual("IResponseErrorForbiddenNotAuthorized");
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toEqual("IResponseErrorForbiddenNotAuthorized");
     }
   });
 
@@ -201,11 +207,11 @@ describe("AzureApiAuthMiddleware", () => {
     expect(mockRequest.header).toHaveBeenCalledWith("x-user-groups");
     expect(mockRequest.header).toHaveBeenCalledWith("x-user-id");
     expect(mockRequest.header).toHaveBeenCalledWith("x-subscription-id");
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.groups).toContain(UserGroup.ApiMessageWrite);
-      expect(result.value.subscriptionId).toBe("s123");
-      expect(result.value.userId).toBe("u123");
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(result.right.groups).toContain(UserGroup.ApiMessageWrite);
+      expect(result.right.subscriptionId).toBe("s123");
+      expect(result.right.userId).toBe("u123");
     }
   });
 
@@ -228,11 +234,11 @@ describe("AzureApiAuthMiddleware", () => {
     expect(mockRequest.header).toHaveBeenCalledWith("x-user-groups");
     expect(mockRequest.header).toHaveBeenCalledWith("x-user-id");
     expect(mockRequest.header).toHaveBeenCalledWith("x-subscription-id");
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.groups).toContain(UserGroup.ApiMessageWrite);
-      expect(result.value.subscriptionId).toBe("s123");
-      expect(result.value.userId).toBe("u123");
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(result.right.groups).toContain(UserGroup.ApiMessageWrite);
+      expect(result.right.subscriptionId).toBe("s123");
+      expect(result.right.userId).toBe("u123");
     }
   });
 
@@ -250,9 +256,145 @@ describe("AzureApiAuthMiddleware", () => {
 
     const result = await middleware(mockRequest as any);
     expect(mockRequest.header).toHaveBeenCalledWith("x-user-groups");
-    expect(isRight(result)).toBeTruthy();
-    if (isRight(result)) {
-      expect(result.value.groups).toEqual(new Set([UserGroup.ApiMessageWrite]));
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(result.right.groups).toEqual(new Set([UserGroup.ApiMessageWrite]));
     }
+  });
+});
+
+describe("AzureAllowBodyPayloadMiddleware", () => {
+  it("should success if pattern is not matched", async () => {
+    const headers = {
+      ...someHeaders
+    };
+    const aPayload = { foo: { bar: "baz" } };
+    const mockRequest = {
+      header: jest.fn(lookup(headers)),
+      body: aPayload
+    };
+    const aNonMatchingCodec = t.interface({ anyField: t.number });
+    const anyGroupSet = new Set([UserGroup.ApiMessageWrite]);
+
+    const middleware = AzureAllowBodyPayloadMiddleware(
+      aNonMatchingCodec,
+      anyGroupSet
+    );
+
+    const result = await middleware(mockRequest as any);
+
+    expect(E.isRight(result)).toBe(true);
+    expect(E.isLeft(aNonMatchingCodec.decode(aPayload))).toBe(true); // test is wrong if it fails
+  });
+
+  it("should success if pattern is matched and user do belongs to correct user group", async () => {
+    const headers = {
+      ...someHeaders
+    };
+    const aPayload = { foo: { bar: "baz" } };
+    const mockRequest = {
+      header: jest.fn(lookup(headers)),
+      body: aPayload
+    };
+    const aMatchingCodec = t.interface({
+      foo: t.interface({ bar: t.string })
+    });
+    const allowedGroupSet = new Set([UserGroup.ApiMessageWrite]);
+
+    const middleware = AzureAllowBodyPayloadMiddleware(
+      aMatchingCodec,
+      allowedGroupSet
+    );
+
+    const result = await middleware(mockRequest as any);
+
+    expect(E.isRight(result)).toBe(true);
+    expect(E.isRight(aMatchingCodec.decode(aPayload))).toBe(true); // test is wrong if it fails
+  });
+
+  it("should success if pattern is not matched - test nr. 2", async () => {
+    const headers = {
+      ...someHeaders
+    };
+    const aPayload = { foo: { bar: "baz" } };
+    const mockRequest = {
+      header: jest.fn(lookup(headers)),
+      body: aPayload
+    };
+    const aNonMatchingCodec = t.interface({ anyField: t.string });
+    const anyGroupSet = new Set([UserGroup.ApiDebugRead]); // any value
+
+    const middleware = AzureAllowBodyPayloadMiddleware(
+      aNonMatchingCodec,
+      anyGroupSet
+    );
+
+    const result = await middleware(mockRequest as any);
+
+    expect(E.isRight(result)).toBe(true);
+    expect(E.isLeft(aNonMatchingCodec.decode(aPayload))).toBe(true); // test is wrong if it fails
+  });
+
+  it("should fail if pattern is matched and current user does not belongs to user group", async () => {
+    const headers = {
+      ...someHeaders
+    };
+    const aPayload = { foo: { bar: "baz" } };
+    const mockRequest = {
+      header: jest.fn(lookup(headers)),
+      body: aPayload
+    };
+    const aMatchingCodec = t.interface({
+      foo: t.interface({ bar: t.string })
+    });
+    const anotherAllowedGroupSet = new Set([UserGroup.ApiDebugRead]);
+
+    const middleware = AzureAllowBodyPayloadMiddleware(
+      aMatchingCodec,
+      anotherAllowedGroupSet
+    );
+
+    const result = await middleware(mockRequest as any);
+
+    expect(E.isLeft(result)).toBe(true);
+    pipe(
+      result,
+      E.fold(
+        _ => expect(_.kind).toBe("IResponseErrorForbiddenNotAuthorized"),
+        _ => fail("Expecting left")
+      )
+    );
+  });
+
+  it("should fail if pattern is matched and current user has no groups", async () => {
+    const headers = {
+      ...someHeaders,
+      "x-user-groups": ""
+    };
+    const aPayload = { foo: { bar: "baz" } };
+    const mockRequest = {
+      header: jest.fn(lookup(headers)),
+      body: aPayload
+    };
+    const aMatchingCodec = t.interface({
+      foo: t.interface({ bar: t.string })
+    });
+
+    const middleware = AzureAllowBodyPayloadMiddleware(
+      aMatchingCodec,
+      anAllowedGroupSet
+    );
+
+    const result = await middleware(mockRequest as any);
+
+    expect(E.isLeft(result)).toBe(true);
+    pipe(
+      result,
+      E.fold(
+        _ =>
+          expect(_.kind).toBe("IResponseErrorForbiddenNoAuthorizationGroups"),
+        _ => fail("Expecting left")
+      )
+    );
   });
 });
