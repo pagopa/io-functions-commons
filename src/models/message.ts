@@ -33,8 +33,8 @@ import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds
 import { getBlobAsText, upsertBlobFromObject } from "../utils/azure_storage";
 import { wrapWithKind } from "../utils/types";
 import { MessageContentBase } from "../../generated/definitions/MessageContentBase";
-import { PaymentDataWithPayee } from "../../generated/definitions/PaymentDataWithPayee";
 import { PaymentDataWithOptionalPayee } from "../../generated/definitions/PaymentDataWithOptionalPayee";
+import { MessageContentWithPaymentDataWithPayee } from "../../generated/definitions/MessageContentWithPaymentDataWithPayee";
 
 export const MESSAGE_COLLECTION_NAME = "messages";
 export const MESSAGE_MODEL_PK_FIELD = "fiscalCode" as const;
@@ -110,10 +110,7 @@ export type MessageWithContent = t.TypeOf<typeof MessageWithContent>;
  */
 export const MessageWithContentWithPaymentDataWithPayee = t.intersection([
   t.interface({
-    content: t.intersection([
-      MessageContentBase,
-      t.interface({ payment_data: PaymentDataWithPayee })
-    ])
+    content: MessageContentWithPaymentDataWithPayee
   }),
   MessageBase
 ]);
@@ -149,6 +146,7 @@ export type MessageWithContentWithPaymentDataWithOptionalPayee = t.TypeOf<
  */
 export const Message = t.union([
   MessageWithContentWithPaymentDataWithPayee,
+  MessageWithContentWithPaymentDataWithOptionalPayee,
   MessageWithContent,
   MessageWithoutContent
 ]);

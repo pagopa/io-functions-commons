@@ -90,26 +90,35 @@ MessageContentBase:
       $ref: "#/PrescriptionData"
     due_date:
       $ref: "#/Timestamp"
-  required:
-    - subject
-    - markdown
-MessageContent:
-  type: object
-  properties:
-    subject:
-      $ref: "#/MessageSubject"
-    markdown:
-      $ref: "#/MessageBodyMarkdown"
-    prescription_data:
-      $ref: "#/PrescriptionData"
-    due_date:
-      $ref: "#/Timestamp"
-    payment_data:
-      $ref: "#/PaymentDataWithOptionalPayee"
+    eu_covid_cert:
+      $ref: "#/EUCovidCert"
   required:
     - subject
     - markdown
 
+MessageContentWithPaymentDataWithPayee:
+  allOf:
+    - $ref: "#/MessageContentBase"
+    - type: object
+      properties:
+        payment_data:
+          $ref: "#/PaymentDataWithPayee"
+      required: payment_data 
+
+MessageContentWithPaymentDataWithoutPayee:
+  allOf:
+    - $ref: "#/MessageContentBase"
+    - type: object
+      properties:
+        payment_data:
+          $ref: "#/PaymentData"
+      required: payment_data 
+MessageContent:
+  x-one-of: true
+  allOf:
+    - $ref: "#/MessageContentWithPaymentDataWithPayee"
+    - $ref: "#/MessageContentWithPaymentDataWithoutPayee"
+    - $ref: "#/MessageContentBase"
 
 NewMessage:
   type: object
@@ -185,8 +194,8 @@ PaymentDataWithPayee:
 PaymentDataWithOptionalPayee:
   x-one-of: true
   allOf:
-    - $ref: "#/PaymentData"
     - $ref: "#/PaymentDataWithPayee"
+    - $ref: "#/PaymentData"
 PaymentNoticeNumber:
   description:
     The field ["Numero Avviso"](https://pagopa-specifichepagamenti.readthedocs.io/it/latest/_docs/Capitolo7.html#il-numero-avviso-e-larchivio-dei-pagamenti-in-attesa)

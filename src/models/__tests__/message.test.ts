@@ -19,12 +19,15 @@ import { fromNullable, none, some } from "fp-ts/lib/Option";
 import {
   MessageModel,
   MessageWithContent,
-  MessageWithContentWithPaymentData,
   NewMessageWithContent,
   RetrievedMessage,
-  NewMessageWithContentWithPaymentData,
   NewMessageWithoutContent,
-  RetrievedMessageWithContent
+  RetrievedMessageWithContent,
+  NewMessageWithContentWithPaymentDataWithPayee,
+  MessageWithContentWithPaymentDataWithPayee,
+  RetrievedMessageWithContentWithPaymentData,
+  MessageWithContentWithPaymentDataWithOptionalPayee,
+  NewMessage
 } from "../message";
 
 jest.mock("../../utils/azure_storage");
@@ -39,6 +42,7 @@ import { PaymentNoticeNumber } from "../../../generated/definitions/PaymentNotic
 import { Payee } from "../../../generated/definitions/Payee";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { pipe } from "fp-ts/lib/function";
+import { PaymentDataWithPayee } from "../../../generated/definitions/PaymentDataWithPayee";
 
 beforeEach(() => {
   jest.resetAllMocks();
@@ -52,6 +56,13 @@ const aMessageContent: MessageContent = {
   markdown: aMessageBodyMarkdown,
   subject: "test".repeat(10) as MessageSubject
 };
+
+const cosmosMetadata = {
+  _etag: "_etag",
+  _rid: "_rid",
+  _self: "_self",
+  _ts: 1
+}
 
 const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
 const anOrganizationFiscalCode = "12345678901" as OrganizationFiscalCode;
@@ -88,12 +99,12 @@ const aPaymentDataWithoutPayee: PaymentData = {
   notice_number: "177777777777777777" as PaymentNoticeNumber
 };
 const aPayee: Payee = { fiscal_code: anOrganizationFiscalCode };
-const aPaymentDataWithPayee: PaymentData = {
+const aPaymentDataWithPayee: PaymentDataWithPayee = {
   ...aPaymentDataWithoutPayee,
   payee: aPayee
 };
 
-const aNewMessageWithContentWithPaymentData: NewMessageWithContentWithPaymentData = {
+const aNewMessageWithContentWithPaymentData: NewMessageWithContentWithPaymentDataWithPayee = {
   ...aNewMessageWithContent,
   content: {
     ...aNewMessageWithContent.content,
@@ -101,7 +112,8 @@ const aNewMessageWithContentWithPaymentData: NewMessageWithContentWithPaymentDat
   },
   kind: "INewMessageWithContentWithPaymentData"
 };
-const aNewMessageWithContentWithPaymentDataWithoutPayee: NewMessageWithContentWithPaymentData = {
+
+const aNewMessageWithContentWithPaymentDataWithoutPayee = {
   ...aNewMessageWithContent,
   content: {
     ...aNewMessageWithContent.content,
@@ -111,39 +123,32 @@ const aNewMessageWithContentWithPaymentDataWithoutPayee: NewMessageWithContentWi
 };
 
 const aRetrievedMessageWithoutContent = {
-  _etag: "_etag",
-  _rid: "_rid",
-  _self: "_self",
-  _ts: 1,
+  ...cosmosMetadata,
   ...aNewMessageWithoutContent
 };
 const aRetrievedMessageWithContent: RetrievedMessageWithContent = {
-  _etag: "_etag",
-  _rid: "_rid",
-  _self: "_self",
-  _ts: 1,
+  ...cosmosMetadata,
   ...aNewMessageWithContent,
   kind: "IRetrievedMessageWithContent"
 };
-const aRetrievedMessageWithContentWithPaymentData = {
-  _etag: "_etag",
-  _rid: "_rid",
-  _self: "_self",
-  _ts: 1,
-  ...aNewMessageWithContentWithPaymentData
+const aRetrievedMessageWithContentWithPaymentData: RetrievedMessageWithContentWithPaymentData = {
+  ...cosmosMetadata,
+  ...aNewMessageWithContentWithPaymentData,
+  kind: "IRetrievedMessageWithContentWithPaymentData",
 };
 
 const aRetrievedMessageWithContentWithPaymentDataWithoutPayee = {
-  _etag: "_etag",
-  _rid: "_rid",
-  _self: "_self",
-  _ts: 1,
-  ...aNewMessageWithContentWithPaymentDataWithoutPayee
+  
+  ...aRetrievedMessageWithContent,
+  content: {
+    ...aRetrievedMessageWithContent.content,
+    payment_data: aPaymentDataWithoutPayee
+  }
 };
 
 describe("Models ", () => {
   it("should decode MessageWithContentWithPaymentData with payment data with payee", () => {
-    const messageWithContentWithPayee = MessageWithContentWithPaymentData.decode(
+    const messageWithContentWithPayee = MessageWithContentWithPaymentDataWithPayee.decode(
       aNewMessageWithContentWithPaymentData
     );
 
@@ -166,25 +171,32 @@ describe("Models ", () => {
   });
 
   it("should decode MessageWithContentWithPaymentData with payment data without payee", () => {
-    const messageWithContentWithoutPayee = MessageWithContentWithPaymentData.decode(
-      aNewMessageWithContentWithPaymentDataWithoutPayee
+    const messageWithContentWithoutPayee = MessageWithContentWithPaymentDataWithOptionalPayee.decode(
+      aRetrievedMessageWithContentWithPaymentDataWithoutPayee
     );
 
-    expect(E.isRight(messageWithContentWithoutPayee)).toBe(true);
+    expect(E.isRight(messageWithContentWithoutPayee)).toBeTruthy();
+  });
+
+  it("should NOT decode NewMessage with content with payment data without payee", () => {
+    const messageWithContentWithoutPayee = NewMessageWithContentWithPaymentDataWithPayee.decode(
+      aNewMessageWithContentWithPaymentDataWithoutPayee
+    );
+    expect(E.isLeft(messageWithContentWithoutPayee)).toBeTruthy();
   });
 
   it("should deserialize MessageWithContentWithPaymentData with payment data without payee", () => {
     pipe(
-      aNewMessageWithContentWithPaymentDataWithoutPayee,
-      MessageWithContentWithPaymentData.decode, 
+      aRetrievedMessageWithContentWithPaymentDataWithoutPayee,
+      MessageWithContentWithPaymentDataWithOptionalPayee.decode, 
       E.fold(
         () => fail(),
         _ => expect(_).toEqual({
-          ...aNewMessageWithContentWithPaymentDataWithoutPayee,
+          ...aRetrievedMessageWithContentWithPaymentDataWithoutPayee,
           content: {
-            ...aNewMessageWithContentWithPaymentDataWithoutPayee.content,
+            ...aRetrievedMessageWithContentWithPaymentDataWithoutPayee.content,
             payment_data: {
-              ...aNewMessageWithContentWithPaymentDataWithoutPayee.content
+              ...aRetrievedMessageWithContentWithPaymentDataWithoutPayee.content
                 .payment_data,
               invalid_after_due_date: false
             }

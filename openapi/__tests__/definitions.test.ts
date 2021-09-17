@@ -14,6 +14,7 @@ import { Payee } from "../../generated/definitions/Payee";
 import { MessageContent } from "../../generated/definitions/MessageContent";
 import { NewMessage } from "../../generated/definitions/NewMessage";
 import { pipe } from "fp-ts/lib/function";
+import { PaymentDataWithOptionalPayee } from "../../generated/definitions/PaymentDataWithOptionalPayee";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -211,7 +212,7 @@ describe("NewMessage definition", () => {
   it("should decode PaymentData with payment data with payee", () => {
     const aPaymentDataWithPayee = { ...aPaymentDataWithoutPayee, payee: aPayee };
 
-    const messageWithContent = PaymentData.decode(
+    const messageWithContent = PaymentDataWithOptionalPayee.decode(
       aPaymentDataWithPayee
     );
     pipe(
