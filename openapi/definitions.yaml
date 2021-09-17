@@ -105,29 +105,11 @@ MessageContent:
     due_date:
       $ref: "#/Timestamp"
     payment_data:
-      $ref: "#/PaymentData"
+      $ref: "#/PaymentDataWithOptionalPayee"
   required:
     - subject
     - markdown
 
-MessageContentWithExplicitPayee:
-  type: object
-  properties:
-    subject:
-      $ref: "#/MessageSubject"
-    markdown:
-      $ref: "#/MessageBodyMarkdown"
-    prescription_data:
-      $ref: "#/PrescriptionData"
-    eu_covid_cert:
-      $ref: "#/EUCovidCert"
-    due_date:
-      $ref: "#/Timestamp"
-    payment_data:
-      $ref: "#/PaymentDataWithExplicitPayee"
-  required:
-    - subject
-    - markdown
 
 NewMessage:
   type: object
@@ -174,7 +156,7 @@ PrescriptionNRE:
   type: string
   minLength: 15
   maxLength: 15
-PaymentDataBase:
+PaymentData:
   type: object
   description: |-
     Metadata needed to process pagoPA payments.
@@ -189,18 +171,9 @@ PaymentDataBase:
   required:
     - amount
     - notice_number
-PaymentData:
+PaymentDataWithPayee:
   allOf:
-    - $ref: "#/PaymentDataBase"
-    - type: object
-      description: |-
-        Metadata to indicate a specific Payee for the payment
-      properties:
-        payee:
-          $ref: "#/Payee"
-PaymentDataWithExplicitPayee:
-  allOf:
-    - $ref: "#/PaymentDataBase"
+    - $ref: "#/PaymentData"
     - type: object
       description: |-
         Metadata to indicate a specific Payee for the payment
@@ -209,6 +182,11 @@ PaymentDataWithExplicitPayee:
           $ref: "#/Payee"
       required:
         - payee
+PaymentDataWithOptionalPayee:
+  x-one-of: true
+  allOf:
+    - $ref: "#/PaymentData"
+    - $ref: "#/PaymentDataWithPayee"
 PaymentNoticeNumber:
   description:
     The field ["Numero Avviso"](https://pagopa-specifichepagamenti.readthedocs.io/it/latest/_docs/Capitolo7.html#il-numero-avviso-e-larchivio-dei-pagamenti-in-attesa)
@@ -281,7 +259,7 @@ CreatedMessageWithContent:
     created_at:
       $ref: "#/Timestamp"
     content:
-      $ref: "#/MessageContentWithExplicitPayee"
+      $ref: "#/MessageContent"
     sender_service_id:
       $ref: "#/ServiceId"
   required:

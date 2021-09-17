@@ -20,12 +20,11 @@ import {
   MessageModel,
   MessageWithContent,
   MessageWithContentWithPaymentData,
-  MessageWithContentWithPaymentDataWithoutPayee,
   NewMessageWithContent,
   RetrievedMessage,
   NewMessageWithContentWithPaymentData,
-  NewMessageWithContentWithPaymentDataWithoutPayee,
-  NewMessageWithoutContent
+  NewMessageWithoutContent,
+  RetrievedMessageWithContent
 } from "../message";
 
 jest.mock("../../utils/azure_storage");
@@ -38,7 +37,6 @@ import { PaymentData } from "../../../generated/definitions/PaymentData";
 import { PaymentAmount } from "../../../generated/definitions/PaymentAmount";
 import { PaymentNoticeNumber } from "../../../generated/definitions/PaymentNoticeNumber";
 import { Payee } from "../../../generated/definitions/Payee";
-import { PaymentDataWithExplicitPayee } from "../../../generated/definitions/PaymentDataWithExplicitPayee";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { pipe } from "fp-ts/lib/function";
 
@@ -90,7 +88,7 @@ const aPaymentDataWithoutPayee: PaymentData = {
   notice_number: "177777777777777777" as PaymentNoticeNumber
 };
 const aPayee: Payee = { fiscal_code: anOrganizationFiscalCode };
-const aPaymentDataWithPayee: PaymentDataWithExplicitPayee = {
+const aPaymentDataWithPayee: PaymentData = {
   ...aPaymentDataWithoutPayee,
   payee: aPayee
 };
@@ -103,13 +101,13 @@ const aNewMessageWithContentWithPaymentData: NewMessageWithContentWithPaymentDat
   },
   kind: "INewMessageWithContentWithPaymentData"
 };
-const aNewMessageWithContentWithPaymentDataWithoutPayee: NewMessageWithContentWithPaymentDataWithoutPayee = {
+const aNewMessageWithContentWithPaymentDataWithoutPayee: NewMessageWithContentWithPaymentData = {
   ...aNewMessageWithContent,
   content: {
     ...aNewMessageWithContent.content,
     payment_data: aPaymentDataWithoutPayee
   },
-  kind: "INewMessageWithContentWithPaymentDataWithoutPayee"
+  kind: "INewMessageWithContentWithPaymentData"
 };
 
 const aRetrievedMessageWithoutContent = {
@@ -119,12 +117,13 @@ const aRetrievedMessageWithoutContent = {
   _ts: 1,
   ...aNewMessageWithoutContent
 };
-const aRetrievedMessageWithContent = {
+const aRetrievedMessageWithContent: RetrievedMessageWithContent = {
   _etag: "_etag",
   _rid: "_rid",
   _self: "_self",
   _ts: 1,
-  ...aNewMessageWithContent
+  ...aNewMessageWithContent,
+  kind: "IRetrievedMessageWithContent"
 };
 const aRetrievedMessageWithContentWithPaymentData = {
   _etag: "_etag",
@@ -166,21 +165,18 @@ describe("Models ", () => {
     );
   });
 
-  it("should NOT decode MessageWithContentWithPayee with payment data without payee", () => {
+  it("should decode MessageWithContentWithPaymentData with payment data without payee", () => {
     const messageWithContentWithoutPayee = MessageWithContentWithPaymentData.decode(
       aNewMessageWithContentWithPaymentDataWithoutPayee
     );
 
-    expect(E.isLeft(messageWithContentWithoutPayee)).toBe(true);
+    expect(E.isRight(messageWithContentWithoutPayee)).toBe(true);
   });
 
-  it("should deserialize MessageWithContentWithPaymentDataWithoutPayee with payment data without payee", () => {
-    const messageWithContentWithPaymentDataWithoutPayee = MessageWithContentWithPaymentDataWithoutPayee.decode(
-      aNewMessageWithContentWithPaymentDataWithoutPayee
-    );
-
+  it("should deserialize MessageWithContentWithPaymentData with payment data without payee", () => {
     pipe(
-      messageWithContentWithPaymentDataWithoutPayee, 
+      aNewMessageWithContentWithPaymentDataWithoutPayee,
+      MessageWithContentWithPaymentData.decode, 
       E.fold(
         () => fail(),
         _ => expect(_).toEqual({
@@ -205,27 +201,25 @@ describe("Models ", () => {
 
 describe("RetrievedMessage", () => {
   it("should deserialize RetrievedMessage without payment_data", () => {
-    const val = RetrievedMessage.decode(aRetrievedMessageWithContent);
     pipe(
-      val,
-      E.fold(() => fail(), _ => {
-        expect(_).toEqual({
-          ...aRetrievedMessageWithContent,
-          kind: "IRetrievedMessageWithContent"
-        });
+      aRetrievedMessageWithContent,
+      RetrievedMessage.decode,
+      E.fold(
+        () => fail(), 
+        val => {
+          expect(val).toEqual({
+            ...aRetrievedMessageWithContent,
+            kind: "IRetrievedMessageWithContent"
+          });
       })
     )
     
   });
 
   it("should deserialize RetrievedMessage with payment_data without payee", () => {
-    const val0 = RetrievedMessage.decode(
-      aRetrievedMessageWithContentWithPaymentDataWithoutPayee
-    );
-
     const expected = {
       ...aRetrievedMessageWithContentWithPaymentDataWithoutPayee,
-      kind: "IRetrievedMessageWithContentWithPaymentDataWithoutPayee",
+      kind: "IRetrievedMessageWithContentWithPaymentData",
       content: {
         ...aRetrievedMessageWithContentWithPaymentDataWithoutPayee.content,
         payment_data: {
@@ -236,7 +230,8 @@ describe("RetrievedMessage", () => {
       }
     };
     pipe(
-      val0,
+      aRetrievedMessageWithContentWithPaymentDataWithoutPayee,
+      RetrievedMessage.decode,
       E.fold(
         () => fail(), 
         value => expect(value).toEqual(expected)
@@ -245,14 +240,13 @@ describe("RetrievedMessage", () => {
   });
 
   it("should deserialize RetrievedMessage without Content", () => {
-    const val = RetrievedMessage.decode(aRetrievedMessageWithoutContent);
-
     const expected = {
       ...aRetrievedMessageWithoutContent,
       kind: "IRetrievedMessageWithoutContent"
     };
     pipe(
-      val,
+      aRetrievedMessageWithoutContent,
+      RetrievedMessage.decode,
       E.fold(
         () => fail(),
         value => expect(value).toEqual(expected)
@@ -261,10 +255,6 @@ describe("RetrievedMessage", () => {
   });
 
   it("should deserialize RetrievedMessage with payment_data with payee", () => {
-    const val = RetrievedMessage.decode(
-      aRetrievedMessageWithContentWithPaymentData
-    );
-
     const expected = {
       ...aRetrievedMessageWithContentWithPaymentData,
       kind: "IRetrievedMessageWithContentWithPaymentData",
@@ -278,7 +268,8 @@ describe("RetrievedMessage", () => {
     };
 
     pipe(
-      val,
+      aRetrievedMessageWithContentWithPaymentData,
+      RetrievedMessage.decode,
       E.fold(
         () => fail(),
         value => expect(value).toEqual(expected)

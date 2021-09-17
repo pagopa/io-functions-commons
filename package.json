@@ -17,7 +17,7 @@
     "test:integration": "yarn build && cd ./__integrations__ && yarn install --frozen-lockfile && yarn start",
     "test:all": "yarn test && yarn test:integration",
     "lint": "eslint . -c .eslintrc.js --ext .ts,.tsx",
-    "generate:all": "npm-run-all generate:*",
+    "generate": "npm-run-all generate:*",
     "generate:definitions": "rimraf ./generated && gen-api-models --api-spec ./openapi/index.yaml --out-dir ./generated/definitions",
     "generate:templates": "gulp generate:templates",
     "preversion": "auto-changelog  --config .auto-changelog.json --unreleased --commit-limit false --stdout --template preview.hbs",
