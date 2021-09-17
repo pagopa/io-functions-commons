@@ -10,6 +10,7 @@ module.exports = {
     "**/__tests__/*",
     "**/__mocks__/*",
     "**/__integrations__/*",
+    "**/templates/html/**",
     "Dangerfile.*",
     "*.d.ts"
   ],
