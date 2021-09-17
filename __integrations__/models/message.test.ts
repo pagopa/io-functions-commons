@@ -18,6 +18,7 @@ import { CosmosErrors } from "../../src/utils/cosmosdb_model";
 import { Validation } from "io-ts";
 import * as E from "fp-ts/lib/Either";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
+import { MessageContent } from "../../generated/definitions/MessageContent";
 
 const MESSAGE_CONTAINER_NAME = "test-message-container" as NonEmptyString;
 
@@ -38,7 +39,19 @@ const aNewMessageWithoutContent: NewMessageWithoutContent = {
   kind: "INewMessageWithoutContent"
 };
 
-const aMessageContentWithPayment = {
+const aMessageContentWithPaymentWithPayee = {
+  subject: "a".repeat(20),
+  markdown: "a".repeat(100),
+  payment_data: {
+    amount: 10,
+    notice_number: `0${"9".repeat(17)}`,
+    payee: {
+      fiscal_code: anotherFiscalCode
+    }
+  }
+};
+
+const aMessageContentWithPaymentWithoutPayee = {
   subject: "a".repeat(20),
   markdown: "a".repeat(100),
   payment_data: {
@@ -187,7 +200,8 @@ describe("Models |> Message", () => {
   it.each`
     title                                                        | value
     ${"a message content without"}                               | ${aMessageContentWithNoPayment}
-    ${"a message content with payment data"}                     | ${aMessageContentWithPayment}
+    ${"a message content with payment data without payee"}       | ${aMessageContentWithPaymentWithoutPayee}
+    ${"a message content with payment data with payee"}          | ${aMessageContentWithPaymentWithPayee}
     ${"a message content with a prescription"}                   | ${aMessageContentPrescription}
     ${"a message content with a EU Covid Certificate auth code"} | ${aMessageContentEUCovidCert}
   `("should save $title correctly", async ({ value }) => {
@@ -213,8 +227,8 @@ describe("Models |> Message", () => {
 
     await pipe(
       model.getContentFromBlob(context.storage, aFakeMessageId),
-      TE.chain(_ =>
-        TE.fromEither(fromOption(() => new Error(`Blob not found`))(_))
+      TE.chain(
+        TE.fromOption(() => new Error(`Blob not found`))
       ),
       TE.bimap(
         _ => fail(`Failed to get content, error: ${JSON.stringify(_)}`),

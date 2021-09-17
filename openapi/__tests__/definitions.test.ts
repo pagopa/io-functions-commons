@@ -301,7 +301,12 @@ describe("Type definition", () => {
       decodedMessageContent,
       E.fold(
         () => fail(),
-        value => expect(value).toBe(aContentWithoutPaymentData)
+        value => {
+        console.log(value);
+        console.log(aContentWithoutPaymentData)
+        expect(value).toEqual(aContentWithoutPaymentData);
+
+        }
       )
     );
   });

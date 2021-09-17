@@ -90,12 +90,9 @@ MessageContentBase:
       $ref: "#/PrescriptionData"
     due_date:
       $ref: "#/Timestamp"
-    eu_covid_cert:
-      $ref: "#/EUCovidCert"
   required:
     - subject
     - markdown
-
 MessageContentWithPaymentDataWithPayee:
   allOf:
     - $ref: "#/MessageContentBase"
@@ -103,8 +100,8 @@ MessageContentWithPaymentDataWithPayee:
       properties:
         payment_data:
           $ref: "#/PaymentDataWithPayee"
-      required: payment_data 
-
+      required: 
+        - payment_data 
 MessageContentWithPaymentDataWithoutPayee:
   allOf:
     - $ref: "#/MessageContentBase"
@@ -112,14 +109,17 @@ MessageContentWithPaymentDataWithoutPayee:
       properties:
         payment_data:
           $ref: "#/PaymentData"
-      required: payment_data 
+      required: 
+        - payment_data 
 MessageContent:
-  x-one-of: true
   allOf:
-    - $ref: "#/MessageContentWithPaymentDataWithPayee"
-    - $ref: "#/MessageContentWithPaymentDataWithoutPayee"
     - $ref: "#/MessageContentBase"
-
+    - type: object
+      properties:
+        eu_covid_cert:
+          $ref: "#/EUCovidCert"
+        payment_data:
+          $ref: "#/PaymentDataWithOptionalPayee"
 NewMessage:
   type: object
   properties:

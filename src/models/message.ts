@@ -489,7 +489,7 @@ export class MessageModel extends CosmosdbModel<
                   )}`
                 )
               ),
-            (content: MessageContent) => TE.of(some(content))
+            content => TE.of(some(content))
           )
         )
       )
