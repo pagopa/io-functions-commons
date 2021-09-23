@@ -175,7 +175,7 @@ describe("NewMessage definition", () => {
     );
   });
 
-  it("should NOT decode NewMessage with content and payment data but without payee", () => {
+  it("should decode NewMessage with content and payment data but without payee", () => {
     const aMessageWithContentWithPaymentDataWithoutPayee = {
       ...aNewMessageWithoutContent,
       content: {
@@ -191,8 +191,18 @@ describe("NewMessage definition", () => {
     pipe(
       messageWithContent,
       E.fold(
-        _ => expect(_).toBeDefined(),
-        () => fail()
+        () => fail(),
+        _ => expect(_).toEqual({
+          ...aMessageWithContentWithPaymentDataWithoutPayee,
+          content: {
+            ...aMessageWithContentWithPaymentDataWithoutPayee.content,
+            payment_data: {
+              ...aMessageWithContentWithPaymentDataWithoutPayee.content.payment_data,
+              invalid_after_due_date: false
+            }
+          },
+          time_to_live: 3600
+        })
       )
     );
   });
