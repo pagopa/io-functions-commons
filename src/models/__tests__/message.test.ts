@@ -23,10 +23,6 @@ import {
   RetrievedMessage,
   NewMessageWithoutContent,
   RetrievedMessageWithContent,
-  NewMessageWithContentWithPaymentDataWithPayee,
-  MessageWithContentWithPaymentDataWithPayee,
-  RetrievedMessageWithContentWithPaymentData,
-  MessageWithContentWithPaymentDataWithOptionalPayee,
   NewMessage
 } from "../message";
 
@@ -42,7 +38,7 @@ import { PaymentNoticeNumber } from "../../../generated/definitions/PaymentNotic
 import { Payee } from "../../../generated/definitions/Payee";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { pipe } from "fp-ts/lib/function";
-import { PaymentDataWithPayee } from "../../../generated/definitions/PaymentDataWithPayee";
+import { PaymentDataWithRequiredPayee } from "../../../generated/definitions/PaymentDataWithRequiredPayee";
 
 beforeEach(() => {
   jest.resetAllMocks();
@@ -51,10 +47,13 @@ beforeEach(() => {
 const MESSAGE_CONTAINER_NAME = "message-content" as NonEmptyString;
 
 const aMessageBodyMarkdown = "test".repeat(80) as MessageBodyMarkdown;
-
-const aMessageContent: MessageContent = {
+const aGeneralMessageContent = {
   markdown: aMessageBodyMarkdown,
   subject: "test".repeat(10) as MessageSubject
+}
+
+const aMessageContent: MessageContent = {
+  ...aGeneralMessageContent
 };
 
 const cosmosMetadata = {
@@ -83,7 +82,10 @@ const aSerializedNewMessageWithContent = {
 };
 
 const aNewMessageWithContent: NewMessageWithContent = {
-  ...aSerializedNewMessageWithContent,
+  ...aSerializedNewMessageWithoutContent,
+  content: {
+    ...aGeneralMessageContent
+  },
   createdAt: new Date(),
   kind: "INewMessageWithContent"
 };
@@ -99,18 +101,18 @@ const aPaymentDataWithoutPayee: PaymentData = {
   notice_number: "177777777777777777" as PaymentNoticeNumber
 };
 const aPayee: Payee = { fiscal_code: anOrganizationFiscalCode };
-const aPaymentDataWithPayee: PaymentDataWithPayee = {
+const aPaymentDataWithPayee: PaymentDataWithRequiredPayee = {
   ...aPaymentDataWithoutPayee,
   payee: aPayee
 };
 
-const aNewMessageWithContentWithPaymentData: NewMessageWithContentWithPaymentDataWithPayee = {
+const aNewMessageWithContentWithPaymentData: NewMessageWithContent = {
   ...aNewMessageWithContent,
   content: {
     ...aNewMessageWithContent.content,
     payment_data: aPaymentDataWithPayee
   },
-  kind: "INewMessageWithContentWithPaymentData"
+  kind: "INewMessageWithContent"
 };
 
 const aNewMessageWithContentWithPaymentDataWithoutPayee = {
@@ -119,7 +121,7 @@ const aNewMessageWithContentWithPaymentDataWithoutPayee = {
     ...aNewMessageWithContent.content,
     payment_data: aPaymentDataWithoutPayee
   },
-  kind: "INewMessageWithContentWithPaymentData"
+  kind: "INewMessageWithContent"
 };
 
 const aRetrievedMessageWithoutContent = {
@@ -131,10 +133,10 @@ const aRetrievedMessageWithContent: RetrievedMessageWithContent = {
   ...aNewMessageWithContent,
   kind: "IRetrievedMessageWithContent"
 };
-const aRetrievedMessageWithContentWithPaymentData: RetrievedMessageWithContentWithPaymentData = {
+const aRetrievedMessageWithContentWithPaymentData: RetrievedMessageWithContent = {
   ...cosmosMetadata,
   ...aNewMessageWithContentWithPaymentData,
-  kind: "IRetrievedMessageWithContentWithPaymentData",
+  kind: "IRetrievedMessageWithContent",
 };
 
 const aRetrievedMessageWithContentWithPaymentDataWithoutPayee = {
@@ -147,8 +149,8 @@ const aRetrievedMessageWithContentWithPaymentDataWithoutPayee = {
 };
 
 describe("Models ", () => {
-  it("should decode MessageWithContentWithPaymentData with payment data with payee", () => {
-    const messageWithContentWithPayee = MessageWithContentWithPaymentDataWithPayee.decode(
+  it("should decode MessageWithContent with payment data with payee", () => {
+    const messageWithContentWithPayee = NewMessageWithContent.decode(
       aNewMessageWithContentWithPaymentData
     );
 
@@ -171,7 +173,7 @@ describe("Models ", () => {
   });
 
   it("should decode MessageWithContentWithPaymentData with payment data without payee", () => {
-    const messageWithContentWithoutPayee = MessageWithContentWithPaymentDataWithOptionalPayee.decode(
+    const messageWithContentWithoutPayee = MessageWithContent.decode(
       aRetrievedMessageWithContentWithPaymentDataWithoutPayee
     );
 
@@ -179,16 +181,16 @@ describe("Models ", () => {
   });
 
   it("should NOT decode NewMessage with content with payment data without payee", () => {
-    const messageWithContentWithoutPayee = NewMessageWithContentWithPaymentDataWithPayee.decode(
+    const messageWithContentWithoutPayee = NewMessageWithContent.decode(
       aNewMessageWithContentWithPaymentDataWithoutPayee
     );
     expect(E.isLeft(messageWithContentWithoutPayee)).toBeTruthy();
   });
 
-  it("should deserialize MessageWithContentWithPaymentData with payment data without payee", () => {
+  it("should deserialize MessageWithContent with payment data without payee", () => {
     pipe(
       aRetrievedMessageWithContentWithPaymentDataWithoutPayee,
-      MessageWithContentWithPaymentDataWithOptionalPayee.decode, 
+      MessageWithContent.decode, 
       E.fold(
         () => fail(),
         _ => expect(_).toEqual({
@@ -231,7 +233,7 @@ describe("RetrievedMessage", () => {
   it("should deserialize RetrievedMessage with payment_data without payee", () => {
     const expected = {
       ...aRetrievedMessageWithContentWithPaymentDataWithoutPayee,
-      kind: "IRetrievedMessageWithContentWithPaymentData",
+      kind: "IRetrievedMessageWithContent",
       content: {
         ...aRetrievedMessageWithContentWithPaymentDataWithoutPayee.content,
         payment_data: {
@@ -269,7 +271,7 @@ describe("RetrievedMessage", () => {
   it("should deserialize RetrievedMessage with payment_data with payee", () => {
     const expected = {
       ...aRetrievedMessageWithContentWithPaymentData,
-      kind: "IRetrievedMessageWithContentWithPaymentData",
+      kind: "IRetrievedMessageWithContent",
       content: {
         ...aRetrievedMessageWithContentWithPaymentData.content,
         payment_data: {

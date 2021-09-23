@@ -79,6 +79,7 @@ NotificationChannelStatus:
     - channel
     - status
     - updated_at
+
 MessageContentBase:
   type: object
   properties:
@@ -86,47 +87,42 @@ MessageContentBase:
       $ref: "#/MessageSubject"
     markdown:
       $ref: "#/MessageBodyMarkdown"
-    prescription_data:
-      $ref: "#/PrescriptionData"
-    due_date:
-      $ref: "#/Timestamp"
   required:
     - subject
     - markdown
-MessageContentWithPaymentDataWithPayee:
-  allOf:
-    - $ref: "#/MessageContentBase"
-    - type: object
-      properties:
-        payment_data:
-          $ref: "#/PaymentDataWithPayee"
-      required: 
-        - payment_data 
-MessageContentWithPaymentDataWithoutPayee:
+MessageContent:
   allOf:
     - $ref: "#/MessageContentBase"
     - type: object
       properties:
         payment_data:
           $ref: "#/PaymentData"
-      required: 
-        - payment_data 
-MessageContent:
+        prescription_data:
+          $ref: "#/PrescriptionData"
+        eu_covid_cert:
+          $ref: "#/EUCovidCert"
+        due_date:
+          $ref: "#/Timestamp"
+NewMessageContent:
   allOf:
     - $ref: "#/MessageContentBase"
     - type: object
       properties:
+        payment_data:
+          $ref: "#/PaymentDataWithRequiredPayee"
+        due_date:
+          $ref: "#/Timestamp"
+        prescription_data:
+          $ref: "#/PrescriptionData"
         eu_covid_cert:
           $ref: "#/EUCovidCert"
-        payment_data:
-          $ref: "#/PaymentDataWithOptionalPayee"
 NewMessage:
   type: object
   properties:
     time_to_live:
       $ref: "#/TimeToLiveSeconds"
     content:
-      $ref: "#/MessageContent"
+      $ref: "#/NewMessageContent"
     default_addresses:
       $ref: "#/NewMessageDefaultAddresses"
     fiscal_code:
@@ -165,7 +161,16 @@ PrescriptionNRE:
   type: string
   minLength: 15
   maxLength: 15
-PaymentData:
+Payee:
+  type: object
+  description: |-
+    Metadata needed to explicit payment's payee.
+  properties:
+    fiscal_code:
+      $ref: "#/OrganizationFiscalCode"
+  required:
+    - fiscal_code
+PaymentDataBase:
   type: object
   description: |-
     Metadata needed to process pagoPA payments.
@@ -180,22 +185,22 @@ PaymentData:
   required:
     - amount
     - notice_number
-PaymentDataWithPayee:
+PaymentData:
   allOf:
-    - $ref: "#/PaymentData"
+    - $ref: "#/PaymentDataBase"
     - type: object
-      description: |-
-        Metadata to indicate a specific Payee for the payment
+      properties:
+        payee:
+          $ref: "#/Payee"
+PaymentDataWithRequiredPayee:
+  allOf:
+    - $ref: "#/PaymentDataBase"
+    - type: object
       properties:
         payee:
           $ref: "#/Payee"
       required:
         - payee
-PaymentDataWithOptionalPayee:
-  x-one-of: true
-  allOf:
-    - $ref: "#/PaymentDataWithPayee"
-    - $ref: "#/PaymentData"
 PaymentNoticeNumber:
   description:
     The field ["Numero Avviso"](https://pagopa-specifichepagamenti.readthedocs.io/it/latest/_docs/Capitolo7.html#il-numero-avviso-e-larchivio-dei-pagamenti-in-attesa)
@@ -209,15 +214,6 @@ PaymentAmount:
   type: integer
   minimum: 1
   maximum: 9999999999
-Payee:
-  description: |-
-    Beneficiary of the payment fiscal code
-  type: object
-  properties:
-    fiscal_code:
-      $ref: "#/OrganizationFiscalCode"
-  required:
-    - fiscal_code
 MaxAllowedPaymentAmount:
   description: |-
     Maximum amount in euro cents that a service is allowed to charge to a user.

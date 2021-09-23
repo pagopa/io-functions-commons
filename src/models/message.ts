@@ -32,9 +32,7 @@ import { Timestamp } from "../../generated/definitions/Timestamp";
 import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds";
 import { getBlobAsText, upsertBlobFromObject } from "../utils/azure_storage";
 import { wrapWithKind } from "../utils/types";
-import { MessageContentBase } from "../../generated/definitions/MessageContentBase";
-import { PaymentDataWithOptionalPayee } from "../../generated/definitions/PaymentDataWithOptionalPayee";
-import { MessageContentWithPaymentDataWithPayee } from "../../generated/definitions/MessageContentWithPaymentDataWithPayee";
+import { NewMessageContent } from "../../generated/definitions/NewMessageContent";
 
 export const MESSAGE_COLLECTION_NAME = "messages";
 export const MESSAGE_MODEL_PK_FIELD = "fiscalCode" as const;
@@ -95,7 +93,7 @@ export const MessageWithoutContent = MessageBase;
  */
 export const MessageWithContent = t.intersection([
   t.interface({
-    content: MessageContentBase
+    content: MessageContent
   }),
   MessageBase
 ]);
@@ -103,71 +101,26 @@ export const MessageWithContent = t.intersection([
 export type MessageWithContent = t.TypeOf<typeof MessageWithContent>;
 
 /**
- * A Message with content with payment data with payee
- *
- * A Message gets stored with content if the recipient opted-in
- * to have the content of the messages permanently stored in his inbox.
- */
-export const MessageWithContentWithPaymentDataWithPayee = t.intersection([
-  t.interface({
-    content: MessageContentWithPaymentDataWithPayee
-  }),
-  MessageBase
-]);
-
-export type MessageWithContentWithPaymentDataWithPayee = t.TypeOf<
-  typeof MessageWithContentWithPaymentDataWithPayee
->;
-
-/**
- * A Message with content with payment data with optional payee
- *
- * A Message gets stored with content if the recipient opted-in
- * to have the content of the messages permanently stored in his inbox.
- */
-export const MessageWithContentWithPaymentDataWithOptionalPayee = t.intersection(
-  [
-    t.interface({
-      content: t.intersection([
-        MessageContentBase,
-        t.interface({ payment_data: PaymentDataWithOptionalPayee })
-      ])
-    }),
-    MessageBase
-  ]
-);
-
-export type MessageWithContentWithPaymentDataWithOptionalPayee = t.TypeOf<
-  typeof MessageWithContentWithPaymentDataWithOptionalPayee
->;
-
-/**
  * A Message can be with our without content
  */
-export const Message = t.union([
-  MessageWithContentWithPaymentDataWithPayee,
-  MessageWithContentWithPaymentDataWithOptionalPayee,
-  MessageWithContent,
-  MessageWithoutContent
-]);
+export const Message = t.union([MessageWithoutContent, MessageWithContent]);
 
 export type Message = t.TypeOf<typeof Message>;
 
 export const NewMessageWithContent = wrapWithKind(
-  t.intersection([MessageWithContent, BaseModel]),
+  t.exact(
+    t.intersection([
+      t.interface({
+        content: NewMessageContent
+      }),
+      MessageBase,
+      BaseModel
+    ])
+  ),
   "INewMessageWithContent" as const
 );
 
 export type NewMessageWithContent = t.TypeOf<typeof NewMessageWithContent>;
-
-export const NewMessageWithContentWithPaymentDataWithPayee = wrapWithKind(
-  t.intersection([MessageWithContentWithPaymentDataWithPayee, BaseModel]),
-  "INewMessageWithContentWithPaymentData" as const
-);
-
-export type NewMessageWithContentWithPaymentDataWithPayee = t.TypeOf<
-  typeof NewMessageWithContentWithPaymentDataWithPayee
->;
 
 export const NewMessageWithoutContent = wrapWithKind(
   t.intersection([MessageWithoutContent, BaseModel]),
@@ -182,7 +135,6 @@ export type NewMessageWithoutContent = t.TypeOf<
  * A (yet to be saved) Message
  */
 export const NewMessage = t.union([
-  NewMessageWithContentWithPaymentDataWithPayee,
   NewMessageWithContent,
   NewMessageWithoutContent
 ]);
@@ -196,18 +148,6 @@ export const RetrievedMessageWithContent = wrapWithKind(
 
 export type RetrievedMessageWithContent = t.TypeOf<
   typeof RetrievedMessageWithContent
->;
-
-export const RetrievedMessageWithContentWithPaymentData = wrapWithKind(
-  t.intersection([
-    MessageWithContentWithPaymentDataWithOptionalPayee,
-    CosmosResource
-  ]),
-  "IRetrievedMessageWithContentWithPaymentData" as const
-);
-
-export type RetrievedMessageWithContentWithPaymentData = t.TypeOf<
-  typeof RetrievedMessageWithContentWithPaymentData
 >;
 
 export const RetrievedMessageWithoutContent = wrapWithKind(
@@ -233,7 +173,6 @@ export type NotExpiredMessage = t.TypeOf<typeof ActiveMessage>;
  * A (previously saved) retrieved Message
  */
 export const RetrievedMessage = t.union([
-  RetrievedMessageWithContentWithPaymentData,
   RetrievedMessageWithContent,
   RetrievedMessageWithoutContent
 ]);
@@ -489,7 +428,7 @@ export class MessageModel extends CosmosdbModel<
                   )}`
                 )
               ),
-            content => TE.of(some(content))
+            (content: MessageContent) => TE.of(some(content))
           )
         )
       )

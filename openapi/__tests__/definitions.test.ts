@@ -14,7 +14,6 @@ import { Payee } from "../../generated/definitions/Payee";
 import { MessageContent } from "../../generated/definitions/MessageContent";
 import { NewMessage } from "../../generated/definitions/NewMessage";
 import { pipe } from "fp-ts/lib/function";
-import { PaymentDataWithOptionalPayee } from "../../generated/definitions/PaymentDataWithOptionalPayee";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -176,7 +175,7 @@ describe("NewMessage definition", () => {
     );
   });
 
-  it("should decode NewMessage with content and payment data but without payee", () => {
+  it("should NOT decode NewMessage with content and payment data but without payee", () => {
     const aMessageWithContentWithPaymentDataWithoutPayee = {
       ...aNewMessageWithoutContent,
       content: {
@@ -192,19 +191,8 @@ describe("NewMessage definition", () => {
     pipe(
       messageWithContent,
       E.fold(
-        () => fail(),
-        value => expect(value).toEqual({
-          ...aMessageWithContentWithPaymentDataWithoutPayee,
-          content: {
-            ...aMessageWithContentWithPaymentDataWithoutPayee.content,
-            payment_data: {
-              ...aMessageWithContentWithPaymentDataWithoutPayee.content
-                .payment_data,
-              invalid_after_due_date: false
-            }
-          },
-          time_to_live: 3600
-        })
+        _ => expect(_).toBeDefined(),
+        () => fail()
       )
     );
   });
@@ -212,7 +200,7 @@ describe("NewMessage definition", () => {
   it("should decode PaymentData with payment data with payee", () => {
     const aPaymentDataWithPayee = { ...aPaymentDataWithoutPayee, payee: aPayee };
 
-    const messageWithContent = PaymentDataWithOptionalPayee.decode(
+    const messageWithContent = PaymentData.decode(
       aPaymentDataWithPayee
     );
     pipe(
@@ -301,12 +289,8 @@ describe("Type definition", () => {
       decodedMessageContent,
       E.fold(
         () => fail(),
-        value => {
-        console.log(value);
-        console.log(aContentWithoutPaymentData)
-        expect(value).toEqual(aContentWithoutPaymentData);
-
-        }
+        value => 
+          expect(value).toEqual(aContentWithoutPaymentData)
       )
     );
   });
