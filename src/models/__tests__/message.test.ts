@@ -52,7 +52,7 @@ const aGeneralMessageContent = {
   subject: "test".repeat(10) as MessageSubject
 }
 
-const aMessageContent: MessageContent = {
+const aMessageContent = {
   ...aGeneralMessageContent
 };
 

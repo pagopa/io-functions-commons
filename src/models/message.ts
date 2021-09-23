@@ -358,7 +358,7 @@ export class MessageModel extends CosmosdbModel<
   public storeContentAsBlob(
     blobService: BlobService,
     messageId: string,
-    messageContent: MessageContent
+    messageContent: NewMessageContent
   ): TE.TaskEither<Error, Option<BlobService.BlobResult>> {
     // Set the blob name
     const blobName = blobIdFromMessageId(messageId);
@@ -367,7 +367,7 @@ export class MessageModel extends CosmosdbModel<
     return pipe(
       TE.tryCatch(
         () =>
-          upsertBlobFromObject<MessageContent>(
+          upsertBlobFromObject<NewMessageContent>(
             blobService,
             this.containerName,
             blobName,
