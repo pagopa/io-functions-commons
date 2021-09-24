@@ -1,7 +1,12 @@
 /**
  * Insert fake data into CosmosDB database emulator.
  */
-import { Container, Database, CosmosClient } from "@azure/cosmos";
+import {
+  Container,
+  Database,
+  CosmosClient,
+  IndexingPolicy
+} from "@azure/cosmos";
 import { BlobService } from "azure-storage";
 
 import { PromiseType } from "@pagopa/ts-commons/lib/types";
@@ -43,7 +48,8 @@ const createDatabase = (dbName: string): TaskEither<CosmosErrors, Database> =>
 const createContainer = (
   db: Database,
   containerName: string,
-  partitionKey: string
+  partitionKey: string,
+  indexingPolicy?: IndexingPolicy
 ): TaskEither<CosmosErrors, Container> =>
   pipe(
     tryCatch<
@@ -53,6 +59,7 @@ const createContainer = (
       () =>
         db.containers.createIfNotExists({
           id: containerName,
+          indexingPolicy,
           partitionKey: `/${partitionKey}`
         }),
       toCosmosErrorResponse
@@ -64,12 +71,13 @@ const deleteContainer = (
   db: Database,
   containerName: string
 ): TaskEither<CosmosErrors, Container> =>
-  pipe(tryCatch<
-    CosmosErrors,
-    PromiseType<ReturnType<typeof db.containers.createIfNotExists>>
-  >(() => db.container(containerName).delete(), toCosmosErrorResponse), map(
-    containerResponse => containerResponse.container
-  ));
+  pipe(
+    tryCatch<
+      CosmosErrors,
+      PromiseType<ReturnType<typeof db.containers.createIfNotExists>>
+    >(() => db.container(containerName).delete(), toCosmosErrorResponse),
+    map(containerResponse => containerResponse.container)
+  );
 
 const makeRandomContainerName = (): string => {
   const result = [];
@@ -91,12 +99,12 @@ export const createContext = (partitionKey: string, hasStorage = false) => {
   let storage: BlobService;
   let container: Container;
   return {
-    async init() {
+    async init(indexingPolicy?: IndexingPolicy) {
       const r = await pipe(
         createDatabase(cosmosDatabaseName),
         chain(db =>
           pipe(
-            createContainer(db, containerName, partitionKey),
+            createContainer(db, containerName, partitionKey,indexingPolicy),
             map(container => ({
               db,
               container
@@ -105,7 +113,9 @@ export const createContext = (partitionKey: string, hasStorage = false) => {
         ),
         getOrElseW<CosmosErrors, { db: Database; container: Container }>(_ =>
           fail(
-            `Cannot init, container: ${containerName}, error: ${JSON.stringify(_)}`
+            `Cannot init, container: ${containerName}, error: ${JSON.stringify(
+              _
+            )}`
           )
         )
       )();

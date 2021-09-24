@@ -189,7 +189,7 @@ it("should return an iterator containing results page of correct pageSize", asyn
       parameters: [
         { name: "@fiscalCode", value: aRetrievedMessageWithContent.fiscalCode }
       ],
-      query: "SELECT * FROM m WHERE m.fiscalCode = @fiscalCode ORDER BY m.id DESC"
+      query: "SELECT * FROM m WHERE m.fiscalCode = @fiscalCode ORDER BY m.fiscalCode, m.id DESC"
     },
     { maxItemCount: 2 }
   );
@@ -244,7 +244,7 @@ it("should construct the correct query with maximumMessageId param", async () =>
         { name: "@fiscalCode", value: aRetrievedMessageWithContent.fiscalCode },
         { name: "@maxId", value: "A_MESSAGE_ID" }
       ],
-      query: "SELECT * FROM m WHERE m.fiscalCode = @fiscalCode AND m.id < @maxId ORDER BY m.id DESC"
+      query: "SELECT * FROM m WHERE m.fiscalCode = @fiscalCode AND m.id < @maxId ORDER BY m.fiscalCode, m.id DESC"
     },
     { maxItemCount: 2 }
   );
@@ -289,7 +289,7 @@ it("should construct the correct query with minimumMessageId param", async () =>
         { name: "@fiscalCode", value: aRetrievedMessageWithContent.fiscalCode },
         { name: "@minId", value: "A_MESSAGE_ID" }
       ],
-      query: "SELECT * FROM m WHERE m.fiscalCode = @fiscalCode AND m.id > @minId ORDER BY m.id DESC"
+      query: "SELECT * FROM m WHERE m.fiscalCode = @fiscalCode AND m.id > @minId ORDER BY m.fiscalCode, m.id DESC"
     },
     { maxItemCount: 2 }
   );
