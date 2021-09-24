@@ -23,6 +23,7 @@ import { MessageSubject } from "../../generated/definitions/MessageSubject";
 import { MessageBodyMarkdown } from "../../generated/definitions/MessageBodyMarkdown";
 import { PaymentAmount } from "../../generated/definitions/PaymentAmount";
 import { PaymentNoticeNumber } from "../../generated/definitions/PaymentNoticeNumber";
+import { IndexingPolicy } from "@azure/cosmos";
 
 const MESSAGE_CONTAINER_NAME = "test-message-container" as NonEmptyString;
 
@@ -104,10 +105,25 @@ const asyncIteratorToPageOfResults = <T>(source: AsyncIterator<T>) => {
   return source.next().then(ir => ir.value as T);
 };
 
+const messagesIndexingPolicy = {
+  compositeIndexes: [
+    [
+      {
+        path: "/fiscalCode",
+        order: "ascending"
+      },
+      {
+        path: "/id",
+        order: "descending"
+      }
+    ]
+  ]
+} as IndexingPolicy;
+
 describe("Models |> Message", () => {
   it("should save messages without content", async () => {
     const context = await createContext(MESSAGE_MODEL_PK_FIELD);
-    await context.init();
+    await context.init(messagesIndexingPolicy);
     const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
 
     // create a new document
@@ -210,7 +226,7 @@ describe("Models |> Message", () => {
     ${"a message content with a EU Covid Certificate auth code"} | ${aMessageContentEUCovidCert}
   `("should save $title correctly", async ({ value }) => {
     const context = await createContext(MESSAGE_MODEL_PK_FIELD, true);
-    await context.init();
+    await context.init(messagesIndexingPolicy);
     const model = new MessageModel(
       context.container,
       context.containerName as NonEmptyString
@@ -268,7 +284,7 @@ describe("Models |> Message", () => {
 
   it("should retrieve a page with all messages when they are less than default page size and no parameter is passed to query", async () => {
     const context = await createContext(MESSAGE_MODEL_PK_FIELD);
-    await context.init();
+    await context.init(messagesIndexingPolicy);
     const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
 
     // create 20 messages
@@ -304,7 +320,7 @@ describe("Models |> Message", () => {
 
   it("should have a done iterator after all results have been given", async () => {
     const context = await createContext(MESSAGE_MODEL_PK_FIELD);
-    await context.init();
+    await context.init(messagesIndexingPolicy);
     const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
 
     // create 20 messages
@@ -343,7 +359,7 @@ describe("Models |> Message", () => {
 
   it("should retrieve a page of maximum default page size number of records when no parameter is passed to query", async () => {
     const context = await createContext(MESSAGE_MODEL_PK_FIELD);
-    await context.init();
+    await context.init(messagesIndexingPolicy);
     const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
 
     // create 10 messages more than defaultPageSize
@@ -379,7 +395,7 @@ describe("Models |> Message", () => {
 
   it("should retrieve a page with all ids greater than minimumId", async () => {
     const context = await createContext(MESSAGE_MODEL_PK_FIELD);
-    await context.init();
+    await context.init(messagesIndexingPolicy);
     const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
 
     // create some messages
@@ -419,7 +435,7 @@ describe("Models |> Message", () => {
 
   it("should retrieve a page with all ids smaller than maximumId", async () => {
     const context = await createContext(MESSAGE_MODEL_PK_FIELD);
-    await context.init();
+    await context.init(messagesIndexingPolicy);
     const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
 
     // create some messages
@@ -459,7 +475,7 @@ describe("Models |> Message", () => {
 
   it("should correctly keep a descending order", async () => {
     const context = await createContext(MESSAGE_MODEL_PK_FIELD);
-    await context.init();
+    await context.init(messagesIndexingPolicy);
     const model = new MessageModel(context.container, MESSAGE_CONTAINER_NAME);
 
     // create some messages

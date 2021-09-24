@@ -292,7 +292,7 @@ export class MessageModel extends CosmosdbModel<
           ...nextMessagesParams.param,
           ...prevMessagesParams.param
         ],
-        query: `${commonQuerySpec.query}${nextMessagesParams.condition}${prevMessagesParams.condition} ORDER BY m.id DESC`
+        query: `${commonQuerySpec.query}${nextMessagesParams.condition}${prevMessagesParams.condition} ORDER BY m.${MESSAGE_MODEL_PK_FIELD}, m.id DESC`
       })),
       TE.chain(querySpec =>
         TE.fromEither(
