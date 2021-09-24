@@ -1,8 +1,19 @@
+import { CreatedMessageWithContent } from "../../generated/definitions/CreatedMessageWithContent";
+
 import { HiddenServicePayload } from "../../generated/definitions/HiddenServicePayload";
 import { ServicePayload } from "../../generated/definitions/ServicePayload";
 import { VisibleServicePayload } from "../../generated/definitions/VisibleServicePayload";
 import * as E from "fp-ts/lib/Either";
-import { isLeft } from "fp-ts/lib/Either";
+
+import { FiscalCode } from "../../generated/definitions/FiscalCode";
+import { PaymentData } from "../../generated/definitions/PaymentData";
+import { OrganizationFiscalCode } from "../../generated/definitions/OrganizationFiscalCode";
+import { PaymentAmount } from "../../generated/definitions/PaymentAmount";
+import { PaymentNoticeNumber } from "../../generated/definitions/PaymentNoticeNumber";
+import { Payee } from "../../generated/definitions/Payee";
+import { MessageContent } from "../../generated/definitions/MessageContent";
+import { NewMessage } from "../../generated/definitions/NewMessage";
+import { pipe } from "fp-ts/lib/function";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -70,9 +81,9 @@ describe("ServicePayload definition", () => {
     const visibleServiceTest = VisibleServicePayload.decode(visibleService);
     const hiddenServiceTest = HiddenServicePayload.decode(visibleService);
 
-    expect(E.isRight(servicePayloadTest)).toBe(true);
-    expect(E.isRight(visibleServiceTest)).toBe(true);
-    expect(E.isLeft(hiddenServiceTest)).toBe(true);
+    expect(E.isRight(servicePayloadTest)).toBeTruthy();
+    expect(E.isRight(visibleServiceTest)).toBeTruthy();
+    expect(E.isLeft(hiddenServiceTest)).toBeTruthy();
   });
 
   it("should decode hiddenService with HiddenService and ServicePayload", () => {
@@ -80,9 +91,9 @@ describe("ServicePayload definition", () => {
     const visibleServiceTest = VisibleServicePayload.decode(hiddenService);
     const hiddenServiceTest = HiddenServicePayload.decode(hiddenService);
 
-    expect(E.isRight(servicePayloadTest)).toBe(true);
-    expect(E.isLeft(visibleServiceTest)).toBe(true);
-    expect(E.isRight(hiddenServiceTest)).toBe(true);
+    expect(E.isRight(servicePayloadTest)).toBeTruthy();
+    expect(E.isLeft(visibleServiceTest)).toBeTruthy();
+    expect(E.isRight(hiddenServiceTest)).toBeTruthy();
   });
 
   it("should not decode invalidService with HiddenService, ServicePayload and VisibleServicePayload", () => {
@@ -90,9 +101,9 @@ describe("ServicePayload definition", () => {
     const visibleServiceTest = VisibleServicePayload.decode(invalidService);
     const hiddenServiceTest = HiddenServicePayload.decode(invalidService);
 
-    expect(E.isLeft(servicePayloadTest)).toBe(true);
-    expect(E.isLeft(visibleServiceTest)).toBe(true);
-    expect(E.isLeft(hiddenServiceTest)).toBe(true);
+    expect(E.isLeft(servicePayloadTest)).toBeTruthy();
+    expect(E.isLeft(visibleServiceTest)).toBeTruthy();
+    expect(E.isLeft(hiddenServiceTest)).toBeTruthy();
   });
 
   it("should decode hiddenServiceWithoutIsVisible with HiddenService and ServicePayload", () => {
@@ -106,8 +117,206 @@ describe("ServicePayload definition", () => {
       hiddenServiceWithoutIsVisible
     );
 
-    expect(E.isRight(servicePayloadTest)).toBe(true);
-    expect(E.isLeft(visibleServiceTest)).toBe(true);
-    expect(E.isRight(hiddenServiceTest)).toBe(true);
+    expect(E.isRight(servicePayloadTest)).toBeTruthy();
+    expect(E.isLeft(visibleServiceTest)).toBeTruthy();
+    expect(E.isRight(hiddenServiceTest)).toBeTruthy();
+  });
+});
+
+const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
+const anOrganizationFiscalCode = "12345678901" as OrganizationFiscalCode;
+const aDate = new Date();
+const aNewMessageWithoutContent = {
+  fiscal_code: aFiscalCode
+};
+const aMessageWithoutContent = {
+  id: "A_MESSAGE_ID",
+  fiscal_code: aFiscalCode,
+  created_at: aDate,
+  sender_service_id: "test"
+};
+
+const aContentWithoutPaymentData = {
+  subject:
+    "A Subject of more than 80 characters. Try to reach this value with stupid words, and I will leave here because I like it",
+  markdown:
+    "A markdown of more than 80 characters. Try to reach this value with stupid words, and I will leave here because I like it"
+};
+
+const aPaymentDataWithoutPayee: PaymentData = {
+  amount: 1000 as PaymentAmount,
+  notice_number: "177777777777777777" as PaymentNoticeNumber
+};
+
+const aPayee: Payee = { fiscal_code: anOrganizationFiscalCode };
+
+describe("NewMessage definition", () => {
+  it("should decode NewMessage with content but without payment data", () => {
+    const aMessageWithContentWithoutPaymentData = {
+      ...aNewMessageWithoutContent,
+      content: aContentWithoutPaymentData
+    };
+
+    expect(E.isRight(MessageContent.decode(aContentWithoutPaymentData))).toBeTruthy();
+
+    const messageWithContent = NewMessage.decode(
+      aMessageWithContentWithoutPaymentData
+    );
+
+    pipe(
+      messageWithContent,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual({
+          ...aMessageWithContentWithoutPaymentData,
+          time_to_live: 3600
+        })
+      )
+    );
+  });
+
+  it("should decode NewMessage with content and payment data but without payee", () => {
+    const aMessageWithContentWithPaymentDataWithoutPayee = {
+      ...aNewMessageWithoutContent,
+      content: {
+        ...aContentWithoutPaymentData,
+        payment_data: aPaymentDataWithoutPayee
+      }
+    };
+
+    const messageWithContent = NewMessage.decode(
+      aMessageWithContentWithPaymentDataWithoutPayee
+    );
+
+    pipe(
+      messageWithContent,
+      E.fold(
+        () => fail(),
+        _ => expect(_).toEqual({
+          ...aMessageWithContentWithPaymentDataWithoutPayee,
+          content: {
+            ...aMessageWithContentWithPaymentDataWithoutPayee.content,
+            payment_data: {
+              ...aMessageWithContentWithPaymentDataWithoutPayee.content.payment_data,
+              invalid_after_due_date: false
+            }
+          },
+          time_to_live: 3600
+        })
+      )
+    );
+  });
+
+  it("should decode PaymentData with payment data with payee", () => {
+    const aPaymentDataWithPayee = { ...aPaymentDataWithoutPayee, payee: aPayee };
+
+    const messageWithContent = PaymentData.decode(
+      aPaymentDataWithPayee
+    );
+    pipe(
+      messageWithContent,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual({
+          ...aPaymentDataWithPayee,
+          invalid_after_due_date: false
+        })
+      )
+    );
+  });
+
+  it("should decode NewMessage with content and payment data with payee", () => {
+    const aMessageWithContentWithPaymentDataWithPayee = {
+      ...aMessageWithoutContent,
+      content: {
+        ...aContentWithoutPaymentData,
+        payment_data: { ...aPaymentDataWithoutPayee, payee: aPayee }
+      }
+    };
+
+    expect(
+      E.isRight(PaymentData.decode(
+        aMessageWithContentWithPaymentDataWithPayee.content.payment_data
+      ))
+    ).toBeTruthy();
+
+    const messageWithContent = NewMessage.decode(
+      aMessageWithContentWithPaymentDataWithPayee
+    );
+
+    expect(E.isRight(messageWithContent)).toBeTruthy();
+  });
+});
+
+describe("CreatedMessageWithContent definition", () => {
+  it("should decode CreatedMessageWithContent with content and payment data with payee", () => {
+    const aMessageWithContentWithPaymentDataWithoutPayee = {
+      ...aMessageWithoutContent,
+      content: {
+        ...aContentWithoutPaymentData,
+        payment_data: { ...aPaymentDataWithoutPayee, payee: aPayee }
+      }
+    };
+
+    expect(
+      E.isRight(Payee.decode(
+        aMessageWithContentWithPaymentDataWithoutPayee.content.payment_data
+          .payee
+      ))
+    ).toBeTruthy();
+
+    const messageWithContent = CreatedMessageWithContent.decode(
+      aMessageWithContentWithPaymentDataWithoutPayee
+    );
+
+    expect(E.isRight(messageWithContent)).toBeTruthy();
+  });
+
+  it("should decode CreatedMessageWithContent with content and payment data without payee", () => {
+    const aMessageWithContentWithPaymentDataWithoutPayee = {
+      ...aMessageWithoutContent,
+      content: {
+        ...aContentWithoutPaymentData,
+        payment_data: { ...aPaymentDataWithoutPayee }
+      }
+    };
+
+    const messageWithContent = CreatedMessageWithContent.decode(
+      aMessageWithContentWithPaymentDataWithoutPayee
+    );
+
+    expect(E.isRight(messageWithContent)).toBeTruthy();
+  });
+});
+
+describe("Type definition", () => {
+  it("should decode MessageContent with content without payment data", () => {
+    const decodedMessageContent = MessageContent.decode(
+      aContentWithoutPaymentData
+    );
+
+    pipe(
+      decodedMessageContent,
+      E.fold(
+        () => fail(),
+        value => 
+          expect(value).toEqual(aContentWithoutPaymentData)
+      )
+    );
+  });
+
+  it("should decode PaymentData without payee", () => {
+    const decodedPaymentData = PaymentData.decode(aPaymentDataWithoutPayee);
+
+    pipe(
+      decodedPaymentData,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual({
+          ...aPaymentDataWithoutPayee,
+          invalid_after_due_date: false
+        })
+      )
+    );
   });
 });

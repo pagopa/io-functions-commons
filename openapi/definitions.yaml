@@ -79,24 +79,43 @@ NotificationChannelStatus:
     - channel
     - status
     - updated_at
-MessageContent:
+
+MessageContentBase:
   type: object
   properties:
     subject:
       $ref: "#/MessageSubject"
     markdown:
       $ref: "#/MessageBodyMarkdown"
-    payment_data:
-      $ref: "#/PaymentData"
-    prescription_data:
-      $ref: "#/PrescriptionData"
-    eu_covid_cert:
-      $ref: "#/EUCovidCert"
-    due_date:
-      $ref: "#/Timestamp"
   required:
     - subject
     - markdown
+MessageContent:
+  allOf:
+    - $ref: "#/MessageContentBase"
+    - type: object
+      properties:
+        payment_data:
+          $ref: "#/PaymentData"
+        prescription_data:
+          $ref: "#/PrescriptionData"
+        eu_covid_cert:
+          $ref: "#/EUCovidCert"
+        due_date:
+          $ref: "#/Timestamp"
+NewMessageContent:
+  allOf:
+    - $ref: "#/MessageContentBase"
+    - type: object
+      properties:
+        payment_data:
+          $ref: "#/PaymentDataWithRequiredPayee"
+        due_date:
+          $ref: "#/Timestamp"
+        prescription_data:
+          $ref: "#/PrescriptionData"
+        eu_covid_cert:
+          $ref: "#/EUCovidCert"
 NewMessage:
   type: object
   properties:
@@ -142,7 +161,16 @@ PrescriptionNRE:
   type: string
   minLength: 15
   maxLength: 15
-PaymentData:
+Payee:
+  type: object
+  description: |-
+    Metadata needed to explicit payment's payee.
+  properties:
+    fiscal_code:
+      $ref: "#/OrganizationFiscalCode"
+  required:
+    - fiscal_code
+PaymentDataBase:
   type: object
   description: |-
     Metadata needed to process pagoPA payments.
@@ -157,6 +185,22 @@ PaymentData:
   required:
     - amount
     - notice_number
+PaymentData:
+  allOf:
+    - $ref: "#/PaymentDataBase"
+    - type: object
+      properties:
+        payee:
+          $ref: "#/Payee"
+PaymentDataWithRequiredPayee:
+  allOf:
+    - $ref: "#/PaymentDataBase"
+    - type: object
+      properties:
+        payee:
+          $ref: "#/Payee"
+      required:
+        - payee
 PaymentNoticeNumber:
   description:
     The field ["Numero Avviso"](https://pagopa-specifichepagamenti.readthedocs.io/it/latest/_docs/Capitolo7.html#il-numero-avviso-e-larchivio-dei-pagamenti-in-attesa)

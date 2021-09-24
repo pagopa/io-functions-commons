@@ -32,6 +32,7 @@ import { Timestamp } from "../../generated/definitions/Timestamp";
 import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds";
 import { getBlobAsText, upsertBlobFromObject } from "../utils/azure_storage";
 import { wrapWithKind } from "../utils/types";
+import { NewMessageContent } from "../../generated/definitions/NewMessageContent";
 
 export const MESSAGE_COLLECTION_NAME = "messages";
 export const MESSAGE_MODEL_PK_FIELD = "fiscalCode" as const;
@@ -107,7 +108,15 @@ export const Message = t.union([MessageWithoutContent, MessageWithContent]);
 export type Message = t.TypeOf<typeof Message>;
 
 export const NewMessageWithContent = wrapWithKind(
-  t.intersection([MessageWithContent, BaseModel]),
+  t.exact(
+    t.intersection([
+      t.interface({
+        content: NewMessageContent
+      }),
+      MessageBase,
+      BaseModel
+    ])
+  ),
   "INewMessageWithContent" as const
 );
 
@@ -349,7 +358,7 @@ export class MessageModel extends CosmosdbModel<
   public storeContentAsBlob(
     blobService: BlobService,
     messageId: string,
-    messageContent: MessageContent
+    messageContent: NewMessageContent
   ): TE.TaskEither<Error, Option<BlobService.BlobResult>> {
     // Set the blob name
     const blobName = blobIdFromMessageId(messageId);
@@ -358,7 +367,7 @@ export class MessageModel extends CosmosdbModel<
     return pipe(
       TE.tryCatch(
         () =>
-          upsertBlobFromObject<MessageContent>(
+          upsertBlobFromObject<NewMessageContent>(
             blobService,
             this.containerName,
             blobName,

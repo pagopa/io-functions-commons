@@ -9,14 +9,21 @@ import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 import { MessageBodyMarkdown } from "../../../generated/definitions/MessageBodyMarkdown";
 import { MessageContent } from "../../../generated/definitions/MessageContent";
 
-import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import {
+  NonEmptyString,
+  OrganizationFiscalCode
+} from "@pagopa/ts-commons/lib/strings";
 
 import { fromNullable, none, some } from "fp-ts/lib/Option";
 
 import {
   MessageModel,
+  MessageWithContent,
   NewMessageWithContent,
-  RetrievedMessageWithContent
+  RetrievedMessage,
+  NewMessageWithoutContent,
+  RetrievedMessageWithContent,
+  NewMessage
 } from "../message";
 
 jest.mock("../../utils/azure_storage");
@@ -25,8 +32,13 @@ import { MessageSubject } from "../../../generated/definitions/MessageSubject";
 import { ServiceId } from "../../../generated/definitions/ServiceId";
 import { TimeToLiveSeconds } from "../../../generated/definitions/TimeToLiveSeconds";
 import * as azureStorageUtils from "../../utils/azure_storage";
+import { PaymentData } from "../../../generated/definitions/PaymentData";
+import { PaymentAmount } from "../../../generated/definitions/PaymentAmount";
+import { PaymentNoticeNumber } from "../../../generated/definitions/PaymentNoticeNumber";
+import { Payee } from "../../../generated/definitions/Payee";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { pipe } from "fp-ts/lib/function";
+import { PaymentDataWithRequiredPayee } from "../../../generated/definitions/PaymentDataWithRequiredPayee";
 
 beforeEach(() => {
   jest.resetAllMocks();
@@ -35,16 +47,26 @@ beforeEach(() => {
 const MESSAGE_CONTAINER_NAME = "message-content" as NonEmptyString;
 
 const aMessageBodyMarkdown = "test".repeat(80) as MessageBodyMarkdown;
-
-const aMessageContent: MessageContent = {
+const aGeneralMessageContent = {
   markdown: aMessageBodyMarkdown,
   subject: "test".repeat(10) as MessageSubject
+}
+
+const aMessageContent = {
+  ...aGeneralMessageContent
 };
 
-const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
+const cosmosMetadata = {
+  _etag: "_etag",
+  _rid: "_rid",
+  _self: "_self",
+  _ts: 1
+}
 
-const aSerializedNewMessageWithContent = {
-  content: aMessageContent,
+const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
+const anOrganizationFiscalCode = "12345678901" as OrganizationFiscalCode;
+
+const aSerializedNewMessageWithoutContent = {
   createdAt: new Date().toISOString(),
   fiscalCode: aFiscalCode,
   id: "A_MESSAGE_ID" as NonEmptyString,
@@ -54,20 +76,221 @@ const aSerializedNewMessageWithContent = {
   timeToLiveSeconds: 3600 as TimeToLiveSeconds
 };
 
+const aSerializedNewMessageWithContent = {
+  ...aSerializedNewMessageWithoutContent,
+  content: aMessageContent
+};
+
 const aNewMessageWithContent: NewMessageWithContent = {
-  ...aSerializedNewMessageWithContent,
+  ...aSerializedNewMessageWithoutContent,
+  content: {
+    ...aGeneralMessageContent
+  },
   createdAt: new Date(),
   kind: "INewMessageWithContent"
 };
 
+const aNewMessageWithoutContent: NewMessageWithoutContent = {
+  ...aSerializedNewMessageWithoutContent,
+  createdAt: new Date(),
+  kind: "INewMessageWithoutContent"
+};
+
+const aPaymentDataWithoutPayee: PaymentData = {
+  amount: 1000 as PaymentAmount,
+  notice_number: "177777777777777777" as PaymentNoticeNumber
+};
+const aPayee: Payee = { fiscal_code: anOrganizationFiscalCode };
+const aPaymentDataWithPayee: PaymentDataWithRequiredPayee = {
+  ...aPaymentDataWithoutPayee,
+  payee: aPayee
+};
+
+const aNewMessageWithContentWithPaymentData: NewMessageWithContent = {
+  ...aNewMessageWithContent,
+  content: {
+    ...aNewMessageWithContent.content,
+    payment_data: aPaymentDataWithPayee
+  },
+  kind: "INewMessageWithContent"
+};
+
+const aNewMessageWithContentWithPaymentDataWithoutPayee = {
+  ...aNewMessageWithContent,
+  content: {
+    ...aNewMessageWithContent.content,
+    payment_data: aPaymentDataWithoutPayee
+  },
+  kind: "INewMessageWithContent"
+};
+
+const aRetrievedMessageWithoutContent = {
+  ...cosmosMetadata,
+  ...aNewMessageWithoutContent
+};
 const aRetrievedMessageWithContent: RetrievedMessageWithContent = {
-  _etag: "_etag",
-  _rid: "_rid",
-  _self: "_self",
-  _ts: 1,
+  ...cosmosMetadata,
   ...aNewMessageWithContent,
   kind: "IRetrievedMessageWithContent"
 };
+const aRetrievedMessageWithContentWithPaymentData: RetrievedMessageWithContent = {
+  ...cosmosMetadata,
+  ...aNewMessageWithContentWithPaymentData,
+  kind: "IRetrievedMessageWithContent",
+};
+
+const aRetrievedMessageWithContentWithPaymentDataWithoutPayee = {
+  
+  ...aRetrievedMessageWithContent,
+  content: {
+    ...aRetrievedMessageWithContent.content,
+    payment_data: aPaymentDataWithoutPayee
+  }
+};
+
+describe("Models ", () => {
+  it("should decode MessageWithContent with payment data with payee", () => {
+    const messageWithContentWithPayee = NewMessageWithContent.decode(
+      aNewMessageWithContentWithPaymentData
+    );
+
+    pipe(
+      messageWithContentWithPayee,
+      E.fold(
+        () => fail(), 
+        _ => expect(_).toEqual({
+          ...aNewMessageWithContentWithPaymentData,
+          content: {
+            ...aNewMessageWithContentWithPaymentData.content,
+            payment_data: {
+              ...aNewMessageWithContentWithPaymentData.content.payment_data,
+              invalid_after_due_date: false
+            }
+          }
+        })
+      )
+    );
+  });
+
+  it("should decode MessageWithContentWithPaymentData with payment data without payee", () => {
+    const messageWithContentWithoutPayee = MessageWithContent.decode(
+      aRetrievedMessageWithContentWithPaymentDataWithoutPayee
+    );
+
+    expect(E.isRight(messageWithContentWithoutPayee)).toBeTruthy();
+  });
+
+  it("should NOT decode NewMessage with content with payment data without payee", () => {
+    const messageWithContentWithoutPayee = NewMessageWithContent.decode(
+      aNewMessageWithContentWithPaymentDataWithoutPayee
+    );
+    expect(E.isLeft(messageWithContentWithoutPayee)).toBeTruthy();
+  });
+
+  it("should deserialize MessageWithContent with payment data without payee", () => {
+    pipe(
+      aRetrievedMessageWithContentWithPaymentDataWithoutPayee,
+      MessageWithContent.decode, 
+      E.fold(
+        () => fail(),
+        _ => expect(_).toEqual({
+          ...aRetrievedMessageWithContentWithPaymentDataWithoutPayee,
+          content: {
+            ...aRetrievedMessageWithContentWithPaymentDataWithoutPayee.content,
+            payment_data: {
+              ...aRetrievedMessageWithContentWithPaymentDataWithoutPayee.content
+                .payment_data,
+              invalid_after_due_date: false
+            }
+          }
+        }) 
+      )
+    )
+  });
+
+  it("should deserialize MessageWithContent without payment_data", () => {
+    expect(E.isRight(MessageWithContent.decode(aNewMessageWithContent))).toBeTruthy();
+  });
+});
+
+describe("RetrievedMessage", () => {
+  it("should deserialize RetrievedMessage without payment_data", () => {
+    pipe(
+      aRetrievedMessageWithContent,
+      RetrievedMessage.decode,
+      E.fold(
+        () => fail(), 
+        val => {
+          expect(val).toEqual({
+            ...aRetrievedMessageWithContent,
+            kind: "IRetrievedMessageWithContent"
+          });
+      })
+    )
+    
+  });
+
+  it("should deserialize RetrievedMessage with payment_data without payee", () => {
+    const expected = {
+      ...aRetrievedMessageWithContentWithPaymentDataWithoutPayee,
+      kind: "IRetrievedMessageWithContent",
+      content: {
+        ...aRetrievedMessageWithContentWithPaymentDataWithoutPayee.content,
+        payment_data: {
+          ...aRetrievedMessageWithContentWithPaymentDataWithoutPayee.content
+            .payment_data,
+          invalid_after_due_date: false
+        }
+      }
+    };
+    pipe(
+      aRetrievedMessageWithContentWithPaymentDataWithoutPayee,
+      RetrievedMessage.decode,
+      E.fold(
+        () => fail(), 
+        value => expect(value).toEqual(expected)
+      )
+    );
+  });
+
+  it("should deserialize RetrievedMessage without Content", () => {
+    const expected = {
+      ...aRetrievedMessageWithoutContent,
+      kind: "IRetrievedMessageWithoutContent"
+    };
+    pipe(
+      aRetrievedMessageWithoutContent,
+      RetrievedMessage.decode,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(expected)
+      )
+    );
+  });
+
+  it("should deserialize RetrievedMessage with payment_data with payee", () => {
+    const expected = {
+      ...aRetrievedMessageWithContentWithPaymentData,
+      kind: "IRetrievedMessageWithContent",
+      content: {
+        ...aRetrievedMessageWithContentWithPaymentData.content,
+        payment_data: {
+          ...aRetrievedMessageWithContentWithPaymentData.content.payment_data,
+          invalid_after_due_date: false
+        }
+      }
+    };
+
+    pipe(
+      aRetrievedMessageWithContentWithPaymentData,
+      RetrievedMessage.decode,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(expected)
+      )
+    );
+  });
+});
 
 const iteratorGenMock = async function*(arr: any[]) {
   for (let a of arr) yield a;

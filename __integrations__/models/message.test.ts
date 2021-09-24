@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { FiscalCode, NonEmptyString, OrganizationFiscalCode } from "@pagopa/ts-commons/lib/strings";
 import {
   MESSAGE_MODEL_PK_FIELD,
   MessageModel,
@@ -18,12 +18,18 @@ import { CosmosErrors } from "../../src/utils/cosmosdb_model";
 import { Validation } from "io-ts";
 import * as E from "fp-ts/lib/Either";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
+import { MessageContent } from "../../generated/definitions/MessageContent";
+import { MessageSubject } from "../../generated/definitions/MessageSubject";
+import { MessageBodyMarkdown } from "../../generated/definitions/MessageBodyMarkdown";
+import { PaymentAmount } from "../../generated/definitions/PaymentAmount";
+import { PaymentNoticeNumber } from "../../generated/definitions/PaymentNoticeNumber";
 import { IndexingPolicy } from "@azure/cosmos";
 
 const MESSAGE_CONTAINER_NAME = "test-message-container" as NonEmptyString;
 
 const aFiscalCode = "RLDBSV36A78Y792X" as FiscalCode;
 const anotherFiscalCode = "TDDBSV36A78Y792X" as FiscalCode;
+const anOrganizationFiscalCode = "01234567890" as OrganizationFiscalCode;
 const aSerializedNewMessageWithoutContent = {
   fiscalCode: aFiscalCode,
   id: "A_MESSAGE_ID" as NonEmptyString,
@@ -39,12 +45,24 @@ const aNewMessageWithoutContent: NewMessageWithoutContent = {
   kind: "INewMessageWithoutContent"
 };
 
-const aMessageContentWithPayment = {
-  subject: "a".repeat(20),
-  markdown: "a".repeat(100),
+const aMessageContentWithPaymentWithPayee: MessageContent = {
+  subject: "a".repeat(20) as MessageSubject,
+  markdown: "a".repeat(100) as MessageBodyMarkdown,
   payment_data: {
-    amount: 10,
-    notice_number: `0${"9".repeat(17)}`
+    amount: 10 as PaymentAmount,
+    notice_number: `0${"9".repeat(17)}` as PaymentNoticeNumber,
+    payee: {
+      fiscal_code: anOrganizationFiscalCode
+    }
+  }
+};
+
+const aMessageContentWithPaymentWithoutPayee: MessageContent = {
+  subject: "a".repeat(20) as MessageSubject,
+  markdown: "a".repeat(100) as MessageBodyMarkdown,
+  payment_data: {
+    amount: 10 as PaymentAmount,
+    notice_number: `0${"9".repeat(17)}` as PaymentNoticeNumber
   }
 };
 
@@ -203,7 +221,7 @@ describe("Models |> Message", () => {
   it.each`
     title                                                        | value
     ${"a message content without"}                               | ${aMessageContentWithNoPayment}
-    ${"a message content with payment data"}                     | ${aMessageContentWithPayment}
+    ${"a message content with payment data with payee"}          | ${aMessageContentWithPaymentWithPayee}
     ${"a message content with a prescription"}                   | ${aMessageContentPrescription}
     ${"a message content with a EU Covid Certificate auth code"} | ${aMessageContentEUCovidCert}
   `("should save $title correctly", async ({ value }) => {
@@ -229,8 +247,8 @@ describe("Models |> Message", () => {
 
     await pipe(
       model.getContentFromBlob(context.storage, aFakeMessageId),
-      TE.chain(_ =>
-        TE.fromEither(fromOption(() => new Error(`Blob not found`))(_))
+      TE.chain(
+        TE.fromOption(() => new Error(`Blob not found`))
       ),
       TE.bimap(
         _ => fail(`Failed to get content, error: ${JSON.stringify(_)}`),
