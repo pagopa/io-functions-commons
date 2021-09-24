@@ -98,5 +98,9 @@
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
+  },
+
+  "resolutions": {
+    "graceful-fs": "^4.2.4"
   }
 }
