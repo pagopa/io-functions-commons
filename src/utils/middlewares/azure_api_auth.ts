@@ -77,7 +77,10 @@ export enum UserGroup {
   ApiDebugRead = "ApiDebugRead",
 
   // messages: send messages with EU Covid Certificate access data
-  ApiMessageWriteEUCovidCert = "ApiMessageWriteEUCovidCert"
+  ApiMessageWriteEUCovidCert = "ApiMessageWriteEUCovidCert",
+
+  // messages: send messages with payee
+  ApiMessageWriteWithPayee = "ApiMessageWriteWithPayee"
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
