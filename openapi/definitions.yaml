@@ -321,8 +321,8 @@ EnrichedMessage:
 PublicMessage:
   x-one-of: true
   allOf:
+    - $ref: "#/EnrichedMessage"
     - $ref: "#/CreatedMessageWithoutContent" 
-    - $ref: "#/EnrichedMessage" 
 MessageResponseNotificationStatus:
   type: object
   properties:
