@@ -272,7 +272,7 @@ describe("CreatedMessageWithContent definition", () => {
     expect(E.isRight(messageWithContent)).toBeTruthy();
   });
 
-  it("should decode CreatedMessageWithContent with content and payment data without payee", () => {
+  it("should NOT decode CreatedMessageWithContent with content and payment data without payee", () => {
     const aMessageWithContentWithPaymentDataWithoutPayee = {
       ...aMessageWithoutContent,
       content: {
@@ -285,7 +285,7 @@ describe("CreatedMessageWithContent definition", () => {
       aMessageWithContentWithPaymentDataWithoutPayee
     );
 
-    expect(E.isRight(messageWithContent)).toBeTruthy();
+    expect(E.isLeft(messageWithContent)).toBeTruthy();
   });
 });
 

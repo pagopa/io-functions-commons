@@ -264,7 +264,7 @@ CreatedMessageWithContent:
     created_at:
       $ref: "#/Timestamp"
     content:
-      $ref: "#/MessageContent"
+      $ref: "#/NewMessageContent"
     sender_service_id:
       $ref: "#/ServiceId"
   required:
