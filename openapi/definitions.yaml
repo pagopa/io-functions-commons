@@ -440,8 +440,8 @@ PublicMessagesCollection:
 PaginatedPublicMessagesCollection:
   description: A paginated collection of messages
   allOf:
-    - $ref: "#/PublicMessagesCollection"
     - $ref: "#/PaginationResponse"
+    - $ref: "#/PublicMessagesCollection"
 BlockedInboxOrChannels:
   type: object
   additionalProperties:
