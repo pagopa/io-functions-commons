@@ -193,6 +193,33 @@ export abstract class CosmosdbModelVersioned<
   }
 
   /**
+   * Insert a document with a specific version
+   *
+   * @param o
+   * @param version
+   * @param requestOptions
+   */
+  protected createNewVersion(
+    o: T,
+    version: NonNegativeInteger,
+    requestOptions?: RequestOptions
+  ): TaskEither<CosmosErrors, TR> {
+    const modelId = this.getModelId(o);
+    const toSave = this.beforeSave(o);
+    return pipe(
+      TE.fromEither(
+        t.intersection([this.newVersionedItemT, VersionedModel]).decode({
+          ...toSave,
+          id: generateVersionedModelId(modelId, version),
+          version
+        })
+      ),
+      TE.mapLeft(CosmosDecodingError),
+      TE.chain(document => super.create(document, requestOptions))
+    );
+  }
+
+  /**
    * Given a document, extract the tuple that define the search key for it
    *
    * @param document
@@ -255,33 +282,6 @@ export abstract class CosmosdbModelVersioned<
       )
     );
   };
-  /**
-   * Insert a document with a specific version
-   *
-   * @param o
-   * @param version
-   * @param requestOptions
-   */
-  private createNewVersion(
-    o: T,
-    version: NonNegativeInteger,
-    requestOptions?: RequestOptions
-  ): TaskEither<CosmosErrors, TR> {
-    const modelId = this.getModelId(o);
-    const toSave = this.beforeSave(o);
-
-    return pipe(
-      TE.fromEither(
-        t.intersection([this.newVersionedItemT, VersionedModel]).decode({
-          ...toSave,
-          id: generateVersionedModelId(modelId, version),
-          version
-        })
-      ),
-      TE.mapLeft(CosmosDecodingError),
-      TE.chain(document => super.create(document, requestOptions))
-    );
-  }
 
   /**
    * Strips off meta fields which are nor part of the base model definition
