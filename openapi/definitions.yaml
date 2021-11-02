@@ -722,7 +722,7 @@ Service:
     required:
       - service_id
       - authorized_recipients
-ServiceMetadata:
+CommonServiceMetadata:
   type: object
   description: A set of metadata properties related to this service.
   properties:
@@ -772,11 +772,46 @@ ServiceMetadata:
   required:
     - scope
     - category
-ServiceCategory:
+StandardServiceMetadata:
+  allOf:
+    - $ref: "#/CommonServiceMetadata"
+    - type: object
+      properties:
+        category:
+          $ref: "#/StandardServiceCategory"
+      required:
+        - category
+SpecialServiceMetadata:
+  allOf:
+    - $ref: "#/CommonServiceMetadata"
+    - type: object
+      properties:
+        category:
+          $ref: "#/SpecialServiceCategory"
+        custom_special_flow:
+          type: string
+          minLength: 1
+      required:
+        - category
+        - custom_special_flow
+ServiceMetadata:
+  x-one-of: true
+  allOf:
+    - $ref: "#/StandardServiceMetadata"
+    - $ref: "#/SpecialServiceMetadata"
+SpecialServiceCategory:
+  type: string
+  x-extensible-enum:
+    - SPECIAL
+StandardServiceCategory:
   type: string
   x-extensible-enum:
     - STANDARD
-    - SPECIAL
+ServiceCategory:
+  x-one-of: true
+  allOf:
+    - $ref: "#/SpecialServiceCategory"
+    - $ref: "#/StandardServiceCategory"
 ServiceScope:
   type: string
   x-extensible-enum:
