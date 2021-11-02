@@ -767,8 +767,16 @@ ServiceMetadata:
       minLength: 1
     scope:
       $ref: "#/ServiceScope"
+    category:
+      $ref: "#/ServiceCategory"
   required:
     - scope
+    - category
+ServiceCategory:
+  type: string
+  x-extensible-enum:
+    - STANDARD
+    - SPECIAL
 ServiceScope:
   type: string
   x-extensible-enum:

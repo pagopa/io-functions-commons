@@ -8,6 +8,7 @@ export const toApiServiceMetadata = (
   address: serviceMetadata.address,
   app_android: serviceMetadata.appAndroid,
   app_ios: serviceMetadata.appIos,
+  category: serviceMetadata.category,
   cta: serviceMetadata.cta,
   description: serviceMetadata.description,
   email: serviceMetadata.email,

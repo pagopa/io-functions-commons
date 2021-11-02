@@ -31,6 +31,10 @@ import { ServiceScope } from "../../generated/definitions/ServiceScope";
 import { CosmosDecodingError, CosmosErrors } from "../utils/cosmosdb_model";
 import { wrapWithKind } from "../utils/types";
 import { mapAsyncIterable, reduceAsyncIterator } from "../utils/async";
+import {
+  ServiceCategory,
+  ServiceCategoryEnum
+} from "../../generated/definitions/ServiceCategory";
 
 export const SERVICE_COLLECTION_NAME = "services";
 export const SERVICE_MODEL_ID_FIELD = "serviceId" as const;
@@ -38,6 +42,7 @@ export const SERVICE_MODEL_PK_FIELD = SERVICE_MODEL_ID_FIELD;
 
 // required attributes
 const ServiceMetadataR = t.interface({
+  category: withDefault(ServiceCategory, ServiceCategoryEnum.STANDARD),
   scope: ServiceScope
 });
 

@@ -1,17 +1,17 @@
+import { ServiceCategoryEnum } from "../../../generated/definitions/ServiceCategory";
 import { ServiceId } from "../../../generated/definitions/ServiceId";
 import { ServiceScopeEnum } from "../../../generated/definitions/ServiceScope";
 import { aVisibleService } from "../../../__mocks__/mocks";
 import {
-  toServicesPublic,
   toServicesTuple,
   VisibleService
 } from "../visible_service";
 
-const withScope = (scope: ServiceScopeEnum) => (
+const withScopeAndCategory = (scope: ServiceScopeEnum, category: ServiceCategoryEnum) => (
   s: VisibleService
 ): VisibleService => ({
   ...s,
-  serviceMetadata: { ...s.serviceMetadata, scope }
+  serviceMetadata: { ...s.serviceMetadata, scope, category }
 });
 
 const withId = (serviceId: ServiceId) => (
@@ -22,10 +22,10 @@ const withId = (serviceId: ServiceId) => (
 });
 
 const aVisibleServiceWithoutMetadata = aVisibleService;
-const aVisibleNationalService = withScope(ServiceScopeEnum.NATIONAL)(
+const aVisibleNationalService = withScopeAndCategory(ServiceScopeEnum.NATIONAL, ServiceCategoryEnum.STANDARD)(
   aVisibleService
 );
-const aVisibleLocalService = withScope(ServiceScopeEnum.LOCAL)(aVisibleService);
+const aVisibleLocalService = withScopeAndCategory(ServiceScopeEnum.LOCAL, ServiceCategoryEnum.STANDARD)(aVisibleService);
 
 // this to check our assumptions on mock values
 expect(aVisibleServiceWithoutMetadata.serviceMetadata).not.toBeDefined();

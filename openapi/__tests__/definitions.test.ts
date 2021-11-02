@@ -14,6 +14,7 @@ import { Payee } from "../../generated/definitions/Payee";
 import { MessageContent } from "../../generated/definitions/MessageContent";
 import { NewMessage } from "../../generated/definitions/NewMessage";
 import { pipe } from "fp-ts/lib/function";
+import { ServiceCategoryEnum } from "../../generated/definitions/ServiceCategory";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -33,6 +34,7 @@ describe("ServicePayload definition", () => {
       address: "address",
       app_android: "app",
       app_ios: "app",
+      category: ServiceCategoryEnum.STANDARD,
       cta: "cta",
       description: "Description",
       email: "test@mail.it",
@@ -62,6 +64,7 @@ describe("ServicePayload definition", () => {
       address: "address",
       app_android: "app",
       app_ios: "app",
+      category: ServiceCategoryEnum.STANDARD,
       cta: "cta",
       description: "Description",
       email: "test@mail.it",
