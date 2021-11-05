@@ -159,8 +159,8 @@ describe("upsert", () => {
   });
 });
 
-describe("update", () => {
-  it("should create a new document with explicit version", async () => {
+describe("create", () => {
+  it("should create a new document with version 0", async () => {
     const expectedNextVersion = 0;
     const externalKey = aMyDocument[aModelExternalKeyId];
     const pk = aMyDocument[aModelPartitionField];
@@ -188,8 +188,8 @@ describe("update", () => {
   });
 });
 
-describe("create", () => {
-  it("should create a new document with version 0", async () => {
+describe("update", () => {
+  it("should create a new document with explicit version", async () => {
     const expectedNextVersion = aRetrievedExistingDocument.version + 1;
     const externalKey = aRetrievedExistingDocument[aModelExternalKeyId];
     const pk = aRetrievedExistingDocument[aModelPartitionField];
