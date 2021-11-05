@@ -246,3 +246,20 @@ describe("findLastVersionByModelId", () => {
   });
 });
 
+describe("typings restrictions", () => {
+  it("should NOT accept modelExternalKeyId equals to partitionKeyId", () => {
+    class MyComposedModel extends CosmosdbModelComposedVersioned<
+      MyDocument,
+      MyDocument,
+      RetrievedMyDocument,
+      typeof aModelExternalKeyId,
+      // @ts-expect-error
+      typeof aModelExternalKeyId
+    > {
+      constructor(c: Container) {
+        super(c, MyDocument, RetrievedMyDocument, aModelExternalKeyId, aModelExternalKeyId);
+      }
+    }
+  });
+});
+
