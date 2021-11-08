@@ -12,11 +12,18 @@ import {
 } from "@pagopa/ts-commons/lib/strings";
 import { MaxAllowedPaymentAmount } from "../../../generated/definitions/MaxAllowedPaymentAmount";
 import {
+  CommonServiceMetadata,
   RetrievedService,
+  ServiceMetadata,
   ServiceModel,
+  SpecialServiceMetadata,
+  StandardServiceMetadata,
   toAuthorizedCIDRs,
   toAuthorizedRecipients
 } from "../service";
+import { ServiceScopeEnum } from "../../../generated/definitions/ServiceScope";
+import { StandardServiceCategoryEnum } from "../../../generated/definitions/StandardServiceCategory";
+import { SpecialServiceCategoryEnum } from "../../../generated/definitions/SpecialServiceCategory";
 
 const aServiceId = "xyz" as NonEmptyString;
 const anOrganizationFiscalCode = "01234567890" as OrganizationFiscalCode;
@@ -163,6 +170,63 @@ describe("listLastVersionServices", () => {
     expect(E.isLeft(result)).toBeTruthy();
     if (E.isLeft(result)) {
       expect(result.left.kind).toBe("COSMOS_DECODING_ERROR");
+    }
+  });
+});
+
+describe("Special Service metadata types", () => {
+
+  it("should decode services metadata without category as Standard Services metadata", async () => {
+    const oldServiceMetadata: CommonServiceMetadata = {
+      scope: ServiceScopeEnum.LOCAL
+    };
+    const asyncIterable = getAsyncIterable([[{...aRetrievedService, serviceMetadata: oldServiceMetadata}]]);
+    mockGetAsyncIterator.mockReturnValueOnce(asyncIterable);
+
+    const model = new ServiceModel(containerMock);
+
+    const result = await model.listLastVersionServices()();
+
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      const values = O.toUndefined(result.right);
+      expect(values).toHaveLength(1);
+      if (values !== undefined) {
+        expect(values[0]).toHaveProperty("serviceMetadata.category", StandardServiceCategoryEnum.STANDARD);
+      }
+    }
+  });
+
+  it("should decode services metadata with category", async () => {
+    const standardServiceMetadata: StandardServiceMetadata = {
+      scope: ServiceScopeEnum.LOCAL,
+      category: StandardServiceCategoryEnum.STANDARD,
+      customSpecialFlow: undefined
+    };
+
+    const specialServiceMetadata: SpecialServiceMetadata = {
+      scope: ServiceScopeEnum.LOCAL,
+      category: SpecialServiceCategoryEnum.SPECIAL,
+      customSpecialFlow: "custom-flow-name" as NonEmptyString
+    };
+
+    const anotherService = {...aRetrievedService, serviceId: "anotherServiceId"};
+
+    const asyncIterable = getAsyncIterable([[{...aRetrievedService, serviceMetadata: standardServiceMetadata}, {...anotherService, serviceMetadata: specialServiceMetadata}]]);
+    mockGetAsyncIterator.mockReturnValueOnce(asyncIterable);
+
+    const model = new ServiceModel(containerMock);
+
+    const result = await model.listLastVersionServices()();
+
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      const values = O.toUndefined(result.right);
+      expect(values).toHaveLength(2);
+      if (values !== undefined) {
+        expect(values[0]).toHaveProperty("serviceMetadata", standardServiceMetadata);
+        expect(values[1]).toHaveProperty("serviceMetadata", specialServiceMetadata);
+      }
     }
   });
 });

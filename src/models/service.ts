@@ -41,7 +41,6 @@ export const SERVICE_MODEL_PK_FIELD = SERVICE_MODEL_ID_FIELD;
 
 // required attributes
 const CommonServiceMetadataR = t.interface({
-  category: withDefault(ServiceCategory, StandardServiceCategoryEnum.STANDARD),
   scope: ServiceScope
 });
 
@@ -93,7 +92,10 @@ export type SpecialServiceMetadata = t.TypeOf<typeof SpecialServiceMetadata>;
 export const StandardServiceMetadata = t.intersection([
   CommonServiceMetadata,
   t.interface({
-    category: t.literal(StandardServiceCategoryEnum.STANDARD),
+    category: t.union([
+      withDefault(ServiceCategory, StandardServiceCategoryEnum.STANDARD),
+      t.literal(StandardServiceCategoryEnum.STANDARD)
+    ]),
     customSpecialFlow: t.undefined
   })
 ]);
