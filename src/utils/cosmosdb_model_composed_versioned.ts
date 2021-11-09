@@ -32,7 +32,7 @@ export type DocumentComposedSearchKey<
   // Quick win would be to narrow T to extend BaseModel, but that way we'd lose usage flexibility
   // Hence we omit "extends BaseModel", but we check keys to be part of "T & BaseModel"
   ReferenceIdKey extends keyof (T & BaseModel),
-  // PartitionKey and ReferenceIdKey must be two different fields.
+  // PartitionKey and ReferenceIdKey must refers two different fields.
   PartitionKey extends keyof Omit<T & BaseModel, ReferenceIdKey>
 > = readonly [(T & BaseModel)[ReferenceIdKey], (T & BaseModel)[PartitionKey]];
 
@@ -66,11 +66,18 @@ export const generateComposedVersionedModelId = <
   )}-${paddedVersion}` as NonEmptyString;
 };
 
+/**
+ * This kind of model is an extension of CosmosdbModelVersioned.
+ * It can handle versioning on all documents identified by the couple T[ReferenceKey] and T[PartitionKey].
+ * To avoid drop of performance is recommandend adopt this pattern only if the number of possible values of T[ReferenceKey] for
+ * each value of T[PartitionKey] is limited.
+ */
 export abstract class CosmosdbModelComposedVersioned<
   T,
   TN extends Readonly<T>,
   TR extends Readonly<T & RetrievedVersionedModel>,
   ReferenceIdKey extends keyof T,
+  // PartitionKey field name must be different from ReferenceIdKey field name.
   PartitionKey extends keyof Omit<T, ReferenceIdKey>
 > extends CosmosdbModelVersioned<T, TN, TR, ReferenceIdKey, PartitionKey> {
   constructor(
