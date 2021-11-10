@@ -6,14 +6,15 @@ import {
   Service,
   SERVICE_MODEL_PK_FIELD,
   ServiceModel,
-  SERVICE_MODEL_ID_FIELD
+  SERVICE_MODEL_ID_FIELD,
+  RetrievedService
 } from "../../src/models/service";
 import { createContext } from "./cosmos_utils";
 import * as e from "fp-ts/lib/Either";
 import * as te from "fp-ts/lib/TaskEither";
 import { pipe } from "fp-ts/lib/function";
 import { ServiceScopeEnum } from "../../generated/definitions/ServiceScope";
-import { CosmosdbModel } from "../../src/utils/cosmosdb_model";
+import { CosmosErrors, toCosmosErrorResponse } from "../../src/utils/cosmosdb_model";
 import { generateVersionedModelId } from "../../src/utils/cosmosdb_model_versioned";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { StandardServiceCategoryEnum } from "../../generated/definitions/StandardServiceCategory";
@@ -146,8 +147,18 @@ describe("Models |> Service", () => {
     };
 
     // Seed the database with a document without serviceMetadata category (backwards compatibility check)
-    const retrievedService = await CosmosdbModel.prototype.create.call(model, {newDoc, id: generateVersionedModelId<Service, typeof SERVICE_MODEL_ID_FIELD>(newDoc.serviceId, 0 as NonNegativeInteger)})();
-    expect(e.isRight(retrievedService)).toBeTruthy();
+    const savedService: e.Either<CosmosErrors, RetrievedService> = await te.tryCatch<CosmosErrors, any>(
+      () =>
+        context.container.items.create({
+          ...newDoc,
+          id: generateVersionedModelId<Service, typeof SERVICE_MODEL_ID_FIELD>(newDoc.serviceId, 0 as NonNegativeInteger),
+          version: 0
+        }, {
+          disableAutomaticIdGeneration: true
+        }),
+      toCosmosErrorResponse
+    )();
+    expect(e.isRight(savedService)).toBeTruthy();
 
     // read latest version of the document
     await pipe(
@@ -162,8 +173,9 @@ describe("Models |> Service", () => {
           expect(result).toEqual(
             expect.objectContaining({
               ...aService,
+              kind: "IRetrievedService",
               serviceMetadata: {
-                ...aService.serviceMetadata,
+                ...newDoc.serviceMetadata,
                 category: StandardServiceCategoryEnum.STANDARD
               },
               version: 0

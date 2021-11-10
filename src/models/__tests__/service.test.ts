@@ -26,7 +26,6 @@ import {
 import { ServiceScopeEnum } from "../../../generated/definitions/ServiceScope";
 import { StandardServiceCategoryEnum } from "../../../generated/definitions/StandardServiceCategory";
 import { SpecialServiceCategoryEnum } from "../../../generated/definitions/SpecialServiceCategory";
-import {readableReport} from "@pagopa/ts-commons/lib/reporters";
 
 const aServiceId = "xyz" as NonEmptyString;
 const anOrganizationFiscalCode = "01234567890" as OrganizationFiscalCode;
@@ -201,6 +200,14 @@ describe("create", () => {
     const model = new ServiceModel(containerMock);
     const result = await model.create({...aRawServiceWithMetadata, kind: "INewService"})();
     expect(mockCreate).toBeCalled();
+    expect(mockCreate).toBeCalledWith(
+      expect.objectContaining({
+          serviceMetadata: expect.objectContaining({
+            category: serviceMetadata.category
+          })
+        }),
+        expect.anything()
+      );
     expect(E.isRight(result)).toBeTruthy();
     if (E.isRight(result)) {
       expect(result.right).toEqual({...aRetrievedService, serviceMetadata, kind: "IRetrievedService", id: expect.any(String)})
@@ -277,6 +284,9 @@ describe("Special Service metadata types", () => {
       serviceMetadata: aCommonServiceMetadata
     }
 
+    const decodedValue = NewService.decode(aNewServiceWithoutCategory);
+    expect(E.isRight(decodedValue)).toBeTruthy();
+
     const aServiceMetadata: ServiceMetadata = {
       scope: ServiceScopeEnum.LOCAL,
       category: SpecialServiceCategoryEnum.SPECIAL
@@ -287,6 +297,9 @@ describe("Special Service metadata types", () => {
       kind: "INewService",
       serviceMetadata: aServiceMetadata
     }
+
+    const decodedValue2 = NewService.decode(aNewServiceWithoutCategory);
+    expect(E.isRight(decodedValue2)).toBeTruthy();
 
   });
   

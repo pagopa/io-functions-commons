@@ -767,11 +767,8 @@ CommonServiceMetadata:
       minLength: 1
     scope:
       $ref: "#/ServiceScope"
-    category:
-      $ref: "#/ServiceCategory"
   required:
     - scope
-    - category
 StandardServiceMetadata:
   allOf:
     - $ref: "#/CommonServiceMetadata"
@@ -793,7 +790,6 @@ SpecialServiceMetadata:
           minLength: 1
       required:
         - category
-        - custom_special_flow
 ServiceMetadata:
   x-one-of: true
   allOf:
