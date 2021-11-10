@@ -31,9 +31,11 @@ import { ServiceScope } from "../../generated/definitions/ServiceScope";
 import { CosmosDecodingError, CosmosErrors } from "../utils/cosmosdb_model";
 import { wrapWithKind } from "../utils/types";
 import { mapAsyncIterable, reduceAsyncIterator } from "../utils/async";
-import { StandardServiceCategoryEnum } from "../../generated/definitions/StandardServiceCategory";
-import { SpecialServiceCategoryEnum } from "../../generated/definitions/SpecialServiceCategory";
-import { ServiceCategory } from "../../generated/definitions/ServiceCategory";
+import {
+  StandardServiceCategory,
+  StandardServiceCategoryEnum
+} from "../../generated/definitions/StandardServiceCategory";
+import { SpecialServiceCategory } from "../../generated/definitions/SpecialServiceCategory";
 
 export const SERVICE_COLLECTION_NAME = "services";
 export const SERVICE_MODEL_ID_FIELD = "serviceId" as const;
@@ -83,7 +85,9 @@ export type CommonServiceMetadata = t.TypeOf<typeof CommonServiceMetadata>;
 export const SpecialServiceMetadata = t.intersection([
   CommonServiceMetadata,
   t.interface({
-    category: t.literal(SpecialServiceCategoryEnum.SPECIAL),
+    category: SpecialServiceCategory
+  }),
+  t.partial({
     customSpecialFlow: NonEmptyString
   })
 ]);
@@ -92,10 +96,10 @@ export type SpecialServiceMetadata = t.TypeOf<typeof SpecialServiceMetadata>;
 export const StandardServiceMetadata = t.intersection([
   CommonServiceMetadata,
   t.interface({
-    category: t.union([
-      withDefault(ServiceCategory, StandardServiceCategoryEnum.STANDARD),
-      t.literal(StandardServiceCategoryEnum.STANDARD)
-    ]),
+    category: withDefault(
+      StandardServiceCategory,
+      StandardServiceCategoryEnum.STANDARD
+    ),
     customSpecialFlow: t.undefined
   })
 ]);
