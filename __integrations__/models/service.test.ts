@@ -146,7 +146,7 @@ describe("Models |> Service", () => {
     };
 
     // Seed the database with a document without serviceMetadata category (backwards compatibility check)
-    const retrievedService = await CosmosdbModel.prototype.create({newDoc, id: generateVersionedModelId<Service, typeof SERVICE_MODEL_ID_FIELD>(newDoc.serviceId, 0 as NonNegativeInteger)})();
+    const retrievedService = await CosmosdbModel.prototype.create.call(model, {newDoc, id: generateVersionedModelId<Service, typeof SERVICE_MODEL_ID_FIELD>(newDoc.serviceId, 0 as NonNegativeInteger)})();
     expect(e.isRight(retrievedService)).toBeTruthy();
 
     // read latest version of the document
