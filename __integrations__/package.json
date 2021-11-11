@@ -4,7 +4,8 @@
   "description": "Integration test suite for integration testing",
   "license": "MIT",
   "scripts": {
-    "start": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest --verbose"
+    "start": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest --verbose",
+    "start:local": "dotenv -e ../.env -- jest --verbose"
   },
   "keywords": [],
   "author": "",
@@ -14,6 +15,7 @@
   "devDependencies": {
     "@types/jest": "^25.2.1",
     "@types/node": "^13.11.0",
+    "dotenv-cli": "^4.1.0",
     "jest": "^25.2.7",
     "ts-jest": "^25.3.1"
   }

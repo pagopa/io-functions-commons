@@ -31,18 +31,23 @@ import { ServiceScope } from "../../generated/definitions/ServiceScope";
 import { CosmosDecodingError, CosmosErrors } from "../utils/cosmosdb_model";
 import { wrapWithKind } from "../utils/types";
 import { mapAsyncIterable, reduceAsyncIterator } from "../utils/async";
+import {
+  StandardServiceCategory,
+  StandardServiceCategoryEnum
+} from "../../generated/definitions/StandardServiceCategory";
+import { SpecialServiceCategory } from "../../generated/definitions/SpecialServiceCategory";
 
 export const SERVICE_COLLECTION_NAME = "services";
 export const SERVICE_MODEL_ID_FIELD = "serviceId" as const;
 export const SERVICE_MODEL_PK_FIELD = SERVICE_MODEL_ID_FIELD;
 
 // required attributes
-const ServiceMetadataR = t.interface({
+const CommonServiceMetadataR = t.interface({
   scope: ServiceScope
 });
 
 // optional attributes
-const ServiceMetadataO = t.partial({
+const CommonServiceMetadataO = t.partial({
   address: NonEmptyString,
 
   appAndroid: NonEmptyString,
@@ -70,11 +75,40 @@ const ServiceMetadataO = t.partial({
   webUrl: NonEmptyString
 });
 
-export const ServiceMetadata = t.intersection(
-  [ServiceMetadataR, ServiceMetadataO],
-  "ServiceMetadata"
+export const CommonServiceMetadata = t.intersection(
+  [CommonServiceMetadataR, CommonServiceMetadataO],
+  "CommonServiceMetadata"
 );
 
+export type CommonServiceMetadata = t.TypeOf<typeof CommonServiceMetadata>;
+
+export const SpecialServiceMetadata = t.intersection([
+  CommonServiceMetadata,
+  t.interface({
+    category: SpecialServiceCategory
+  }),
+  t.partial({
+    customSpecialFlow: NonEmptyString
+  })
+]);
+export type SpecialServiceMetadata = t.TypeOf<typeof SpecialServiceMetadata>;
+
+export const StandardServiceMetadata = t.intersection([
+  CommonServiceMetadata,
+  t.interface({
+    category: withDefault(
+      StandardServiceCategory,
+      StandardServiceCategoryEnum.STANDARD
+    ),
+    customSpecialFlow: t.undefined
+  })
+]);
+export type StandardServiceMetadata = t.TypeOf<typeof StandardServiceMetadata>;
+
+export const ServiceMetadata = t.union([
+  StandardServiceMetadata,
+  SpecialServiceMetadata
+]);
 export type ServiceMetadata = t.TypeOf<typeof ServiceMetadata>;
 
 /**
