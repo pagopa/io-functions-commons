@@ -4,6 +4,7 @@ import { HiddenServicePayload } from "../../generated/definitions/HiddenServiceP
 import { ServicePayload } from "../../generated/definitions/ServicePayload";
 import { VisibleServicePayload } from "../../generated/definitions/VisibleServicePayload";
 import * as E from "fp-ts/lib/Either";
+import * as t from "io-ts";
 
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { PaymentData } from "../../generated/definitions/PaymentData";
@@ -13,8 +14,14 @@ import { PaymentNoticeNumber } from "../../generated/definitions/PaymentNoticeNu
 import { Payee } from "../../generated/definitions/Payee";
 import { MessageContent } from "../../generated/definitions/MessageContent";
 import { NewMessage } from "../../generated/definitions/NewMessage";
-import { pipe } from "fp-ts/lib/function";
+import { identity, pipe } from "fp-ts/lib/function";
 import { StandardServiceCategoryEnum } from "../../generated/definitions/StandardServiceCategory";
+
+import { ServiceMetadata as ApiServiceMetadata } from "../../generated/definitions/ServiceMetadata";
+import { CommonServiceMetadata as ApiCommonServiceMetadata } from "../../generated/definitions/CommonServiceMetadata";
+import { StandardServiceMetadata as ApiStandardServiceMetadata } from "../../generated/definitions/StandardServiceMetadata";
+import { ServiceScopeEnum } from "../../generated/definitions/ServiceScope";
+import { SpecialServiceCategoryEnum } from "../../generated/definitions/SpecialServiceCategory";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -27,32 +34,38 @@ describe("ServicePayload definition", () => {
     version: 0
   };
 
+  const serviceMetadata = {
+    address: "address",
+    app_android: "app",
+    app_ios: "app",
+    cta: "cta",
+    description: "Description",
+    email: "test@mail.it",
+    pec: "pec@mail.it",
+    phone: "333",
+    privacy_url: "http://privateurl.it",
+    scope: "LOCAL",
+    support_url: "http://supporturl.it",
+    token_name: "token",
+    tos_url: "http://weburlk.it",
+    web_url: "http://weburl.it"
+  };
+
   const visibleService = {
     ...commonServicePayload,
     is_visible: true,
-    service_metadata: {
-      address: "address",
-      app_android: "app",
-      app_ios: "app",
-      category: StandardServiceCategoryEnum.STANDARD,
-      cta: "cta",
-      description: "Description",
-      email: "test@mail.it",
-      pec: "pec@mail.it",
-      phone: "333",
-      privacy_url: "http://privateurl.it",
-      scope: "LOCAL",
-      support_url: "http://supporturl.it",
-      token_name: "token",
-      tos_url: "http://weburlk.it",
-      web_url: "http://weburl.it"
-    }
+    service_metadata: serviceMetadata
   };
 
   const hiddenService = {
     ...commonServicePayload,
     is_visible: false
   };
+
+  const hiddenServiceWithMetadata = {
+    ...hiddenService,
+    service_metadata: serviceMetadata
+  }
 
   const hiddenServiceWithoutIsVisible = {
     ...commonServicePayload
@@ -64,7 +77,6 @@ describe("ServicePayload definition", () => {
       address: "address",
       app_android: "app",
       app_ios: "app",
-      category: StandardServiceCategoryEnum.STANDARD,
       cta: "cta",
       description: "Description",
       email: "test@mail.it",
@@ -123,6 +135,29 @@ describe("ServicePayload definition", () => {
     expect(E.isRight(servicePayloadTest)).toBeTruthy();
     expect(E.isLeft(visibleServiceTest)).toBeTruthy();
     expect(E.isRight(hiddenServiceTest)).toBeTruthy();
+  });
+
+  it("should ignore category in ServicePayload", () => {
+    // Only Admins can set service category, ServicePayload is the inferface exposed to PA
+    pipe(
+      ServicePayload.decode({...visibleService, service_metadata: {
+        ...visibleService.service_metadata,
+        category: SpecialServiceCategoryEnum.SPECIAL
+      }}),
+      E.map(_ => {
+        expect(_.service_metadata).not.toHaveProperty("category");
+        return _;
+      }),
+      E.chain(_ => ServicePayload.decode({...hiddenServiceWithMetadata, service_metadata: {
+        ...hiddenServiceWithMetadata.service_metadata,
+        category: SpecialServiceCategoryEnum.SPECIAL
+      }})),
+      E.map(_ => {
+        expect(_.service_metadata).not.toHaveProperty("category");
+        return _;
+      }),
+      E.fold(_ => fail("Unexpected decoding error"), identity)
+    )
   });
 });
 
@@ -323,3 +358,45 @@ describe("Type definition", () => {
     );
   });
 });
+
+describe("ServiceMetadata", () => {
+  it("should API decode unsupported service metadata as common service metadata", () => {
+
+    // Create a Fake service category unsupported by the App
+    const UnsupportedServiceMetadata = t.intersection([
+      ApiCommonServiceMetadata,
+      t.interface({
+        category: t.literal("UNSUPPORTED"),
+        other_property: t.number
+      })
+    ]);
+    type UnsupportedServiceMetadata = t.TypeOf<typeof UnsupportedServiceMetadata>;
+
+    pipe(
+      {
+        scope: ServiceScopeEnum.LOCAL,
+        category: "UNSUPPORTED",
+        other_property: 1
+      } as UnsupportedServiceMetadata,
+      ApiServiceMetadata.decode,
+      E.mapLeft(_ => fail("Unexpected decoding error")),
+      E.map(_ => {
+        expect(ApiCommonServiceMetadata.is(_)).toBeTruthy();
+        expect(_).not.toHaveProperty("category");
+        expect(_).not.toHaveProperty("other_property");
+      })
+    );
+
+    pipe({
+      scope: ServiceScopeEnum.LOCAL,
+      category: StandardServiceCategoryEnum.STANDARD
+    } as ApiStandardServiceMetadata,
+      ApiServiceMetadata.decode,
+      E.mapLeft(_ => fail("Unexpected decoding error")),
+      E.map(_ => {
+        expect(ApiStandardServiceMetadata.is(_)).toBeTruthy();
+        expect(_).toHaveProperty("category", StandardServiceCategoryEnum.STANDARD);
+      })
+    );
+  });
+})

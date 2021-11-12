@@ -634,8 +634,15 @@ ServicePayload:
   description: A payload used to create/update a service for a user.
   x-one-of: true
   allOf:
-   - $ref: "#/VisibleServicePayload"    
+   - $ref: "#/VisibleServicePayload"
    - $ref: "#/HiddenServicePayload"
+ExtendedServicePayload:
+  allOf:
+    - $ref: "#/ServicePayload"
+    - type: object
+      properties:
+        service_metadata:
+          $ref: "#/ServiceMetadata"
 CommonServicePayload:
   description: Common properties for a ServicePayload
   type: object
@@ -681,7 +688,9 @@ VisibleServicePayload:
         description: |-
           It indicates that service appears in the service list
       service_metadata:
-        $ref: "#/ServiceMetadata"
+        description: |-
+          That service can't handle some ServiceMetadata fields (es. category)
+        $ref: "#/CommonServiceMetadata"
     required:
       - is_visible
       - service_metadata
@@ -699,11 +708,13 @@ HiddenServicePayload:
         description: |-
           It indicates that service is hidden
       service_metadata:
-        $ref: "#/ServiceMetadata"
+        description: |-
+          That service can't handle some ServiceMetadata fields (es. category)
+        $ref: "#/CommonServiceMetadata"
 Service: 
   description: A service tied to user's subscription.
   allOf:
-  - $ref: "#/ServicePayload"
+  - $ref: "#/ExtendedServicePayload"
   - type: object
     properties:
       id:
@@ -795,6 +806,7 @@ ServiceMetadata:
   allOf:
     - $ref: "#/StandardServiceMetadata"
     - $ref: "#/SpecialServiceMetadata"
+    - $ref: "#/CommonServiceMetadata"
 SpecialServiceCategory:
   type: string
   x-extensible-enum:
