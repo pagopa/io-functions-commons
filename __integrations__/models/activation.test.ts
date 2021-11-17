@@ -70,11 +70,8 @@ describe("Models |> Profile", () => {
 
     // read latest version of the document
     await pipe(
-      TE.taskEither.of<any, void>(void 0),
-      TE.chainW(_ =>
-        model.findLastVersionByModelId([newDoc[ACTIVATION_REFERENCE_ID_FIELD], newDoc[ACTIVATION_MODEL_PK_FIELD]])
-      ),
-      TE.chain(_ => TE.fromOption(() => "It's none")(_)),
+      model.findLastVersionByModelId([newDoc[ACTIVATION_REFERENCE_ID_FIELD], newDoc[ACTIVATION_MODEL_PK_FIELD]]),
+      TE.chainW(_ => TE.fromOption(() => "It's none")(_)),
       TE.bimap(
         _ => fail(`Failed to read doc, error: ${JSON.stringify(_)}`),
         result => {

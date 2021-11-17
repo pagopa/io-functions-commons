@@ -26,21 +26,29 @@ const aRetrivedActivation: RetrievedActivation = {
   ...aRawActivation
 };
 
+const mockFetchAll = jest.fn();
+const mockCreate = jest.fn();
+
+const containerMock = ({
+  items: {
+    create: mockCreate,
+    query: jest.fn(() => ({
+      fetchAll: mockFetchAll
+    }))
+  }
+} as unknown) as Container;
+
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
 describe("findLastVersionByModelId", () => {
   it("should resolve to an existing activation", async () => {
-    const containerMock = ({
-      items: {
-        create: jest.fn(),
-        query: jest.fn(() => ({
-          fetchAll: jest.fn(() =>
-            Promise.resolve({
-              resources: [aRetrivedActivation]
-            })
-          )
-        }))
-      }
-    } as unknown) as Container;
-
+    mockFetchAll.mockImplementationOnce(() =>
+      Promise.resolve({
+        resources: [aRetrivedActivation]
+      })
+    );
     const model = new ActivationModel(containerMock);
 
     const result = await model.findLastVersionByModelId([aServiceId, aFiscalCode])();
@@ -55,18 +63,11 @@ describe("findLastVersionByModelId", () => {
   });
 
   it("should resolve to empty if activation was found", async () => {
-    const containerMock = ({
-      items: {
-        create: jest.fn(),
-        query: jest.fn(_ => ({
-          fetchAll: jest.fn(() =>
-            Promise.resolve({
-              resources: undefined
-            })
-          )
-        }))
-      }
-    } as unknown) as Container;
+    mockFetchAll.mockImplementationOnce(() =>
+      Promise.resolve({
+        resources: undefined
+      })
+    );
 
     const model = new ActivationModel(containerMock);
 
@@ -79,18 +80,11 @@ describe("findLastVersionByModelId", () => {
   });
 
   it("should validate the retrieved object agains the model type", async () => {
-    const containerMock = ({
-      items: {
-        create: jest.fn(),
-        query: jest.fn(() => ({
-          fetchAll: jest.fn(() =>
-            Promise.resolve({
-              resources: [{}]
-            })
-          )
-        }))
-      }
-    } as unknown) as Container;
+    mockFetchAll.mockImplementationOnce(() =>
+      Promise.resolve({
+        resources: [{}]
+      })
+    );
 
     const model = new ActivationModel(containerMock);
 
@@ -105,17 +99,9 @@ describe("findLastVersionByModelId", () => {
 
 describe("create", () => {
   it("should create a new activation", async () => {
-    const mockCreate = jest.fn((_, __) => Promise.resolve({
+    mockCreate.mockImplementationOnce((_, __) => Promise.resolve({
       resource: aRetrivedActivation
     }));
-    const containerMock = ({
-      items: {
-        create: mockCreate,
-        query: jest.fn(() => ({
-          fetchAll: jest.fn()
-        }))
-      }
-    } as unknown) as Container;
 
     const model = new ActivationModel(containerMock);
 
@@ -142,19 +128,12 @@ describe("create", () => {
 
 describe("upsert", () => {
   it("should create a new activation with version 0 if don't exists previous documents", async () => {
-    const mockCreate = jest.fn((_, __) => Promise.resolve({
+    mockCreate.mockImplementationOnce((_, __) => Promise.resolve({
       resource: aRetrivedActivation
     }));
-    const containerMock = ({
-      items: {
-        create: mockCreate,
-        query: jest.fn(() => ({
-          fetchAll: jest.fn(() => Promise.resolve({
-            resources: undefined
-          }))
-        }))
-      }
-    } as unknown) as Container;
+    mockFetchAll.mockImplementationOnce(() => Promise.resolve({
+      resources: undefined
+    }));
 
     const model = new ActivationModel(containerMock);
 
@@ -180,25 +159,18 @@ describe("upsert", () => {
 
   it("should create a new activation with version 1 if exists a previous document", async () => {
     const expectedDocumentId = generateComposedVersionedModelId<Activation, typeof ACTIVATION_REFERENCE_ID_FIELD, typeof ACTIVATION_MODEL_PK_FIELD>(aServiceId, aFiscalCode, 1 as NonNegativeInteger);
-    const mockCreate = jest.fn((_, __) => Promise.resolve({
+    mockCreate.mockImplementationOnce((_, __) => Promise.resolve({
       resource: {
         ...aRetrivedActivation,
         version: 1,
         id: expectedDocumentId
       }
     }));
-    const containerMock = ({
-      items: {
-        create: mockCreate,
-        query: jest.fn(() => ({
-          fetchAll: jest.fn(() => Promise.resolve({
-            resources: [
-              aRetrivedActivation
-            ]
-          }))
-        }))
-      }
-    } as unknown) as Container;
+    mockFetchAll.mockImplementationOnce(() => Promise.resolve({
+      resources: [
+        aRetrivedActivation
+      ]
+    }));
 
     const model = new ActivationModel(containerMock);
 
