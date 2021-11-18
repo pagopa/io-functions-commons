@@ -302,5 +302,4 @@ describe("Special Service metadata types", () => {
     expect(E.isRight(decodedValue2)).toBeTruthy();
 
   });
-  
 });

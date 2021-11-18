@@ -14,6 +14,7 @@ import { MessageSubject } from "../../../generated/definitions/MessageSubject";
 import { OrganizationFiscalCode } from "../../../generated/definitions/OrganizationFiscalCode";
 import { TimeToLiveSeconds } from "../../../generated/definitions/TimeToLiveSeconds";
 import { CreatedMessageEventSenderMetadata } from "../created_message_sender_metadata";
+import { StandardServiceCategoryEnum } from "../../../generated/definitions/StandardServiceCategory";
 
 const aMessageId = "A_MESSAGE_ID" as NonEmptyString;
 const aNotificationId = "A_NOTIFICATION_ID" as NonEmptyString;
@@ -42,6 +43,7 @@ const aSenderMetadata: CreatedMessageEventSenderMetadata = {
   organizationFiscalCode: anOrganizationFiscalCode,
   organizationName: "AgID" as NonEmptyString,
   requireSecureChannels: false,
+  serviceCategory: StandardServiceCategoryEnum.STANDARD,
   serviceName: "Test" as NonEmptyString,
   serviceUserEmail: "email@example.com" as EmailAddress
 };
