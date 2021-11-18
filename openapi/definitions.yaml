@@ -995,3 +995,9 @@ ServicePreference:
     - is_inbox_enabled
     - is_webhook_enabled
     - settings_version
+ActivationStatus:
+  type: string
+  x-extensible-enum:
+    - ACTIVE
+    - INACTIVE
+    - PENDING
