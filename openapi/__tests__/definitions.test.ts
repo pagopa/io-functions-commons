@@ -22,6 +22,7 @@ import { CommonServiceMetadata as ApiCommonServiceMetadata } from "../../generat
 import { StandardServiceMetadata as ApiStandardServiceMetadata } from "../../generated/definitions/StandardServiceMetadata";
 import { ServiceScopeEnum } from "../../generated/definitions/ServiceScope";
 import { SpecialServiceCategoryEnum } from "../../generated/definitions/SpecialServiceCategory";
+import { LegalData } from "../../generated/definitions/LegalData";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -65,7 +66,7 @@ describe("ServicePayload definition", () => {
   const hiddenServiceWithMetadata = {
     ...hiddenService,
     service_metadata: serviceMetadata
-  }
+  };
 
   const hiddenServiceWithoutIsVisible = {
     ...commonServicePayload
@@ -140,24 +141,32 @@ describe("ServicePayload definition", () => {
   it("should ignore category in ServicePayload", () => {
     // Only Admins can set service category, ServicePayload is the inferface exposed to PA
     pipe(
-      ServicePayload.decode({...visibleService, service_metadata: {
-        ...visibleService.service_metadata,
-        category: SpecialServiceCategoryEnum.SPECIAL
-      }}),
+      ServicePayload.decode({
+        ...visibleService,
+        service_metadata: {
+          ...visibleService.service_metadata,
+          category: SpecialServiceCategoryEnum.SPECIAL
+        }
+      }),
       E.map(_ => {
         expect(_.service_metadata).not.toHaveProperty("category");
         return _;
       }),
-      E.chain(_ => ServicePayload.decode({...hiddenServiceWithMetadata, service_metadata: {
-        ...hiddenServiceWithMetadata.service_metadata,
-        category: SpecialServiceCategoryEnum.SPECIAL
-      }})),
+      E.chain(_ =>
+        ServicePayload.decode({
+          ...hiddenServiceWithMetadata,
+          service_metadata: {
+            ...hiddenServiceWithMetadata.service_metadata,
+            category: SpecialServiceCategoryEnum.SPECIAL
+          }
+        })
+      ),
       E.map(_ => {
         expect(_.service_metadata).not.toHaveProperty("category");
         return _;
       }),
       E.fold(_ => fail("Unexpected decoding error"), identity)
-    )
+    );
   });
 });
 
@@ -186,6 +195,17 @@ const aPaymentDataWithoutPayee: PaymentData = {
   notice_number: "177777777777777777" as PaymentNoticeNumber
 };
 
+const aContentWithLegalData = {
+  ...aContentWithoutPaymentData,
+  legal_data: {
+    sender_mail_from: "test@test.it",
+
+    has_attachment: true,
+
+    message_unique_id: "000001"
+  }
+};
+
 const aPayee: Payee = { fiscal_code: anOrganizationFiscalCode };
 
 describe("NewMessage definition", () => {
@@ -195,7 +215,9 @@ describe("NewMessage definition", () => {
       content: aContentWithoutPaymentData
     };
 
-    expect(E.isRight(MessageContent.decode(aContentWithoutPaymentData))).toBeTruthy();
+    expect(
+      E.isRight(MessageContent.decode(aContentWithoutPaymentData))
+    ).toBeTruthy();
 
     const messageWithContent = NewMessage.decode(
       aMessageWithContentWithoutPaymentData
@@ -205,10 +227,11 @@ describe("NewMessage definition", () => {
       messageWithContent,
       E.fold(
         () => fail(),
-        value => expect(value).toEqual({
-          ...aMessageWithContentWithoutPaymentData,
-          time_to_live: 3600
-        })
+        value =>
+          expect(value).toEqual({
+            ...aMessageWithContentWithoutPaymentData,
+            time_to_live: 3600
+          })
       )
     );
   });
@@ -230,35 +253,39 @@ describe("NewMessage definition", () => {
       messageWithContent,
       E.fold(
         () => fail(),
-        _ => expect(_).toEqual({
-          ...aMessageWithContentWithPaymentDataWithoutPayee,
-          content: {
-            ...aMessageWithContentWithPaymentDataWithoutPayee.content,
-            payment_data: {
-              ...aMessageWithContentWithPaymentDataWithoutPayee.content.payment_data,
-              invalid_after_due_date: false
-            }
-          },
-          time_to_live: 3600
-        })
+        _ =>
+          expect(_).toEqual({
+            ...aMessageWithContentWithPaymentDataWithoutPayee,
+            content: {
+              ...aMessageWithContentWithPaymentDataWithoutPayee.content,
+              payment_data: {
+                ...aMessageWithContentWithPaymentDataWithoutPayee.content
+                  .payment_data,
+                invalid_after_due_date: false
+              }
+            },
+            time_to_live: 3600
+          })
       )
     );
   });
 
   it("should decode PaymentData with payment data with payee", () => {
-    const aPaymentDataWithPayee = { ...aPaymentDataWithoutPayee, payee: aPayee };
+    const aPaymentDataWithPayee = {
+      ...aPaymentDataWithoutPayee,
+      payee: aPayee
+    };
 
-    const messageWithContent = PaymentData.decode(
-      aPaymentDataWithPayee
-    );
+    const messageWithContent = PaymentData.decode(aPaymentDataWithPayee);
     pipe(
       messageWithContent,
       E.fold(
         () => fail(),
-        value => expect(value).toEqual({
-          ...aPaymentDataWithPayee,
-          invalid_after_due_date: false
-        })
+        value =>
+          expect(value).toEqual({
+            ...aPaymentDataWithPayee,
+            invalid_after_due_date: false
+          })
       )
     );
   });
@@ -273,9 +300,11 @@ describe("NewMessage definition", () => {
     };
 
     expect(
-      E.isRight(PaymentData.decode(
-        aMessageWithContentWithPaymentDataWithPayee.content.payment_data
-      ))
+      E.isRight(
+        PaymentData.decode(
+          aMessageWithContentWithPaymentDataWithPayee.content.payment_data
+        )
+      )
     ).toBeTruthy();
 
     const messageWithContent = NewMessage.decode(
@@ -297,10 +326,12 @@ describe("CreatedMessageWithContent definition", () => {
     };
 
     expect(
-      E.isRight(Payee.decode(
-        aMessageWithContentWithPaymentDataWithoutPayee.content.payment_data
-          .payee
-      ))
+      E.isRight(
+        Payee.decode(
+          aMessageWithContentWithPaymentDataWithoutPayee.content.payment_data
+            .payee
+        )
+      )
     ).toBeTruthy();
 
     const messageWithContent = CreatedMessageWithContent.decode(
@@ -337,8 +368,7 @@ describe("Type definition", () => {
       decodedMessageContent,
       E.fold(
         () => fail(),
-        value => 
-          expect(value).toEqual(aContentWithoutPaymentData)
+        value => expect(value).toEqual(aContentWithoutPaymentData)
       )
     );
   });
@@ -350,10 +380,23 @@ describe("Type definition", () => {
       decodedPaymentData,
       E.fold(
         () => fail(),
-        value => expect(value).toEqual({
-          ...aPaymentDataWithoutPayee,
-          invalid_after_due_date: false
-        })
+        value =>
+          expect(value).toEqual({
+            ...aPaymentDataWithoutPayee,
+            invalid_after_due_date: false
+          })
+      )
+    );
+  });
+
+  it("should decode MessageContent with content with legal data", () => {
+    const decodedMessageContent = MessageContent.decode(aContentWithLegalData);
+
+    pipe(
+      decodedMessageContent,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(aContentWithLegalData)
       )
     );
   });
@@ -361,7 +404,6 @@ describe("Type definition", () => {
 
 describe("ServiceMetadata", () => {
   it("should API decode unsupported service metadata as common service metadata", () => {
-
     // Create a Fake service category unsupported by the App
     const UnsupportedServiceMetadata = t.intersection([
       ApiCommonServiceMetadata,
@@ -370,7 +412,9 @@ describe("ServiceMetadata", () => {
         other_property: t.number
       })
     ]);
-    type UnsupportedServiceMetadata = t.TypeOf<typeof UnsupportedServiceMetadata>;
+    type UnsupportedServiceMetadata = t.TypeOf<
+      typeof UnsupportedServiceMetadata
+    >;
 
     pipe(
       {
@@ -387,16 +431,20 @@ describe("ServiceMetadata", () => {
       })
     );
 
-    pipe({
-      scope: ServiceScopeEnum.LOCAL,
-      category: StandardServiceCategoryEnum.STANDARD
-    } as ApiStandardServiceMetadata,
+    pipe(
+      {
+        scope: ServiceScopeEnum.LOCAL,
+        category: StandardServiceCategoryEnum.STANDARD
+      } as ApiStandardServiceMetadata,
       ApiServiceMetadata.decode,
       E.mapLeft(_ => fail("Unexpected decoding error")),
       E.map(_ => {
         expect(ApiStandardServiceMetadata.is(_)).toBeTruthy();
-        expect(_).toHaveProperty("category", StandardServiceCategoryEnum.STANDARD);
+        expect(_).toHaveProperty(
+          "category",
+          StandardServiceCategoryEnum.STANDARD
+        );
       })
     );
   });
-})
+});
