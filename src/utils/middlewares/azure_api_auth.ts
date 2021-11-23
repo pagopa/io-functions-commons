@@ -80,7 +80,10 @@ export enum UserGroup {
   ApiMessageWriteEUCovidCert = "ApiMessageWriteEUCovidCert",
 
   // messages: send messages with payee
-  ApiMessageWriteWithPayee = "ApiMessageWriteWithPayee"
+  ApiMessageWriteWithPayee = "ApiMessageWriteWithPayee",
+
+  // messages: send messages with legal data
+  ApiMessageWriteWithLegal = "ApiMessageWriteWithLegal"
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
