@@ -310,6 +310,11 @@ EnrichedMessage:
       type: string
     message_title:
       type: string
+    category:
+      $ref: '#/MessageCategory'
+    has_attachments:
+      type: boolean
+      default: false
   required:
     - id
     - fiscal_code
@@ -1013,3 +1018,30 @@ ActivationStatus:
     - ACTIVE
     - INACTIVE
     - PENDING
+MessageCategory:
+  x-one-of: true
+  allOf:
+    - $ref: "#/MessageCategoryPayment"
+    - $ref: "#/MessageCategoryBase"
+MessageCategoryBase:
+  type: object
+  properties:
+    tag:
+      type: string
+      enum:
+        - GREEN_PASS
+        - GENERIC
+  required:
+    - tag
+MessageCategoryPayment:
+  type: object
+  properties: 
+    tag:
+      type: string
+      enum:
+        - PAYMENT
+    rptId:
+      type: string
+  required:
+    - tag
+    - rptId
