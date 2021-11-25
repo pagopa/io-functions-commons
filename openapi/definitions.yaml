@@ -99,6 +99,8 @@ MessageContent:
           $ref: "#/PaymentData"
         prescription_data:
           $ref: "#/PrescriptionData"
+        legal_data:
+          $ref: '#/LegalData'
         eu_covid_cert:
           $ref: "#/EUCovidCert"
         due_date:
@@ -142,6 +144,25 @@ PrescriptionData:
       $ref: "#/PrescriberFiscalCode"
   required:
     - nre
+LegalData:
+  type: object
+  properties:
+    sender_mail_from: 
+      type: string
+      minLength: 1
+    has_attachment:
+      type: boolean
+      default: false
+    message_unique_id:
+      type: string
+      minLength: 1
+    original_message_url:
+      type: string
+      minLength: 1
+  required:
+    - sender_mail_from
+    - has_attachment
+    - message_unique_id
 EUCovidCert:
   type: object
   description: |-
