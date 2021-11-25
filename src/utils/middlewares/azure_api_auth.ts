@@ -83,7 +83,7 @@ export enum UserGroup {
   ApiMessageWriteWithPayee = "ApiMessageWriteWithPayee",
 
   // messages: send messages with legal data
-  ApiMessageWriteWithLegal = "ApiMessageWriteWithLegal"
+  ApiMessageWriteWithLegal = "ApiMessageWriteWithLegalData"
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
