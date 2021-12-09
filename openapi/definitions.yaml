@@ -1059,6 +1059,33 @@ ActivationStatus:
     - ACTIVE
     - INACTIVE
     - PENDING
+Activation:
+  type: object
+  properties:
+    service_id:
+      $ref: "#/ServiceId"
+    fiscal_code:
+      $ref: "#/FiscalCode"
+    status:
+      $ref: "#/ActivationStatus"
+    version:
+      type: integer
+      minimum: 0
+  required:
+    - service_id
+    - fiscal_code
+    - status
+    - version
+ActivationPayload:
+  type: object
+  properties:
+    fiscal_code:
+      $ref: "#/FiscalCode"
+    status:
+      $ref: "#/ActivationStatus"
+  required:
+    - fiscal_code
+    - status
 MessageCategory:
   x-one-of: true
   allOf:
