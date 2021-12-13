@@ -367,20 +367,24 @@ MessageResponseWithContent:
       $ref: "#/MessageStatusValue"
   required:
     - message
+LegalMessageWithContent:
+  allOf:
+    - $ref: "#/CreatedMessageWithContent"
+    - type: object
+      properties:
+        legal_message:
+          $ref: "#/LegalMessage"
+      required:
+        legal_message
 LegalMessageResponseWithContent:
-  type: object
-  properties:
-    message:
-      $ref: "#/CreatedMessageWithContent"
-    legal_message:
-      $ref: "#/LegalMessage"
-    notification:
-      $ref: "#/MessageResponseNotificationStatus"
-    status:
-      $ref: "#/MessageStatusValue"
-  required:
-    - message
-    - legal_message
+  allOf:
+    - $ref: "#/MessageResponseWithContent"
+    - type: object
+      properties:
+        message:
+          $ref: "#/LegalMessageWithContent"
+      required:
+        message
 MessageResponseWithoutContent:
   type: object
   properties:
