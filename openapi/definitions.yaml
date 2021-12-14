@@ -372,10 +372,10 @@ LegalMessageWithContent:
     - $ref: "#/CreatedMessageWithContent"
     - type: object
       properties:
-        legal_message:
+        - legal_message:
           $ref: "#/LegalMessage"
       required:
-        legal_message
+        - legal_message
 LegalMessageResponseWithContent:
   allOf:
     - $ref: "#/MessageResponseWithContent"
@@ -384,7 +384,7 @@ LegalMessageResponseWithContent:
         message:
           $ref: "#/LegalMessageWithContent"
       required:
-        message
+        - message
 MessageResponseWithoutContent:
   type: object
   properties:
