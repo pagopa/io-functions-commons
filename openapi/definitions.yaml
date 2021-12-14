@@ -1069,7 +1069,7 @@ MessageCategoryBase:
       type: string
       enum:
         - LEGAL_MESSAGE
-        - GREEN_PASS
+        - EU_COVID_CERT
         - GENERIC
   required:
     - tag
