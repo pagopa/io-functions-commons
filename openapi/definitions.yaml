@@ -367,6 +367,24 @@ MessageResponseWithContent:
       $ref: "#/MessageStatusValue"
   required:
     - message
+LegalMessageWithContent:
+  allOf:
+    - $ref: "#/CreatedMessageWithContent"
+    - type: object
+      properties:
+        legal_message:
+          $ref: "#/LegalMessage"
+      required:
+        - legal_message
+LegalMessageResponseWithContent:
+  allOf:
+    - $ref: "#/MessageResponseWithContent"
+    - type: object
+      properties:
+        message:
+          $ref: "#/LegalMessageWithContent"
+      required:
+        - message
 MessageResponseWithoutContent:
   type: object
   properties:
@@ -1050,6 +1068,7 @@ MessageCategoryBase:
     tag:
       type: string
       enum:
+        - LEGAL_MESSAGE
         - EU_COVID_CERT
         - GENERIC
   required:
@@ -1066,3 +1085,97 @@ MessageCategoryPayment:
   required:
     - tag
     - rptId
+LegalMessage:
+  type: object
+  properties:
+    eml: 
+      $ref: "#/LegalMessageEml"
+    cert_data:
+      $ref: "#/LegalMessageCertData"
+  required: 
+    - eml
+    - cert_data
+LegalMessageEml:
+  type: object
+  properties:
+    subject:
+      type: string
+    plain_text_content:
+      type: string
+    html_content:
+      type: string
+    attachments:
+      type: array
+      items:
+        $ref: '#/Attachment'
+  required:
+    - subject
+    - plain_text_content
+    - html_content
+    - attachments
+LegalMessageCertData:
+  type: object
+  properties:
+    header:
+      $ref: "#/CertDataHeader"
+    data:
+      $ref: "#/CertData"
+  required:
+    - header
+    - data
+CertData:
+  type: object
+  properties:
+    sender_provider:
+      type: string
+      minLength: 1
+    timestamp:
+      type: string
+      format: date-time
+    envelope_id:
+      type: string
+      minLength: 1
+    msg_id:
+      type: string
+      minLength: 1
+    receipt_type:
+      type: string
+  required:
+    - sender_provider
+    - timestamp
+    - envelope_id
+    - msg_id
+    - receipt_type
+CertDataHeader:
+  type: object
+  properties:
+    sender:
+      type: string
+      minLength: 1
+    recipients:
+      type: string
+      minLength: 1
+    replies:
+      type: string
+      minLength: 1
+    object:
+      type: string
+      minLength: 1
+Attachment:
+  type: object
+  properties:
+    id:
+      type: string
+    content_type:
+      type: string
+    name:
+      type: string
+    url:
+      type: string
+ImpersonatedService:
+  type: object
+  properties:
+    service_id:
+      type: string
+    user_groups:
+      type: string
