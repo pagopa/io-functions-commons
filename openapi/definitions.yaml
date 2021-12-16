@@ -118,6 +118,8 @@ NewMessageContent:
           $ref: "#/PrescriptionData"
         eu_covid_cert:
           $ref: "#/EUCovidCert"
+        legal_data:
+          $ref: '#/LegalData'
 NewMessage:
   type: object
   properties:
@@ -1161,6 +1163,9 @@ CertDataHeader:
     object:
       type: string
       minLength: 1
+  required:
+    - sender
+    - recipients
 Attachment:
   type: object
   properties:
@@ -1172,6 +1177,10 @@ Attachment:
       type: string
     url:
       type: string
+  required:
+    - id
+    - content_type
+    - name
 ImpersonatedService:
   type: object
   properties:
@@ -1179,3 +1188,6 @@ ImpersonatedService:
       type: string
     user_groups:
       type: string
+  required:
+    - service_id
+    - user_groups
