@@ -98,6 +98,27 @@ export function checkSourceIpForHandler<P1, P2, P3, P4, P5, P6, O>(
   p6: P6
 ) => Promise<O | IResponseErrorForbiddenNotAuthorized>;
 
+export function checkSourceIpForHandler<P1, P2, P3, P4, P5, P6, P7, O>(
+  f: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6, p7: P7) => Promise<O>,
+  e: (
+    p1: P1,
+    p2: P2,
+    p3: P3,
+    p4: P4,
+    p5: P5,
+    p6: P6,
+    p7: P7
+  ) => ITuple2<ClientIp, ReadonlySet<string>>
+): (
+  p1: P1,
+  p2: P2,
+  p3: P3,
+  p4: P4,
+  p5: P5,
+  p6: P6,
+  p7: P7
+) => Promise<O | IResponseErrorForbiddenNotAuthorized>;
+
 /**
  * Whether the request is coming from an allowed IP.
  *
@@ -107,15 +128,24 @@ export function checkSourceIpForHandler<P1, P2, P3, P4, P5, P6, O>(
  *                    CIDRs from the user attributes
  */
 // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
-export function checkSourceIpForHandler<P1, P2, P3, P4, P5, P6, O>(
-  handler: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6) => Promise<O>,
+export function checkSourceIpForHandler<P1, P2, P3, P4, P5, P6, P7, O>(
+  handler: (
+    p1: P1,
+    p2: P2,
+    p3: P3,
+    p4: P4,
+    p5: P5,
+    p6: P6,
+    p7: P7
+  ) => Promise<O>,
   extractor: (
     p1: P1,
     p2: P2,
     p3: P3,
     p4: P4,
     p5: P5,
-    p6: P6
+    p6: P6,
+    p7: P7
   ) => ITuple2<ClientIp, ReadonlySet<string>>
 ): (
   p1: P1,
@@ -123,15 +153,16 @@ export function checkSourceIpForHandler<P1, P2, P3, P4, P5, P6, O>(
   p3: P3,
   p4: P4,
   p5: P5,
-  p6: P6
+  p6: P6,
+  p7: P7
 ) => Promise<
   O | IResponseErrorForbiddenNotAuthorized | IResponseErrorInternal
 > {
   // eslint-disable-next-line max-params, @typescript-eslint/explicit-function-return-type
-  return (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6) =>
+  return (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6, p7: P7) =>
     new Promise(resolve => {
       // extract the x-forwarded-for header and the allowed cidrs from the params
-      const x = extractor(p1, p2, p3, p4, p5, p6);
+      const x = extractor(p1, p2, p3, p4, p5, p6, p7);
       const maybeClientIp = x.e1;
       const cidrs = x.e2;
 
@@ -149,7 +180,7 @@ export function checkSourceIpForHandler<P1, P2, P3, P4, P5, P6, O>(
         isContainedInCidrs(maybeClientIp.value, cidrs)
       ) {
         // forward request to handler
-        return resolve(handler(p1, p2, p3, p4, p5, p6));
+        return resolve(handler(p1, p2, p3, p4, p5, p6, p7));
       } else {
         // respond with Not Authorized
         return resolve(ResponseErrorForbiddenNotAuthorized);
