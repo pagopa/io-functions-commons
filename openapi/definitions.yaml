@@ -1189,7 +1189,7 @@ ImpersonatedService:
     user_groups:
       type: string
     user_email:
-      type string
+      type: string
   required:
     - service_id
     - user_groups
