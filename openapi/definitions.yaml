@@ -1188,6 +1188,9 @@ ImpersonatedService:
       type: string
     user_groups:
       type: string
+    user_email:
+      type string
   required:
     - service_id
     - user_groups
+    - user_email
