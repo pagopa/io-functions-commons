@@ -88,6 +88,9 @@ export enum UserGroup {
   // messages: send messages with legal data
   ApiMessageWriteWithLegalData = "ApiMessageWriteWithLegalData",
 
+  // messages: send messages with legal data without service impersonification
+  ApiMessageWriteWithLegalDataWithoutImpersonification = "ApiMessageWriteWithLegalDataWithoutImpersonification",
+
   // legal messages: read sent legal message
   ApiMessageReadWithLegalData = "ApiMessageReadWithLegalData"
 }
