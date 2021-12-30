@@ -1182,8 +1182,10 @@ CertDataHeader:
       type: string
       minLength: 1
     recipients:
-      type: string
-      minLength: 1
+      type: array
+      items:
+        type: string
+        minLength: 1
     replies:
       type: string
       minLength: 1
