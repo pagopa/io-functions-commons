@@ -7,7 +7,10 @@ import {
   checkConfigHealth,
   checkAzureStorageHealth,
   checkAzureCosmosDbHealth,
-  checkUrlHealth
+  checkUrlHealth,
+  HealthCheck,
+  HealthProblem,
+  toHealthProblems
 } from "../healthcheck";
 
 import * as healthcheck from "../healthcheck";
@@ -290,6 +293,67 @@ describe("checkApplicationHealth - multiple errors", () => {
       TE.map(_ => {
         expect(true).toBeFalsy();
         done();
+      })
+    )();
+  });
+
+  it("should support custom health checks when every check is ok", async () => {
+    const customHC1 = (): HealthCheck<"HC1", true> => TE.of(true);
+    const customHC2 = (): HealthCheck<"HC2", true> => TE.of(true);
+
+    await pipe(
+      aValidConfig,
+      checkApplicationHealth(IConfig, [c => customHC1(), c => customHC2()]),
+      TE.mapLeft(err => {
+        fail("This should not be called");
+      }),
+      TE.map(_ => {
+        expect(_).toBe(true);
+      })
+    )();
+  });
+
+  it("should support custom health checks when config check fails", async () => {
+    const customHC1 = (): HealthCheck<"HC1", true> => TE.of(true);
+    const customHC2 = (): HealthCheck<"HC2", true> => TE.of(true);
+    const anInvalidConfig = {};
+
+    await pipe(
+      anInvalidConfig,
+      checkApplicationHealth(IConfig, [c => customHC1(), c => customHC2()]),
+      TE.mapLeft(err => {
+        // trick: extract prefix from messagest to get the error kind
+        const kinds = err
+          .map(_ => _.split("|")[0])
+          .filter((value, index, self) => self.indexOf(value) === index);
+        expect(kinds).toEqual(["Config"]);
+      }),
+      TE.map(_ => {
+        fail("This should not be called");
+      })
+    )();
+  });
+
+  it("should support custom health checks when custom health checks fail", async () => {
+    const customHC1 = (): HealthCheck<"HC1", true> =>
+      TE.left(toHealthProblems("HC1")("first issue"));
+    const customHC2 = (): HealthCheck<"HC2", true> =>
+      TE.left(toHealthProblems("HC2")("second issue"));
+
+    await pipe(
+      aValidConfig,
+      checkApplicationHealth(IConfig, [c => customHC1(), c => customHC2()]),
+      TE.mapLeft(err => {
+        // trick: extract prefix from messagest to get the error kind
+        const kinds = err
+          .map(_ => _.split("|")[0])
+          .filter((value, index, self) => self.indexOf(value) === index)
+          .sort();
+        expect(kinds).toEqual(["HC1", "HC2"]);
+        expect(err.length).toBe(2);
+      }),
+      TE.map(_ => {
+        fail("This should not be called");
       })
     )();
   });
