@@ -19,28 +19,28 @@ import fetch from "node-fetch";
 
 import * as t from "io-ts";
 
-export type ProblemSource =
-  | "Config"
-  | "Url"
-  | "AzureCosmosDB"
-  | "AzureStorage"
-  | "AzureNotificationHub";
+type Literal<S> = string extends S ? never : string;
 
-// eslint-disable-next-line
-export type HealthProblem<S extends ProblemSource> = string & { __source: S };
+// ProblemSources are just string literals
+export type ProblemSource<S> = Literal<S>;
+
+export type HealthProblem<S extends ProblemSource<S>> = string & {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  readonly __source: S;
+};
 export type HealthCheck<
-  S extends ProblemSource = ProblemSource,
+  S extends ProblemSource<S>,
   True = true
 > = TE.TaskEither<ReadonlyArray<HealthProblem<S>>, True>;
 
 // format and cast a problem message with its source
-const formatProblem = <S extends ProblemSource>(
+const formatProblem = <S extends ProblemSource<S>>(
   source: S,
   message: string
 ): HealthProblem<S> => `${source}|${message}` as HealthProblem<S>;
 
 // utility to format an unknown error to an arry of HealthProblem
-export const toHealthProblems = <S extends ProblemSource>(source: S) => (
+export const toHealthProblems = <S extends ProblemSource<S>>(source: S) => (
   e: unknown
 ): ReadonlyArray<HealthProblem<S>> => [
   formatProblem(source, E.toError(e).message)
@@ -164,25 +164,32 @@ export const checkUrlHealth = (url: string): HealthCheck<"Url", true> =>
  */
 export const checkApplicationHealth = <
   IConfig extends t.Mixed,
-  S extends ProblemSource
+  S extends ProblemSource<S>
 >(
   ConfigCodec: IConfig,
   checks: ReadonlyArray<(c: t.TypeOf<IConfig>) => HealthCheck<S, true>>
-) => (config: unknown): HealthCheck<ProblemSource, true> => {
+) => (
+  config: unknown
+): TE.TaskEither<
+  ReadonlyArray<HealthProblem<S>> | ReadonlyArray<HealthProblem<"Config">>,
+  true
+> => {
   const applicativeValidation = TE.getApplicativeTaskValidation(
     T.ApplicativePar,
-    RA.getSemigroup<HealthProblem<ProblemSource>>()
+    RA.getSemigroup<HealthProblem<S>>()
   );
 
   return pipe(
     config,
     TE.of,
     TE.chain(checkConfigHealth(ConfigCodec)),
-    TE.map(decodedConfig => checks.map(check => check(decodedConfig))),
-    TE.chain(
-      // run each taskEither and collect validation errors from each one of them, if any
-      A.sequence(applicativeValidation)
+    TE.chainW(decodedConfig =>
+      pipe(
+        checks.map(check => check(decodedConfig)),
+        // run each taskEither and collect validation errors from each one of them, if any
+        A.sequence(applicativeValidation)
+      )
     ),
-    TE.map(_ => true)
+    TE.map(_ => true as const)
   );
 };
