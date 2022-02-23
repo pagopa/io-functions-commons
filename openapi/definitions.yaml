@@ -342,6 +342,12 @@ EnrichedMessage:
     has_attachments:
       type: boolean
       default: false
+    is_read:
+      type: boolean
+      default: false
+    is_archived:
+      type: boolean
+      default: false
   required:
     - id
     - fiscal_code
