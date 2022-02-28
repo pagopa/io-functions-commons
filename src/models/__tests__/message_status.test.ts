@@ -5,12 +5,15 @@ import * as O from "fp-ts/lib/Option";
 import { NonNegativeNumber } from "@pagopa/ts-commons/lib/numbers";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
-import { Container } from "@azure/cosmos";
+import { Container, ResourceResponse } from "@azure/cosmos";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { MessageStatusValueEnum } from "../../../generated/definitions/MessageStatusValue";
-import { MessageStatusModel, RetrievedMessageStatus } from "../message_status";
+import {
+  MessageStatusModel,
+  NewMessageStatus,
+  RetrievedMessageStatus
+} from "../message_status";
 import { pipe } from "fp-ts/lib/function";
-import { isSome } from "fp-ts/lib/Option";
 
 const aMessageId = "A_MESSAGE_ID" as NonEmptyString;
 
@@ -110,6 +113,119 @@ describe("findOneMessageStatusById", () => {
     expect(E.isLeft(result)).toBeTruthy();
     if (E.isLeft(result)) {
       expect(result.left.kind).toBe("COSMOS_DECODING_ERROR");
+    }
+  });
+});
+
+describe("Update status", () => {
+  const mockCreateItem = jest
+    .fn()
+    .mockImplementation(async doc => new ResourceResponse(doc, {}, 200, 200));
+
+  const mockFetchAll = jest.fn(() =>
+    Promise.resolve({
+      resources: [aRetrievedMessageStatus]
+    })
+  );
+
+  beforeEach(() => jest.clearAllMocks());
+
+  // ------------------------------
+  // Read messages
+  // ------------------------------
+
+  it("should update an existing message status with isRead = true", async () => {
+    const containerMock = ({
+      items: {
+        create: mockCreateItem,
+        query: jest.fn(() => ({
+          fetchAll: mockFetchAll
+        }))
+      }
+    } as unknown) as Container;
+    const model = new MessageStatusModel(containerMock);
+
+    const result = await model.findLastVersionByModelId([aMessageId])();
+
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isSome(result.right)).toBeTruthy();
+      expect(O.toUndefined(result.right)).toEqual(aRetrievedMessageStatus);
+    }
+
+    const val = {
+      ...aRetrievedMessageStatus,
+      kind: "INewMessageStatus",
+      isRead: true
+    } as NewMessageStatus;
+
+    const upsertedresult = await model.upsert(val)();
+
+    expect(E.isRight(upsertedresult)).toBe(true);
+    if (E.isRight(result)) {
+      expect(O.isSome(result.right)).toBeTruthy();
+
+      const param = mockCreateItem.mock.calls[0][0];
+
+      const date = new Date().toJSON().split("T")[0];
+
+      expect(param).toEqual(
+        expect.objectContaining({
+          ...val,
+          updatedAt: expect.stringContaining(date),
+          id: "A_MESSAGE_ID-0000000000000001",
+          version: 1
+        })
+      );
+    }
+  });
+  // ------------------------------
+  // Archived messages
+  // ------------------------------
+
+  it("should update an existing message status with isArchived = true", async () => {
+    const containerMock = ({
+      items: {
+        create: mockCreateItem,
+        query: jest.fn(() => ({
+          fetchAll: mockFetchAll
+        }))
+      }
+    } as unknown) as Container;
+    const model = new MessageStatusModel(containerMock);
+
+    const result = await model.findLastVersionByModelId([aMessageId])();
+
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isSome(result.right)).toBeTruthy();
+      expect(O.toUndefined(result.right)).toEqual(aRetrievedMessageStatus);
+    }
+
+    const val = {
+      ...aRetrievedMessageStatus,
+      kind: "INewMessageStatus",
+      isArchived: true
+    } as NewMessageStatus;
+
+    const upsertedresult = await model.upsert(val)();
+
+    expect(E.isRight(upsertedresult)).toBe(true);
+    if (E.isRight(result)) {
+      expect(O.isSome(result.right)).toBeTruthy();
+
+      const param = mockCreateItem.mock.calls[0][0];
+
+      const date = new Date().toJSON().split("T")[0];
+
+      expect(param).toEqual(
+        expect.objectContaining({
+          ...val,
+          updatedAt: expect.stringContaining(date),
+          id: "A_MESSAGE_ID-0000000000000001",
+          version: 1
+        })
+      );
     }
   });
 });
