@@ -266,17 +266,19 @@ MessageStatusValue:
     - REJECTED
   example: ACCEPTED
 MessageStatus:
-  type: object
-  properties:
-    status:
-      $ref: "#/MessageStatusValue"
-    updated_at:
-      $ref: "#/Timestamp"
-    version:
-      type: integer
-  required:
-    - status
-    - updated_at
+  allOf:
+    - type: object
+      properties:
+        status:
+          $ref: "#/MessageStatusValue"
+        updated_at:
+          $ref: "#/Timestamp"
+        version:
+          type: integer
+      required:
+        - status
+        - updated_at
+    - $ref: "#/MessageStatusAttributes"
 CreatedMessageWithContent:
   type: object
   properties:
@@ -1223,3 +1225,12 @@ ImpersonatedService:
     - service_id
     - user_groups
     - user_email
+MessageStatusAttributes:
+  type: object
+  properties:
+    is_archived:
+      type: boolean
+      default: false
+    is_read:
+      type: boolean
+      default: false

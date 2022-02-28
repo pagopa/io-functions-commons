@@ -22,7 +22,8 @@ import { CommonServiceMetadata as ApiCommonServiceMetadata } from "../../generat
 import { StandardServiceMetadata as ApiStandardServiceMetadata } from "../../generated/definitions/StandardServiceMetadata";
 import { ServiceScopeEnum } from "../../generated/definitions/ServiceScope";
 import { SpecialServiceCategoryEnum } from "../../generated/definitions/SpecialServiceCategory";
-import { LegalData } from "../../generated/definitions/LegalData";
+import { MessageStatusValueEnum } from "../../generated/definitions/MessageStatusValue";
+import { MessageStatus } from "../../generated/definitions/MessageStatus";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -445,6 +446,103 @@ describe("ServiceMetadata", () => {
           StandardServiceCategoryEnum.STANDARD
         );
       })
+    );
+  });
+});
+
+describe("MessageStatusAttributes", () => {
+  const aNonReadAndNonArchivedMessageStatusWithoutAttributes = {
+    status: MessageStatusValueEnum.ACCEPTED,
+    version: 1,
+    updated_at: new Date()
+  };
+
+  const isReadMessageStatusAttributes = {
+    is_read: true
+  };
+
+  const isArchivedMessageStatusAttributes = {
+    is_archived: true
+  };
+
+  it("should decode a MessageStatus not read and not archived", () => {
+    const decodedMessageStatusContent = MessageStatus.decode(
+      aNonReadAndNonArchivedMessageStatusWithoutAttributes
+    );
+
+    pipe(
+      decodedMessageStatusContent,
+      E.fold(
+        () => fail(),
+        value =>
+          expect(value).toEqual({
+            ...aNonReadAndNonArchivedMessageStatusWithoutAttributes,
+            is_archived: false,
+            is_read: false
+          })
+      )
+    );
+  });
+
+  it("should decode a read MessageStatus", () => {
+    const decodedMessageStatusContent = MessageStatus.decode({
+      ...aNonReadAndNonArchivedMessageStatusWithoutAttributes,
+      ...isReadMessageStatusAttributes
+    });
+
+    pipe(
+      decodedMessageStatusContent,
+      E.fold(
+        () => fail(),
+        value =>
+          expect(value).toEqual({
+            ...aNonReadAndNonArchivedMessageStatusWithoutAttributes,
+            ...isReadMessageStatusAttributes,
+            is_archived: false
+          })
+      )
+    );
+  });
+
+  it("should decode an archived MessageStatus", () => {
+    const decodedMessageStatusContent = MessageStatus.decode({
+      ...aNonReadAndNonArchivedMessageStatusWithoutAttributes,
+      ...isArchivedMessageStatusAttributes
+    });
+
+    pipe(
+      decodedMessageStatusContent,
+      E.fold(
+        () => fail(),
+        value =>
+          expect(value).toEqual({
+            ...aNonReadAndNonArchivedMessageStatusWithoutAttributes,
+            ...isArchivedMessageStatusAttributes,
+            is_read: false
+          })
+      )
+    );
+  });
+
+
+  it("should decode a read and archived MessageStatus", () => {
+    const decodedMessageStatusContent = MessageStatus.decode({
+      ...aNonReadAndNonArchivedMessageStatusWithoutAttributes,
+      ...isArchivedMessageStatusAttributes,
+      ...isReadMessageStatusAttributes
+    });
+
+    pipe(
+      decodedMessageStatusContent,
+      E.fold(
+        () => fail(),
+        value =>
+          expect(value).toEqual({
+            ...aNonReadAndNonArchivedMessageStatusWithoutAttributes,
+            ...isArchivedMessageStatusAttributes,
+            ...isReadMessageStatusAttributes
+          })
+      )
     );
   });
 });
