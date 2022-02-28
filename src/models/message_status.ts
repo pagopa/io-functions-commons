@@ -22,11 +22,18 @@ export const MESSAGE_STATUS_MODEL_PK_FIELD = "messageId" as const;
 
 // We cannot intersect with MessageStatus
 // as it is a *strict* interface
-export const MessageStatus = t.interface({
-  messageId: NonEmptyString,
-  status: MessageStatusValue,
-  updatedAt: Timestamp
-});
+export const MessageStatus = t.intersection([
+  t.interface({
+    messageId: NonEmptyString,
+    status: MessageStatusValue,
+    updatedAt: Timestamp
+  }),
+  t.partial({
+    isRead: t.boolean,
+    // eslint-disable-next-line sort-keys
+    isArchived: t.boolean
+  })
+]);
 
 export type MessageStatus = t.TypeOf<typeof MessageStatus>;
 
