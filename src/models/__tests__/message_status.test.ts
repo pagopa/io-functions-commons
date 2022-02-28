@@ -64,7 +64,11 @@ describe("findOneMessageStatusById", () => {
     expect(E.isRight(result)).toBeTruthy();
     if (E.isRight(result)) {
       expect(O.isSome(result.right)).toBeTruthy();
-      expect(O.toUndefined(result.right)).toEqual(aRetrievedMessageStatus);
+      expect(O.toUndefined(result.right)).toEqual({
+        ...aRetrievedMessageStatus,
+        isRead: false,
+        isArchived: false
+      });
     }
   });
 
@@ -150,7 +154,11 @@ describe("Update status", () => {
     expect(E.isRight(result)).toBeTruthy();
     if (E.isRight(result)) {
       expect(O.isSome(result.right)).toBeTruthy();
-      expect(O.toUndefined(result.right)).toEqual(aRetrievedMessageStatus);
+      expect(O.toUndefined(result.right)).toEqual({
+        ...aRetrievedMessageStatus,
+        isRead: false,
+        isArchived: false
+      });
     }
 
     const val = {
@@ -172,6 +180,7 @@ describe("Update status", () => {
       expect(param).toEqual(
         expect.objectContaining({
           ...val,
+          isArchived: false,
           updatedAt: expect.stringContaining(date),
           id: "A_MESSAGE_ID-0000000000000001",
           version: 1
@@ -221,6 +230,7 @@ describe("Update status", () => {
       expect(param).toEqual(
         expect.objectContaining({
           ...val,
+          isRead: false,
           updatedAt: expect.stringContaining(date),
           id: "A_MESSAGE_ID-0000000000000001",
           version: 1
