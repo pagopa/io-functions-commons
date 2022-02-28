@@ -69,7 +69,6 @@ export const getMessageStatusUpdater = (
     TE.map(
       O.getOrElse(() => ({
         messageId,
-        status,
         // eslint-disable-next-line sort-keys
         isRead: false,
         // eslint-disable-next-line sort-keys
@@ -80,6 +79,7 @@ export const getMessageStatusUpdater = (
       messageStatusModel.upsert({
         ...item,
         kind: "INewMessageStatus",
+        status,
         updatedAt: new Date()
       })
     )
