@@ -356,6 +356,8 @@ EnrichedMessage:
     - service_name
     - organization_name
     - message_title
+    - is_read
+    - is_archived
 PublicMessage:
   x-one-of: true
   allOf:
