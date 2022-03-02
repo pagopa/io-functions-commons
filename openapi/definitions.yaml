@@ -1233,12 +1233,16 @@ MessageStatusReadChange:
       enum:
         - true
       default: true
+  required:
+    - is_read
 MessageStatusArchivedChange:
   type: object
   properties:
     is_archived:
       type: boolean
       default: false
+  required:
+    - is_archived
 MessageStatusAttributesBulkChange:
   allOf:
     - $ref: "#/MessageStatusReadChange"
