@@ -1241,20 +1241,11 @@ MessageStatusArchivedChange:
       type: boolean
   required:
     - is_archived
-MessageStatusAttributesSingleChange:
-  x-one-of: true
-  allOf:
-    - $ref: "#/MessageStatusReadChange"
-    - $ref: "#/MessageStatusArchivedChange"
-MessageStatusAttributesBulkChange:
-  allOf:
-    - $ref: "#/MessageStatusReadChange"
-    - $ref: "#/MessageStatusArchivedChange"
 MessageStatusAttributesChange:
   x-one-of: true
   allOf:
-    - $ref: "#/MessageStatusAttributesBulkChange"
-    - $ref: "#/MessageStatusAttributesSingleChange"
+    - $ref: "#/MessageStatusReadChange"
+    - $ref: "#/MessageStatusArchivedChange"
 MessageStatusAttributes:
   type: object
   properties:

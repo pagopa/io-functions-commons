@@ -564,16 +564,6 @@ describe("MessageStatusAttributesChange", () => {
     is_archived: false
   };
 
-  const aRightBulkChange = {
-    is_read: true,
-    is_archived: true
-  };
-
-  const aWrongBulkChange = {
-    is_read: false,
-    is_archived: true
-  };
-
   it("should fail decoding an empty change", () => {
     const result = MessageStatusAttributesChange.decode({});
     expect(E.isLeft(result)).toBeTruthy();
@@ -581,11 +571,6 @@ describe("MessageStatusAttributesChange", () => {
 
   it("should fail decoding a wrong read change", () => {
     const result = MessageStatusAttributesChange.decode(aWrongReadChange);
-    expect(E.isLeft(result)).toBeTruthy();
-  });
-
-  it("should fail decoding a wrong bulk change", () => {
-    const result = MessageStatusAttributesChange.decode(aWrongBulkChange);
     expect(E.isLeft(result)).toBeTruthy();
   });
 
@@ -621,18 +606,6 @@ describe("MessageStatusAttributesChange", () => {
       E.fold(
         () => fail(),
         value => expect(value).toEqual(anArchiveChange)
-      )
-    );
-  });
-
-  it("should succeed decoding a right bulk change", () => {
-    const result = MessageStatusAttributesChange.decode(aRightBulkChange);
-    expect(E.isRight(result)).toBeTruthy();
-    pipe(
-      result,
-      E.fold(
-        () => fail(),
-        value => expect(value).toEqual(aRightBulkChange)
       )
     );
   });
