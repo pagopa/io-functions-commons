@@ -1232,7 +1232,6 @@ MessageStatusReadChange:
       type: boolean
       enum:
         - true
-      default: true
   required:
     - is_read
 MessageStatusArchivedChange:
@@ -1240,19 +1239,22 @@ MessageStatusArchivedChange:
   properties:
     is_archived:
       type: boolean
-      default: false
   required:
     - is_archived
-MessageStatusAttributesBulkChange:
-  allOf:
-    - $ref: "#/MessageStatusReadChange"
-    - $ref: "#/MessageStatusArchivedChange" 
-MessageStatusAttributesChange:
+MessageStatusAttributesSingleChange:
   x-one-of: true
   allOf:
     - $ref: "#/MessageStatusReadChange"
-    - $ref: "#/MessageStatusArchivedChange" 
+    - $ref: "#/MessageStatusArchivedChange"
+MessageStatusAttributesBulkChange:
+  allOf:
+    - $ref: "#/MessageStatusReadChange"
+    - $ref: "#/MessageStatusArchivedChange"
+MessageStatusAttributesChange:
+  x-one-of: true
+  allOf:
     - $ref: "#/MessageStatusAttributesBulkChange"
+    - $ref: "#/MessageStatusAttributesSingleChange"
 MessageStatusAttributes:
   type: object
   properties:

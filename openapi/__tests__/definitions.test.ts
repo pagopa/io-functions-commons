@@ -24,6 +24,7 @@ import { ServiceScopeEnum } from "../../generated/definitions/ServiceScope";
 import { SpecialServiceCategoryEnum } from "../../generated/definitions/SpecialServiceCategory";
 import { MessageStatusValueEnum } from "../../generated/definitions/MessageStatusValue";
 import { MessageStatus } from "../../generated/definitions/MessageStatus";
+import { MessageStatusAttributesChange } from "../../generated/definitions/MessageStatusAttributesChange";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -524,7 +525,6 @@ describe("MessageStatusAttributes", () => {
     );
   });
 
-
   it("should decode a read and archived MessageStatus", () => {
     const decodedMessageStatusContent = MessageStatus.decode({
       ...aNonReadAndNonArchivedMessageStatusWithoutAttributes,
@@ -545,4 +545,96 @@ describe("MessageStatusAttributes", () => {
       )
     );
   });
+});
+
+describe("MessageStatusAttributesChange", () => {
+  const aRightReadChange = {
+    is_read: true
+  };
+
+  const aWrongReadChange = {
+    is_read: false
+  };
+
+  const anArchiveChange = {
+    is_archived: true
+  };
+
+  const anUnarchiveChange = {
+    is_archived: false
+  };
+
+  const aRightBulkChange = {
+    is_read: true,
+    is_archived: true
+  };
+
+  const aWrongBulkChange = {
+    is_read: false,
+    is_archived: true
+  };
+
+  it("should fail decoding an empty change", () => {
+    const result = MessageStatusAttributesChange.decode({});
+    expect(E.isLeft(result)).toBeTruthy();
+  });
+
+  it("should fail decoding a wrong read change", () => {
+    const result = MessageStatusAttributesChange.decode(aWrongReadChange);
+    expect(E.isLeft(result)).toBeTruthy();
+  });
+
+  it("should fail decoding a wrong bulk change", () => {
+    const result = MessageStatusAttributesChange.decode(aWrongBulkChange);
+    expect(E.isLeft(result)).toBeTruthy();
+  });
+
+  it("should succeed decoding a correct read change", () => {
+    const result = MessageStatusAttributesChange.decode(aRightReadChange);
+    expect(E.isRight(result)).toBeTruthy();
+    pipe(
+      result,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(aRightReadChange)
+      )
+    );
+  });
+
+  it("should succeed decoding an unarchive change", () => {
+    const result = MessageStatusAttributesChange.decode(anUnarchiveChange);
+    expect(E.isRight(result)).toBeTruthy();
+    pipe(
+      result,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(anUnarchiveChange)
+      )
+    );
+  });
+
+  it("should succeed decoding an archive change", () => {
+    const result = MessageStatusAttributesChange.decode(anArchiveChange);
+    expect(E.isRight(result)).toBeTruthy();
+    pipe(
+      result,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(anArchiveChange)
+      )
+    );
+  });
+
+  it("should succeed decoding a right bulk change", () => {
+    const result = MessageStatusAttributesChange.decode(aRightBulkChange);
+    expect(E.isRight(result)).toBeTruthy();
+    pipe(
+      result,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(aRightBulkChange)
+      )
+    );
+  });
+
 });
