@@ -1239,16 +1239,22 @@ MessageStatusArchivedChange:
     is_archived:
       type: boolean
       default: false
+MessageStatusAttributesBulkChange:
+  allOf:
+    - $ref: "#/MessageStatusReadChange"
+    - $ref: "#/MessageStatusArchivedChange" 
 MessageStatusAttributesChange:
   x-one-of: true
   allOf:
     - $ref: "#/MessageStatusReadChange"
     - $ref: "#/MessageStatusArchivedChange" 
+    - $ref: "#/MessageStatusAttributesBulkChange"
 MessageStatusAttributes:
-  allOf:
-    - type: object
-      properties:
-        is_read:
-          type: boolean
-          default: false
-    - $ref: "#/MessageStatusArchivedChange" 
+  type: object
+  properties:
+    is_read:
+      type: boolean
+      default: false
+    is_archived:
+      type: boolean
+      default: false
