@@ -25,6 +25,7 @@ import { SpecialServiceCategoryEnum } from "../../generated/definitions/SpecialS
 import { MessageStatusValueEnum } from "../../generated/definitions/MessageStatusValue";
 import { MessageStatus } from "../../generated/definitions/MessageStatus";
 import { MessageStatusAttributesChange } from "../../generated/definitions/MessageStatusAttributesChange";
+import { MessageStatusChangeEnum } from "../../generated/definitions/MessageStatusChange";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -549,19 +550,40 @@ describe("MessageStatusAttributes", () => {
 
 describe("MessageStatusAttributesChange", () => {
   const aRightReadChange = {
+    operation: MessageStatusChangeEnum.read,
     is_read: true
   };
 
   const aWrongReadChange = {
+    operation: MessageStatusChangeEnum.read,
     is_read: false
   };
 
   const anArchiveChange = {
+    operation: MessageStatusChangeEnum.archive,
     is_archived: true
   };
 
   const anUnarchiveChange = {
+    operation: MessageStatusChangeEnum.archive,
     is_archived: false
+  };
+
+  const aWrongChange = {
+    operation: MessageStatusChangeEnum.read,
+    is_archived: false
+  };
+
+  const aRightBulkChange = {
+    operation: MessageStatusChangeEnum.bulk,
+    is_read: true,
+    is_archived: true
+  };
+
+  const aWrongBulkChange = {
+    operation: MessageStatusChangeEnum.bulk,
+    is_read: false,
+    is_archived: true
   };
 
   it("should fail decoding an empty change", () => {
@@ -571,6 +593,16 @@ describe("MessageStatusAttributesChange", () => {
 
   it("should fail decoding a wrong read change", () => {
     const result = MessageStatusAttributesChange.decode(aWrongReadChange);
+    expect(E.isLeft(result)).toBeTruthy();
+  });
+
+  it("should fail decoding a wrong bulk change", () => {
+    const result = MessageStatusAttributesChange.decode(aWrongBulkChange);
+    expect(E.isLeft(result)).toBeTruthy();
+  });
+
+  it("should fail decoding a wrong change", () => {
+    const result = MessageStatusAttributesChange.decode(aWrongChange);
     expect(E.isLeft(result)).toBeTruthy();
   });
 
@@ -610,4 +642,15 @@ describe("MessageStatusAttributesChange", () => {
     );
   });
 
+  it("should succeed decoding a right bulk change", () => {
+    const result = MessageStatusAttributesChange.decode(aRightBulkChange);
+    expect(E.isRight(result)).toBeTruthy();
+    pipe(
+      result,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(aRightBulkChange)
+      )
+    );
+  });
 });

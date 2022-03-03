@@ -1225,27 +1225,60 @@ ImpersonatedService:
     - service_id
     - user_groups
     - user_email
+MessageStatusChange:
+  type: string
+  enum:
+    - read
+    - archive
+    - bulk
 MessageStatusReadChange:
   type: object
   properties:
+    operation:
+      type: string
+      enum: 
+        - read
     is_read:
       type: boolean
       enum:
         - true
   required:
+    - operation
     - is_read
 MessageStatusArchivedChange:
   type: object
   properties:
+    operation:
+      type: string
+      enum: 
+        - archive
     is_archived:
       type: boolean
   required:
+    - operation
+    - is_archived
+MessageStatusAttributesBulkChange:
+  type: object
+  properties:
+    operation:
+      type: string
+      enum: 
+        - bulk
+    is_archived:
+      type: boolean
+    is_read:
+      type: boolean
+      enum:
+        - true
+  required:
+    - operation
     - is_archived
 MessageStatusAttributesChange:
   x-one-of: true
   allOf:
     - $ref: "#/MessageStatusReadChange"
     - $ref: "#/MessageStatusArchivedChange"
+    - $ref: "#/MessageStatusAttributesBulkChange"
 MessageStatusAttributes:
   type: object
   properties:
