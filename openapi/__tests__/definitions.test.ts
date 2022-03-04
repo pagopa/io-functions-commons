@@ -25,7 +25,9 @@ import { SpecialServiceCategoryEnum } from "../../generated/definitions/SpecialS
 import { MessageStatusValueEnum } from "../../generated/definitions/MessageStatusValue";
 import { MessageStatus } from "../../generated/definitions/MessageStatus";
 import { MessageStatusChange } from "../../generated/definitions/MessageStatusChange";
-import { MessageStatusChangeTypeEnum } from "../../generated/definitions/MessageStatusChangeType";
+import { Change_typeEnum as BulkChangeType } from "../../generated/definitions/MessageStatusBulkChange";
+import { Change_typeEnum as ReadingChangeType } from "../../generated/definitions/MessageStatusReadingChange";
+import { Change_typeEnum as ArchinvingChangeType } from "../../generated/definitions/MessageStatusArchivingChange";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -550,38 +552,38 @@ describe("MessageStatusAttributes", () => {
 
 describe("MessageStatusChange", () => {
   const aRightReadChange = {
-    change_type: MessageStatusChangeTypeEnum.reading,
+    change_type: ReadingChangeType.reading,
     is_read: true
   };
 
   const aWrongReadChange = {
-    change_type: MessageStatusChangeTypeEnum.reading,
+    change_type: ReadingChangeType.reading,
     is_read: false
   };
 
   const anArchiveChange = {
-    change_type: MessageStatusChangeTypeEnum.archiving,
+    change_type: ArchinvingChangeType.archiving,
     is_archived: true
   };
 
   const anUnarchiveChange = {
-    change_type: MessageStatusChangeTypeEnum.archiving,
+    change_type: ArchinvingChangeType.archiving,
     is_archived: false
   };
 
   const aWrongChange = {
-    change_type: MessageStatusChangeTypeEnum.reading,
+    change_type: ReadingChangeType.reading,
     is_archived: false
   };
 
   const aRightBulkChange = {
-    change_type: MessageStatusChangeTypeEnum.bulk,
+    change_type: BulkChangeType.bulk,
     is_read: true,
     is_archived: true
   };
 
   const aWrongBulkChange = {
-    change_type: MessageStatusChangeTypeEnum.bulk,
+    change_type: BulkChangeType.bulk,
     is_read: false,
     is_archived: true
   };
