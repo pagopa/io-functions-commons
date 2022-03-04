@@ -25,7 +25,7 @@ import { SpecialServiceCategoryEnum } from "../../generated/definitions/SpecialS
 import { MessageStatusValueEnum } from "../../generated/definitions/MessageStatusValue";
 import { MessageStatus } from "../../generated/definitions/MessageStatus";
 import { MessageStatusAttributesChange } from "../../generated/definitions/MessageStatusAttributesChange";
-import { MessageStatusChangeEnum } from "../../generated/definitions/MessageStatusChange";
+import { MessageStatusChangeTypeEnum } from "../../generated/definitions/MessageStatusChangeType";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -550,38 +550,38 @@ describe("MessageStatusAttributes", () => {
 
 describe("MessageStatusAttributesChange", () => {
   const aRightReadChange = {
-    operation: MessageStatusChangeEnum.read,
+    change_type: MessageStatusChangeTypeEnum.reading,
     is_read: true
   };
 
   const aWrongReadChange = {
-    operation: MessageStatusChangeEnum.read,
+    change_type: MessageStatusChangeTypeEnum.reading,
     is_read: false
   };
 
   const anArchiveChange = {
-    operation: MessageStatusChangeEnum.archive,
+    change_type: MessageStatusChangeTypeEnum.archiving,
     is_archived: true
   };
 
   const anUnarchiveChange = {
-    operation: MessageStatusChangeEnum.archive,
+    change_type: MessageStatusChangeTypeEnum.archiving,
     is_archived: false
   };
 
   const aWrongChange = {
-    operation: MessageStatusChangeEnum.read,
+    change_type: MessageStatusChangeTypeEnum.reading,
     is_archived: false
   };
 
   const aRightBulkChange = {
-    operation: MessageStatusChangeEnum.bulk,
+    change_type: MessageStatusChangeTypeEnum.bulk,
     is_read: true,
     is_archived: true
   };
 
   const aWrongBulkChange = {
-    operation: MessageStatusChangeEnum.bulk,
+    change_type: MessageStatusChangeTypeEnum.bulk,
     is_read: false,
     is_archived: true
   };

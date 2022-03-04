@@ -1225,42 +1225,42 @@ ImpersonatedService:
     - service_id
     - user_groups
     - user_email
-MessageStatusChange:
+MessageStatusChangeType:
   type: string
   enum:
-    - read
-    - archive
+    - reading
+    - archiving
     - bulk
 MessageStatusReadChange:
   type: object
   properties:
-    operation:
+    change_type:
       type: string
       enum: 
-        - read
+        - reading
     is_read:
       type: boolean
       enum:
         - true
   required:
-    - operation
+    - change_type
     - is_read
 MessageStatusArchivedChange:
   type: object
   properties:
-    operation:
+    change_type:
       type: string
       enum: 
-        - archive
+        - archiving
     is_archived:
       type: boolean
   required:
-    - operation
+    - change_type
     - is_archived
-MessageStatusAttributesBulkChange:
+MessageStatusBulkChange:
   type: object
   properties:
-    operation:
+    change_type:
       type: string
       enum: 
         - bulk
@@ -1271,14 +1271,14 @@ MessageStatusAttributesBulkChange:
       enum:
         - true
   required:
-    - operation
+    - change_type
     - is_archived
 MessageStatusAttributesChange:
   x-one-of: true
   allOf:
     - $ref: "#/MessageStatusReadChange"
     - $ref: "#/MessageStatusArchivedChange"
-    - $ref: "#/MessageStatusAttributesBulkChange"
+    - $ref: "#/MessageStatusBulkChange"
 MessageStatusAttributes:
   type: object
   properties:
