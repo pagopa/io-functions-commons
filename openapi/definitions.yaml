@@ -1231,7 +1231,7 @@ MessageStatusChangeType:
     - reading
     - archiving
     - bulk
-MessageStatusReadChange:
+MessageStatusReadingChange:
   type: object
   properties:
     change_type:
@@ -1245,7 +1245,7 @@ MessageStatusReadChange:
   required:
     - change_type
     - is_read
-MessageStatusArchivedChange:
+MessageStatusArchivingChange:
   type: object
   properties:
     change_type:
@@ -1273,11 +1273,11 @@ MessageStatusBulkChange:
   required:
     - change_type
     - is_archived
-MessageStatusAttributesChange:
+MessageStatusChange:
   x-one-of: true
   allOf:
-    - $ref: "#/MessageStatusReadChange"
-    - $ref: "#/MessageStatusArchivedChange"
+    - $ref: "#/MessageStatusReadingChange"
+    - $ref: "#/MessageStatusArchivingChange"
     - $ref: "#/MessageStatusBulkChange"
 MessageStatusAttributes:
   type: object
