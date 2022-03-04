@@ -266,17 +266,19 @@ MessageStatusValue:
     - REJECTED
   example: ACCEPTED
 MessageStatus:
-  type: object
-  properties:
-    status:
-      $ref: "#/MessageStatusValue"
-    updated_at:
-      $ref: "#/Timestamp"
-    version:
-      type: integer
-  required:
-    - status
-    - updated_at
+  allOf:
+    - type: object
+      properties:
+        status:
+          $ref: "#/MessageStatusValue"
+        updated_at:
+          $ref: "#/Timestamp"
+        version:
+          type: integer
+      required:
+        - status
+        - updated_at
+    - $ref: "#/MessageStatusAttributes"
 CreatedMessageWithContent:
   type: object
   properties:
@@ -1223,3 +1225,60 @@ ImpersonatedService:
     - service_id
     - user_groups
     - user_email
+MessageStatusReadingChange:
+  type: object
+  properties:
+    change_type:
+      type: string
+      enum: 
+        - reading
+    is_read:
+      type: boolean
+      enum:
+        - true
+  required:
+    - change_type
+    - is_read
+MessageStatusArchivingChange:
+  type: object
+  properties:
+    change_type:
+      type: string
+      enum: 
+        - archiving
+    is_archived:
+      type: boolean
+  required:
+    - change_type
+    - is_archived
+MessageStatusBulkChange:
+  type: object
+  properties:
+    change_type:
+      type: string
+      enum: 
+        - bulk
+    is_archived:
+      type: boolean
+    is_read:
+      type: boolean
+      enum:
+        - true
+  required:
+    - change_type
+    - is_archived
+MessageStatusChange:
+  x-one-of: true
+  allOf:
+    - $ref: "#/MessageStatusReadingChange"
+    - $ref: "#/MessageStatusArchivingChange"
+    - $ref: "#/MessageStatusBulkChange"
+MessageStatusAttributes:
+  type: object
+  properties:
+    is_read:
+      type: boolean
+      default: false
+    is_archived:
+      type: boolean
+      default: false

@@ -22,7 +22,12 @@ import { CommonServiceMetadata as ApiCommonServiceMetadata } from "../../generat
 import { StandardServiceMetadata as ApiStandardServiceMetadata } from "../../generated/definitions/StandardServiceMetadata";
 import { ServiceScopeEnum } from "../../generated/definitions/ServiceScope";
 import { SpecialServiceCategoryEnum } from "../../generated/definitions/SpecialServiceCategory";
-import { LegalData } from "../../generated/definitions/LegalData";
+import { MessageStatusValueEnum } from "../../generated/definitions/MessageStatusValue";
+import { MessageStatus } from "../../generated/definitions/MessageStatus";
+import { MessageStatusChange } from "../../generated/definitions/MessageStatusChange";
+import { Change_typeEnum as BulkChangeType } from "../../generated/definitions/MessageStatusBulkChange";
+import { Change_typeEnum as ReadingChangeType } from "../../generated/definitions/MessageStatusReadingChange";
+import { Change_typeEnum as ArchinvingChangeType } from "../../generated/definitions/MessageStatusArchivingChange";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -445,6 +450,209 @@ describe("ServiceMetadata", () => {
           StandardServiceCategoryEnum.STANDARD
         );
       })
+    );
+  });
+});
+
+describe("MessageStatusAttributes", () => {
+  const aNonReadAndNonArchivedMessageStatusWithoutAttributes = {
+    status: MessageStatusValueEnum.ACCEPTED,
+    version: 1,
+    updated_at: new Date()
+  };
+
+  const isReadMessageStatusAttributes = {
+    is_read: true
+  };
+
+  const isArchivedMessageStatusAttributes = {
+    is_archived: true
+  };
+
+  it("should decode a MessageStatus not read and not archived", () => {
+    const decodedMessageStatusContent = MessageStatus.decode(
+      aNonReadAndNonArchivedMessageStatusWithoutAttributes
+    );
+
+    pipe(
+      decodedMessageStatusContent,
+      E.fold(
+        () => fail(),
+        value =>
+          expect(value).toEqual({
+            ...aNonReadAndNonArchivedMessageStatusWithoutAttributes,
+            is_archived: false,
+            is_read: false
+          })
+      )
+    );
+  });
+
+  it("should decode a read MessageStatus", () => {
+    const decodedMessageStatusContent = MessageStatus.decode({
+      ...aNonReadAndNonArchivedMessageStatusWithoutAttributes,
+      ...isReadMessageStatusAttributes
+    });
+
+    pipe(
+      decodedMessageStatusContent,
+      E.fold(
+        () => fail(),
+        value =>
+          expect(value).toEqual({
+            ...aNonReadAndNonArchivedMessageStatusWithoutAttributes,
+            ...isReadMessageStatusAttributes,
+            is_archived: false
+          })
+      )
+    );
+  });
+
+  it("should decode an archived MessageStatus", () => {
+    const decodedMessageStatusContent = MessageStatus.decode({
+      ...aNonReadAndNonArchivedMessageStatusWithoutAttributes,
+      ...isArchivedMessageStatusAttributes
+    });
+
+    pipe(
+      decodedMessageStatusContent,
+      E.fold(
+        () => fail(),
+        value =>
+          expect(value).toEqual({
+            ...aNonReadAndNonArchivedMessageStatusWithoutAttributes,
+            ...isArchivedMessageStatusAttributes,
+            is_read: false
+          })
+      )
+    );
+  });
+
+  it("should decode a read and archived MessageStatus", () => {
+    const decodedMessageStatusContent = MessageStatus.decode({
+      ...aNonReadAndNonArchivedMessageStatusWithoutAttributes,
+      ...isArchivedMessageStatusAttributes,
+      ...isReadMessageStatusAttributes
+    });
+
+    pipe(
+      decodedMessageStatusContent,
+      E.fold(
+        () => fail(),
+        value =>
+          expect(value).toEqual({
+            ...aNonReadAndNonArchivedMessageStatusWithoutAttributes,
+            ...isArchivedMessageStatusAttributes,
+            ...isReadMessageStatusAttributes
+          })
+      )
+    );
+  });
+});
+
+describe("MessageStatusChange", () => {
+  const aRightReadChange = {
+    change_type: ReadingChangeType.reading,
+    is_read: true
+  };
+
+  const aWrongReadChange = {
+    change_type: ReadingChangeType.reading,
+    is_read: false
+  };
+
+  const anArchiveChange = {
+    change_type: ArchinvingChangeType.archiving,
+    is_archived: true
+  };
+
+  const anUnarchiveChange = {
+    change_type: ArchinvingChangeType.archiving,
+    is_archived: false
+  };
+
+  const aWrongChange = {
+    change_type: ReadingChangeType.reading,
+    is_archived: false
+  };
+
+  const aRightBulkChange = {
+    change_type: BulkChangeType.bulk,
+    is_read: true,
+    is_archived: true
+  };
+
+  const aWrongBulkChange = {
+    change_type: BulkChangeType.bulk,
+    is_read: false,
+    is_archived: true
+  };
+
+  it("should fail decoding an empty change", () => {
+    const result = MessageStatusChange.decode({});
+    expect(E.isLeft(result)).toBeTruthy();
+  });
+
+  it("should fail decoding a wrong read change", () => {
+    const result = MessageStatusChange.decode(aWrongReadChange);
+    expect(E.isLeft(result)).toBeTruthy();
+  });
+
+  it("should fail decoding a wrong bulk change", () => {
+    const result = MessageStatusChange.decode(aWrongBulkChange);
+    expect(E.isLeft(result)).toBeTruthy();
+  });
+
+  it("should fail decoding a wrong change", () => {
+    const result = MessageStatusChange.decode(aWrongChange);
+    expect(E.isLeft(result)).toBeTruthy();
+  });
+
+  it("should succeed decoding a correct read change", () => {
+    const result = MessageStatusChange.decode(aRightReadChange);
+    expect(E.isRight(result)).toBeTruthy();
+    pipe(
+      result,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(aRightReadChange)
+      )
+    );
+  });
+
+  it("should succeed decoding an unarchive change", () => {
+    const result = MessageStatusChange.decode(anUnarchiveChange);
+    expect(E.isRight(result)).toBeTruthy();
+    pipe(
+      result,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(anUnarchiveChange)
+      )
+    );
+  });
+
+  it("should succeed decoding an archive change", () => {
+    const result = MessageStatusChange.decode(anArchiveChange);
+    expect(E.isRight(result)).toBeTruthy();
+    pipe(
+      result,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(anArchiveChange)
+      )
+    );
+  });
+
+  it("should succeed decoding a right bulk change", () => {
+    const result = MessageStatusChange.decode(aRightBulkChange);
+    expect(E.isRight(result)).toBeTruthy();
+    pipe(
+      result,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(aRightBulkChange)
+      )
     );
   });
 });
