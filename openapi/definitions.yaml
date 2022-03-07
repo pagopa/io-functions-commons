@@ -266,19 +266,17 @@ MessageStatusValue:
     - REJECTED
   example: ACCEPTED
 MessageStatus:
-  allOf:
-    - type: object
-      properties:
-        status:
-          $ref: "#/MessageStatusValue"
-        updated_at:
-          $ref: "#/Timestamp"
-        version:
-          type: integer
-      required:
-        - status
-        - updated_at
-    - $ref: "#/MessageStatusAttributes"
+  type: object
+  properties:
+    status:
+      $ref: "#/MessageStatusValue"
+    updated_at:
+      $ref: "#/Timestamp"
+    version:
+      type: integer
+  required:
+    - status
+    - updated_at
 CreatedMessageWithContent:
   type: object
   properties:
@@ -319,37 +317,40 @@ CreatedMessageWithoutContent:
     - created_at
     - sender_service_id
 EnrichedMessage:
-  type: object
-  properties:
-    id:
-      type: string
-    fiscal_code:
-      $ref: "#/FiscalCode"
-    time_to_live:
-      $ref: "#/TimeToLiveSeconds"
-    created_at:
-      $ref: "#/Timestamp"
-    sender_service_id:
-      $ref: "#/ServiceId"
-    service_name:
-      type: string
-    organization_name:
-      type: string
-    message_title:
-      type: string
-    category:
-      $ref: '#/MessageCategory'
-    has_attachments:
-      type: boolean
-      default: false
-  required:
-    - id
-    - fiscal_code
-    - created_at
-    - sender_service_id
-    - service_name
-    - organization_name
-    - message_title
+  allOf:
+    - type: object
+      properties:
+        id:
+          type: string
+        fiscal_code:
+          $ref: "#/FiscalCode"
+        time_to_live:
+          $ref: "#/TimeToLiveSeconds"
+        created_at:
+          $ref: "#/Timestamp"
+        sender_service_id:
+          $ref: "#/ServiceId"
+        service_name:
+          type: string
+        organization_name:
+          type: string
+        message_title:
+          type: string
+        category:
+          $ref: '#/MessageCategory'
+        has_attachments:
+          type: boolean
+          default: false
+      required:
+        - id
+        - fiscal_code
+        - created_at
+        - sender_service_id
+        - service_name
+        - organization_name
+        - message_title
+    - $ref: "#/MessageStatusAttributes"
+
 PublicMessage:
   x-one-of: true
   allOf:
@@ -1282,3 +1283,6 @@ MessageStatusAttributes:
     is_archived:
       type: boolean
       default: false
+  required:
+    - is_read
+    - is_archived
