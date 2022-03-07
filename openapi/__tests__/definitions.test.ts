@@ -480,9 +480,7 @@ describe("MessageStatusAttributes", () => {
         () => fail(),
         value =>
           expect(value).toEqual({
-            ...aNonReadAndNonArchivedMessageStatusWithoutAttributes,
-            is_archived: false,
-            is_read: false
+            ...aNonReadAndNonArchivedMessageStatusWithoutAttributes
           })
       )
     );
@@ -500,9 +498,7 @@ describe("MessageStatusAttributes", () => {
         () => fail(),
         value =>
           expect(value).toEqual({
-            ...aNonReadAndNonArchivedMessageStatusWithoutAttributes,
-            ...isReadMessageStatusAttributes,
-            is_archived: false
+            ...aNonReadAndNonArchivedMessageStatusWithoutAttributes
           })
       )
     );
@@ -520,9 +516,7 @@ describe("MessageStatusAttributes", () => {
         () => fail(),
         value =>
           expect(value).toEqual({
-            ...aNonReadAndNonArchivedMessageStatusWithoutAttributes,
-            ...isArchivedMessageStatusAttributes,
-            is_read: false
+            ...aNonReadAndNonArchivedMessageStatusWithoutAttributes
           })
       )
     );
@@ -542,8 +536,6 @@ describe("MessageStatusAttributes", () => {
         value =>
           expect(value).toEqual({
             ...aNonReadAndNonArchivedMessageStatusWithoutAttributes,
-            ...isArchivedMessageStatusAttributes,
-            ...isReadMessageStatusAttributes
           })
       )
     );

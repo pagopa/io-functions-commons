@@ -266,19 +266,17 @@ MessageStatusValue:
     - REJECTED
   example: ACCEPTED
 MessageStatus:
-  allOf:
-    - type: object
-      properties:
-        status:
-          $ref: "#/MessageStatusValue"
-        updated_at:
-          $ref: "#/Timestamp"
-        version:
-          type: integer
-      required:
-        - status
-        - updated_at
-    - $ref: "#/MessageStatusAttributes"
+  type: object
+  properties:
+    status:
+      $ref: "#/MessageStatusValue"
+    updated_at:
+      $ref: "#/Timestamp"
+    version:
+      type: integer
+  required:
+    - status
+    - updated_at
 CreatedMessageWithContent:
   type: object
   properties:
@@ -351,7 +349,7 @@ EnrichedMessage:
         - service_name
         - organization_name
         - message_title
-    - $ref: "#/RequiredMessageStatusAttributes"
+    - $ref: "#/MessageStatusAttributes"
 
 PublicMessage:
   x-one-of: true
@@ -1277,15 +1275,6 @@ MessageStatusChange:
     - $ref: "#/MessageStatusArchivingChange"
     - $ref: "#/MessageStatusBulkChange"
 MessageStatusAttributes:
-  type: object
-  properties:
-    is_read:
-      type: boolean
-      default: false
-    is_archived:
-      type: boolean
-      default: false
-RequiredMessageStatusAttributes:
   type: object
   properties:
     is_read:
