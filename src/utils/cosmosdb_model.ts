@@ -112,7 +112,7 @@ export const toCosmosErrorResponse = (
     (e instanceof Error ? e : new Error(String(e))) as ErrorResponse
   );
 
-const wrapCreate = <TN, TR>(
+export const wrapCreate = <TN, TR>(
   newItemT: t.Type<TN, ItemDefinition, unknown>,
   retrievedItemT: t.Type<TR, unknown, unknown>,
   createItem: (
