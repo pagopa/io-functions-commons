@@ -18,6 +18,7 @@ import {
   RetrievedVersionedModel
 } from "../utils/cosmosdb_model_versioned";
 import { wrapWithKind } from "../utils/types";
+import { FiscalCode } from "../../generated/definitions/FiscalCode";
 
 export const MESSAGE_STATUS_COLLECTION_NAME = "message-status";
 export const MESSAGE_STATUS_MODEL_ID_FIELD = "messageId" as const;
@@ -25,15 +26,21 @@ export const MESSAGE_STATUS_MODEL_PK_FIELD = "messageId" as const;
 
 // We cannot intersect with MessageStatus
 // as it is a *strict* interface
-export const MessageStatus = t.interface({
-  messageId: NonEmptyString,
-  status: MessageStatusValue,
-  updatedAt: Timestamp,
-  // eslint-disable-next-line sort-keys
-  isRead: withDefault(t.boolean, false),
-  // eslint-disable-next-line sort-keys
-  isArchived: withDefault(t.boolean, false)
-});
+export const MessageStatus = t.intersection([
+  t.interface({
+    messageId: NonEmptyString,
+    status: MessageStatusValue,
+    updatedAt: Timestamp,
+    // eslint-disable-next-line sort-keys
+    isRead: withDefault(t.boolean, false),
+    // eslint-disable-next-line sort-keys
+    isArchived: withDefault(t.boolean, false)
+  }),
+  // fiscalCode is optional due to retro-compatibility
+  t.partial({
+    fiscalCode: FiscalCode
+  })
+]);
 
 export type MessageStatus = t.TypeOf<typeof MessageStatus>;
 
