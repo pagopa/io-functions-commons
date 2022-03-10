@@ -6,7 +6,6 @@ import * as O from "fp-ts/lib/Option";
 import * as TE from "fp-ts/lib/TaskEither";
 import { TaskEither } from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
-
 import { PromiseType } from "@pagopa/ts-commons/lib/types";
 
 import {
@@ -16,13 +15,15 @@ import {
   FeedResponse,
   ItemDefinition,
   ItemResponse,
+  PatchOperationType,
   RequestOptions,
   Resource,
   SqlQuerySpec
 } from "@azure/cosmos";
-
+import * as RA from "fp-ts/ReadonlyArray";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { pipe } from "fp-ts/lib/function";
+import { flow, pipe } from "fp-ts/lib/function";
+import * as R from "./record";
 import { mapAsyncIterable } from "./async";
 import { isDefined } from "./types";
 
@@ -209,6 +210,56 @@ export abstract class CosmosdbModel<
       this.retrievedItemT,
       this.container.items.upsert.bind(this.container.items)
     )(newDocument, options);
+  }
+
+  /**
+   * Partial update an existing document identified by searchKey.
+   *
+   * @param searchKey the document identifier
+   * @param partialDocument the field to update
+   * @param options the request option (not required)
+   * @returns a task either containig the updated document
+   */
+  public patch(
+    searchKey: DocumentSearchKey<TR, CosmosDocumentIdKey, PartitionKey>,
+    partialDocument: Partial<T>,
+    options?: RequestOptions
+  ): TE.TaskEither<CosmosErrors, TR> {
+    // documentId must be always valued,
+    // meanwhile partitionKey might be undefined
+    const documentId = searchKey[0];
+    const partitionKey = searchKey[1] || documentId;
+    return pipe(
+      partialDocument,
+      R.toArray(),
+      RA.map(entry => ({
+        op: PatchOperationType.add,
+        path: `/${entry.key}`,
+        value: entry.value
+      })),
+      readonlyPatchOperations => readonlyPatchOperations.slice(), // copy the readonly array to a mutable one
+      patchOperations =>
+        TE.tryCatch(
+          () =>
+            this.container
+              .item(documentId, partitionKey)
+              .patch(patchOperations, options),
+          toCosmosErrorResponse
+        ),
+      TE.map(patchResponse => O.fromNullable(patchResponse.resource)),
+      TE.chain(
+        TE.fromOption(() =>
+          CosmosErrorResponse({
+            code: 404,
+            message: "message item not foud for input id",
+            name: "Not Found"
+          })
+        )
+      ),
+      TE.chainEitherKW(
+        flow(this.retrievedItemT.decode, E.mapLeft(CosmosDecodingError))
+      )
+    );
   }
 
   /**
