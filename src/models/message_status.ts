@@ -1,4 +1,4 @@
-import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import * as t from "io-ts";
 
 import { Container } from "@azure/cosmos";
@@ -18,7 +18,6 @@ import {
   RetrievedVersionedModel
 } from "../utils/cosmosdb_model_versioned";
 import { wrapWithKind } from "../utils/types";
-import { FiscalCode } from "../../generated/definitions/FiscalCode";
 
 export const MESSAGE_STATUS_COLLECTION_NAME = "message-status";
 export const MESSAGE_STATUS_MODEL_ID_FIELD = "messageId" as const;
@@ -68,18 +67,18 @@ export type MessageStatusUpdater = (
  */
 export const getMessageStatusUpdater = (
   messageStatusModel: MessageStatusModel,
-  messageId: NonEmptyString
+  messageId: NonEmptyString,
+  fiscalCode: FiscalCode
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 ): MessageStatusUpdater => status =>
   pipe(
     messageStatusModel.findLastVersionByModelId([messageId]),
     TE.map(
-      O.getOrElse(() => ({
-        messageId,
-        // eslint-disable-next-line sort-keys
+      O.getOrElseW(() => ({
+        fiscalCode,
+        isArchived: false,
         isRead: false,
-        // eslint-disable-next-line sort-keys
-        isArchived: false
+        messageId
       }))
     ),
     TE.chain(item =>
