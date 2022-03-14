@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import * as E from "fp-ts/Either";
 import * as TE from "fp-ts/TaskEither";
@@ -21,10 +21,12 @@ import { pipe } from "fp-ts/lib/function";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 
 const aMessageId = "A_MESSAGE_ID" as NonEmptyString;
+const aFiscalCode = "RLDBSV36A78Y792X" as FiscalCode;
 const aMessageStatus = {
   status: MessageStatusValueEnum.ACCEPTED,
   version: 0 as NonNegativeInteger,
-  updatedAt: new Date()
+  updatedAt: new Date(),
+  fiscalCode: aFiscalCode
 };
 
 const messageStatusListLength = 1;
@@ -117,7 +119,11 @@ describe("Models |> Message-Status", () => {
 
     const anotherMessageId = "ANOTHER_MESSAGE_ID" as NonEmptyString;
 
-    const updater = getMessageStatusUpdater(model, anotherMessageId);
+    const updater = getMessageStatusUpdater(
+      model,
+      anotherMessageId,
+      aFiscalCode
+    );
     const result = await updater(MessageStatusValueEnum.ACCEPTED)();
 
     expect(E.isRight(result)).toBe(true);
@@ -141,7 +147,11 @@ describe("Models |> Message-Status", () => {
 
     const anotherMessageId = "ANOTHER_MESSAGE_ID" as NonEmptyString;
 
-    const updater = getMessageStatusUpdater(model, anotherMessageId);
+    const updater = getMessageStatusUpdater(
+      model,
+      anotherMessageId,
+      aFiscalCode
+    );
 
     //First, create the "Accepted" status
     await updater(MessageStatusValueEnum.ACCEPTED)();
@@ -170,7 +180,11 @@ describe("Models |> Message-Status", () => {
 
     const anotherMessageId = "ANOTHER_MESSAGE_ID" as NonEmptyString;
 
-    const updater = getMessageStatusUpdater(model, anotherMessageId);
+    const updater = getMessageStatusUpdater(
+      model,
+      anotherMessageId,
+      aFiscalCode
+    );
 
     //First, create the "Accepted" status
     const accepted = await updater(MessageStatusValueEnum.ACCEPTED)();
