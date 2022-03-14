@@ -2,7 +2,10 @@ import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import * as t from "io-ts";
 
 import { Container } from "@azure/cosmos";
-import { TaskEither } from "fp-ts/lib/TaskEither";
+import * as TE from "fp-ts/lib/TaskEither";
+import * as O from "fp-ts/lib/Option";
+import { withDefault } from "@pagopa/ts-commons/lib/types";
+import { pipe } from "fp-ts/lib/function";
 import {
   MessageStatusValue,
   MessageStatusValueEnum
@@ -15,6 +18,7 @@ import {
   RetrievedVersionedModel
 } from "../utils/cosmosdb_model_versioned";
 import { wrapWithKind } from "../utils/types";
+import { FiscalCode } from "../../generated/definitions/FiscalCode";
 
 export const MESSAGE_STATUS_COLLECTION_NAME = "message-status";
 export const MESSAGE_STATUS_MODEL_ID_FIELD = "messageId" as const;
@@ -22,11 +26,21 @@ export const MESSAGE_STATUS_MODEL_PK_FIELD = "messageId" as const;
 
 // We cannot intersect with MessageStatus
 // as it is a *strict* interface
-export const MessageStatus = t.interface({
-  messageId: NonEmptyString,
-  status: MessageStatusValue,
-  updatedAt: Timestamp
-});
+export const MessageStatus = t.intersection([
+  t.interface({
+    messageId: NonEmptyString,
+    status: MessageStatusValue,
+    updatedAt: Timestamp,
+    // eslint-disable-next-line sort-keys
+    isRead: withDefault(t.boolean, false),
+    // eslint-disable-next-line sort-keys
+    isArchived: withDefault(t.boolean, false)
+  }),
+  // fiscalCode is optional due to retro-compatibility
+  t.partial({
+    fiscalCode: FiscalCode
+  })
+]);
 
 export type MessageStatus = t.TypeOf<typeof MessageStatus>;
 
@@ -46,7 +60,7 @@ export type RetrievedMessageStatus = t.TypeOf<typeof RetrievedMessageStatus>;
 
 export type MessageStatusUpdater = (
   status: MessageStatusValueEnum
-) => TaskEither<CosmosErrors, RetrievedMessageStatus>;
+) => TE.TaskEither<CosmosErrors, RetrievedMessageStatus>;
 
 /**
  * Convenience method that returns a function
@@ -57,12 +71,26 @@ export const getMessageStatusUpdater = (
   messageId: NonEmptyString
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 ): MessageStatusUpdater => status =>
-  messageStatusModel.upsert({
-    kind: "INewMessageStatus",
-    messageId,
-    status,
-    updatedAt: new Date()
-  });
+  pipe(
+    messageStatusModel.findLastVersionByModelId([messageId]),
+    TE.map(
+      O.getOrElse(() => ({
+        messageId,
+        // eslint-disable-next-line sort-keys
+        isRead: false,
+        // eslint-disable-next-line sort-keys
+        isArchived: false
+      }))
+    ),
+    TE.chain(item =>
+      messageStatusModel.upsert({
+        ...item,
+        kind: "INewMessageStatus",
+        status,
+        updatedAt: new Date()
+      })
+    )
+  );
 
 /**
  * A model for handling MessageStatus

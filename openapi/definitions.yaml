@@ -317,37 +317,40 @@ CreatedMessageWithoutContent:
     - created_at
     - sender_service_id
 EnrichedMessage:
-  type: object
-  properties:
-    id:
-      type: string
-    fiscal_code:
-      $ref: "#/FiscalCode"
-    time_to_live:
-      $ref: "#/TimeToLiveSeconds"
-    created_at:
-      $ref: "#/Timestamp"
-    sender_service_id:
-      $ref: "#/ServiceId"
-    service_name:
-      type: string
-    organization_name:
-      type: string
-    message_title:
-      type: string
-    category:
-      $ref: '#/MessageCategory'
-    has_attachments:
-      type: boolean
-      default: false
-  required:
-    - id
-    - fiscal_code
-    - created_at
-    - sender_service_id
-    - service_name
-    - organization_name
-    - message_title
+  allOf:
+    - type: object
+      properties:
+        id:
+          type: string
+        fiscal_code:
+          $ref: "#/FiscalCode"
+        time_to_live:
+          $ref: "#/TimeToLiveSeconds"
+        created_at:
+          $ref: "#/Timestamp"
+        sender_service_id:
+          $ref: "#/ServiceId"
+        service_name:
+          type: string
+        organization_name:
+          type: string
+        message_title:
+          type: string
+        category:
+          $ref: '#/MessageCategory'
+        has_attachments:
+          type: boolean
+          default: false
+      required:
+        - id
+        - fiscal_code
+        - created_at
+        - sender_service_id
+        - service_name
+        - organization_name
+        - message_title
+    - $ref: "#/MessageStatusAttributes"
+
 PublicMessage:
   x-one-of: true
   allOf:
@@ -1223,3 +1226,63 @@ ImpersonatedService:
     - service_id
     - user_groups
     - user_email
+MessageStatusReadingChange:
+  type: object
+  properties:
+    change_type:
+      type: string
+      enum: 
+        - reading
+    is_read:
+      type: boolean
+      enum:
+        - true
+  required:
+    - change_type
+    - is_read
+MessageStatusArchivingChange:
+  type: object
+  properties:
+    change_type:
+      type: string
+      enum: 
+        - archiving
+    is_archived:
+      type: boolean
+  required:
+    - change_type
+    - is_archived
+MessageStatusBulkChange:
+  type: object
+  properties:
+    change_type:
+      type: string
+      enum: 
+        - bulk
+    is_archived:
+      type: boolean
+    is_read:
+      type: boolean
+      enum:
+        - true
+  required:
+    - change_type
+    - is_archived
+MessageStatusChange:
+  x-one-of: true
+  allOf:
+    - $ref: "#/MessageStatusReadingChange"
+    - $ref: "#/MessageStatusArchivingChange"
+    - $ref: "#/MessageStatusBulkChange"
+MessageStatusAttributes:
+  type: object
+  properties:
+    is_read:
+      type: boolean
+      default: false
+    is_archived:
+      type: boolean
+      default: false
+  required:
+    - is_read
+    - is_archived
