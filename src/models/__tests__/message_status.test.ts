@@ -3,7 +3,7 @@
 import * as E from "fp-ts/lib/Either";
 import * as O from "fp-ts/lib/Option";
 import { NonNegativeNumber } from "@pagopa/ts-commons/lib/numbers";
-import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import { Container, ResourceResponse } from "@azure/cosmos";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
@@ -17,9 +17,11 @@ import {
 import { pipe } from "fp-ts/lib/function";
 
 const aMessageId = "A_MESSAGE_ID" as NonEmptyString;
+const aFiscalCode = "RLDBSV36A78Y792X" as FiscalCode;
 
 const aSerializedMessageStatus = {
   messageId: aMessageId,
+  fiscalCode: aFiscalCode,
   status: MessageStatusValueEnum.ACCEPTED,
   updatedAt: new Date().toISOString()
 };
@@ -227,7 +229,7 @@ describe("getMessageStatusUpdater", () => {
 
     const model = new MessageStatusModel(containerMock);
 
-    const updater = getMessageStatusUpdater(model, aNewMessageId);
+    const updater = getMessageStatusUpdater(model, aNewMessageId, aFiscalCode);
 
     const res = await updater(newStatus)();
 
@@ -238,6 +240,7 @@ describe("getMessageStatusUpdater", () => {
           version: 0,
           status: newStatus,
           messageId: aNewMessageId,
+          fiscalCode: aFiscalCode,
           isRead: false,
           isArchived: false
         })
@@ -261,7 +264,7 @@ describe("getMessageStatusUpdater", () => {
 
     const model = new MessageStatusModel(containerMock);
 
-    const updater = getMessageStatusUpdater(model, aNewMessageId);
+    const updater = getMessageStatusUpdater(model, aNewMessageId, aFiscalCode);
 
     const res = await updater(newStatus)();
 
@@ -272,6 +275,7 @@ describe("getMessageStatusUpdater", () => {
           version: 1,
           status: newStatus,
           messageId: aNewMessageId,
+          fiscalCode: aFiscalCode,
           isRead: false,
           isArchived: false
         })
@@ -297,7 +301,7 @@ describe("getMessageStatusUpdater", () => {
 
     const model = new MessageStatusModel(containerMock);
 
-    const updater = getMessageStatusUpdater(model, aNewMessageId);
+    const updater = getMessageStatusUpdater(model, aNewMessageId, aFiscalCode);
 
     const res = await updater(newStatus)();
 
@@ -308,6 +312,7 @@ describe("getMessageStatusUpdater", () => {
           version: 1,
           status: newStatus,
           messageId: aNewMessageId,
+          fiscalCode: aFiscalCode,
           isRead: true,
           isArchived: true
         })
