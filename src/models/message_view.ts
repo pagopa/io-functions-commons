@@ -46,7 +46,6 @@ const MessageViewR = t.interface({
   messageTitle: NonEmptyString,
   organizationName: NonEmptyString,
   senderServiceId: ServiceId,
-  serviceName: NonEmptyString,
   status: Status,
   version: NonNegativeInteger
 });
@@ -71,14 +70,11 @@ export class MessageViewModel extends CosmosdbModel<
   typeof MESSAGE_VIEW_MODEL_PK_FIELD
 > {
   /**
-   * Creates a new Message model
+   * Creates a new MessageView model
    *
    * @param container the Cosmos container client
    */
-  constructor(
-    container: Container,
-    protected readonly containerName: NonEmptyString
-  ) {
+  constructor(container: Container) {
     super(container, MessageView, RetrievedMessageView);
   }
 }
