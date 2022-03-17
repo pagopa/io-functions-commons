@@ -251,7 +251,7 @@ export abstract class CosmosdbModel<
         TE.fromOption(() =>
           CosmosErrorResponse({
             code: 404,
-            message: "message item not foud for input id",
+            message: "message item not found for input id",
             name: "Not Found"
           })
         )
