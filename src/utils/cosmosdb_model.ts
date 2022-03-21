@@ -237,7 +237,7 @@ export abstract class CosmosdbModel<
         path: `/${entry.key}`,
         value: entry.value
       })),
-      readonlyPatchOperations => readonlyPatchOperations.slice(), // copy the readonly array to a mutable one
+      RA.toArray, // copy the readonly array to a mutable one
       patchOperations =>
         TE.tryCatch(
           () =>
