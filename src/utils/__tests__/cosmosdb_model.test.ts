@@ -306,9 +306,6 @@ describe("patch", () => {
       undefined
     );
     expect(E.isRight(result)).toBeTruthy();
-    if (E.isRight(result)) {
-      expect(result.right.test).toEqual(anotherTest);
-    }
   });
 
   it("GIVEN a not working cosmos WHEN patch a value THEN return a task either containing a 404 error", async () => {
