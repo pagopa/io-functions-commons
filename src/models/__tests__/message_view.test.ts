@@ -21,7 +21,7 @@ const aComponents: Components = {
   attachments: { has: false },
   euCovidCert: { has: false },
   legalData: { has: false },
-  payment: { has: false, rptId: "" }
+  payment: { has: false }
 };
 
 const aStatus: Status = {
@@ -36,7 +36,6 @@ const aMessageView: MessageView = {
   fiscalCode: "AAAAAA00A00A000A" as FiscalCode,
   id: "a-unique-msg-id" as NonEmptyString,
   messageTitle: "a-msg-title" as NonEmptyString,
-  organizationName: "an-organization-name" as NonEmptyString,
   senderServiceId: "a-service-id" as ServiceId,
   status: aStatus,
   version: 0 as NonNegativeInteger
