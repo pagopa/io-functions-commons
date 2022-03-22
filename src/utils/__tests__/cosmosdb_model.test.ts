@@ -6,12 +6,7 @@ import * as O from "fp-ts/lib/Option";
 import { Container, ErrorResponse, ResourceResponse } from "@azure/cosmos";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import {
-  BaseModel,
-  CosmosdbModel,
-  CosmosResource,
-  DocumentSearchKey
-} from "../cosmosdb_model";
+import { BaseModel, CosmosdbModel, CosmosResource } from "../cosmosdb_model";
 
 beforeEach(() => {
   jest.resetAllMocks();
@@ -52,6 +47,7 @@ class MyPartitionedModel extends CosmosdbModel<
 }
 
 const readMock = jest.fn();
+const patchMock = jest.fn();
 const containerMock = {
   item: jest.fn(),
   items: {
@@ -285,6 +281,66 @@ describe("find", () => {
       if (result.left.kind === "COSMOS_ERROR_RESPONSE") {
         expect(result.left.error.code).toBe(500);
       }
+    }
+  });
+});
+
+const anotherTest = "another-test";
+describe("patch", () => {
+  it("GIVEN an existing document WHEN patch a value THEN return a task either containing the updated document", async () => {
+    containerMock.item.mockReturnValueOnce({ patch: patchMock });
+    patchMock.mockImplementationOnce(() =>
+      Promise.resolve({
+        resource: {
+          ...aDocument,
+          ...someMetadata,
+          test: anotherTest
+        }
+      })
+    );
+    const model = new MyModel(container);
+    const result = await model.patch([testId], { test: anotherTest })();
+
+    expect(patchMock).toBeCalledWith(
+      [{ op: "add", path: "/test", value: anotherTest }],
+      undefined
+    );
+    expect(E.isRight(result)).toBeTruthy();
+  });
+
+  it("GIVEN a not working cosmos WHEN patch a value THEN return a task either containing a 404 error", async () => {
+    containerMock.item.mockReturnValueOnce({ patch: patchMock });
+    patchMock.mockImplementationOnce(() =>
+      Promise.resolve({ resource: undefined })
+    );
+    const model = new MyModel(container);
+    const result = await model.patch([testId], { test: anotherTest })();
+
+    expect(patchMock).toBeCalledTimes(1);
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left).toEqual(
+        expect.objectContaining({
+          error: expect.objectContaining({ code: 404 })
+        })
+      );
+    }
+  });
+
+  it("GIVEN an not existing document WHEN patch a value THEN return a task either containing a 404 error", async () => {
+    containerMock.item.mockReturnValueOnce({ patch: patchMock });
+    patchMock.mockImplementationOnce(() => Promise.reject(errorResponse));
+    const model = new MyModel(container);
+    const result = await model.patch([testId], { test: anotherTest })();
+
+    expect(patchMock).toBeCalledTimes(1);
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left).toEqual(
+        expect.objectContaining({
+          error: expect.objectContaining({ code: 500 })
+        })
+      );
     }
   });
 });
