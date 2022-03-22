@@ -17,17 +17,11 @@ export const Component = t.interface({
 });
 export type Component = t.TypeOf<typeof Component>;
 
-export const PaymentComponent = t.intersection([
-  Component,
-  t.interface({ rptId: t.string })
-]);
-export type PaymentComponent = t.TypeOf<typeof PaymentComponent>;
-
 export const Components = t.interface({
   attachments: Component,
   euCovidCert: Component,
   legalData: Component,
-  payment: PaymentComponent
+  payment: Component
 });
 export type Components = t.TypeOf<typeof Components>;
 
@@ -44,7 +38,6 @@ const MessageViewR = t.interface({
   fiscalCode: FiscalCode,
   id: NonEmptyString,
   messageTitle: NonEmptyString,
-  organizationName: NonEmptyString,
   senderServiceId: ServiceId,
   status: Status,
   version: NonNegativeInteger
