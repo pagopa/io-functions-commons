@@ -302,7 +302,38 @@ describe("patch", () => {
     const result = await model.patch([testId], { test: anotherTest })();
 
     expect(patchMock).toBeCalledWith(
-      [{ op: "add", path: "/test", value: anotherTest }],
+      {
+        condition: undefined,
+        operations: [{ op: "add", path: "/test", value: anotherTest }]
+      },
+      undefined
+    );
+    expect(E.isRight(result)).toBeTruthy();
+  });
+
+  it("GIVEN an existing document WHEN patch a value with condition THEN return a task either containing the updated document", async () => {
+    containerMock.item.mockReturnValueOnce({ patch: patchMock });
+    patchMock.mockImplementationOnce(() =>
+      Promise.resolve({
+        resource: {
+          ...aDocument,
+          ...someMetadata,
+          test: anotherTest
+        }
+      })
+    );
+    const model = new MyModel(container);
+    const result = await model.patch(
+      [testId],
+      { test: anotherTest },
+      "WHERE condition"
+    )();
+
+    expect(patchMock).toBeCalledWith(
+      {
+        condition: "WHERE condition",
+        operations: [{ op: "add", path: "/test", value: anotherTest }]
+      },
       undefined
     );
     expect(E.isRight(result)).toBeTruthy();
