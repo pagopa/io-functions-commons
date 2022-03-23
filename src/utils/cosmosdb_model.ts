@@ -217,12 +217,14 @@ export abstract class CosmosdbModel<
    *
    * @param searchKey the document identifier
    * @param partialDocument the field to update
+   * @param condition the condition for performing patch operation (not required)
    * @param options the request option (not required)
    * @returns a task either containig the updated document
    */
   public patch(
     searchKey: DocumentSearchKey<TR, CosmosDocumentIdKey, PartitionKey>,
     partialDocument: Partial<T>,
+    condition?: string,
     options?: RequestOptions
   ): TE.TaskEither<CosmosErrors, TR> {
     // documentId must be always valued,
@@ -243,7 +245,7 @@ export abstract class CosmosdbModel<
           () =>
             this.container
               .item(documentId, partitionKey)
-              .patch(patchOperations, options),
+              .patch({ condition, operations: patchOperations }, options),
           toCosmosErrorResponse
         ),
       TE.map(patchResponse => O.fromNullable(patchResponse.resource)),
