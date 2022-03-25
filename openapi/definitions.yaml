@@ -277,6 +277,10 @@ MessageStatus:
   required:
     - status
     - updated_at
+MessageStatusWithAttributes:
+  allOf:
+    - $ref: "#/MessageStatus"
+    - $ref: "#/MessageStatusAttributes"
 CreatedMessageWithContent:
   type: object
   properties:
