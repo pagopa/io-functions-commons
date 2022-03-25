@@ -549,14 +549,7 @@ describe("MessageStatus", () => {
       ...aRightMessageStatus,
       is_read: "false"
     });
-    expect(E.isRight(result)).toBeTruthy();
-    pipe(
-      result,
-      E.fold(
-        () => fail(),
-        value => expect(value).toEqual(aDefaultMessageWriteWithAttributes)
-      )
-    );
+    expect(E.isLeft(result)).toBeTruthy();
   });
 });
 
