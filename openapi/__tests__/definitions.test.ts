@@ -25,6 +25,8 @@ import { SpecialServiceCategoryEnum } from "../../generated/definitions/SpecialS
 import { MessageStatusValueEnum } from "../../generated/definitions/MessageStatusValue";
 import { MessageStatus } from "../../generated/definitions/MessageStatus";
 import { MessageStatusChange } from "../../generated/definitions/MessageStatusChange";
+import { MessageStatusAttributes } from "../../generated/definitions/MessageStatusAttributes";
+import { MessageStatusWithAttributes } from "../../generated/definitions/MessageStatusWithAttributes";
 import { Change_typeEnum as BulkChangeType } from "../../generated/definitions/MessageStatusBulkChange";
 import { Change_typeEnum as ReadingChangeType } from "../../generated/definitions/MessageStatusReadingChange";
 import { Change_typeEnum as ArchinvingChangeType } from "../../generated/definitions/MessageStatusArchivingChange";
@@ -451,6 +453,103 @@ describe("ServiceMetadata", () => {
         );
       })
     );
+  });
+});
+
+describe("MessageStatus", () => {
+  const aRightMessageStatus: MessageStatus = {
+    status: MessageStatusValueEnum.PROCESSED,
+    updated_at: new Date(),
+    version: 0
+  };
+
+  const aWrongMessageStatus = {
+    ...aRightMessageStatus,
+    status: "AAAA"
+  };
+
+  const aRightMessageStatusAttributes: MessageStatusAttributes = {
+    is_archived: false,
+    is_read: false
+  };
+
+  const aDefaultMessageWriteWithAttributes: MessageStatusWithAttributes = {
+    ...aRightMessageStatus,
+    ...aRightMessageStatusAttributes
+  };
+
+  it("should fail decoding an empty MessageStatus", () => {
+    const result = MessageStatus.decode({});
+    expect(E.isLeft(result)).toBeTruthy();
+  });
+
+  it("should fail decoding a wrong MessageStatus", () => {
+    const result = MessageStatus.decode(aWrongMessageStatus);
+    expect(E.isLeft(result)).toBeTruthy();
+  });
+
+  it("should succeed decoding a correct MessageStatus", () => {
+    const result = MessageStatus.decode(aRightMessageStatus);
+    expect(E.isRight(result)).toBeTruthy();
+    pipe(
+      result,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(aRightMessageStatus)
+      )
+    );
+  });
+
+  it("should succeed decoding MessageStatus with attributes", () => {
+    const result = MessageStatus.decode({
+      ...aRightMessageStatus,
+      ...aRightMessageStatusAttributes
+    });
+    expect(E.isRight(result)).toBeTruthy();
+    pipe(
+      result,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(aRightMessageStatus)
+      )
+    );
+  });
+
+  it("should succeed decoding MessageStatusWithAttributes from a MessageStatus with default", () => {
+    const result = MessageStatusWithAttributes.decode({
+      ...aRightMessageStatus
+    });
+    expect(E.isRight(result)).toBeTruthy();
+    pipe(
+      result,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(aDefaultMessageWriteWithAttributes)
+      )
+    );
+  });
+
+  it("should succeed decoding a right MessageStatusWithAttributes", () => {
+    const result = MessageStatusWithAttributes.decode({
+      ...aRightMessageStatus,
+      ...aRightMessageStatusAttributes
+    });
+    expect(E.isRight(result)).toBeTruthy();
+    pipe(
+      result,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(aDefaultMessageWriteWithAttributes)
+      )
+    );
+  });
+
+  it("should fail decoding a wrong MessageStatusWithAttributes", () => {
+    const result = MessageStatusWithAttributes.decode({
+      ...aRightMessageStatus,
+      is_read: "false"
+    });
+    expect(E.isLeft(result)).toBeTruthy();
   });
 });
 
