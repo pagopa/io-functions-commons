@@ -20,7 +20,7 @@ export const Component = t.union([HasComponent, NotHasComponent]);
 export type Component = t.TypeOf<typeof Component>;
 
 export const PaymentComponent = t.union([
-  NotHasComponent,
+  t.exact(NotHasComponent),
   t.intersection([
     HasComponent,
     t.interface({ notice_number: PaymentNoticeNumber })

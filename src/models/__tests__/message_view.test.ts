@@ -1,11 +1,7 @@
 import * as E from "fp-ts/lib/Either";
 
 import { Container } from "@azure/cosmos";
-import {
-  FiscalCode,
-  NonEmptyString,
-  OrganizationFiscalCode
-} from "@pagopa/ts-commons/lib/strings";
+import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import {
   MessageView,
   RetrievedMessageView,
@@ -98,7 +94,7 @@ describe("message_view", () => {
     expect(E.isLeft(result)).toBeTruthy();
   });
 
-  it("GIVEN a message_view obejct with a notice_number-only payment WHEN the object is decode THEN the decode fails", async () => {
+  it("GIVEN a message_view obejct with a notice_number-only payment WHEN the object is decode THEN the decoded object do not contains a notice_number", async () => {
     const messageViewWithPayment = {
       ...aMessageView,
       components: {
@@ -108,6 +104,13 @@ describe("message_view", () => {
     };
     const result = MessageView.decode(messageViewWithPayment);
     expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(result.right.components.payment).toEqual(
+        expect.not.objectContaining({
+          notice_number: aNoticeNumber
+        })
+      );
+    }
   });
 });
 
