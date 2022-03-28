@@ -1,11 +1,7 @@
 import * as E from "fp-ts/lib/Either";
 
 import { Container } from "@azure/cosmos";
-import {
-  FiscalCode,
-  NonEmptyString,
-  OrganizationFiscalCode
-} from "@pagopa/ts-commons/lib/strings";
+import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import {
   MessageView,
   RetrievedMessageView,
@@ -65,6 +61,58 @@ const containerMock = ({
     }))
   }
 } as unknown) as Container;
+
+const aNoticeNumber = "177777777777777777";
+
+describe("message_view", () => {
+  it("GIVEN a valid message_view obejct WHEN the object is decode THEN the decode succeed", async () => {
+    const result = MessageView.decode(aMessageView);
+    expect(E.isRight(result)).toBeTruthy();
+  });
+
+  it("GIVEN a valid message_view obejct with payment WHEN the object is decode THEN the decode succeed", async () => {
+    const messageViewWithPayment = {
+      ...aMessageView,
+      components: {
+        ...aMessageView.components,
+        payment: { has: true, notice_number: aNoticeNumber }
+      }
+    };
+    const result = MessageView.decode(messageViewWithPayment);
+    expect(E.isRight(result)).toBeTruthy();
+  });
+
+  it("GIVEN a message_view obejct with a missing notice_number payment WHEN the object is decode THEN the decode fails", async () => {
+    const messageViewWithPayment = {
+      ...aMessageView,
+      components: {
+        ...aMessageView.components,
+        payment: { has: true }
+      }
+    };
+    const result = MessageView.decode(messageViewWithPayment);
+    expect(E.isLeft(result)).toBeTruthy();
+  });
+
+  it("GIVEN a message_view obejct with a notice_number-only payment WHEN the object is decode THEN the decoded object do not contains a notice_number", async () => {
+    const messageViewWithPayment = {
+      ...aMessageView,
+      components: {
+        ...aMessageView.components,
+        payment: { has: false, notice_number: aNoticeNumber }
+      }
+    };
+    const result = MessageView.decode(messageViewWithPayment);
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(result.right.components.payment).toEqual(
+        expect.not.objectContaining({
+          notice_number: aNoticeNumber
+        })
+      );
+    }
+  });
+});
 
 describe("create", () => {
   it("GIVEN a valid message_view WHEN the client create is called THEN the create return a Right", async () => {

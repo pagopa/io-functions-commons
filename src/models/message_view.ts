@@ -8,20 +8,31 @@ import { ServiceId } from "../../generated/definitions/ServiceId";
 import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds";
 import { Timestamp } from "../../generated/definitions/Timestamp";
 import { CosmosResource, CosmosdbModel } from "../utils/cosmosdb_model";
+import { PaymentNoticeNumber } from "../../generated/definitions/PaymentNoticeNumber";
 
 export const MESSAGE_VIEW_COLLECTION_NAME = "message-view";
 const MESSAGE_VIEW_MODEL_PK_FIELD = "fiscalCode";
 
-export const Component = t.interface({
-  has: t.boolean
-});
+const HasComponent = t.interface({ has: t.literal(true) });
+const NotHasComponent = t.interface({ has: t.literal(false) });
+
+export const Component = t.union([HasComponent, NotHasComponent]);
 export type Component = t.TypeOf<typeof Component>;
+
+export const PaymentComponent = t.union([
+  t.exact(NotHasComponent),
+  t.intersection([
+    HasComponent,
+    t.interface({ notice_number: PaymentNoticeNumber })
+  ])
+]);
+export type PaymentComponent = t.TypeOf<typeof PaymentComponent>;
 
 export const Components = t.interface({
   attachments: Component,
   euCovidCert: Component,
   legalData: Component,
-  payment: Component
+  payment: PaymentComponent
 });
 export type Components = t.TypeOf<typeof Components>;
 
