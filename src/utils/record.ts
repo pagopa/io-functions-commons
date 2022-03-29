@@ -20,7 +20,7 @@ export const isObject = (i: unknown): i is Record<string, unknown> =>
  * @returns an array of all the input object {key,value}
  */
 export const propertiesToArray = (input: unknown): ReadonlyArray<IEntry> => {
-  const addDelimiter = (a: string, b: string): string => (a ? `${a}.${b}` : b);
+  const addDelimiter = (a: string, b: string): string => (a ? `${a}/${b}` : b);
 
   const paths = (obj: unknown, head = ""): ReadonlyArray<IEntry> =>
     isObject(obj)
