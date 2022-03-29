@@ -31,8 +31,8 @@ describe("propertiesToArray2", () => {
     const properties = propertiesToArray(input);
     expect(properties).toEqual([
       { key: "flat", value: "flat" },
-      { key: "nested.nested1", value: "1" },
-      { key: "nested.nested2", value: "2" }
+      { key: "nested/nested1", value: "1" },
+      { key: "nested/nested2", value: "2" }
     ]);
   });
 
@@ -50,8 +50,8 @@ describe("propertiesToArray2", () => {
     const properties = propertiesToArray(input);
     expect(properties).toEqual([
       { key: "flat", value: "flat" },
-      { key: "nested1.nested11.nested111", value: "1" },
-      { key: "nested1.nested11.nested112", value: "2" }
+      { key: "nested1/nested11/nested111", value: "1" },
+      { key: "nested1/nested11/nested112", value: "2" }
     ]);
   });
 });
