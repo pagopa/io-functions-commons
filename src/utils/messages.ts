@@ -139,5 +139,6 @@ export const retrievedMessageToPublic = (
   created_at: retrievedMessage.createdAt,
   fiscal_code: retrievedMessage.fiscalCode,
   id: retrievedMessage.id,
-  sender_service_id: retrievedMessage.senderServiceId
+  sender_service_id: retrievedMessage.senderServiceId,
+  time_to_live: retrievedMessage.timeToLiveSeconds
 });
