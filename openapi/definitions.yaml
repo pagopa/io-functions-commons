@@ -131,6 +131,8 @@ NewMessage:
       $ref: "#/NewMessageDefaultAddresses"
     fiscal_code:
       $ref: "#/FiscalCode"
+    feature_level_type:
+      $ref: "#/FeatureLevelType"
   required:
     - content
 FeatureLevelType:
