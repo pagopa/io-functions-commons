@@ -92,7 +92,11 @@ export enum UserGroup {
   ApiMessageWriteWithLegalDataWithoutImpersonification = "ApiMessageWriteWithLegalDataWithoutImpersonification",
 
   // legal messages: read sent legal message
-  ApiMessageReadWithLegalData = "ApiMessageReadWithLegalData"
+  ApiMessageReadWithLegalData = "ApiMessageReadWithLegalData",
+
+  // Advanced Message handling (read / write)
+  ApiMessageWriteAdvanced = "ApiMessageWriteAdvanced",
+  ApiMessageReadAdvanced = "ApiMessageReadAdvanced"
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
