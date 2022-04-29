@@ -385,11 +385,12 @@ MessageResponseWithContent:
       $ref: "#/MessageResponseNotificationStatus"
     status:
       $ref: "#/MessageStatusValue"
-    is_read: 
-      type: boolean
+    read_status: 
+      $ref: "#/ReadStatus"
       description: |-
         Describes whether a user has read the message or not
-        NOTE: This value is only available for ADVANCED messages
+        NOTE  : This value is only available for ADVANCED messages
+        NOTE 2: Without right permissions, `UNAVAILABLE` will be returned
     payment_status:
       $ref: "#/PaymentStatus"
       description: |-
@@ -1317,3 +1318,12 @@ PaymentStatus:
     - PAID
     - NOT_PAID
   example: NOT_PAID
+ReadStatus:
+  type: string
+  x-extensible-enum:
+    - UNAVAILABLE
+    - UNREAD
+    - READ
+  example: UNREAD
+  description:
+    Api definition of read status enumeration
