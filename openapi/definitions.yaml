@@ -385,6 +385,16 @@ MessageResponseWithContent:
       $ref: "#/MessageResponseNotificationStatus"
     status:
       $ref: "#/MessageStatusValue"
+    is_read: 
+      type: boolean
+      description: |-
+        Describes whether a user has read the message or not
+        NOTE: This value is only available for ADVANCED messages
+    payment_status:
+      $ref: "#/PaymentStatus"
+      description: |-
+        Describes the state of the related payment notice
+        NOTE: This value is only available for ADVANCED payment messages
   required:
     - message
 LegalMessageWithContent:
