@@ -19,6 +19,7 @@ import {
 import { MessageStatusValueEnum } from "../../generated/definitions/MessageStatusValue";
 import { pipe } from "fp-ts/lib/function";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
+import { PaymentStatusEnum } from "../../generated/definitions/PaymentStatus";
 
 const aMessageId = "A_MESSAGE_ID" as NonEmptyString;
 const aFiscalCode = "RLDBSV36A78Y792X" as FiscalCode;
@@ -27,6 +28,13 @@ const aMessageStatus = {
   version: 0 as NonNegativeInteger,
   updatedAt: new Date(),
   fiscalCode: aFiscalCode
+};
+
+const aMessageStatusWithPaymentStatus = {
+  ...aMessageStatus,
+  id: `${aMessageId}-${"0".repeat(16)}` as NonEmptyString,
+  messageId: `${aMessageId}` as NonEmptyString,
+  paymentStatus: PaymentStatusEnum.PAID
 };
 
 const messageStatusListLength = 1;
@@ -70,6 +78,40 @@ describe("Models |> Message-Status", () => {
       ...oldMessageStatusList[0],
       isRead: false,
       isArchived: false
+    });
+
+    context.dispose();
+  });
+
+  it("should retrieve message-status with paymentStatus when present", async () => {
+    const context = await createContext(MESSAGE_STATUS_MODEL_PK_FIELD);
+    await context.init();
+    const model = new MessageStatusModel(context.container);
+
+    await pipe(
+      TE.tryCatch<CosmosErrors, any>(
+        () =>
+          context.container.items.create(aMessageStatusWithPaymentStatus, {
+            disableAutomaticIdGeneration: true
+          }),
+        toCosmosErrorResponse
+      ),
+      TE.mapLeft(err => fail(`Cannot insert item ${err}`))
+    )();
+
+    const retrievedValue = await pipe(
+      model.findLastVersionByModelId([
+        aMessageStatusWithPaymentStatus.messageId
+      ]),
+      TE.map(O.getOrElseW(() => fail("MessageStatus not found"))),
+      TE.getOrElse(() => fail("Cosmos error"))
+    )();
+
+    expect(retrievedValue).toMatchObject({
+      ...aMessageStatusWithPaymentStatus,
+      isRead: false,
+      isArchived: false,
+      paymentStatus: aMessageStatusWithPaymentStatus.paymentStatus
     });
 
     context.dispose();
@@ -172,7 +214,6 @@ describe("Models |> Message-Status", () => {
 
     context.dispose();
   });
-
   it("should upsert a message-status with isRead and isArchived", async () => {
     const context = await createContext(MESSAGE_STATUS_MODEL_PK_FIELD);
     await context.init();

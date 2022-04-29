@@ -7,7 +7,6 @@ import * as asyncI from "../../utils/async";
 
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 import { MessageBodyMarkdown } from "../../../generated/definitions/MessageBodyMarkdown";
-import { MessageContent } from "../../../generated/definitions/MessageContent";
 
 import {
   NonEmptyString,
