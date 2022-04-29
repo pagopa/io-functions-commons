@@ -133,6 +133,13 @@ NewMessage:
       $ref: "#/FiscalCode"
   required:
     - content
+FeatureLevelType:
+   type: string
+   default: STANDARD
+   x-extensible-enum:
+     - STANDARD
+     - ADVANCED
+   example: STANDARD
 PrescriptionData:
   type: object
   description: |-

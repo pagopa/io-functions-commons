@@ -1,5 +1,9 @@
 /* eslint-disable no-console */
-import { FiscalCode, NonEmptyString, OrganizationFiscalCode } from "@pagopa/ts-commons/lib/strings";
+import {
+  FiscalCode,
+  NonEmptyString,
+  OrganizationFiscalCode
+} from "@pagopa/ts-commons/lib/strings";
 import {
   MESSAGE_MODEL_PK_FIELD,
   MessageModel,
@@ -24,6 +28,8 @@ import { MessageBodyMarkdown } from "../../generated/definitions/MessageBodyMark
 import { PaymentAmount } from "../../generated/definitions/PaymentAmount";
 import { PaymentNoticeNumber } from "../../generated/definitions/PaymentNoticeNumber";
 import { IndexingPolicy } from "@azure/cosmos";
+import { FeatureLevelTypeEnum } from "../../generated/definitions/FeatureLevelType";
+import { withoutUndefinedValues } from "@pagopa/ts-commons/lib/types";
 
 const MESSAGE_CONTAINER_NAME = "test-message-container" as NonEmptyString;
 
@@ -31,6 +37,7 @@ const aFiscalCode = "RLDBSV36A78Y792X" as FiscalCode;
 const anotherFiscalCode = "TDDBSV36A78Y792X" as FiscalCode;
 const anOrganizationFiscalCode = "01234567890" as OrganizationFiscalCode;
 const aSerializedNewMessageWithoutContent = {
+  featureLevelType: FeatureLevelTypeEnum.STANDARD,
   fiscalCode: aFiscalCode,
   id: "A_MESSAGE_ID" as NonEmptyString,
   indexedId: "A_MESSAGE_ID" as NonEmptyString,
@@ -218,9 +225,83 @@ describe("Models |> Message", () => {
     context.dispose();
   });
 
+  it("should retrieve a message without featureLevelType with default", async () => {
+    const context = await createContext(MESSAGE_MODEL_PK_FIELD);
+    await context.init(messagesIndexingPolicy);
+    const container = context.container;
+    const model = new MessageModel(container, MESSAGE_CONTAINER_NAME);
+
+    // create a new document
+    const createTestMessageDoc = await pipe(
+      TE.tryCatch(
+        () =>
+          container.items.create(
+            withoutUndefinedValues({
+              ...aNewMessageWithoutContent,
+              featureLevelType: undefined
+            }),
+            { disableAutomaticIdGeneration: true }
+          ),
+        E.toError
+      )
+    )();
+
+    // find the message by query
+    await pipe(
+      TE.of<any, void>(void 0),
+      TE.chainW(_ =>
+        model.findOneByQuery({
+          parameters: [
+            {
+              name: "@id",
+              value: aNewMessageWithoutContent.id
+            }
+          ],
+          query: `SELECT * FROM m WHERE m.id = @id`
+        })
+      ),
+      TE.chain(_ => TE.fromEither(fromOption(() => "It's none")(_))),
+      TE.bimap(
+        _ => fail(`Failed to read single doc, error: ${JSON.stringify(_)}`),
+        result => {
+          expect(result).toEqual(
+            expect.objectContaining({
+              ...aSerializedNewMessageWithoutContent
+            })
+          );
+        }
+      )
+    )();
+
+    // find the message by recipient
+    await pipe(
+      TE.of<any, void>(void 0),
+      TE.chainW(_ =>
+        model.find([
+          aNewMessageWithoutContent.id,
+          aNewMessageWithoutContent.fiscalCode
+        ])
+      ),
+      TE.chain(_ => TE.fromEither(fromOption(() => "It's none")(_))),
+      TE.bimap(
+        _ => fail(`Failed to find one doc, error: ${JSON.stringify(_)}`),
+        result => {
+          expect(result).toEqual(
+            expect.objectContaining({
+              ...aSerializedNewMessageWithoutContent
+            })
+          );
+          return result;
+        }
+      )
+    )();
+
+    context.dispose();
+  });
+
   it.each`
     title                                                        | value
-    ${"a message content without"}                               | ${aMessageContentWithNoPayment}
+    ${"a message content without payment"}                       | ${aMessageContentWithNoPayment}
     ${"a message content with payment data with payee"}          | ${aMessageContentWithPaymentWithPayee}
     ${"a message content with a prescription"}                   | ${aMessageContentPrescription}
     ${"a message content with a EU Covid Certificate auth code"} | ${aMessageContentEUCovidCert}
@@ -247,9 +328,7 @@ describe("Models |> Message", () => {
 
     await pipe(
       model.getContentFromBlob(context.storage, aFakeMessageId),
-      TE.chain(
-        TE.fromOption(() => new Error(`Blob not found`))
-      ),
+      TE.chain(TE.fromOption(() => new Error(`Blob not found`))),
       TE.bimap(
         _ => fail(`Failed to get content, error: ${JSON.stringify(_)}`),
         result => {

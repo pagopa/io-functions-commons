@@ -39,6 +39,8 @@ import { Payee } from "../../../generated/definitions/Payee";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { pipe } from "fp-ts/lib/function";
 import { PaymentDataWithRequiredPayee } from "../../../generated/definitions/PaymentDataWithRequiredPayee";
+import { FeatureLevelTypeEnum } from "../../../generated/definitions/FeatureLevelType";
+import { withoutUndefinedValues } from "@pagopa/ts-commons/lib/types";
 
 beforeEach(() => {
   jest.resetAllMocks();
@@ -50,7 +52,7 @@ const aMessageBodyMarkdown = "test".repeat(80) as MessageBodyMarkdown;
 const aGeneralMessageContent = {
   markdown: aMessageBodyMarkdown,
   subject: "test".repeat(10) as MessageSubject
-}
+};
 
 const aMessageContent = {
   ...aGeneralMessageContent
@@ -61,13 +63,14 @@ const cosmosMetadata = {
   _rid: "_rid",
   _self: "_self",
   _ts: 1
-}
+};
 
 const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
 const anOrganizationFiscalCode = "12345678901" as OrganizationFiscalCode;
 
 const aSerializedNewMessageWithoutContent = {
   createdAt: new Date().toISOString(),
+  featureLevelType: FeatureLevelTypeEnum.STANDARD,
   fiscalCode: aFiscalCode,
   id: "A_MESSAGE_ID" as NonEmptyString,
   indexedId: "A_MESSAGE_ID" as NonEmptyString,
@@ -136,11 +139,10 @@ const aRetrievedMessageWithContent: RetrievedMessageWithContent = {
 const aRetrievedMessageWithContentWithPaymentData: RetrievedMessageWithContent = {
   ...cosmosMetadata,
   ...aNewMessageWithContentWithPaymentData,
-  kind: "IRetrievedMessageWithContent",
+  kind: "IRetrievedMessageWithContent"
 };
 
 const aRetrievedMessageWithContentWithPaymentDataWithoutPayee = {
-  
   ...aRetrievedMessageWithContent,
   content: {
     ...aRetrievedMessageWithContent.content,
@@ -157,17 +159,18 @@ describe("Models ", () => {
     pipe(
       messageWithContentWithPayee,
       E.fold(
-        () => fail(), 
-        _ => expect(_).toEqual({
-          ...aNewMessageWithContentWithPaymentData,
-          content: {
-            ...aNewMessageWithContentWithPaymentData.content,
-            payment_data: {
-              ...aNewMessageWithContentWithPaymentData.content.payment_data,
-              invalid_after_due_date: false
+        () => fail(),
+        _ =>
+          expect(_).toEqual({
+            ...aNewMessageWithContentWithPaymentData,
+            content: {
+              ...aNewMessageWithContentWithPaymentData.content,
+              payment_data: {
+                ...aNewMessageWithContentWithPaymentData.content.payment_data,
+                invalid_after_due_date: false
+              }
             }
-          }
-        })
+          })
       )
     );
   });
@@ -187,29 +190,63 @@ describe("Models ", () => {
     expect(E.isLeft(messageWithContentWithoutPayee)).toBeTruthy();
   });
 
+  it("should decode a STANDARD NewMessage with content without featureLevelType", () => {
+    const messageWithContent = NewMessageWithContent.decode(
+      withoutUndefinedValues({
+        ...aNewMessageWithContent,
+        featureLevelType: undefined
+      })
+    );
+    pipe(
+      messageWithContent,
+      E.fold(
+        () => fail(),
+        _ =>
+          expect(_).toEqual({
+            ...aNewMessageWithContent,
+            featureLevelType: FeatureLevelTypeEnum.STANDARD
+          })
+      )
+    );
+  });
+
+  it("should decode an ADVANCED NewMessage with content ", () => {
+    const messageWithContent = NewMessageWithContent.decode(
+      withoutUndefinedValues({
+        ...aNewMessageWithContent,
+        featureLevelType: FeatureLevelTypeEnum.ADVANCED
+      })
+    );
+
+    expect(E.isRight(messageWithContent)).toBeTruthy();
+  });
+
   it("should deserialize MessageWithContent with payment data without payee", () => {
     pipe(
       aRetrievedMessageWithContentWithPaymentDataWithoutPayee,
-      MessageWithContent.decode, 
+      MessageWithContent.decode,
       E.fold(
         () => fail(),
-        _ => expect(_).toEqual({
-          ...aRetrievedMessageWithContentWithPaymentDataWithoutPayee,
-          content: {
-            ...aRetrievedMessageWithContentWithPaymentDataWithoutPayee.content,
-            payment_data: {
-              ...aRetrievedMessageWithContentWithPaymentDataWithoutPayee.content
-                .payment_data,
-              invalid_after_due_date: false
+        _ =>
+          expect(_).toEqual({
+            ...aRetrievedMessageWithContentWithPaymentDataWithoutPayee,
+            content: {
+              ...aRetrievedMessageWithContentWithPaymentDataWithoutPayee.content,
+              payment_data: {
+                ...aRetrievedMessageWithContentWithPaymentDataWithoutPayee
+                  .content.payment_data,
+                invalid_after_due_date: false
+              }
             }
-          }
-        }) 
+          })
       )
-    )
+    );
   });
 
   it("should deserialize MessageWithContent without payment_data", () => {
-    expect(E.isRight(MessageWithContent.decode(aNewMessageWithContent))).toBeTruthy();
+    expect(
+      E.isRight(MessageWithContent.decode(aNewMessageWithContent))
+    ).toBeTruthy();
   });
 });
 
@@ -219,15 +256,15 @@ describe("RetrievedMessage", () => {
       aRetrievedMessageWithContent,
       RetrievedMessage.decode,
       E.fold(
-        () => fail(), 
+        () => fail(),
         val => {
           expect(val).toEqual({
             ...aRetrievedMessageWithContent,
             kind: "IRetrievedMessageWithContent"
           });
-      })
-    )
-    
+        }
+      )
+    );
   });
 
   it("should deserialize RetrievedMessage with payment_data without payee", () => {
@@ -247,7 +284,7 @@ describe("RetrievedMessage", () => {
       aRetrievedMessageWithContentWithPaymentDataWithoutPayee,
       RetrievedMessage.decode,
       E.fold(
-        () => fail(), 
+        () => fail(),
         value => expect(value).toEqual(expected)
       )
     );
@@ -256,6 +293,41 @@ describe("RetrievedMessage", () => {
   it("should deserialize RetrievedMessage without Content", () => {
     const expected = {
       ...aRetrievedMessageWithoutContent,
+      kind: "IRetrievedMessageWithoutContent"
+    };
+    pipe(
+      aRetrievedMessageWithoutContent,
+      RetrievedMessage.decode,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(expected)
+      )
+    );
+  });
+
+  it("should deserialize RetrievedMessage without featureLevelType", () => {
+    const expected = {
+      ...aRetrievedMessageWithoutContent,
+      featureLevelType: FeatureLevelTypeEnum.STANDARD,
+      kind: "IRetrievedMessageWithoutContent"
+    };
+    pipe(
+      withoutUndefinedValues({
+        ...aRetrievedMessageWithoutContent,
+        featureLevelType: undefined
+      }),
+      RetrievedMessage.decode,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(expected)
+      )
+    );
+  });
+
+  it("should deserialize RetrievedMessage with featureLevelType", () => {
+    const expected = {
+      ...aRetrievedMessageWithoutContent,
+      featureLevelType: FeatureLevelTypeEnum.STANDARD,
       kind: "IRetrievedMessageWithoutContent"
     };
     pipe(
@@ -375,7 +447,10 @@ describe("findMessages", () => {
 
 it("should return an iterator containing results page of correct pageSize", async () => {
   const iteratorMock = iteratorGenMock([
-    [E.right(aRetrievedMessageWithContent), E.right(aRetrievedMessageWithContent)],
+    [
+      E.right(aRetrievedMessageWithContent),
+      E.right(aRetrievedMessageWithContent)
+    ],
     [E.right(aRetrievedMessageWithContent)]
   ]);
 
@@ -398,12 +473,10 @@ it("should return an iterator containing results page of correct pageSize", asyn
 
   const model = new MessageModel(containerMock, MESSAGE_CONTAINER_NAME);
 
-  const errorsOrResultIterator = await model
-    .findMessages(
-      aRetrievedMessageWithContent.fiscalCode,
-      2 as NonNegativeInteger
-    )
-    ();
+  const errorsOrResultIterator = await model.findMessages(
+    aRetrievedMessageWithContent.fiscalCode,
+    2 as NonNegativeInteger
+  )();
 
   expect(asyncIteratorSpy).toHaveBeenCalledTimes(1);
   expect(containerMock.items.query).toHaveBeenCalledTimes(1);
@@ -412,7 +485,8 @@ it("should return an iterator containing results page of correct pageSize", asyn
       parameters: [
         { name: "@fiscalCode", value: aRetrievedMessageWithContent.fiscalCode }
       ],
-      query: "SELECT * FROM m WHERE m.fiscalCode = @fiscalCode ORDER BY m.fiscalCode, m.id DESC"
+      query:
+        "SELECT * FROM m WHERE m.fiscalCode = @fiscalCode ORDER BY m.fiscalCode, m.id DESC"
     },
     { maxItemCount: 2 }
   );
@@ -425,7 +499,9 @@ it("should return an iterator containing results page of correct pageSize", asyn
       E.right(aRetrievedMessageWithContent)
     ]);
     const result2 = await iterator.next();
-    expect(result2.value).toMatchObject([E.right(aRetrievedMessageWithContent)]);
+    expect(result2.value).toMatchObject([
+      E.right(aRetrievedMessageWithContent)
+    ]);
   }
 });
 
@@ -451,13 +527,11 @@ it("should construct the correct query with maximumMessageId param", async () =>
 
   const model = new MessageModel(containerMock, MESSAGE_CONTAINER_NAME);
 
-  await model
-    .findMessages(
-      aRetrievedMessageWithContent.fiscalCode,
-      2 as NonNegativeInteger,
-      "A_MESSAGE_ID" as NonEmptyString
-    )
-    ();
+  await model.findMessages(
+    aRetrievedMessageWithContent.fiscalCode,
+    2 as NonNegativeInteger,
+    "A_MESSAGE_ID" as NonEmptyString
+  )();
 
   expect(asyncIteratorSpy).toHaveBeenCalledTimes(1);
   expect(containerMock.items.query).toHaveBeenCalledTimes(1);
@@ -467,7 +541,8 @@ it("should construct the correct query with maximumMessageId param", async () =>
         { name: "@fiscalCode", value: aRetrievedMessageWithContent.fiscalCode },
         { name: "@maxId", value: "A_MESSAGE_ID" }
       ],
-      query: "SELECT * FROM m WHERE m.fiscalCode = @fiscalCode AND m.id < @maxId ORDER BY m.fiscalCode, m.id DESC"
+      query:
+        "SELECT * FROM m WHERE m.fiscalCode = @fiscalCode AND m.id < @maxId ORDER BY m.fiscalCode, m.id DESC"
     },
     { maxItemCount: 2 }
   );
@@ -495,14 +570,12 @@ it("should construct the correct query with minimumMessageId param", async () =>
 
   const model = new MessageModel(containerMock, MESSAGE_CONTAINER_NAME);
 
-  await model
-    .findMessages(
-      aRetrievedMessageWithContent.fiscalCode,
-      2 as NonNegativeInteger,
-      undefined,
-      "A_MESSAGE_ID" as NonEmptyString
-    )
-    ();
+  await model.findMessages(
+    aRetrievedMessageWithContent.fiscalCode,
+    2 as NonNegativeInteger,
+    undefined,
+    "A_MESSAGE_ID" as NonEmptyString
+  )();
 
   expect(asyncIteratorSpy).toHaveBeenCalledTimes(1);
   expect(containerMock.items.query).toHaveBeenCalledTimes(1);
@@ -512,7 +585,8 @@ it("should construct the correct query with minimumMessageId param", async () =>
         { name: "@fiscalCode", value: aRetrievedMessageWithContent.fiscalCode },
         { name: "@minId", value: "A_MESSAGE_ID" }
       ],
-      query: "SELECT * FROM m WHERE m.fiscalCode = @fiscalCode AND m.id > @minId ORDER BY m.fiscalCode, m.id DESC"
+      query:
+        "SELECT * FROM m WHERE m.fiscalCode = @fiscalCode AND m.id > @minId ORDER BY m.fiscalCode, m.id DESC"
     },
     { maxItemCount: 2 }
   );
@@ -520,7 +594,10 @@ it("should construct the correct query with minimumMessageId param", async () =>
 
 it("should return an iterator with correct done definition", async () => {
   const iteratorMock = iteratorGenMock([
-    [E.right(aRetrievedMessageWithContent), E.right(aRetrievedMessageWithContent)]
+    [
+      E.right(aRetrievedMessageWithContent),
+      E.right(aRetrievedMessageWithContent)
+    ]
   ]);
 
   const asyncIteratorSpy = jest
@@ -542,12 +619,10 @@ it("should return an iterator with correct done definition", async () => {
 
   const model = new MessageModel(containerMock, MESSAGE_CONTAINER_NAME);
 
-  const errorsOrResultIterator = await model
-    .findMessages(
-      aRetrievedMessageWithContent.fiscalCode,
-      2 as NonNegativeInteger
-    )
-    ();
+  const errorsOrResultIterator = await model.findMessages(
+    aRetrievedMessageWithContent.fiscalCode,
+    2 as NonNegativeInteger
+  )();
 
   expect(asyncIteratorSpy).toHaveBeenCalledTimes(1);
   expect(containerMock.items.query).toHaveBeenCalledTimes(1);

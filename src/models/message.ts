@@ -33,6 +33,7 @@ import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds
 import { getBlobAsText, upsertBlobFromObject } from "../utils/azure_storage";
 import { wrapWithKind } from "../utils/types";
 import { NewMessageContent } from "../../generated/definitions/NewMessageContent";
+import { FeatureLevelType } from "../../generated/definitions/FeatureLevelType";
 
 export const MESSAGE_COLLECTION_NAME = "messages";
 export const MESSAGE_MODEL_PK_FIELD = "fiscalCode" as const;
@@ -42,6 +43,9 @@ const MESSAGE_BLOB_STORAGE_SUFFIX = ".json";
 const MessageBaseR = t.interface({
   // when the message was accepted by the system
   createdAt: Timestamp,
+
+  // the featureType level
+  featureLevelType: FeatureLevelType,
 
   // the fiscal code of the recipient
   fiscalCode: FiscalCode,
