@@ -30,6 +30,7 @@ import { MessageStatusWithAttributes } from "../../generated/definitions/Message
 import { Change_typeEnum as BulkChangeType } from "../../generated/definitions/MessageStatusBulkChange";
 import { Change_typeEnum as ReadingChangeType } from "../../generated/definitions/MessageStatusReadingChange";
 import { Change_typeEnum as ArchinvingChangeType } from "../../generated/definitions/MessageStatusArchivingChange";
+import { FeatureLevelTypeEnum } from "../../generated/definitions/FeatureLevelType";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -216,7 +217,7 @@ const aContentWithLegalData = {
 const aPayee: Payee = { fiscal_code: anOrganizationFiscalCode };
 
 describe("NewMessage definition", () => {
-  it("should decode NewMessage with content but without payment data", () => {
+  it("should decode STANDARD NewMessage with content but without payment data", () => {
     const aMessageWithContentWithoutPaymentData = {
       ...aNewMessageWithoutContent,
       content: aContentWithoutPaymentData
@@ -237,7 +238,37 @@ describe("NewMessage definition", () => {
         value =>
           expect(value).toEqual({
             ...aMessageWithContentWithoutPaymentData,
-            time_to_live: 3600
+            time_to_live: 3600,
+            feature_level_type: FeatureLevelTypeEnum.STANDARD
+          })
+      )
+    );
+  });
+
+  it("should decode ADVANCED NewMessage with content but without payment data", () => {
+    const aMessageWithContentWithoutPaymentData = {
+      ...aNewMessageWithoutContent,
+      feature_level_type: FeatureLevelTypeEnum.ADVANCED,
+      content: aContentWithoutPaymentData
+    };
+
+    expect(
+      E.isRight(MessageContent.decode(aContentWithoutPaymentData))
+    ).toBeTruthy();
+
+    const messageWithContent = NewMessage.decode(
+      aMessageWithContentWithoutPaymentData
+    );
+
+    pipe(
+      messageWithContent,
+      E.fold(
+        () => fail(),
+        value =>
+          expect(value).toEqual({
+            ...aMessageWithContentWithoutPaymentData,
+            time_to_live: 3600,
+            feature_level_type: FeatureLevelTypeEnum.ADVANCED
           })
       )
     );
@@ -271,7 +302,8 @@ describe("NewMessage definition", () => {
                 invalid_after_due_date: false
               }
             },
-            time_to_live: 3600
+            time_to_live: 3600,
+            feature_level_type: FeatureLevelTypeEnum.STANDARD
           })
       )
     );
