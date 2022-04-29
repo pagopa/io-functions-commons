@@ -305,12 +305,15 @@ CreatedMessageWithContent:
       $ref: "#/NewMessageContent"
     sender_service_id:
       $ref: "#/ServiceId"
+    feature_level_type: 
+      $ref: "#/FeatureLevelType"
   required:
     - id
     - fiscal_code
     - created_at
     - content
     - sender_service_id
+    - feature_level_type
 CreatedMessageWithoutContent:
   type: object
   properties:
@@ -324,11 +327,14 @@ CreatedMessageWithoutContent:
       $ref: "#/Timestamp"
     sender_service_id:
       $ref: "#/ServiceId"
+    feature_level_type: 
+      $ref: "#/FeatureLevelType"
   required:
     - id
     - fiscal_code
     - created_at
     - sender_service_id
+    - feature_level_type
 EnrichedMessage:
   allOf:
     - type: object

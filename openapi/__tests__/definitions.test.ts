@@ -355,7 +355,7 @@ describe("NewMessage definition", () => {
 });
 
 describe("CreatedMessageWithContent definition", () => {
-  it("should decode CreatedMessageWithContent with content and payment data with payee", () => {
+  it("should decode STANDARD CreatedMessageWithContent with content and payment data with payee", () => {
     const aMessageWithContentWithPaymentDataWithoutPayee = {
       ...aMessageWithoutContent,
       content: {
@@ -394,6 +394,44 @@ describe("CreatedMessageWithContent definition", () => {
     );
 
     expect(E.isLeft(messageWithContent)).toBeTruthy();
+  });
+
+  it("should decode ADVANCED CreatedMessageWithContent with content and payment data with payee", () => {
+    const aMessageWithContentWithPaymentDataWithPayee = {
+      ...aMessageWithoutContent,
+      feature_level_type: FeatureLevelTypeEnum.ADVANCED,
+      content: {
+        ...aContentWithoutPaymentData,
+        payment_data: { ...aPaymentDataWithoutPayee, payee: aPayee }
+      }
+    };
+
+    expect(
+      E.isRight(
+        Payee.decode(
+          aMessageWithContentWithPaymentDataWithPayee.content.payment_data.payee
+        )
+      )
+    ).toBeTruthy();
+
+    const messageWithContent = CreatedMessageWithContent.decode(
+      aMessageWithContentWithPaymentDataWithPayee
+    );
+
+    expect(E.isRight(messageWithContent)).toBeTruthy();
+
+    pipe(
+      messageWithContent,
+      E.fold(
+        () => fail(),
+        value =>
+          expect(value).toMatchObject(
+            expect.objectContaining({
+              feature_level_type: FeatureLevelTypeEnum.ADVANCED
+            })
+          )
+      )
+    );
   });
 });
 
