@@ -1299,3 +1299,11 @@ MessageStatusAttributes:
   required:
     - is_read
     - is_archived
+PaymentStatus:
+  type: string
+  description: |-
+    Payment status enumeration
+  x-extensible-enum:
+    - PAID
+    - NOT_PAID
+  example: NOT_PAID

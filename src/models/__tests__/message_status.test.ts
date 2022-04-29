@@ -15,15 +15,25 @@ import {
   RetrievedMessageStatus
 } from "../message_status";
 import { pipe } from "fp-ts/lib/function";
+import { PaymentStatusEnum } from "../../../generated/definitions/PaymentStatus";
 
 const aMessageId = "A_MESSAGE_ID" as NonEmptyString;
 const aFiscalCode = "RLDBSV36A78Y792X" as FiscalCode;
+const nowDate = new Date();
 
 const aSerializedMessageStatus = {
   messageId: aMessageId,
   fiscalCode: aFiscalCode,
   status: MessageStatusValueEnum.ACCEPTED,
-  updatedAt: new Date().toISOString()
+  updatedAt: nowDate.toISOString()
+};
+
+const aNewMessageStatus: NewMessageStatus = {
+  ...aSerializedMessageStatus,
+  isArchived: false,
+  isRead: false,
+  kind: "INewMessageStatus",
+  updatedAt: nowDate
 };
 
 const aSerializedRetrievedMessageStatus = {
@@ -77,6 +87,41 @@ mockFetchAll.mockImplementation(async () => ({
 
 beforeEach(() => {
   jest.clearAllMocks();
+});
+
+describe("Models ", () => {
+  it("should decode MessageStatus without payment status", () => {
+    const messageStatusWithoutPaymentStatus = NewMessageStatus.decode(
+      aSerializedMessageStatus
+    );
+
+    pipe(
+      messageStatusWithoutPaymentStatus,
+      E.fold(
+        () => fail(),
+        _ => expect(_).toEqual(aNewMessageStatus)
+      )
+    );
+  });
+
+  it("should decode MessageStatus with payment status", () => {
+    const messageStatusWithoutPaymentStatus = NewMessageStatus.decode({
+      ...aSerializedMessageStatus,
+      paymentStatus: PaymentStatusEnum.PAID
+    });
+
+    pipe(
+      messageStatusWithoutPaymentStatus,
+      E.fold(
+        () => fail(),
+        _ =>
+          expect(_).toEqual({
+            ...aNewMessageStatus,
+            paymentStatus: PaymentStatusEnum.PAID
+          })
+      )
+    );
+  });
 });
 
 describe("findOneMessageStatusById", () => {
