@@ -305,12 +305,15 @@ CreatedMessageWithContent:
       $ref: "#/NewMessageContent"
     sender_service_id:
       $ref: "#/ServiceId"
+    feature_level_type: 
+      $ref: "#/FeatureLevelType"
   required:
     - id
     - fiscal_code
     - created_at
     - content
     - sender_service_id
+    - feature_level_type
 CreatedMessageWithoutContent:
   type: object
   properties:
@@ -324,11 +327,14 @@ CreatedMessageWithoutContent:
       $ref: "#/Timestamp"
     sender_service_id:
       $ref: "#/ServiceId"
+    feature_level_type: 
+      $ref: "#/FeatureLevelType"
   required:
     - id
     - fiscal_code
     - created_at
     - sender_service_id
+    - feature_level_type
 EnrichedMessage:
   allOf:
     - type: object
@@ -385,6 +391,17 @@ MessageResponseWithContent:
       $ref: "#/MessageResponseNotificationStatus"
     status:
       $ref: "#/MessageStatusValue"
+    read_status: 
+      $ref: "#/ReadStatus"
+      description: |-
+        Describes whether a user has read the message or not
+        NOTE  : This value is only available for ADVANCED messages
+        NOTE 2: Without right permissions, `UNAVAILABLE` will be returned
+    payment_status:
+      $ref: "#/PaymentStatus"
+      description: |-
+        Describes the state of the related payment notice
+        NOTE: This value is only available for ADVANCED payment messages
   required:
     - message
 LegalMessageWithContent:
@@ -1307,3 +1324,12 @@ PaymentStatus:
     - PAID
     - NOT_PAID
   example: NOT_PAID
+ReadStatus:
+  type: string
+  x-extensible-enum:
+    - UNAVAILABLE
+    - UNREAD
+    - READ
+  example: UNREAD
+  description:
+    Api definition of read status enumeration
