@@ -276,7 +276,7 @@ describe("getMessageStatusUpdater", () => {
 
     const updater = getMessageStatusUpdater(model, aNewMessageId, aFiscalCode);
 
-    const res = await updater(newStatus)();
+    const res = await updater({status: newStatus})();
 
     expect(E.isRight(res)).toBe(true);
     if (E.isRight(res)) {
@@ -311,7 +311,7 @@ describe("getMessageStatusUpdater", () => {
 
     const updater = getMessageStatusUpdater(model, aNewMessageId, aFiscalCode);
 
-    const res = await updater(newStatus)();
+    const res = await updater({status: newStatus})();
 
     expect(E.isRight(res)).toBe(true);
     if (E.isRight(res)) {
@@ -348,7 +348,7 @@ describe("getMessageStatusUpdater", () => {
 
     const updater = getMessageStatusUpdater(model, aNewMessageId, aFiscalCode);
 
-    const res = await updater(newStatus)();
+    const res = await updater({status: newStatus})();
 
     expect(E.isRight(res)).toBe(true);
     if (E.isRight(res)) {
@@ -364,4 +364,43 @@ describe("getMessageStatusUpdater", () => {
       );
     }
   });
+
+
+
+  it("should update message status with a partial object", async () => {
+    const aNewMessageId = "ANonExistingId-2" as NonEmptyString;
+    const newStatus = MessageStatusValueEnum.PROCESSED;
+
+    mockFetchAll.mockImplementation(async () => ({
+      resources: [
+        {
+          ...aRetrievedMessageStatus,
+          status: MessageStatusValueEnum.ACCEPTED,
+          messageId: aNewMessageId
+        }
+      ]
+    }));
+
+    const model = new MessageStatusModel(containerMock);
+
+    const updater = getMessageStatusUpdater(model, aNewMessageId, aFiscalCode);
+
+    const res = await updater({status: newStatus, paymentStatus: PaymentStatusEnum.NOT_PAID})();
+
+    expect(E.isRight(res)).toBe(true);
+    if (E.isRight(res)) {
+      expect(mockCreateItem.mock.calls[0][0]).toMatchObject(
+        expect.objectContaining({
+          version: 1,
+          status: newStatus,
+          messageId: aNewMessageId,
+          fiscalCode: aFiscalCode,
+          paymentStatus: PaymentStatusEnum.NOT_PAID,
+          isRead: false,
+          isArchived: false
+        })
+      );
+    }
+  });
+
 });

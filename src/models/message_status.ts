@@ -6,10 +6,7 @@ import * as TE from "fp-ts/lib/TaskEither";
 import * as O from "fp-ts/lib/Option";
 import { withDefault } from "@pagopa/ts-commons/lib/types";
 import { pipe } from "fp-ts/lib/function";
-import {
-  MessageStatusValue,
-  MessageStatusValueEnum
-} from "../../generated/definitions/MessageStatusValue";
+import { MessageStatusValue } from "../../generated/definitions/MessageStatusValue";
 import { Timestamp } from "../../generated/definitions/Timestamp";
 
 import { CosmosErrors } from "../utils/cosmosdb_model";
@@ -61,7 +58,7 @@ export const RetrievedMessageStatus = wrapWithKind(
 export type RetrievedMessageStatus = t.TypeOf<typeof RetrievedMessageStatus>;
 
 export type MessageStatusUpdater = (
-  status: MessageStatusValueEnum
+  messageStatusProps: Pick<MessageStatus, "status"> & Partial<MessageStatus>
 ) => TE.TaskEither<CosmosErrors, RetrievedMessageStatus>;
 
 /**
@@ -73,7 +70,7 @@ export const getMessageStatusUpdater = (
   messageId: NonEmptyString,
   fiscalCode: FiscalCode
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-): MessageStatusUpdater => status =>
+): MessageStatusUpdater => messageStatusProps =>
   pipe(
     messageStatusModel.findLastVersionByModelId([messageId]),
     TE.map(
@@ -88,7 +85,7 @@ export const getMessageStatusUpdater = (
       messageStatusModel.upsert({
         ...item,
         kind: "INewMessageStatus",
-        status,
+        ...messageStatusProps,
         updatedAt: new Date()
       })
     )
