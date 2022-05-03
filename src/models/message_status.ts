@@ -18,7 +18,6 @@ import {
   RetrievedVersionedModel
 } from "../utils/cosmosdb_model_versioned";
 import { wrapWithKind } from "../utils/types";
-import { PaymentStatus } from "../../generated/definitions/PaymentStatus";
 
 export const MESSAGE_STATUS_COLLECTION_NAME = "message-status";
 export const MESSAGE_STATUS_MODEL_ID_FIELD = "messageId" as const;
@@ -38,9 +37,7 @@ export const MessageStatus = t.intersection([
   }),
   t.partial({
     // fiscalCode is optional due to retro-compatibility
-    fiscalCode: FiscalCode,
-    // paymentStatus represents the status of a payment related to a message
-    paymentStatus: PaymentStatus
+    fiscalCode: FiscalCode
   })
 ]);
 
