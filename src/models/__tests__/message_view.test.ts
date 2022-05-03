@@ -12,6 +12,10 @@ import { ServiceId } from "../../../generated/definitions/ServiceId";
 import { MessageStatusValueEnum } from "../../../generated/definitions/MessageStatusValue";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { MessageViewModel } from "../message_view";
+import { pipe } from "fp-ts/lib/function";
+import { PaymentStatusEnum } from "../../../generated/definitions/PaymentStatus";
+import { errorsToReadableMessages } from "@pagopa/ts-commons/lib/reporters";
+import { TimeToLiveSeconds } from "../../../generated/definitions/TimeToLiveSeconds";
 
 const aComponents: Components = {
   attachments: { has: false },
@@ -34,6 +38,7 @@ const aMessageView: MessageView = {
   messageTitle: "a-msg-title" as NonEmptyString,
   senderServiceId: "a-service-id" as ServiceId,
   status: aStatus,
+  timeToLive: 3600 as TimeToLiveSeconds,
   version: 0 as NonNegativeInteger
 };
 
@@ -65,12 +70,28 @@ const containerMock = ({
 const aNoticeNumber = "177777777777777777";
 
 describe("message_view", () => {
-  it("GIVEN a valid message_view obejct WHEN the object is decode THEN the decode succeed", async () => {
+  it("GIVEN a valid message_view object WHEN the object is decode THEN the decode succeed", async () => {
     const result = MessageView.decode(aMessageView);
     expect(E.isRight(result)).toBeTruthy();
   });
 
-  it("GIVEN a valid message_view obejct with payment WHEN the object is decode THEN the decode succeed", async () => {
+  it("GIVEN a valid message_view object with payment WHEN the object does not contain a valid paymentStatus THEN the decode fails", async () => {
+    const messageViewWithPayment = {
+      ...aMessageView,
+      components: {
+        ...aMessageView.components,
+        payment: {
+          has: true,
+          notice_number: aNoticeNumber,
+          payment_status: "WRONG"
+        }
+      }
+    };
+    const result = MessageView.decode(messageViewWithPayment);
+    expect(E.isLeft(result)).toBeTruthy();
+  });
+
+  it("GIVEN a valid message_view object with payment WHEN the object contains a valid paymentStatus THEN the decode succeed", async () => {
     const messageViewWithPayment = {
       ...aMessageView,
       components: {
@@ -78,11 +99,26 @@ describe("message_view", () => {
         payment: { has: true, notice_number: aNoticeNumber }
       }
     };
-    const result = MessageView.decode(messageViewWithPayment);
-    expect(E.isRight(result)).toBeTruthy();
+    pipe(
+      messageViewWithPayment,
+      MessageView.decode,
+      E.mapLeft(_ => fail(errorsToReadableMessages(_))),
+      E.map(decoded => {
+        expect(decoded).toEqual({
+          ...messageViewWithPayment,
+          components: {
+            ...messageViewWithPayment.components,
+            payment: {
+              ...messageViewWithPayment.components.payment,
+              payment_status: PaymentStatusEnum.NOT_PAID
+            }
+          }
+        });
+      })
+    );
   });
 
-  it("GIVEN a message_view obejct with a missing notice_number payment WHEN the object is decode THEN the decode fails", async () => {
+  it("GIVEN a message_view object with a missing notice_number payment WHEN the object is decode THEN the decode fails", async () => {
     const messageViewWithPayment = {
       ...aMessageView,
       components: {
@@ -94,7 +130,7 @@ describe("message_view", () => {
     expect(E.isLeft(result)).toBeTruthy();
   });
 
-  it("GIVEN a message_view obejct with a notice_number-only payment WHEN the object is decode THEN the decoded object do not contains a notice_number", async () => {
+  it("GIVEN a message_view object with a notice_number-only payment WHEN the object is decode THEN the decoded object do not contains a notice_number", async () => {
     const messageViewWithPayment = {
       ...aMessageView,
       components: {
