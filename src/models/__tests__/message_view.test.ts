@@ -91,7 +91,7 @@ describe("message_view", () => {
     expect(E.isLeft(result)).toBeTruthy();
   });
 
-  it("GIVEN a valid message_view object with payment WHEN the object is decode THEN the decode succeed", async () => {
+  it("GIVEN a valid message_view object with payment WHEN the object contains a valid paymentStatus THEN the decode succeed", async () => {
     const messageViewWithPayment = {
       ...aMessageView,
       components: {
