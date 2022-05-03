@@ -2,6 +2,7 @@ import * as t from "io-ts";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { Container } from "@azure/cosmos";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
+import { withDefault } from "@pagopa/ts-commons/lib/types";
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { MessageStatusValue } from "../../generated/definitions/MessageStatusValue";
 import { ServiceId } from "../../generated/definitions/ServiceId";
@@ -9,23 +10,35 @@ import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds
 import { Timestamp } from "../../generated/definitions/Timestamp";
 import { CosmosResource, CosmosdbModel } from "../utils/cosmosdb_model";
 import { PaymentNoticeNumber } from "../../generated/definitions/PaymentNoticeNumber";
+import {
+  PaymentStatus,
+  PaymentStatusEnum
+} from "../../generated/definitions/PaymentStatus";
 
 export const MESSAGE_VIEW_COLLECTION_NAME = "message-view";
 const MESSAGE_VIEW_MODEL_PK_FIELD = "fiscalCode";
 
 const HasComponent = t.interface({ has: t.literal(true) });
 const NotHasComponent = t.interface({ has: t.literal(false) });
+export type NotHasComponent = t.TypeOf<typeof NotHasComponent>;
+export type HasComponent = t.TypeOf<typeof HasComponent>;
 
-export const Component = t.union([HasComponent, NotHasComponent]);
+export const Component = withDefault(t.union([HasComponent, NotHasComponent]), {
+  has: false
+});
 export type Component = t.TypeOf<typeof Component>;
 
 export const PaymentComponent = t.union([
   t.exact(NotHasComponent),
   t.intersection([
     HasComponent,
-    t.interface({ notice_number: PaymentNoticeNumber })
+    t.interface({
+      notice_number: PaymentNoticeNumber,
+      payment_status: withDefault(PaymentStatus, PaymentStatusEnum.NOT_PAID)
+    })
   ])
 ]);
+
 export type PaymentComponent = t.TypeOf<typeof PaymentComponent>;
 
 export const Components = t.interface({
