@@ -89,41 +89,6 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-describe("Models ", () => {
-  it("should decode MessageStatus without payment status", () => {
-    const messageStatusWithoutPaymentStatus = NewMessageStatus.decode(
-      aSerializedMessageStatus
-    );
-
-    pipe(
-      messageStatusWithoutPaymentStatus,
-      E.fold(
-        () => fail(),
-        _ => expect(_).toEqual(aNewMessageStatus)
-      )
-    );
-  });
-
-  it("should decode MessageStatus with payment status", () => {
-    const messageStatusWithoutPaymentStatus = NewMessageStatus.decode({
-      ...aSerializedMessageStatus,
-      paymentStatus: PaymentStatusEnum.PAID
-    });
-
-    pipe(
-      messageStatusWithoutPaymentStatus,
-      E.fold(
-        () => fail(),
-        _ =>
-          expect(_).toEqual({
-            ...aNewMessageStatus,
-            paymentStatus: PaymentStatusEnum.PAID
-          })
-      )
-    );
-  });
-});
-
 describe("findOneMessageStatusById", () => {
   it("should return an existing message status", async () => {
     const model = new MessageStatusModel(containerMock);
