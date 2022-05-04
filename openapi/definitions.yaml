@@ -305,15 +305,12 @@ CreatedMessageWithContent:
       $ref: "#/NewMessageContent"
     sender_service_id:
       $ref: "#/ServiceId"
-    feature_level_type: 
-      $ref: "#/FeatureLevelType"
   required:
     - id
     - fiscal_code
     - created_at
     - content
     - sender_service_id
-    - feature_level_type
 CreatedMessageWithoutContent:
   type: object
   properties:
@@ -327,14 +324,11 @@ CreatedMessageWithoutContent:
       $ref: "#/Timestamp"
     sender_service_id:
       $ref: "#/ServiceId"
-    feature_level_type: 
-      $ref: "#/FeatureLevelType"
   required:
     - id
     - fiscal_code
     - created_at
     - sender_service_id
-    - feature_level_type
 EnrichedMessage:
   allOf:
     - type: object
@@ -370,6 +364,69 @@ EnrichedMessage:
         - message_title
     - $ref: "#/MessageStatusAttributes"
 
+ExternalCreatedMessageWithoutContent:
+  allOf:
+    - $ref: "#/CreatedMessageWithoutContent"
+    - type: object
+      properties:
+        feature_level_type:
+          $ref: "#/FeatureLevelType"
+      required:
+        - feature_level_type
+ExternalCreatedMessageWithContent:
+  allOf:
+    - $ref: "#/CreatedMessageWithContent"
+    - type: object
+      properties:
+        feature_level_type:
+          $ref: "#/FeatureLevelType"
+      required:
+        - feature_level_type
+ExternalMessageResponseWithoutContent:
+  type: object
+  properties:
+    message:
+      $ref: "#/ExternalCreatedMessageWithoutContent"
+    notification:
+      $ref: "#/MessageResponseNotificationStatus"
+    status:
+      $ref: "#/MessageStatusValue"
+    read_status: 
+      $ref: "#/ReadStatus"
+      description: |-
+        Describes whether a user has read the message or not
+        NOTE  : This value is only available for ADVANCED messages
+        NOTE 2: `UNAVAILABLE` will be returned if user revoked the permission to access to read status
+    payment_status:
+      $ref: "#/PaymentStatus"
+      description: |-
+        Describes the state of the related payment notice
+        NOTE: This value is only available for ADVANCED payment messages
+  required:
+    - message
+ExternalMessageResponseWithContent:
+  type: object
+  properties:
+    message:
+      $ref: "#/ExternalCreatedMessageWithContent"
+    notification:
+      $ref: "#/MessageResponseNotificationStatus"
+    status:
+      $ref: "#/MessageStatusValue"
+    read_status: 
+      $ref: "#/ReadStatus"
+      description: |-
+        Describes whether a user has read the message or not
+        NOTE  : This value is only available for ADVANCED messages
+        NOTE 2: `UNAVAILABLE` will be returned if user revoked the permission to access to read status
+    payment_status:
+      $ref: "#/PaymentStatus"
+      description: |-
+        Describes the state of the related payment notice
+        NOTE: This value is only available for ADVANCED payment messages
+  required:
+    - message
+
 PublicMessage:
   x-one-of: true
   allOf:
@@ -391,17 +448,6 @@ MessageResponseWithContent:
       $ref: "#/MessageResponseNotificationStatus"
     status:
       $ref: "#/MessageStatusValue"
-    read_status: 
-      $ref: "#/ReadStatus"
-      description: |-
-        Describes whether a user has read the message or not
-        NOTE  : This value is only available for ADVANCED messages
-        NOTE 2: `UNAVAILABLE` will be returned if user revoked the permission to access to read status
-    payment_status:
-      $ref: "#/PaymentStatus"
-      description: |-
-        Describes the state of the related payment notice
-        NOTE: This value is only available for ADVANCED payment messages
   required:
     - message
 LegalMessageWithContent:

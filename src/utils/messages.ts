@@ -137,7 +137,6 @@ export const retrievedMessageToPublic = (
   retrievedMessage: RetrievedMessage
 ): CreatedMessageWithoutContent => ({
   created_at: retrievedMessage.createdAt,
-  feature_level_type: retrievedMessage.featureLevelType,
   fiscal_code: retrievedMessage.fiscalCode,
   id: retrievedMessage.id,
   sender_service_id: retrievedMessage.senderServiceId,
