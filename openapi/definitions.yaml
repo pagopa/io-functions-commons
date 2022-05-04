@@ -305,15 +305,12 @@ CreatedMessageWithContent:
       $ref: "#/NewMessageContent"
     sender_service_id:
       $ref: "#/ServiceId"
-    feature_level_type: 
-      $ref: "#/FeatureLevelType"
   required:
     - id
     - fiscal_code
     - created_at
     - content
     - sender_service_id
-    - feature_level_type
 CreatedMessageWithoutContent:
   type: object
   properties:
@@ -327,14 +324,11 @@ CreatedMessageWithoutContent:
       $ref: "#/Timestamp"
     sender_service_id:
       $ref: "#/ServiceId"
-    feature_level_type: 
-      $ref: "#/FeatureLevelType"
   required:
     - id
     - fiscal_code
     - created_at
     - sender_service_id
-    - feature_level_type
 EnrichedMessage:
   allOf:
     - type: object
@@ -369,6 +363,43 @@ EnrichedMessage:
         - organization_name
         - message_title
     - $ref: "#/MessageStatusAttributes"
+
+ExternalCreatedMessageWithoutContent:
+  allOf:
+    - $ref: "#/CreatedMessageWithoutContent"
+    - type: object
+      properties:
+        feature_level_type:
+          $ref: "#/FeatureLevelType"
+      required:
+        - feature_level_type
+ExternalCreatedMessageWithContent:
+  allOf:
+    - $ref: "#/CreatedMessageWithContent"
+    - type: object
+      properties:
+        feature_level_type:
+          $ref: "#/FeatureLevelType"
+      required:
+        - feature_level_type
+ExternalMessageResponseWithoutContent:
+  allOf:
+    - $ref: "#/MessageResponseWithoutContent"
+    - type: object
+      properties:
+        feature_level_type:
+          $ref: "#/FeatureLevelType"
+      required:
+        - feature_level_type
+ExternalMessageResponseWithContent:
+  allOf:
+    - $ref: "#/MessageResponseWithContent"
+    - type: object
+      properties:
+        feature_level_type:
+          $ref: "#/FeatureLevelType"
+      required:
+        - feature_level_type
 
 PublicMessage:
   x-one-of: true
