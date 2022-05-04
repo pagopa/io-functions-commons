@@ -1,4 +1,5 @@
 import { CreatedMessageWithContent } from "../../generated/definitions/CreatedMessageWithContent";
+import { ExternalCreatedMessageWithContent } from "../../generated/definitions/ExternalCreatedMessageWithContent";
 
 import { HiddenServicePayload } from "../../generated/definitions/HiddenServicePayload";
 import { ServicePayload } from "../../generated/definitions/ServicePayload";
@@ -415,6 +416,76 @@ describe("CreatedMessageWithContent definition", () => {
     ).toBeTruthy();
 
     const messageWithContent = CreatedMessageWithContent.decode(
+      aMessageWithContentWithPaymentDataWithPayee
+    );
+
+    expect(E.isRight(messageWithContent)).toBeTruthy();
+
+
+  });
+});
+
+describe("ExternalCreatedMessageWithContent definition", () => {
+  it("should decode STANDARD CreatedMessageWithContent with content and payment data with payee", () => {
+    const aMessageWithContentWithPaymentDataWithoutPayee = {
+      ...aMessageWithoutContent,
+      content: {
+        ...aContentWithoutPaymentData,
+        payment_data: { ...aPaymentDataWithoutPayee, payee: aPayee }
+      }
+    };
+
+    expect(
+      E.isRight(
+        Payee.decode(
+          aMessageWithContentWithPaymentDataWithoutPayee.content.payment_data
+            .payee
+        )
+      )
+    ).toBeTruthy();
+
+    const messageWithContent = ExternalCreatedMessageWithContent.decode(
+      aMessageWithContentWithPaymentDataWithoutPayee
+    );
+
+    expect(E.isRight(messageWithContent)).toBeTruthy();
+  });
+
+  it("should NOT decode ExternalCreatedMessageWithContent with content and payment data without payee", () => {
+    const aMessageWithContentWithPaymentDataWithoutPayee = {
+      ...aMessageWithoutContent,
+      content: {
+        ...aContentWithoutPaymentData,
+        payment_data: { ...aPaymentDataWithoutPayee }
+      }
+    };
+
+    const messageWithContent = ExternalCreatedMessageWithContent.decode(
+      aMessageWithContentWithPaymentDataWithoutPayee
+    );
+
+    expect(E.isLeft(messageWithContent)).toBeTruthy();
+  });
+
+  it("should decode ADVANCED ExternalCreatedMessageWithContent with content and payment data with payee", () => {
+    const aMessageWithContentWithPaymentDataWithPayee = {
+      ...aMessageWithoutContent,
+      feature_level_type: FeatureLevelTypeEnum.ADVANCED,
+      content: {
+        ...aContentWithoutPaymentData,
+        payment_data: { ...aPaymentDataWithoutPayee, payee: aPayee }
+      }
+    };
+
+    expect(
+      E.isRight(
+        Payee.decode(
+          aMessageWithContentWithPaymentDataWithPayee.content.payment_data.payee
+        )
+      )
+    ).toBeTruthy();
+
+    const messageWithContent = ExternalCreatedMessageWithContent.decode(
       aMessageWithContentWithPaymentDataWithPayee
     );
 
