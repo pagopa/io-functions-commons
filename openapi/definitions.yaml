@@ -367,17 +367,6 @@ EnrichedMessage:
     - $ref: "#/BaseEnrichedMessage"
     - $ref: "#/MessageStatusAttributes"
 
-GetMessageResponse:
-  x-one-of: true
-  allOf:
-    - type: object
-      properties:
-        message: 
-          $ref: '#/EnrichedMessage'
-      required:
-        - message
-    - $ref: "#/MessageResponseWithContent"
-
 ExternalCreatedMessageWithoutContent:
   allOf:
     - $ref: "#/CreatedMessageWithoutContent"
@@ -453,11 +442,23 @@ MessageResponseNotificationStatus:
       $ref: "#/NotificationChannelStatusValue"
     webhook:
       $ref: "#/NotificationChannelStatusValue"
+
+CreatedMessageWithContentAndEnrichedData:
+  allOf:
+    - $ref: "#/CreatedMessageWithContent"
+    - $ref: "#/EnrichedMessage"
+
+CreatedMessageWithContentResponse:
+  x-one-of: true
+  allOf:
+    - $ref: "#/CreatedMessageWithContent"
+    - $ref: "#/CreatedMessageWithContentAndEnrichedData"
+
 MessageResponseWithContent:
   type: object
   properties:
     message:
-      $ref: "#/CreatedMessageWithContent"
+      $ref: "#/CreatedMessageWithContentResponse"
     notification:
       $ref: "#/MessageResponseNotificationStatus"
     status:
