@@ -153,6 +153,43 @@ describe("find", () => {
       expect(result.left.kind).toBe("COSMOS_DECODING_ERROR");
     }
   });
+
+  it("should successfully validate a retrieved object without isAllowSendReadMessageStatus property", async () => {
+    const {
+      isAllowSendReadMessageStatus,
+      ...aRetrievedServicePreferenceWithoutIsAllowSendReadMessageStatus
+    } = aRetrievedServicePreference;
+
+    const containerMock = ({
+      item: jest.fn().mockImplementation((_, __) => ({
+        read: jest.fn(() =>
+          Promise.resolve({
+            resource: aRetrievedServicePreferenceWithoutIsAllowSendReadMessageStatus
+          })
+        )
+      }))
+    } as unknown) as Container;
+
+    const model = new ServicesPreferencesModel(
+      containerMock,
+      SERVICE_PREFERENCES_COLLECTION_NAME
+    );
+
+    const result = await model.find([
+      makeServicesPreferencesDocumentId(
+        aFiscalCode,
+        aServiceId,
+        0 as NonNegativeInteger
+      ),
+      aFiscalCode
+    ])();
+
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isSome(result.right)).toBeTruthy();
+      expect(O.toUndefined(result.right)).toEqual(aRetrievedServicePreference);
+    }
+  });
 });
 
 describe("create ServicePreference", () => {
@@ -179,5 +216,3 @@ describe("create ServicePreference", () => {
     }
   });
 });
-
-// Test read document with missing `isAllowSendReadMessageStatus`
