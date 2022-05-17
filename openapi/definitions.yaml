@@ -1145,6 +1145,9 @@ ServicePreference:
     It's needed by Citizens to express how they want Services to get in touch with them.
   type: object
   properties:
+    is_allowed_send_read_message_status:
+      type: boolean
+      default: true
     is_email_enabled:
       type: boolean
     is_inbox_enabled:

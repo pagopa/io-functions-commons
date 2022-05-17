@@ -22,6 +22,7 @@ const aServiceId = "aServiceId" as NonEmptyString;
 const aStoredServicePreference: ServicePreference = {
   fiscalCode: aFiscalCode,
   serviceId: aServiceId,
+  isAllowSendReadMessageStatus: true,
   isEmailEnabled: true,
   isInboxEnabled: true,
   settingsVersion: 0 as NonNegativeInteger,
@@ -36,6 +37,7 @@ const aNewServicePreference: NewServicePreference = {
   ),
   fiscalCode: aFiscalCode,
   serviceId: aServiceId,
+  isAllowSendReadMessageStatus: true,
   isEmailEnabled: true,
   isInboxEnabled: true,
   settingsVersion: 0 as NonNegativeInteger,
@@ -177,3 +179,5 @@ describe("create ServicePreference", () => {
     }
   });
 });
+
+// Test read document with missing `isAllowSendReadMessageStatus`

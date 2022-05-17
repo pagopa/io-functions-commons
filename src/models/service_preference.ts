@@ -4,6 +4,7 @@ import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { Container, RequestOptions } from "@azure/cosmos";
 import { TaskEither } from "fp-ts/lib/TaskEither";
+import { withDefault } from "@pagopa/ts-commons/lib/types";
 import { ServiceId } from "../../generated/definitions/ServiceId";
 import {
   BaseModel,
@@ -23,7 +24,11 @@ export const ServicePreference = t.interface({
   // the fiscal code of the citized associated to this service preference
   fiscalCode: FiscalCode,
 
+  // whether to allow to send read messages status to the sender
+  isAllowSendReadMessageStatus: withDefault(t.boolean, true),
+
   // whether to send email notifications for a specific service
+  // This property is NOT used.
   isEmailEnabled: t.boolean,
 
   // whether to store the content of messages sent to this citizen from a specific service
