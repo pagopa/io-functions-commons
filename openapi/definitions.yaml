@@ -103,6 +103,8 @@ MessageContent:
           $ref: '#/LegalData'
         eu_covid_cert:
           $ref: "#/EUCovidCert"
+        third_party_data:
+          $ref: "#/ThirdPartyData"
         due_date:
           $ref: "#/Timestamp"
 NewMessageContent:
@@ -118,6 +120,8 @@ NewMessageContent:
           $ref: "#/PrescriptionData"
         eu_covid_cert:
           $ref: "#/EUCovidCert"
+        third_party_data:
+          $ref: "#/ThirdPartyData"
         legal_data:
           $ref: '#/LegalData'
 NewMessage:
@@ -176,6 +180,29 @@ LegalData:
     - sender_mail_from
     - has_attachment
     - message_unique_id
+ThirdPartyData:
+  type: object
+  description: |-
+    Paylod containing all information needed to retrieve and visualize third party message details
+  properties:
+    id:
+      type: string
+      description: Unique id for retrieving third party enriched information about the message
+    original_sender:
+        type: string
+        description: |-
+          Either a ServiceId or a simple string representing the sender name
+        minLength: 1
+    has_attachments:
+      type: boolean
+      default: false
+    external_receipt_date:
+      $ref: "#/Timestamp"
+    summary:
+      type: string
+      minLength: 1
+  required:
+    - id
 EUCovidCert:
   type: object
   description: |-
