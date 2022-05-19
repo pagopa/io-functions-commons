@@ -194,8 +194,8 @@ describe("Models |> ServicePreference", () => {
       model.create(newDoc),
       TE.bimap(
         error => {
-          expect(error).toBeTruthy();
-          console.log(error);
+            expect(error).toBeTruthy();
+            expect(error.kind).toEqual("COSMOS_DECODING_ERROR");
         },
         result => fail(`Created invalid doc, error: ${JSON.stringify(result)}`)
       ),
