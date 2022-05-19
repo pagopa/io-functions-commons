@@ -42,7 +42,7 @@ const aServicePreference: ServicePreference = pipe(
 );
 
 describe("Models |> ServicePreference", () => {
-  it("should save and retrieve documents", async () => {
+  it("should save and retrieve valid documents", async () => {
     const context = createContext(SERVICE_PREFERENCES_MODEL_PK_FIELD);
     await context.init();
     const model = new ServicesPreferencesModel(
@@ -118,7 +118,7 @@ describe("Models |> ServicePreference", () => {
     context.dispose();
   });
 
-  it("should read documents with default isAllowSendReadMessageStatus", async () => {
+  it("should read documents with a default isAllowSendReadMessageStatus when not present", async () => {
     const context = createContext(SERVICE_PREFERENCES_MODEL_PK_FIELD);
     await context.init();
     const model = new ServicesPreferencesModel(
@@ -169,6 +169,37 @@ describe("Models |> ServicePreference", () => {
           );
         }
       )
+    )();
+
+    context.dispose();
+  });
+
+  it("should fail to save not valid documents", async () => {
+    const context = createContext(SERVICE_PREFERENCES_MODEL_PK_FIELD);
+    await context.init();
+    const model = new ServicesPreferencesModel(
+      context.container,
+      SERVICE_PREFERENCES_COLLECTION_NAME
+    );
+
+    // @ts-ignore to force bad behaviour
+    const newDoc = {
+      kind: "INewServicePreference" as const,
+      ...aServicePreference,
+      fiscalCode: undefined
+    } as NewServicePreference;
+
+    // create a new document
+    const created = await pipe(
+      model.create(newDoc),
+      TE.bimap(
+        error => {
+          expect(error).toBeTruthy();
+          console.log(error);
+        },
+        result => fail(`Created invalid doc, error: ${JSON.stringify(result)}`)
+      ),
+      TE.toUnion
     )();
 
     context.dispose();
