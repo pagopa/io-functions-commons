@@ -183,7 +183,7 @@ LegalData:
 ThirdPartyData:
   type: object
   description: |-
-    Paylod containing all information needed to retrieve and visualize third party message details
+    Payload containing all information needed to retrieve and visualize third party message details
   properties:
     id:
       type: string
