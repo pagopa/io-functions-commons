@@ -96,7 +96,10 @@ export enum UserGroup {
 
   // Advanced Message handling (read / write)
   ApiMessageWriteAdvanced = "ApiMessageWriteAdvanced",
-  ApiMessageReadAdvanced = "ApiMessageReadAdvanced"
+  ApiMessageReadAdvanced = "ApiMessageReadAdvanced",
+
+  // 3rd party Message handling
+  ApiThirdPartyMessageWrite = "ApiThirdPartyMessageWrite"
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
