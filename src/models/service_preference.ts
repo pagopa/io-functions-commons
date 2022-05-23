@@ -20,22 +20,12 @@ export const SERVICE_PREFERENCES_MODEL_PK_FIELD = "fiscalCode" as const;
 /**
  * Base interface for ServicePreference objects
  */
-export const ServicePreference = t.interface({
+export const BasicServicePreferences = t.interface({
   // the fiscal code of the citized associated to this service preference
   fiscalCode: FiscalCode,
 
-  // whether to allow to send read messages status to the sender
-  isAllowSendReadMessageStatus: withDefault(t.boolean, true),
-
-  // whether to send email notifications for a specific service
-  // This property is NOT used.
-  isEmailEnabled: t.boolean,
-
   // whether to store the content of messages sent to this citizen from a specific service
   isInboxEnabled: t.boolean,
-
-  // whether to push notifications to the default webhook for a specific service
-  isWebhookEnabled: t.boolean,
 
   // the identifier of the service to which this preference refers
   // this equals user's subscriptionId
@@ -45,6 +35,54 @@ export const ServicePreference = t.interface({
   // this value refers to servicePreferencesSettings.version in user Profile
   settingsVersion: NonNegativeInteger
 });
+export type BasicServicePreferences = t.TypeOf<typeof BasicServicePreferences>;
+
+export const EnabledInboxServicePreferences = t.intersection([
+  BasicServicePreferences,
+  t.interface({
+    // whether to allow to send read messages status to the sender
+    isAllowSendReadMessageStatus: withDefault(t.boolean, true),
+
+    // whether to send email notifications for a specific service
+    // This property is NOT used.
+    isEmailEnabled: t.boolean,
+
+    // whether to store the content of messages sent to this citizen from a specific service
+    isInboxEnabled: t.literal(true),
+
+    // whether to push notifications to the default webhook for a specific service
+    isWebhookEnabled: t.boolean
+  })
+]);
+export type EnabledInboxServicePreferences = t.TypeOf<
+  typeof EnabledInboxServicePreferences
+>;
+
+export const DisabledInboxServicePreferences = t.intersection([
+  BasicServicePreferences,
+  t.interface({
+    //do not allow to send read messages status to the sender
+    isAllowSendReadMessageStatus: withDefault(t.literal(false), false),
+
+    // do not to send email notifications for a specific service
+    // This property is NOT used.
+    isEmailEnabled: t.literal(false),
+
+    // whether to store the content of messages sent to this citizen from a specific service
+    isInboxEnabled: t.literal(false),
+
+    // do not to push notifications to the default webhook for a specific service
+    isWebhookEnabled: t.literal(false)
+  })
+]);
+export type DisabledInboxServicePreferences = t.TypeOf<
+  typeof DisabledInboxServicePreferences
+>;
+
+export const ServicePreference = t.union([
+  EnabledInboxServicePreferences,
+  DisabledInboxServicePreferences
+]);
 export type ServicePreference = t.TypeOf<typeof ServicePreference>;
 
 export const NewServicePreference = wrapWithKind(
