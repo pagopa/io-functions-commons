@@ -61,7 +61,7 @@ export type EnabledInboxServicePreferences = t.TypeOf<
 export const DisabledInboxServicePreferences = t.intersection([
   BasicServicePreferences,
   t.interface({
-    //do not allow to send read messages status to the sender
+    // do not allow to send read messages status to the sender
     isAllowSendReadMessageStatus: withDefault(t.literal(false), false),
 
     // do not to send email notifications for a specific service
