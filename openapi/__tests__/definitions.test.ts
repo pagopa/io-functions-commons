@@ -215,6 +215,14 @@ const aContentWithLegalData = {
   }
 };
 
+const aContentWithThirdPartyData = {
+  ...aContentWithoutPaymentData,
+  third_party_data: {
+    id: "aThirdPartyId",
+    original_sender: "Comune di Mêlée"
+  }
+};
+
 const aPayee: Payee = { fiscal_code: anOrganizationFiscalCode };
 
 describe("NewMessage definition", () => {
@@ -420,8 +428,6 @@ describe("CreatedMessageWithContent definition", () => {
     );
 
     expect(E.isRight(messageWithContent)).toBeTruthy();
-
-
   });
 });
 
@@ -545,6 +551,27 @@ describe("Type definition", () => {
       E.fold(
         () => fail(),
         value => expect(value).toEqual(aContentWithLegalData)
+      )
+    );
+  });
+
+  it("should decode MessageContent with content with Third Party data", () => {
+    const decodedMessageContent = MessageContent.decode(
+      aContentWithThirdPartyData
+    );
+
+    pipe(
+      decodedMessageContent,
+      E.fold(
+        () => fail(),
+        value =>
+          expect(value).toEqual({
+            ...aContentWithThirdPartyData,
+            third_party_data: {
+              ...aContentWithThirdPartyData.third_party_data,
+              has_attachments: false
+            }
+          })
       )
     );
   });
