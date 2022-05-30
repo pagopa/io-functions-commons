@@ -59,6 +59,50 @@ const aRetrievedServicePreference: RetrievedServicePreference = {
   ...aStoredServicePreference
 };
 
+describe("ServicePreference::Codec", () => {
+  it("should fail decoding a disabled inbox ServicePreference with enabled preferences", async () => {
+    const aWrongServicePreference = {
+      ...aStoredServicePreference,
+      isInboxEnabled: false,
+      isAllowSendReadMessageStatus: true,
+      isEmailEnabled: true,
+      isWebhookEnabled: true
+    };
+
+    const result = ServicePreference.decode(aWrongServicePreference);
+
+    expect(E.isLeft(result)).toBeTruthy();
+  });
+
+  it("should succeed decoding a correctly disabled ServicePreference", async () => {
+    const aWrongServicePreference = {
+      ...aStoredServicePreference,
+      isInboxEnabled: false,
+      isAllowSendReadMessageStatus: false,
+      isEmailEnabled: false,
+      isWebhookEnabled: false
+    };
+
+    const result = ServicePreference.decode(aWrongServicePreference);
+
+    expect(E.isRight(result)).toBeTruthy();
+  });
+
+  it("should succeed decoding a correctly enabled ServicePreference", async () => {
+    const aWrongServicePreference = {
+      ...aStoredServicePreference,
+      isInboxEnabled: true,
+      isAllowSendReadMessageStatus: false,
+      isEmailEnabled: true,
+      isWebhookEnabled: false
+    };
+
+    const result = ServicePreference.decode(aWrongServicePreference);
+
+    expect(E.isRight(result)).toBeTruthy();
+  });
+});
+
 describe("find", () => {
   it("should resolve to an existing profile", async () => {
     const containerMock = ({
