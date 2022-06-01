@@ -188,6 +188,7 @@ ThirdPartyData:
     id:
       type: string
       description: Unique id for retrieving third party enriched information about the message
+      minLength: 1
     original_sender:
         type: string
         description: |-
