@@ -597,6 +597,28 @@ describe("Type definition", () => {
     );
   });
 
+  it("should fail decoding a MessageContent with Third Party data with empty id", () => {
+    const aContentWithThirdPartyDataWithoutId = {
+      ...aContentWithoutPaymentData,
+      third_party_data: {
+        id: "",
+        original_sender: "Comune di Mêlée"
+      }
+    };
+
+    const decodedMessageContent = MessageContent.decode(
+      aContentWithThirdPartyDataWithoutId
+    );
+
+    pipe(
+      decodedMessageContent,
+      E.fold(
+        () => expect(1).toBe(1),
+        _ => fail()
+      )
+    );
+  });
+
   it("should fail decoding a MessageContent with Third Party data without with empty summary", () => {
     const aContentWithThirdPartyDataWithoutSummary = {
       ...aContentWithThirdPartyData,
