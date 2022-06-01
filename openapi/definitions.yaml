@@ -1378,12 +1378,16 @@ ThirdPartyAttachment:
   properties:
       id:
         type: string
+        minLength: 1
       content_type:
         type: string
+        minLength: 1
       name:
         type: string
+        minLength: 1
       url:
         type: string
+        minLength: 1
   required:
     - id
     - name
