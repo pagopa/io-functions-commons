@@ -1224,6 +1224,7 @@ MessageCategory:
   allOf:
     - $ref: "#/MessageCategoryPayment"
     - $ref: "#/MessageCategoryBase"
+    - $ref: "#/MessageCategoryPN"
 MessageCategoryBase:
   type: object
   properties:
@@ -1247,6 +1248,17 @@ MessageCategoryPayment:
   required:
     - tag
     - rptId
+MessageCategoryPN:
+  allOf:
+    - $ref: "#/ThirdPartyData"
+    - type: object
+      properties: 
+        tag:
+          type: string
+          enum:
+            - PN
+      required:
+        - tag
 LegalMessage:
   type: object
   properties:
