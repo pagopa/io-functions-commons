@@ -1372,7 +1372,7 @@ ThirdPartyMessage:
       items: 
         $ref: "#/ThirdPartyAttachment"
   required:
-    - items
+    - attachments
 ThirdPartyAttachment:
   type: object
   properties:
