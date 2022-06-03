@@ -21,7 +21,8 @@ const aComponents: Components = {
   attachments: { has: false },
   euCovidCert: { has: false },
   legalData: { has: false },
-  payment: { has: false }
+  payment: { has: false },
+  thirdParty: { has: false }
 };
 
 const aStatus: Status = {
@@ -73,6 +74,51 @@ describe("message_view", () => {
   it("GIVEN a valid message_view object WHEN the object is decode THEN the decode succeed", async () => {
     const result = MessageView.decode(aMessageView);
     expect(E.isRight(result)).toBeTruthy();
+  });
+
+  it("GIVEN a valid message_view object with thirdParty WHEN the object does not contain a valid id THEN the decode fails", async () => {
+    const messageViewWithThirdParty = {
+      ...aMessageView,
+      components: {
+        ...aMessageView.components,
+        thirdParty: {
+          has: true,
+          id: ""
+        }
+      }
+    };
+    const result = MessageView.decode(messageViewWithThirdParty);
+    expect(E.isLeft(result)).toBeTruthy();
+  });
+
+  it("GIVEN a valid message_view object with thirdParty WHEN the object contains a valid id THEN the decode succeed", async () => {
+    const messageViewWithThirdParty = {
+      ...aMessageView,
+      components: {
+        ...aMessageView.components,
+        thirdParty: {
+          has: true,
+          id: "AN_ID"
+        }
+      }
+    };
+    pipe(
+      messageViewWithThirdParty,
+      MessageView.decode,
+      E.mapLeft(_ => fail(errorsToReadableMessages(_))),
+      E.map(decoded => {
+        expect(decoded).toEqual({
+          ...messageViewWithThirdParty,
+          components: {
+            ...messageViewWithThirdParty.components,
+            thirdParty: {
+              ...messageViewWithThirdParty.components.thirdParty,
+              has_attachments: false
+            }
+          }
+        });
+      })
+    );
   });
 
   it("GIVEN a valid message_view object with payment WHEN the object does not contain a valid paymentStatus THEN the decode fails", async () => {

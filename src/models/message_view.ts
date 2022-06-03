@@ -41,11 +41,30 @@ export const PaymentComponent = t.union([
 
 export type PaymentComponent = t.TypeOf<typeof PaymentComponent>;
 
+export const ThirdPartyComponent = t.union([
+  t.exact(NotHasComponent),
+  t.intersection([
+    HasComponent,
+    t.interface({
+      has_attachments: withDefault(t.boolean, false),
+      id: NonEmptyString
+    }),
+    t.partial({
+      original_receipt_date: Timestamp,
+      original_sender: NonEmptyString,
+      summary: NonEmptyString
+    })
+  ])
+]);
+
+export type ThirdPartyComponent = t.TypeOf<typeof ThirdPartyComponent>;
+
 export const Components = t.interface({
   attachments: Component,
   euCovidCert: Component,
   legalData: Component,
-  payment: PaymentComponent
+  payment: PaymentComponent,
+  thirdParty: ThirdPartyComponent
 });
 export type Components = t.TypeOf<typeof Components>;
 
