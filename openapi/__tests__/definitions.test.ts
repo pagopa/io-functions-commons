@@ -927,4 +927,21 @@ describe("ThirdPartyMessage", () => {
       E.mapLeft(_ => fail())
     );
   });
+
+  it("should decode a ThirdPartyMessage with attachments", async () => {
+    const aThirdPartyMessage = {
+      attachments: [
+        { id: "anId", url: "an/Url" },
+        { id: "anotherId", url: "another/Url", name: "anotherName" }
+      ]
+    };
+
+    const decoded = ThirdPartyMessage.decode(aThirdPartyMessage);
+
+    pipe(
+      decoded,
+      E.map(d => expect(d).toEqual(aThirdPartyMessage)),
+      E.mapLeft(_ => fail())
+    );
+  });
 });

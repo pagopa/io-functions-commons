@@ -1394,7 +1394,6 @@ ThirdPartyAttachment:
         minLength: 1
   required:
     - id
-    - name
     - url
 MessageStatusReadingChange:
   type: object
