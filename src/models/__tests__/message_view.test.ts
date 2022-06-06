@@ -194,6 +194,14 @@ describe("message_view", () => {
       );
     }
   });
+
+  it("GIVEN a valid message_view without third party object WHEN the object is decode THEN the decode succeed", async () => {
+    const result = MessageView.decode({
+      ...aMessageView,
+      components: { ...aComponents, thirdParty: undefined }
+    });
+    expect(E.isRight(result)).toBeTruthy();
+  });
 });
 
 describe("create", () => {
