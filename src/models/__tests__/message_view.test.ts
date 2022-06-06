@@ -196,9 +196,11 @@ describe("message_view", () => {
   });
 
   it("GIVEN a valid message_view without third party object WHEN the object is decode THEN the decode succeed", async () => {
+    const { thirdParty, ...componentsWithoutThirdParty } = aComponents;
+
     const result = MessageView.decode({
       ...aMessageView,
-      components: { ...aComponents, thirdParty: undefined }
+      components: componentsWithoutThirdParty
     });
     expect(E.isRight(result)).toBeTruthy();
   });
