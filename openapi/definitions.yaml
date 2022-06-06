@@ -521,6 +521,15 @@ LegalMessageResponseWithContent:
           $ref: "#/LegalMessageWithContent"
       required:
         - message
+ThirdPartyMessageWithContent:
+  allOf:
+    - $ref: "#/CreatedMessageWithContent"
+    - type: object
+      properties:
+        third_party_message:
+          $ref: "#/ThirdPartyMessage"
+      required:
+        - third_party_message
 MessageResponseWithoutContent:
   type: object
   properties:
@@ -1367,6 +1376,37 @@ ImpersonatedService:
     - service_id
     - user_groups
     - user_email
+ThirdPartyMessage:
+  allOf:
+    # We expects additional properties to be free-form objects
+    - type: object
+      additionalProperties: true
+    - type: object
+      properties:
+        attachments: 
+          type: array
+          items: 
+            $ref: "#/ThirdPartyAttachment"
+  required:
+    - attachments
+ThirdPartyAttachment:
+  type: object
+  properties:
+      id:
+        type: string
+        minLength: 1
+      content_type:
+        type: string
+        minLength: 1
+      name:
+        type: string
+        minLength: 1
+      url:
+        type: string
+        minLength: 1
+  required:
+    - id
+    - url
 MessageStatusReadingChange:
   type: object
   properties:
