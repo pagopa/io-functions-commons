@@ -32,6 +32,7 @@ import { Change_typeEnum as BulkChangeType } from "../../generated/definitions/M
 import { Change_typeEnum as ReadingChangeType } from "../../generated/definitions/MessageStatusReadingChange";
 import { Change_typeEnum as ArchinvingChangeType } from "../../generated/definitions/MessageStatusArchivingChange";
 import { FeatureLevelTypeEnum } from "../../generated/definitions/FeatureLevelType";
+import { ThirdPartyMessage } from "../../generated/definitions/ThirdPartyMessage";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -889,6 +890,41 @@ describe("MessageStatusChange", () => {
         () => fail(),
         value => expect(value).toEqual(aRightBulkChange)
       )
+    );
+  });
+});
+
+describe("ThirdPartyMessage", () => {
+  it("should decode a ThirdPartyMessage with empty attachment list", async () => {
+    const aThirdPartyMessage = {
+      attachments: []
+    };
+
+    const decoded = ThirdPartyMessage.decode(aThirdPartyMessage);
+
+    pipe(
+      decoded,
+      E.map(d => expect(d).toEqual(aThirdPartyMessage)),
+      E.mapLeft(_ => fail())
+    );
+  });
+
+  it("should decode a ThirdPartyMessage with extra data", async () => {
+    const aThirdPartyMessage = {
+      attachments: [],
+      extra_data_1: {
+        extra_data_1: 42,
+        extra_data_2: "42"
+      },
+      extra_data_2: ["42", "43"]
+    };
+
+    const decoded = ThirdPartyMessage.decode(aThirdPartyMessage);
+
+    pipe(
+      decoded,
+      E.map(d => expect(d).toEqual(aThirdPartyMessage)),
+      E.mapLeft(_ => fail())
     );
   });
 });
