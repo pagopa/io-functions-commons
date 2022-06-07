@@ -1377,16 +1377,17 @@ ImpersonatedService:
     - user_groups
     - user_email
 ThirdPartyMessage:
-  allOf:
+  type: object
+  properties:
+    attachments: 
+      type: array
+      items: 
+        $ref: "#/ThirdPartyAttachment"
+      default: "[]"
     # We expects additional properties to be free-form objects
-    - type: object
+    details:
+      type: object
       additionalProperties: true
-    - type: object
-      properties:
-        attachments: 
-          type: array
-          items: 
-            $ref: "#/ThirdPartyAttachment"
   required:
     - attachments
 ThirdPartyAttachment:
