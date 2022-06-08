@@ -909,14 +909,28 @@ describe("ThirdPartyMessage", () => {
     );
   });
 
-  it("should decode a ThirdPartyMessage with extra data", async () => {
+  it("should decode a ThirdPartyMessage without attachment list", async () => {
+    const aThirdPartyMessage = {};
+
+    const decoded = ThirdPartyMessage.decode(aThirdPartyMessage);
+
+    pipe(
+      decoded,
+      E.map(d => expect(d).toEqual(aThirdPartyMessage)),
+      E.mapLeft(_ => fail())
+    );
+  });
+
+  it("should decode a ThirdPartyMessage with details", async () => {
     const aThirdPartyMessage = {
       attachments: [],
-      extra_data_1: {
-        extra_data_1: 42,
-        extra_data_2: "42"
-      },
-      extra_data_2: ["42", "43"]
+      details: {
+        extra_data_1: {
+          extra_data_1: 42,
+          extra_data_2: "42"
+        },
+        extra_data_2: ["42", "43"]
+      }
     };
 
     const decoded = ThirdPartyMessage.decode(aThirdPartyMessage);
