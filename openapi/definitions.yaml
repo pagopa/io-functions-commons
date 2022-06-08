@@ -1383,13 +1383,10 @@ ThirdPartyMessage:
       type: array
       items: 
         $ref: "#/ThirdPartyAttachment"
-      default: "[]"
     # We expects additional properties to be free-form objects
     details:
       type: object
       additionalProperties: true
-  required:
-    - attachments
 ThirdPartyAttachment:
   type: object
   properties:

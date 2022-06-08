@@ -916,7 +916,7 @@ describe("ThirdPartyMessage", () => {
 
     pipe(
       decoded,
-      E.map(d => expect(d).toEqual({ ...aThirdPartyMessage, attachments: [] })),
+      E.map(d => expect(d).toEqual(aThirdPartyMessage)),
       E.mapLeft(_ => fail())
     );
   });
