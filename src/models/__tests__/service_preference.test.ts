@@ -9,6 +9,7 @@ import {
   makeServicesPreferencesDocumentId,
   NewServicePreference,
   RetrievedServicePreference,
+  SendReadMessageStatusEnum,
   ServicePreference,
   ServicesPreferencesModel,
   SERVICE_PREFERENCES_COLLECTION_NAME
@@ -22,7 +23,7 @@ const aServiceId = "aServiceId" as NonEmptyString;
 const aStoredServicePreference: ServicePreference = {
   fiscalCode: aFiscalCode,
   serviceId: aServiceId,
-  isAllowSendReadMessageStatus: true,
+  sendReadMessageStatus: SendReadMessageStatusEnum.ALLOW,
   isEmailEnabled: true,
   isInboxEnabled: true,
   settingsVersion: 0 as NonNegativeInteger,
@@ -37,7 +38,7 @@ const aNewServicePreference: NewServicePreference = {
   ),
   fiscalCode: aFiscalCode,
   serviceId: aServiceId,
-  isAllowSendReadMessageStatus: true,
+  sendReadMessageStatus: SendReadMessageStatusEnum.ALLOW,
   isEmailEnabled: true,
   isInboxEnabled: true,
   settingsVersion: 0 as NonNegativeInteger,
@@ -64,7 +65,7 @@ describe("ServicePreference::Codec", () => {
     const aWrongServicePreference = {
       ...aStoredServicePreference,
       isInboxEnabled: false,
-      isAllowSendReadMessageStatus: true,
+      sendReadMessageStatus: SendReadMessageStatusEnum.ALLOW,
       isEmailEnabled: true,
       isWebhookEnabled: true
     };
@@ -78,7 +79,7 @@ describe("ServicePreference::Codec", () => {
     const aWrongServicePreference = {
       ...aStoredServicePreference,
       isInboxEnabled: false,
-      isAllowSendReadMessageStatus: false,
+      sendReadMessageStatus: SendReadMessageStatusEnum.DENY,
       isEmailEnabled: false,
       isWebhookEnabled: false
     };
@@ -92,7 +93,7 @@ describe("ServicePreference::Codec", () => {
     const aWrongServicePreference = {
       ...aStoredServicePreference,
       isInboxEnabled: true,
-      isAllowSendReadMessageStatus: false,
+      sendReadMessageStatus: SendReadMessageStatusEnum.DENY,
       isEmailEnabled: true,
       isWebhookEnabled: false
     };
@@ -198,17 +199,17 @@ describe("find", () => {
     }
   });
 
-  it("should successfully validate a retrieved object without isAllowSendReadMessageStatus property", async () => {
+  it("should successfully validate a retrieved object without sendReadMessageStatus property", async () => {
     const {
-      isAllowSendReadMessageStatus,
-      ...aRetrievedServicePreferenceWithoutIsAllowSendReadMessageStatus
+      sendReadMessageStatus,
+      ...aRetrievedServicePreferenceWithoutSendReadMessageStatus
     } = aRetrievedServicePreference;
 
     const containerMock = ({
       item: jest.fn().mockImplementation((_, __) => ({
         read: jest.fn(() =>
           Promise.resolve({
-            resource: aRetrievedServicePreferenceWithoutIsAllowSendReadMessageStatus
+            resource: aRetrievedServicePreferenceWithoutSendReadMessageStatus
           })
         )
       }))
@@ -231,7 +232,10 @@ describe("find", () => {
     expect(E.isRight(result)).toBeTruthy();
     if (E.isRight(result)) {
       expect(O.isSome(result.right)).toBeTruthy();
-      expect(O.toUndefined(result.right)).toEqual(aRetrievedServicePreference);
+      expect(O.toUndefined(result.right)).toEqual({
+        ...aRetrievedServicePreference,
+        sendReadMessageStatus: SendReadMessageStatusEnum.UNKNOWN
+      });
     }
   });
 });

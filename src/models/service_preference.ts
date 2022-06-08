@@ -5,6 +5,7 @@ import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { Container, RequestOptions } from "@azure/cosmos";
 import { TaskEither } from "fp-ts/lib/TaskEither";
 import { withDefault } from "@pagopa/ts-commons/lib/types";
+import { enumType } from "@pagopa/ts-commons/lib/types";
 import { ServiceId } from "../../generated/definitions/ServiceId";
 import {
   BaseModel,
@@ -16,6 +17,20 @@ import { wrapWithKind } from "../utils/types";
 
 export const SERVICE_PREFERENCES_COLLECTION_NAME = "services-preferences" as NonEmptyString;
 export const SERVICE_PREFERENCES_MODEL_PK_FIELD = "fiscalCode" as const;
+
+/**
+ * Enumeration of possible SendReadMessageStatus choices
+ */
+export enum SendReadMessageStatusEnum {
+  "UNKNOWN" = "UNKNOWN",
+  "ALLOW" = "ALLOW",
+  "DENY" = "DENY"
+}
+export const SendReadMessageStatus = enumType<SendReadMessageStatusEnum>(
+  SendReadMessageStatusEnum,
+  "SendReadMessageStatusEnum"
+);
+export type SendReadMessageStatus = t.TypeOf<typeof SendReadMessageStatus>;
 
 /**
  * Base interface for ServicePreference objects
@@ -41,7 +56,10 @@ export const EnabledInboxServicePreferences = t.intersection([
   BasicServicePreferences,
   t.interface({
     // whether to allow to send read messages status to the sender
-    isAllowSendReadMessageStatus: withDefault(t.boolean, true),
+    sendReadMessageStatus: withDefault(
+      SendReadMessageStatus,
+      SendReadMessageStatusEnum.UNKNOWN
+    ),
 
     // whether to send email notifications for a specific service
     // This property is NOT used.
@@ -62,7 +80,13 @@ export const DisabledInboxServicePreferences = t.intersection([
   BasicServicePreferences,
   t.interface({
     // do not allow to send read messages status to the sender
-    isAllowSendReadMessageStatus: withDefault(t.literal(false), false),
+    sendReadMessageStatus: withDefault(
+      t.keyof({
+        [SendReadMessageStatusEnum.UNKNOWN]: null,
+        [SendReadMessageStatusEnum.DENY]: null
+      }),
+      SendReadMessageStatusEnum.UNKNOWN
+    ),
 
     // do not to send email notifications for a specific service
     // This property is NOT used.
