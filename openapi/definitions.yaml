@@ -1167,10 +1167,10 @@ ServicePreference:
     - $ref: "#/BasicServicePreference"
     - type: object
       properties:
-        is_allowed_send_read_message_status:
+        can_access_message_read_status:
           type: boolean
       required:
-        - is_allowed_send_read_message_status
+        - can_access_message_read_status
 UpsertServicePreference:
   description: |-
     Define a set of preferences of a Citizen for a given Service.
@@ -1179,7 +1179,7 @@ UpsertServicePreference:
     - $ref: "#/BasicServicePreference"
     - type: object
       properties:
-        is_allowed_send_read_message_status:
+        can_access_message_read_status:
           type: boolean
 ActivationStatus:
   type: string
