@@ -9,7 +9,7 @@ import {
   makeServicesPreferencesDocumentId,
   NewServicePreference,
   RetrievedServicePreference,
-  SendReadMessageStatusEnum,
+  AccessReadMessageStatusEnum,
   ServicePreference,
   ServicesPreferencesModel,
   SERVICE_PREFERENCES_COLLECTION_NAME
@@ -23,7 +23,7 @@ const aServiceId = "aServiceId" as NonEmptyString;
 const aStoredServicePreference: ServicePreference = {
   fiscalCode: aFiscalCode,
   serviceId: aServiceId,
-  sendReadMessageStatus: SendReadMessageStatusEnum.ALLOW,
+  accessReadMessageStatus: AccessReadMessageStatusEnum.ALLOW,
   isEmailEnabled: true,
   isInboxEnabled: true,
   settingsVersion: 0 as NonNegativeInteger,
@@ -38,7 +38,7 @@ const aNewServicePreference: NewServicePreference = {
   ),
   fiscalCode: aFiscalCode,
   serviceId: aServiceId,
-  sendReadMessageStatus: SendReadMessageStatusEnum.ALLOW,
+  accessReadMessageStatus: AccessReadMessageStatusEnum.ALLOW,
   isEmailEnabled: true,
   isInboxEnabled: true,
   settingsVersion: 0 as NonNegativeInteger,
@@ -65,7 +65,7 @@ describe("ServicePreference::Codec", () => {
     const aWrongServicePreference = {
       ...aStoredServicePreference,
       isInboxEnabled: false,
-      sendReadMessageStatus: SendReadMessageStatusEnum.ALLOW,
+      accessReadMessageStatus: AccessReadMessageStatusEnum.ALLOW,
       isEmailEnabled: true,
       isWebhookEnabled: true
     };
@@ -79,7 +79,7 @@ describe("ServicePreference::Codec", () => {
     const aWrongServicePreference = {
       ...aStoredServicePreference,
       isInboxEnabled: false,
-      sendReadMessageStatus: SendReadMessageStatusEnum.DENY,
+      accessReadMessageStatus: AccessReadMessageStatusEnum.DENY,
       isEmailEnabled: false,
       isWebhookEnabled: false
     };
@@ -93,7 +93,7 @@ describe("ServicePreference::Codec", () => {
     const aWrongServicePreference = {
       ...aStoredServicePreference,
       isInboxEnabled: true,
-      sendReadMessageStatus: SendReadMessageStatusEnum.DENY,
+      accessReadMessageStatus: AccessReadMessageStatusEnum.DENY,
       isEmailEnabled: true,
       isWebhookEnabled: false
     };
@@ -201,7 +201,7 @@ describe("find", () => {
 
   it("should successfully validate a retrieved object without sendReadMessageStatus property", async () => {
     const {
-      sendReadMessageStatus,
+      accessReadMessageStatus,
       ...aRetrievedServicePreferenceWithoutSendReadMessageStatus
     } = aRetrievedServicePreference;
 
@@ -234,7 +234,7 @@ describe("find", () => {
       expect(O.isSome(result.right)).toBeTruthy();
       expect(O.toUndefined(result.right)).toEqual({
         ...aRetrievedServicePreference,
-        sendReadMessageStatus: SendReadMessageStatusEnum.UNKNOWN
+        accessReadMessageStatus: AccessReadMessageStatusEnum.UNKNOWN
       });
     }
   });

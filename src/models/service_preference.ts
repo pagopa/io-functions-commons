@@ -21,16 +21,16 @@ export const SERVICE_PREFERENCES_MODEL_PK_FIELD = "fiscalCode" as const;
 /**
  * Enumeration of possible SendReadMessageStatus choices
  */
-export enum SendReadMessageStatusEnum {
+export enum AccessReadMessageStatusEnum {
   "UNKNOWN" = "UNKNOWN",
   "ALLOW" = "ALLOW",
   "DENY" = "DENY"
 }
-export const SendReadMessageStatus = enumType<SendReadMessageStatusEnum>(
-  SendReadMessageStatusEnum,
-  "SendReadMessageStatusEnum"
+export const AccessReadMessageStatus = enumType<AccessReadMessageStatusEnum>(
+  AccessReadMessageStatusEnum,
+  "AccessReadMessageStatusEnum"
 );
-export type SendReadMessageStatus = t.TypeOf<typeof SendReadMessageStatus>;
+export type AccessReadMessageStatus = t.TypeOf<typeof AccessReadMessageStatus>;
 
 /**
  * Base interface for ServicePreference objects
@@ -55,6 +55,12 @@ export type BasicServicePreferences = t.TypeOf<typeof BasicServicePreferences>;
 export const EnabledInboxServicePreferences = t.intersection([
   BasicServicePreferences,
   t.interface({
+    // whether to allow to send read messages status to the sender
+    accessReadMessageStatus: withDefault(
+      AccessReadMessageStatus,
+      AccessReadMessageStatusEnum.UNKNOWN
+    ),
+
     // whether to send email notifications for a specific service
     // This property is NOT used.
     isEmailEnabled: t.boolean,
@@ -63,13 +69,7 @@ export const EnabledInboxServicePreferences = t.intersection([
     isInboxEnabled: t.literal(true),
 
     // whether to push notifications to the default webhook for a specific service
-    isWebhookEnabled: t.boolean,
-
-    // whether to allow to send read messages status to the sender
-    sendReadMessageStatus: withDefault(
-      SendReadMessageStatus,
-      SendReadMessageStatusEnum.UNKNOWN
-    )
+    isWebhookEnabled: t.boolean
   })
 ]);
 export type EnabledInboxServicePreferences = t.TypeOf<
@@ -79,6 +79,14 @@ export type EnabledInboxServicePreferences = t.TypeOf<
 export const DisabledInboxServicePreferences = t.intersection([
   BasicServicePreferences,
   t.interface({
+    // do not allow to send read messages status to the sender
+    accessReadMessageStatus: withDefault(
+      t.keyof({
+        [AccessReadMessageStatusEnum.UNKNOWN]: null,
+        [AccessReadMessageStatusEnum.DENY]: null
+      }),
+      AccessReadMessageStatusEnum.UNKNOWN
+    ),
     // do not to send email notifications for a specific service
     // This property is NOT used.
     isEmailEnabled: t.literal(false),
@@ -87,16 +95,7 @@ export const DisabledInboxServicePreferences = t.intersection([
     isInboxEnabled: t.literal(false),
 
     // do not to push notifications to the default webhook for a specific service
-    isWebhookEnabled: t.literal(false),
-
-    // do not allow to send read messages status to the sender
-    sendReadMessageStatus: withDefault(
-      t.keyof({
-        [SendReadMessageStatusEnum.UNKNOWN]: null,
-        [SendReadMessageStatusEnum.DENY]: null
-      }),
-      SendReadMessageStatusEnum.UNKNOWN
-    )
+    isWebhookEnabled: t.literal(false)
   })
 ]);
 export type DisabledInboxServicePreferences = t.TypeOf<
