@@ -4,6 +4,7 @@ import { withDefault } from "@pagopa/ts-commons/lib/types";
 
 import { Container } from "@azure/cosmos";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
+import { PatternString } from "@pagopa/ts-commons/lib/strings";
 import {
   CosmosdbModelVersioned,
   RetrievedVersionedModel
@@ -59,6 +60,13 @@ const ServicePreferencesSettings = t.union([
 ]);
 
 /**
+ * Semver like string with the addition of an optional 4th number
+ */
+export const SemverRegexType = PatternString(
+  "^((0|[1-9]\\d*)\\.){2}(0|[1-9]\\d*)(\\.(0|[1-9]\\d*)){0,1}$"
+);
+
+/**
  * Base interface for Profile objects
  */
 export const Profile = t.intersection([
@@ -104,6 +112,12 @@ export const Profile = t.intersection([
 
     // whether to push notifications to the default webhook (defaults to false)
     isWebhookEnabled: IsWebhookEnabled,
+
+    // user app version
+    lastAppVersion: withDefault(
+      t.union([SemverRegexType, t.literal("UNKNOWN")]),
+      "UNKNOWN"
+    ),
 
     // array of user's preferred languages in ISO-3166-1-2 format
     // https://it.wikipedia.org/wiki/ISO_3166-2
