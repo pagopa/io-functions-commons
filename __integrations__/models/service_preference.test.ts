@@ -8,19 +8,13 @@ import {
   SERVICE_PREFERENCES_MODEL_PK_FIELD,
   SERVICE_PREFERENCES_COLLECTION_NAME,
   ServicesPreferencesModel,
-  NewServicePreference
+  NewServicePreference,
+  AccessReadMessageStatusEnum
 } from "../../src/models/service_preference";
 import { createContext } from "./cosmos_utils";
 import { pipe } from "fp-ts/lib/function";
-import { ServiceScopeEnum } from "../../generated/definitions/ServiceScope";
-import {
-  CosmosErrors,
-  DocumentSearchKey,
-  toCosmosErrorResponse
-} from "../../src/utils/cosmosdb_model";
-import { generateVersionedModelId } from "../../src/utils/cosmosdb_model_versioned";
+import { DocumentSearchKey } from "../../src/utils/cosmosdb_model";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
-import { StandardServiceCategoryEnum } from "../../generated/definitions/StandardServiceCategory";
 import { withoutUndefinedValues } from "@pagopa/ts-commons/lib/types";
 
 const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
@@ -30,7 +24,7 @@ const aServicePreference: ServicePreference = pipe(
   ServicePreference.decode({
     fiscalCode: aFiscalCode,
     serviceId: aServiceId,
-    isAllowSendReadMessageStatus: true,
+    accessReadMessageStatus: AccessReadMessageStatusEnum.ALLOW,
     isEmailEnabled: true,
     isInboxEnabled: true,
     settingsVersion: 0 as NonNegativeInteger,
@@ -72,12 +66,12 @@ describe("Models |> ServicePreference", () => {
       TE.toUnion
     )();
 
-    // upsert document changing isAllowSendReadMessageStatus
+    // upsert document changing accessReadMessageStatus
     await pipe(
       model.upsert({
         ...created,
         kind: "INewServicePreference",
-        isAllowSendReadMessageStatus: false
+        accessReadMessageStatus: AccessReadMessageStatusEnum.DENY,
       }),
       TE.bimap(
         _ => fail(`Failed to update doc, error: ${JSON.stringify(_)}`),
@@ -85,7 +79,7 @@ describe("Models |> ServicePreference", () => {
           expect(result).toEqual(
             expect.objectContaining({
               ...aServicePreference,
-              isAllowSendReadMessageStatus: false
+              accessReadMessageStatus: AccessReadMessageStatusEnum.DENY
             })
           );
         }
@@ -108,7 +102,7 @@ describe("Models |> ServicePreference", () => {
           expect(result).toEqual(
             expect.objectContaining({
               ...aServicePreference,
-              isAllowSendReadMessageStatus: false
+              accessReadMessageStatus: AccessReadMessageStatusEnum.DENY
             })
           );
         }
@@ -118,7 +112,7 @@ describe("Models |> ServicePreference", () => {
     context.dispose();
   });
 
-  it("should read documents with a default isAllowSendReadMessageStatus when not present", async () => {
+  it("should read documents with a default accessReadMessageStatus when not present", async () => {
     const context = createContext(SERVICE_PREFERENCES_MODEL_PK_FIELD);
     await context.init();
     const model = new ServicesPreferencesModel(
@@ -127,12 +121,12 @@ describe("Models |> ServicePreference", () => {
     );
 
     const {
-      isAllowSendReadMessageStatus,
-      ...aServicePreferenceWithoutIsAllowSendReadMessageStatus
+      accessReadMessageStatus,
+      ...aServicePreferenceWithoutAccessReadMessageStatus
     } = aServicePreference;
 
     const partialDocumentToSave = {
-      ...aServicePreferenceWithoutIsAllowSendReadMessageStatus,
+      ...aServicePreferenceWithoutAccessReadMessageStatus,
       id: "aServicePreferenceDocumentId"
     };
 
@@ -164,7 +158,7 @@ describe("Models |> ServicePreference", () => {
           expect(result).toEqual(
             expect.objectContaining({
               ...aServicePreference,
-              isAllowSendReadMessageStatus: true
+              accessReadMessageStatus: AccessReadMessageStatusEnum.UNKNOWN
             })
           );
         }
@@ -194,8 +188,8 @@ describe("Models |> ServicePreference", () => {
       model.create(newDoc),
       TE.bimap(
         error => {
-            expect(error).toBeTruthy();
-            expect(error.kind).toEqual("COSMOS_DECODING_ERROR");
+          expect(error).toBeTruthy();
+          expect(error.kind).toEqual("COSMOS_DECODING_ERROR");
         },
         result => fail(`Created invalid doc, error: ${JSON.stringify(result)}`)
       ),
