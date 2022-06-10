@@ -61,7 +61,21 @@ const aRetrievedServicePreference: RetrievedServicePreference = {
 };
 
 describe("ServicePreference::Codec", () => {
-  it("should fail decoding a disabled inbox ServicePreference with enabled preferences", async () => {
+  it("retrocompatibility - should succeed decoding a disabled inbox ServicePreference with enabled preferences and DENY accessReadMessageStatus", async () => {
+    const aWrongServicePreference = {
+      ...aStoredServicePreference,
+      isInboxEnabled: false,
+      accessReadMessageStatus: AccessReadMessageStatusEnum.DENY,
+      isEmailEnabled: true,
+      isWebhookEnabled: true
+    };
+
+    const result = ServicePreference.decode(aWrongServicePreference);
+
+    expect(E.isRight(result)).toBeTruthy();
+  });
+
+  it("should fail decoding a disabled inbox ServicePreference with enabled preferences and ALLOW accessReadMessageStatus", async () => {
     const aWrongServicePreference = {
       ...aStoredServicePreference,
       isInboxEnabled: false,
