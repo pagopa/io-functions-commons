@@ -89,13 +89,17 @@ export const DisabledInboxServicePreferences = t.intersection([
     ),
     // do not to send email notifications for a specific service
     // This property is NOT used.
-    isEmailEnabled: t.literal(false),
+    // This property should be always false but this is not compatible with existing records
+    // so we should expect any boolean till we will fix existing records
+    isEmailEnabled: t.boolean,
 
     // whether to store the content of messages sent to this citizen from a specific service
     isInboxEnabled: t.literal(false),
 
     // do not to push notifications to the default webhook for a specific service
-    isWebhookEnabled: t.literal(false)
+    // This property should be always false but this is not compatible with existing records
+    // so we should expect any boolean till we will fix existing records
+    isWebhookEnabled: t.boolean
   })
 ]);
 export type DisabledInboxServicePreferences = t.TypeOf<
