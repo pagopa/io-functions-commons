@@ -35,6 +35,9 @@ export const PaymentComponent = t.union([
     t.interface({
       notice_number: PaymentNoticeNumber,
       payment_status: withDefault(PaymentStatus, PaymentStatusEnum.NOT_PAID)
+    }),
+    t.partial({
+      due_date: Timestamp
     })
   ])
 ]);

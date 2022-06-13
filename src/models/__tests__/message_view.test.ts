@@ -51,6 +51,8 @@ const aRetrievedMessageView: RetrievedMessageView = {
   _ts: 1
 };
 
+const aDueDate = "2022-01-01T00:00:00.000Z";
+
 const mockFetchAll = jest.fn();
 const mockGetAsyncIterator = jest.fn();
 const mockCreate = jest.fn();
@@ -157,6 +159,38 @@ describe("message_view", () => {
             payment: {
               ...messageViewWithPayment.components.payment,
               payment_status: PaymentStatusEnum.NOT_PAID
+            }
+          }
+        });
+      })
+    );
+  });
+
+  it("GIVEN a valid message_view object with payment WHEN due_date is set THEN the decode succeed", async () => {
+    const messageViewWithPayment = {
+      ...aMessageView,
+      components: {
+        ...aMessageView.components,
+        payment: {
+          has: true,
+          notice_number: aNoticeNumber,
+          due_date: aDueDate
+        }
+      }
+    };
+    pipe(
+      messageViewWithPayment,
+      MessageView.decode,
+      E.mapLeft(_ => fail(errorsToReadableMessages(_))),
+      E.map(decoded => {
+        expect(decoded).toEqual({
+          ...messageViewWithPayment,
+          components: {
+            ...messageViewWithPayment.components,
+            payment: {
+              ...messageViewWithPayment.components.payment,
+              payment_status: PaymentStatusEnum.NOT_PAID,
+              due_date: new Date(aDueDate)
             }
           }
         });
