@@ -62,7 +62,7 @@ const aRetrievedServicePreference: RetrievedServicePreference = {
 
 describe("ServicePreference::Codec", () => {
   it("retrocompatibility - should succeed decoding a disabled inbox ServicePreference with enabled preferences and DENY accessReadMessageStatus", async () => {
-    const aWrongServicePreference = {
+    const aServicePreference = {
       ...aStoredServicePreference,
       isInboxEnabled: false,
       accessReadMessageStatus: AccessReadMessageStatusEnum.DENY,
@@ -70,7 +70,7 @@ describe("ServicePreference::Codec", () => {
       isWebhookEnabled: true
     };
 
-    const result = ServicePreference.decode(aWrongServicePreference);
+    const result = ServicePreference.decode(aServicePreference);
 
     expect(E.isRight(result)).toBeTruthy();
   });
@@ -89,8 +89,8 @@ describe("ServicePreference::Codec", () => {
     expect(E.isLeft(result)).toBeTruthy();
   });
 
-  it("should succeed decoding a correctly disabled ServicePreference", async () => {
-    const aWrongServicePreference = {
+  it("retrocompatibility - should succeed decoding a correctly disabled ServicePreference", async () => {
+    const aServicePreference = {
       ...aStoredServicePreference,
       isInboxEnabled: false,
       accessReadMessageStatus: AccessReadMessageStatusEnum.DENY,
@@ -98,13 +98,13 @@ describe("ServicePreference::Codec", () => {
       isWebhookEnabled: false
     };
 
-    const result = ServicePreference.decode(aWrongServicePreference);
+    const result = ServicePreference.decode(aServicePreference);
 
     expect(E.isRight(result)).toBeTruthy();
   });
 
   it("should succeed decoding a correctly enabled ServicePreference", async () => {
-    const aWrongServicePreference = {
+    const aServicePreference = {
       ...aStoredServicePreference,
       isInboxEnabled: true,
       accessReadMessageStatus: AccessReadMessageStatusEnum.DENY,
@@ -112,7 +112,7 @@ describe("ServicePreference::Codec", () => {
       isWebhookEnabled: false
     };
 
-    const result = ServicePreference.decode(aWrongServicePreference);
+    const result = ServicePreference.decode(aServicePreference);
 
     expect(E.isRight(result)).toBeTruthy();
   });

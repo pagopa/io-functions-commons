@@ -20,20 +20,15 @@ import { withoutUndefinedValues } from "@pagopa/ts-commons/lib/types";
 const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
 const aServiceId = "aServiceId" as NonEmptyString;
 
-const aServicePreference: ServicePreference = pipe(
-  ServicePreference.decode({
-    fiscalCode: aFiscalCode,
-    serviceId: aServiceId,
-    accessReadMessageStatus: AccessReadMessageStatusEnum.ALLOW,
-    isEmailEnabled: true,
-    isInboxEnabled: true,
-    settingsVersion: 0 as NonNegativeInteger,
-    isWebhookEnabled: true
-  }),
-  E.getOrElseW(() => {
-    throw new Error("Cannot decode service payload.");
-  })
-);
+const aServicePreference: ServicePreference = {
+  fiscalCode: aFiscalCode,
+  serviceId: aServiceId,
+  accessReadMessageStatus: AccessReadMessageStatusEnum.ALLOW,
+  isEmailEnabled: true,
+  isInboxEnabled: true,
+  settingsVersion: 0 as NonNegativeInteger,
+  isWebhookEnabled: true
+};
 
 describe("Models |> ServicePreference", () => {
   it("should save and retrieve valid documents", async () => {
@@ -55,11 +50,7 @@ describe("Models |> ServicePreference", () => {
       TE.bimap(
         _ => fail(`Failed to create doc, error: ${JSON.stringify(_)}`),
         result => {
-          expect(result).toEqual(
-            expect.objectContaining({
-              ...aServicePreference
-            })
-          );
+          expect(result).toEqual(expect.objectContaining(aServicePreference));
           return result;
         }
       ),
@@ -71,7 +62,7 @@ describe("Models |> ServicePreference", () => {
       model.upsert({
         ...created,
         kind: "INewServicePreference",
-        accessReadMessageStatus: AccessReadMessageStatusEnum.DENY,
+        accessReadMessageStatus: AccessReadMessageStatusEnum.DENY
       }),
       TE.bimap(
         _ => fail(`Failed to update doc, error: ${JSON.stringify(_)}`),
