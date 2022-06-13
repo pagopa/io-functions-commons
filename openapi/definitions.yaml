@@ -1176,9 +1176,9 @@ ServicesPreferencesMode:
     - LEGACY
     - AUTO
     - MANUAL
-ServicePreference:
+BasicServicePreference:
   description: |-
-    Define a set of preferences of a Citizen for a given Service.
+    Define a set of required preferences of a Citizen for a given Service.
     It's needed by Citizens to express how they want Services to get in touch with them.
   type: object
   properties:
@@ -1196,6 +1196,28 @@ ServicePreference:
     - is_inbox_enabled
     - is_webhook_enabled
     - settings_version
+ServicePreference:
+  description: |-
+    Return the set of preferences of a Citizen for a given Service.
+    It's needed by Citizens to read previoulsy expressed preferences.
+  allOf:
+    - $ref: "#/BasicServicePreference"
+    - type: object
+      properties:
+        can_access_message_read_status:
+          type: boolean
+      required:
+        - can_access_message_read_status
+UpsertServicePreference:
+  description: |-
+    Define a set of preferences of a Citizen for a given Service.
+    Extends the BasicServicePreference with new optional preferences for backward compatibility.
+  allOf:
+    - $ref: "#/BasicServicePreference"
+    - type: object
+      properties:
+        can_access_message_read_status:
+          type: boolean
 ActivationStatus:
   type: string
   x-extensible-enum:

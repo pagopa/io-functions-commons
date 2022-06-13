@@ -15,6 +15,9 @@ npm install -g @zeit/cosmosdb-server
 nohup cosmosdb-server -p 3000 &
 
 # execute test passing references as env variables
+set NAME and BASE64KEY to the desired storage
+
+STORAGE_CONN_STRING="DefaultEndpointsProtocol=https;AccountName=<NAME>;AccountKey=<BASE64KEY>;EndpointSuffix=core.windows.net" \
 MAILHOG_HOSTNAME=localhost \
 COSMOSDB_URI=https://localhost:3000/ \
 COSMOSDB_KEY="dummy key" \

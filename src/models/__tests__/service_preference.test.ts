@@ -9,6 +9,7 @@ import {
   makeServicesPreferencesDocumentId,
   NewServicePreference,
   RetrievedServicePreference,
+  AccessReadMessageStatusEnum,
   ServicePreference,
   ServicesPreferencesModel,
   SERVICE_PREFERENCES_COLLECTION_NAME
@@ -22,6 +23,7 @@ const aServiceId = "aServiceId" as NonEmptyString;
 const aStoredServicePreference: ServicePreference = {
   fiscalCode: aFiscalCode,
   serviceId: aServiceId,
+  accessReadMessageStatus: AccessReadMessageStatusEnum.ALLOW,
   isEmailEnabled: true,
   isInboxEnabled: true,
   settingsVersion: 0 as NonNegativeInteger,
@@ -36,6 +38,7 @@ const aNewServicePreference: NewServicePreference = {
   ),
   fiscalCode: aFiscalCode,
   serviceId: aServiceId,
+  accessReadMessageStatus: AccessReadMessageStatusEnum.ALLOW,
   isEmailEnabled: true,
   isInboxEnabled: true,
   settingsVersion: 0 as NonNegativeInteger,
@@ -56,6 +59,64 @@ const aRetrievedServicePreference: RetrievedServicePreference = {
   kind: "IRetrievedServicePreference",
   ...aStoredServicePreference
 };
+
+describe("ServicePreference::Codec", () => {
+  it("retrocompatibility - should succeed decoding a disabled inbox ServicePreference with enabled preferences and DENY accessReadMessageStatus", async () => {
+    const aServicePreference = {
+      ...aStoredServicePreference,
+      isInboxEnabled: false,
+      accessReadMessageStatus: AccessReadMessageStatusEnum.DENY,
+      isEmailEnabled: true,
+      isWebhookEnabled: true
+    };
+
+    const result = ServicePreference.decode(aServicePreference);
+
+    expect(E.isRight(result)).toBeTruthy();
+  });
+
+  it("should fail decoding a disabled inbox ServicePreference with enabled preferences and ALLOW accessReadMessageStatus", async () => {
+    const aWrongServicePreference = {
+      ...aStoredServicePreference,
+      isInboxEnabled: false,
+      accessReadMessageStatus: AccessReadMessageStatusEnum.ALLOW,
+      isEmailEnabled: true,
+      isWebhookEnabled: true
+    };
+
+    const result = ServicePreference.decode(aWrongServicePreference);
+
+    expect(E.isLeft(result)).toBeTruthy();
+  });
+
+  it("retrocompatibility - should succeed decoding a correctly disabled ServicePreference", async () => {
+    const aServicePreference = {
+      ...aStoredServicePreference,
+      isInboxEnabled: false,
+      accessReadMessageStatus: AccessReadMessageStatusEnum.DENY,
+      isEmailEnabled: false,
+      isWebhookEnabled: false
+    };
+
+    const result = ServicePreference.decode(aServicePreference);
+
+    expect(E.isRight(result)).toBeTruthy();
+  });
+
+  it("should succeed decoding a correctly enabled ServicePreference", async () => {
+    const aServicePreference = {
+      ...aStoredServicePreference,
+      isInboxEnabled: true,
+      accessReadMessageStatus: AccessReadMessageStatusEnum.DENY,
+      isEmailEnabled: true,
+      isWebhookEnabled: false
+    };
+
+    const result = ServicePreference.decode(aServicePreference);
+
+    expect(E.isRight(result)).toBeTruthy();
+  });
+});
 
 describe("find", () => {
   it("should resolve to an existing profile", async () => {
@@ -149,6 +210,46 @@ describe("find", () => {
     expect(E.isLeft(result)).toBeTruthy();
     if (E.isLeft(result)) {
       expect(result.left.kind).toBe("COSMOS_DECODING_ERROR");
+    }
+  });
+
+  it("should successfully validate a retrieved object without sendReadMessageStatus property", async () => {
+    const {
+      accessReadMessageStatus,
+      ...aRetrievedServicePreferenceWithoutSendReadMessageStatus
+    } = aRetrievedServicePreference;
+
+    const containerMock = ({
+      item: jest.fn().mockImplementation((_, __) => ({
+        read: jest.fn(() =>
+          Promise.resolve({
+            resource: aRetrievedServicePreferenceWithoutSendReadMessageStatus
+          })
+        )
+      }))
+    } as unknown) as Container;
+
+    const model = new ServicesPreferencesModel(
+      containerMock,
+      SERVICE_PREFERENCES_COLLECTION_NAME
+    );
+
+    const result = await model.find([
+      makeServicesPreferencesDocumentId(
+        aFiscalCode,
+        aServiceId,
+        0 as NonNegativeInteger
+      ),
+      aFiscalCode
+    ])();
+
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isSome(result.right)).toBeTruthy();
+      expect(O.toUndefined(result.right)).toEqual({
+        ...aRetrievedServicePreference,
+        accessReadMessageStatus: AccessReadMessageStatusEnum.UNKNOWN
+      });
     }
   });
 });
