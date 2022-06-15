@@ -74,7 +74,8 @@ describe("findLastVersionByModelId", () => {
         servicePreferencesSettings: {
           mode: ServicesPreferencesModeEnum.LEGACY,
           version: PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION
-        }
+        },
+        lastAppVersion: "UNKNOWN"
       });
     }
   });
