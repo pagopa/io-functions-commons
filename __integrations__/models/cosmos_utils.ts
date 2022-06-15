@@ -80,7 +80,7 @@ const deleteContainer = (
   );
 
 const makeRandomContainerName = (): string => {
-  const result = [];
+  const result: string[] = [];
   const characters = "abcdefghijklmnopqrstuvwxyz";
   const charactersLength = characters.length;
   // eslint-disable-next-line functional/no-let
@@ -104,7 +104,7 @@ export const createContext = (partitionKey: string, hasStorage = false) => {
         createDatabase(cosmosDatabaseName),
         chain(db =>
           pipe(
-            createContainer(db, containerName, partitionKey,indexingPolicy),
+            createContainer(db, containerName, partitionKey, indexingPolicy),
             map(container => ({
               db,
               container

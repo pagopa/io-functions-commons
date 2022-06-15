@@ -14,11 +14,14 @@ docker run -d -p 1025:1025 -p 8025:8025 --name mailhog mailhog/mailhog
 npm install -g @zeit/cosmosdb-server
 nohup cosmosdb-server -p 3000 &
 
+docker run -d --rm -p 10000:10000 mcr.microsoft.com/azure-storage/azurite azurite-blob --blobHost 0.0.0.0
+
 # execute test passing references as env variables
 MAILHOG_HOSTNAME=localhost \
 COSMOSDB_URI=https://localhost:3000/ \
 COSMOSDB_KEY="dummy key" \
 COSMOSDB_DATABASE_NAME=integration-tests \
+STORAGE_CONN_STRING="DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;" \
 yarn test:integration
 ```
 

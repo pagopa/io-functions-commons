@@ -12,3 +12,5 @@ coverage
 # eslint section
 !.eslintrc.js
 .eslintcache
+
+nohup.out
