@@ -676,6 +676,8 @@ Profile:
       $ref: "#/IsWebhookEnabled"
     is_email_enabled:
       $ref: "#/IsEmailEnabled"
+    last_app_version:
+      $ref: "#/AppVersion"
     version:
       type: integer
   required:
@@ -721,6 +723,8 @@ ExtendedProfile:
       $ref: "#/IsEmailValidated"
     is_test_profile:
       $ref: "#/IsTestProfile"
+    last_app_version:
+      $ref: "#/AppVersion"
     version:
       type: integer
   required:
@@ -754,6 +758,12 @@ IsTestProfile:
   type: boolean
   description: True if the user's profile is only for test purpose. 
   default: false
+AppVersion:
+  type: string
+  format: Semver
+  description: A string field in Semantic Versioning format
+  x-import: '@pagopa/ts-commons/lib/strings'
+  example: "1.10.11"
 TimeToLiveSeconds:
   type: integer
   default: 3600
