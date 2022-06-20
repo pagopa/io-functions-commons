@@ -13,3 +13,5 @@ nohup.out
 # eslint section
 !.eslintrc.js
 .eslintcache
+
+nohup.out

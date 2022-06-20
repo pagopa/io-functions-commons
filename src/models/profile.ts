@@ -4,6 +4,7 @@ import { withDefault } from "@pagopa/ts-commons/lib/types";
 
 import { Container } from "@azure/cosmos";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
+import { Semver } from "@pagopa/ts-commons/lib/strings";
 import {
   CosmosdbModelVersioned,
   RetrievedVersionedModel
@@ -104,6 +105,12 @@ export const Profile = t.intersection([
 
     // whether to push notifications to the default webhook (defaults to false)
     isWebhookEnabled: IsWebhookEnabled,
+
+    // user app version
+    lastAppVersion: withDefault(
+      t.union([Semver, t.literal("UNKNOWN")]),
+      "UNKNOWN"
+    ),
 
     // array of user's preferred languages in ISO-3166-1-2 format
     // https://it.wikipedia.org/wiki/ISO_3166-2

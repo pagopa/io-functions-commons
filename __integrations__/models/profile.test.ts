@@ -6,7 +6,8 @@ import {
   Profile,
   PROFILE_MODEL_PK_FIELD,
   ProfileModel,
-  PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION
+  PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION,
+  NewProfile
 } from "../../src/models/profile";
 import { createContext } from "./cosmos_utils";
 import { fromOption } from "fp-ts/lib/Either";
@@ -32,7 +33,7 @@ const aProfile: Profile = pipe(
 );
 describe("Models |> Profile", () => {
   it("should save documents with correct versioning", async () => {
-    const context = await createContext(PROFILE_MODEL_PK_FIELD);
+    const context = createContext(PROFILE_MODEL_PK_FIELD);
     await context.init();
     const model = new ProfileModel(context.container);
 
@@ -128,7 +129,7 @@ describe("Models |> Profile", () => {
   });
 
   it("should consider service prefereces", async () => {
-    const context = await createContext(PROFILE_MODEL_PK_FIELD);
+    const context = createContext(PROFILE_MODEL_PK_FIELD);
     await context.init();
     const model = new ProfileModel(context.container);
 
@@ -213,7 +214,7 @@ describe("Models |> Profile", () => {
   });
 
   it("should increment service prefereces version", async () => {
-    const context = await createContext(PROFILE_MODEL_PK_FIELD);
+    const context = createContext(PROFILE_MODEL_PK_FIELD);
     await context.init();
     const model = new ProfileModel(context.container);
 
@@ -338,7 +339,7 @@ describe("Models |> Profile", () => {
   `(
     "should fail when passing inconsistent service preferences (mode: $mode, version: $version})",
     async ({ mode, version }) => {
-      const context = await createContext(PROFILE_MODEL_PK_FIELD);
+      const context = createContext(PROFILE_MODEL_PK_FIELD);
       await context.init();
       const model = new ProfileModel(context.container);
 
@@ -380,7 +381,7 @@ describe("Models |> Profile", () => {
   `(
     "should save records when passing consistent service preferences (mode: $mode, version: $version})",
     async ({ mode, version }) => {
-      const context = await createContext(PROFILE_MODEL_PK_FIELD);
+      const context = createContext(PROFILE_MODEL_PK_FIELD);
       await context.init();
       const model = new ProfileModel(context.container);
 
@@ -403,6 +404,40 @@ describe("Models |> Profile", () => {
           _ => {
             expect(_.servicePreferencesSettings.mode).toBe(mode);
             expect(_.servicePreferencesSettings.version).toBe(version);
+          }
+        )
+      )();
+
+      context.dispose();
+    }
+  );
+
+  it.each`
+    inputValue    | expectedValue
+    ${undefined}  | ${"UNKNOWN"}
+    ${"UNKNOWN"}  | ${"UNKNOWN"}
+    ${"1.10.1"}   | ${"1.10.1"}
+    ${"1.11.2.1"} | ${"1.11.2.1"}
+  `(
+    "should save records when passing consistent lastAppVersion = $inputValue",
+    async ({ inputValue, expectedValue }) => {
+      const context = createContext(PROFILE_MODEL_PK_FIELD);
+      await context.init();
+      const model = new ProfileModel(context.container);
+
+      const toBeSavedProfile: NewProfile = {
+        kind: "INewProfile" as const,
+        ...aProfile,
+        lastAppVersion: inputValue
+      };
+
+      await pipe(
+        model.create(toBeSavedProfile),
+        te.bimap(
+          _ =>
+            fail(`Should not have failed with lastAppVersion = ${inputValue}`),
+          _ => {
+            expect(_.lastAppVersion).toBe(expectedValue);
           }
         )
       )();
