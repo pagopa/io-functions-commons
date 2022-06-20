@@ -38,7 +38,7 @@
     "@types/request-ip": "^0.0.33",
     "@types/winston": "^2.4.4",
     "auto-changelog": "^2.3.0",
-    "danger": "^7.0.0",
+    "danger": "^8.0.0",
     "danger-plugin-digitalcitizenship": "^1.0.0",
     "eslint-plugin-prettier": "^3.4.0",
     "gulp": "^3.9.1",
@@ -100,7 +100,7 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
-  "resolutions": {
+  "overrides": {
     "graceful-fs": "^4.2.4"
   }
 }
