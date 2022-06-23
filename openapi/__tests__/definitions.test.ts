@@ -972,12 +972,12 @@ type IfEquals<T, U, Y = unknown, N = never> = (<G>() => G extends T
   : 2) extends <G>() => G extends U ? 1 : 2
   ? Y
   : N;
-declare const exactType: <T, U>(
+const exactType: <T, U>(
   draft: T & IfEquals<T, U>,
   expected: U & IfEquals<T, U>
-) => IfEquals<T, U>;
-declare const semver: Semver;
-declare const appVersion: AppVersion;
+) => IfEquals<T, U> = (_, __) => _;
+let semver: Semver;
+let appVersion: AppVersion;
 
 describe("Semver and AppVersion compatibility", () => {
   it("Should decode successfully a valid semver string", () => {
