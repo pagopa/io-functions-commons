@@ -33,6 +33,9 @@ import { Change_typeEnum as ReadingChangeType } from "../../generated/definition
 import { Change_typeEnum as ArchinvingChangeType } from "../../generated/definitions/MessageStatusArchivingChange";
 import { FeatureLevelTypeEnum } from "../../generated/definitions/FeatureLevelType";
 import { ThirdPartyMessage } from "../../generated/definitions/ThirdPartyMessage";
+import { Semver } from "@pagopa/ts-commons/lib/strings";
+
+import { AppVersion } from "../../generated/definitions/AppVersion";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -957,5 +960,38 @@ describe("ThirdPartyMessage", () => {
       E.map(d => expect(d).toEqual(aThirdPartyMessage)),
       E.mapLeft(_ => fail())
     );
+  });
+});
+
+/**
+ * Semver type and AppVersion definition compatibility tests
+ */
+
+type IfEquals<T, U, Y = unknown, N = never> = (<G>() => G extends T
+  ? 1
+  : 2) extends <G>() => G extends U ? 1 : 2
+  ? Y
+  : N;
+declare const exactType: <T, U>(
+  draft: T & IfEquals<T, U>,
+  expected: U & IfEquals<T, U>
+) => IfEquals<T, U>;
+declare const semver: Semver;
+declare const appVersion: AppVersion;
+
+describe("Semver and AppVersion compatibility", () => {
+  it("Should decode successfully a valid semver string", () => {
+    const semver = "1.10.1" as Semver;
+    const decoded = AppVersion.decode(semver);
+    expect(E.isRight(decoded)).toBeTruthy();
+  });
+  it("Should fail the decode of a invalid semver string", () => {
+    const semver = "1.10.01" as Semver;
+    const decoded = AppVersion.decode(semver);
+    expect(E.isLeft(decoded)).toBeTruthy();
+  });
+  it("Typescript type are compatible and interchangeable", () => {
+    exactType(semver, appVersion);
+    exactType(appVersion, semver);
   });
 });
