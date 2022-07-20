@@ -8,8 +8,11 @@ import { isNone } from "fp-ts/lib/Option";
 import {
   BlobNotFoundCode,
   getBlobAsObject,
-  getBlobAsText
+  getBlobAsText,
+  getBlobAsTextWithError
 } from "../azure_storage";
+
+import { createBlobService } from "azure-storage";
 
 const TestObject = t.interface({
   prop: t.string
@@ -26,6 +29,19 @@ const blobServiceMock = {
 };
 
 describe("getBlobAsText", () => {
+  it("IT -> should return None on BlobNotFound error", async () => {
+    const STORAGE_CONNECTION_STRING =
+      "DefaultEndpointsProtocol=https;AccountName=iomocktest;AccountKey=qw/9pReSlzvYdfJ8n7cNsXiaq12u9WXRgiMPRtYs8BC0mShAgvCEplbK7/Avd1k/LPAzBvZd6jBOqksrEMtTrg==;EndpointSuffix=core.windows.net";
+    const blobService = createBlobService(STORAGE_CONNECTION_STRING);
+    const errorOrMaybeText = await getBlobAsTextWithError(
+      blobService,
+      "message-content",
+      "NOT_EXISTING.json"
+    )();
+
+    console.log("AAAA: " + JSON.stringify(errorOrMaybeText));
+  });
+
   it("should return None on BlobNotFound error", async () => {
     const errorOrMaybeText = await getBlobAsText(
       blobServiceMock as any,

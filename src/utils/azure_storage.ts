@@ -6,6 +6,7 @@ import * as t from "io-ts";
 
 import { Either } from "fp-ts/lib/Either";
 import * as E from "fp-ts/lib/Either";
+import * as TE from "fp-ts/TaskEither";
 
 import { fromNullable, isNone, none, Option, some } from "fp-ts/lib/Option";
 
@@ -172,6 +173,7 @@ export const getBlobAsText = (
         if (err) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const errorAsStorageError = err as StorageError;
+          console.log("BBBB: " + JSON.stringify(errorAsStorageError));
           if (
             errorAsStorageError.code !== undefined &&
             errorAsStorageError.code === BlobNotFoundCode
@@ -183,6 +185,30 @@ export const getBlobAsText = (
           return resolve(E.right<Error, Option<string>>(fromNullable(result)));
         }
       }
+    );
+  });
+
+/**
+ * Get a blob content as text (string). In case of error, it will return error details
+ *
+ * @param blobService     the Azure blob service
+ * @param containerName   the name of the Azure blob storage container
+ * @param blobName        blob file name
+ */
+export const getBlobAsTextWithError = (
+  blobService: azureStorage.BlobService,
+  containerName: string,
+  blobName: string,
+  options: azureStorage.BlobService.GetBlobRequestOptions = {}
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+): TE.TaskEither<azureStorage.StorageError, Option<string>> => () =>
+  new Promise(resolve => {
+    blobService.getBlobToText(
+      containerName,
+      blobName,
+      options,
+      (err, result, _) =>
+        err ? resolve(E.left(err)) : resolve(E.right(fromNullable(result)))
     );
   });
 

@@ -30,7 +30,11 @@ import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { ServiceId } from "../../generated/definitions/ServiceId";
 import { Timestamp } from "../../generated/definitions/Timestamp";
 import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds";
-import { getBlobAsText, upsertBlobFromObject } from "../utils/azure_storage";
+import {
+  getBlobAsText,
+  getBlobAsTextWithError,
+  upsertBlobFromObject
+} from "../utils/azure_storage";
 import { wrapWithKind } from "../utils/types";
 import { NewMessageContent } from "../../generated/definitions/NewMessageContent";
 import { FeatureLevelType } from "../../generated/definitions/FeatureLevelType";
@@ -397,11 +401,7 @@ export class MessageModel extends CosmosdbModel<
 
     // Retrieve blob content and deserialize
     return pipe(
-      TE.tryCatch(
-        () => getBlobAsText(blobService, this.containerName, blobId),
-        E.toError
-      ),
-      TE.chain(TE.fromEither),
+      getBlobAsTextWithError(blobService, this.containerName, blobId),
       TE.chain(maybeContentAsText =>
         TE.fromEither(
           E.fromOption(
