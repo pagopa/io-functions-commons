@@ -1,5 +1,6 @@
 import { BlobService } from "azure-storage";
 import * as E from "fp-ts/lib/Either";
+import * as J from "fp-ts/Json";
 import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
 import * as O from "fp-ts/lib/Option";
 import * as TE from "fp-ts/lib/TaskEither";
@@ -11,7 +12,7 @@ import {
   SqlQuerySpec
 } from "@azure/cosmos";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
-import { pipe } from "fp-ts/lib/function";
+import { flow, pipe } from "fp-ts/lib/function";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import {
@@ -31,13 +32,14 @@ import { ServiceId } from "../../generated/definitions/ServiceId";
 import { Timestamp } from "../../generated/definitions/Timestamp";
 import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds";
 import {
-  getBlobAsText,
+  GenericCode,
   getBlobAsTextWithError,
   upsertBlobFromObject
 } from "../utils/azure_storage";
 import { wrapWithKind } from "../utils/types";
 import { NewMessageContent } from "../../generated/definitions/NewMessageContent";
 import { FeatureLevelType } from "../../generated/definitions/FeatureLevelType";
+import { BlobNotFoundCode } from "../utils/azure_storage";
 
 export const MESSAGE_COLLECTION_NAME = "messages";
 export const MESSAGE_MODEL_PK_FIELD = "fiscalCode" as const;
@@ -397,45 +399,54 @@ export class MessageModel extends CosmosdbModel<
     blobService: BlobService,
     messageId: string
   ): TE.TaskEither<Error, Option<MessageContent>> {
-    const blobId = blobIdFromMessageId(messageId);
-
     // Retrieve blob content and deserialize
     return pipe(
-      getBlobAsTextWithError(blobService, this.containerName, blobId),
+      blobIdFromMessageId(messageId),
+      getBlobAsTextWithError(blobService, this.containerName),
+      TE.mapLeft(storageError => ({
+        code: storageError.code ?? GenericCode,
+        message: storageError.message
+      })),
       TE.chain(maybeContentAsText =>
         TE.fromEither(
           E.fromOption(
             // Blob exists but the content is empty
-            () => new Error("Cannot get stored message content from blob")
+            () => ({
+              code: GenericCode,
+              message: "Cannot get stored message content from empty blob"
+            })
           )(maybeContentAsText)
         )
       ),
       // Try to decode the MessageContent
-      TE.chain(contentAsText =>
-        pipe(
-          E.parseJSON(contentAsText, E.toError),
-          E.fold(
-            _ => TE.left(new Error(`Cannot parse content text into object`)),
-            _ => TE.of(_)
-          )
+      TE.chain(
+        flow(
+          J.parse,
+          E.mapLeft(E.toError),
+          TE.fromEither,
+          TE.mapLeft(parseError => ({
+            code: GenericCode,
+            message: `Cannot parse content text into object: ${parseError.message}`
+          }))
         )
       ),
-      TE.chain(undecodedContent =>
-        pipe(
-          MessageContent.decode(undecodedContent),
-          E.fold(
-            errors =>
-              TE.left(
-                new Error(
-                  `Cannot deserialize stored message content: ${readableReport(
-                    errors
-                  )}`
-                )
-              ),
-            (content: MessageContent) => TE.of(some(content))
-          )
+      TE.chain(
+        flow(
+          MessageContent.decode,
+          TE.fromEither,
+          TE.mapLeft(decodeErrors => ({
+            code: GenericCode,
+            message: `Cannot deserialize stored message content: ${readableReport(
+              decodeErrors
+            )}`
+          })),
+          TE.map(some)
         )
-      )
+      ),
+      TE.orElse(error =>
+        error.code === BlobNotFoundCode ? TE.right(none) : TE.left(error)
+      ),
+      TE.mapLeft(error => new Error(error.message))
     );
   }
 }
