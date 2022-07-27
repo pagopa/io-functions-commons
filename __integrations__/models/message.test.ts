@@ -17,7 +17,7 @@ import { ServiceId } from "../../generated/definitions/ServiceId";
 import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds";
 import { pipe } from "fp-ts/lib/function";
 import * as TE from "fp-ts/lib/TaskEither";
-import { isSome } from "fp-ts/lib/Option";
+import { isSome, none } from "fp-ts/lib/Option";
 import { CosmosErrors } from "../../src/utils/cosmosdb_model";
 import { Validation } from "io-ts";
 import * as E from "fp-ts/lib/Either";
@@ -590,5 +590,27 @@ describe("Models |> Message", () => {
     });
 
     context.dispose();
+  });
+
+  it("should return a none when retrieving a not existing content", async () => {
+    const context = await createContext(MESSAGE_MODEL_PK_FIELD, true);
+    await context.init(messagesIndexingPolicy);
+    const model = new MessageModel(
+      context.container,
+      context.containerName as NonEmptyString
+    );
+
+    await pipe(
+      model.getContentFromBlob(context.storage, "not-exist-blob-id"),
+      TE.bimap(
+        _ => fail(`Failed to get content, error: ${JSON.stringify(_)}`),
+        result => {
+          // check the output contains a none
+          expect(result).toEqual(none);
+        }
+      )
+    )();
+
+    await context.dispose();
   });
 });
