@@ -6,11 +6,12 @@ import * as t from "io-ts";
 
 import { Either } from "fp-ts/lib/Either";
 import * as E from "fp-ts/lib/Either";
+import * as TE from "fp-ts/TaskEither";
 
 import { fromNullable, isNone, none, Option, some } from "fp-ts/lib/Option";
 
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
-import { pipe } from "fp-ts/lib/function";
+import { pipe, constant } from "fp-ts/lib/function";
 
 type Resolve<T> = (value: T | PromiseLike<T>) => void;
 
@@ -21,7 +22,7 @@ export type StorageError = Error & {
 // BLOB STORAGE FUNCTIONS AND TYPES
 
 // Code used by blobService when a blob is not found
-
+export const GenericCode = "GenericCode";
 export const BlobNotFoundCode = "BlobNotFound";
 
 /**
@@ -185,6 +186,35 @@ export const getBlobAsText = (
       }
     );
   });
+
+/**
+ * Get a blob content as text (string). In case of error, it will return error details.
+ *
+ * @param blobService     the Azure blob service
+ * @param containerName   the name of the Azure blob storage container
+ * @param blobName        blob file name
+ */
+export const getBlobAsTextWithError = (
+  blobService: azureStorage.BlobService,
+  containerName: string,
+  options: azureStorage.BlobService.GetBlobRequestOptions = {}
+) => (
+  blobName: string
+): TE.TaskEither<azureStorage.StorageError, Option<string>> =>
+  pipe(
+    new Promise<E.Either<azureStorage.StorageError, Option<string>>>(
+      resolve => {
+        blobService.getBlobToText(
+          containerName,
+          blobName,
+          options,
+          (err, result, _) =>
+            err ? resolve(E.left(err)) : resolve(E.right(fromNullable(result)))
+        );
+      }
+    ),
+    constant
+  );
 
 /**
  * Get a blob content as a typed (io-ts) object.
