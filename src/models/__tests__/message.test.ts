@@ -818,6 +818,32 @@ describe("getContentFromBlob", () => {
     getBlobAsTextSpy.mockReset();
   });
 
+  it("should get an error if storage return an error", async () => {
+    const err = {
+      name: "StorageError",
+      message:
+        "Generic Error. \nRequestId:27149c2d-001e-000e-2d04-a12766000000\nTime:2022-07-26T15:27:59.0934919Z",
+      code: "GenericError",
+      statusCode: 500,
+      requestId: "27149c2d-001e-000e-2d04-a12766000000"
+    };
+    const getBlobAsTextSpy = jest
+      .spyOn(azureStorageUtils, "getBlobAsTextWithError")
+      .mockReturnValueOnce(() => TE.left(err));
+
+    const errorOrMaybeMessageContent = await model.getContentFromBlob(
+      blobServiceMock as any,
+      aMessageId
+    )();
+
+    expect(E.isLeft(errorOrMaybeMessageContent)).toBeTruthy();
+    if (E.isLeft(errorOrMaybeMessageContent)) {
+      expect(errorOrMaybeMessageContent.left).toEqual(new Error(err.message));
+    }
+
+    getBlobAsTextSpy.mockReset();
+  });
+
   it("should fail with an error when the retrieved blob is empty", async () => {
     const getBlobAsTextSpy = jest
       .spyOn(azureStorageUtils, "getBlobAsTextWithError")
