@@ -362,7 +362,7 @@ describe("AzureAllowBodyPayloadMiddleware", () => {
       E.fold(
         _ => {
           expect(_.kind).toBe("IResponseErrorForbiddenNotAuthorized")
-          expect(_.detail).toContain("User has no valid scopes: You are not part of any valid scope, you should ask the administrator to give you the required permissions.")
+          expect(_.detail).toContain("You are not allowed here: No valid scopes, you are not allowed to send such payloads. Ask the administrator to give you the required permissions.")
         },
         _ => fail("Expecting left")
       )
@@ -396,7 +396,7 @@ describe("AzureAllowBodyPayloadMiddleware", () => {
       E.fold(
         _ => {
           expect(_.kind).toBe("IResponseErrorForbiddenNoAuthorizationGroups")
-          expect(_.detail).toContain("User has no valid scopes: You are not part of any valid scope, you should ask the administrator to give you the required permissions.")
+          expect(_.detail).toContain("User has no valid scopes: No valid scopes, you are not allowed to send such payloads. Ask the administrator to give you the required permissions.")
         },
         _ => fail("Expecting left")
       )
