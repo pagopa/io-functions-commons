@@ -3,6 +3,8 @@ import * as E from "fp-ts/lib/Either";
 import { fromNullable, isSome, Option, Some } from "fp-ts/lib/Option";
 
 import {
+  getResponseErrorForbiddenNoAuthorizationGroups,
+  getResponseErrorForbiddenNotAuthorized,
   IResponse,
   IResponseErrorForbiddenAnonymousUser,
   IResponseErrorForbiddenNoAuthorizationGroups,
@@ -269,7 +271,8 @@ type AzureAllowBodyPayloadMiddlewareErrorResponses =
  */
 export const AzureAllowBodyPayloadMiddleware = <S, A>(
   pattern: t.Type<A, S>,
-  allowedGroups: ReadonlySet<UserGroup>
+  allowedGroups: ReadonlySet<UserGroup>,
+  notAllowedMessage = "No valid scopes, you are not allowed to send such payloads. Ask the administrator to give you the required permissions."
 ): IRequestMiddleware<
   | "IResponseErrorForbiddenNotAuthorized"
   | "IResponseErrorForbiddenNoAuthorizationGroups",
@@ -288,7 +291,11 @@ export const AzureAllowBodyPayloadMiddleware = <S, A>(
           _ =>
             pipe(
               NonEmptyString.decode(request.header("x-user-groups")),
-              E.mapLeft(_errors => ResponseErrorForbiddenNoAuthorizationGroups),
+              E.mapLeft(_errors =>
+                getResponseErrorForbiddenNoAuthorizationGroups(
+                  notAllowedMessage
+                )
+              ),
               E.map(getGroupsFromHeader),
               // check if current user belongs to at least one of the allowed groups
               E.map(userGroups =>
@@ -297,7 +304,9 @@ export const AzureAllowBodyPayloadMiddleware = <S, A>(
               E.chainW(isInGroup =>
                 isInGroup
                   ? E.right(void 0)
-                  : E.left(ResponseErrorForbiddenNotAuthorized)
+                  : E.left(
+                      getResponseErrorForbiddenNotAuthorized(notAllowedMessage)
+                    )
               )
             )
         )

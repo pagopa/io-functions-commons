@@ -360,7 +360,10 @@ describe("AzureAllowBodyPayloadMiddleware", () => {
     pipe(
       result,
       E.fold(
-        _ => expect(_.kind).toBe("IResponseErrorForbiddenNotAuthorized"),
+        _ => {
+          expect(_.kind).toBe("IResponseErrorForbiddenNotAuthorized")
+          expect(_.detail).toContain("You are not allowed here: No valid scopes, you are not allowed to send such payloads. Ask the administrator to give you the required permissions.")
+        },
         _ => fail("Expecting left")
       )
     );
@@ -391,10 +394,83 @@ describe("AzureAllowBodyPayloadMiddleware", () => {
     pipe(
       result,
       E.fold(
-        _ =>
-          expect(_.kind).toBe("IResponseErrorForbiddenNoAuthorizationGroups"),
+        _ => {
+          expect(_.kind).toBe("IResponseErrorForbiddenNoAuthorizationGroups")
+          expect(_.detail).toContain("User has no valid scopes: No valid scopes, you are not allowed to send such payloads. Ask the administrator to give you the required permissions.")
+        },
         _ => fail("Expecting left")
       )
     );
   });
+
+  it("should return a ResponseErrorForbiddenNoAuthorizationGroups with a custom detail", async () => {
+    const headers = {
+      ...someHeaders,
+      "x-user-groups": ""
+    };
+    const aPayload = { foo: { bar: "baz" } };
+    const mockRequest = {
+      header: jest.fn(lookup(headers)),
+      body: aPayload
+    };
+    const aMatchingCodec = t.interface({
+      foo: t.interface({ bar: t.string })
+    });
+
+    const middleware = AzureAllowBodyPayloadMiddleware(
+      aMatchingCodec,
+      anAllowedGroupSet,
+      "a custom detail"
+    );
+
+    const result = await middleware(mockRequest as any);
+
+    expect(E.isLeft(result)).toBe(true);
+    pipe(
+      result,
+      E.fold(
+        _ =>{
+          expect(_.kind).toBe("IResponseErrorForbiddenNoAuthorizationGroups");
+          expect(_.detail).toContain("a custom detail");
+        },
+        _ => fail("Expecting left")
+      )
+    );
+  });
+
+  it("should return a IResponseErrorForbiddenNotAuthorized with a custom detail", async () => {
+    const headers = {
+      ...someHeaders
+    };
+    const aPayload = { foo: { bar: "baz" } };
+    const mockRequest = {
+      header: jest.fn(lookup(headers)),
+      body: aPayload
+    };
+    const aMatchingCodec = t.interface({
+      foo: t.interface({ bar: t.string })
+    });
+    const anotherAllowedGroupSet = new Set([UserGroup.ApiDebugRead]);
+
+    const middleware = AzureAllowBodyPayloadMiddleware(
+      aMatchingCodec,
+      anotherAllowedGroupSet,
+      "a custom detail"
+    );
+
+    const result = await middleware(mockRequest as any);
+
+    expect(E.isLeft(result)).toBe(true);
+    pipe(
+      result,
+      E.fold(
+        _ => {
+          expect(_.kind).toBe("IResponseErrorForbiddenNotAuthorized");
+          expect(_.detail).toContain("a custom detail");
+        },
+        _ => fail("Expecting left")
+      )
+    );
+  });
+
 });
