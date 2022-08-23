@@ -9,7 +9,7 @@ import {
   Status
 } from "../message_view";
 import { ServiceId } from "../../../generated/definitions/ServiceId";
-import { MessageStatusValueEnum } from "../../../generated/definitions/MessageStatusValue";
+import { NotRejectedMessageStatusValueEnum as MessageStatusValueEnum } from "../../../generated/definitions/NotRejectedMessageStatusValue";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { MessageViewModel } from "../message_view";
 import { pipe } from "fp-ts/lib/function";
