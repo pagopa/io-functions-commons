@@ -7,9 +7,17 @@ import * as O from "fp-ts/lib/Option";
 import { withDefault } from "@pagopa/ts-commons/lib/types";
 import { pipe } from "fp-ts/lib/function";
 import {
-  MessageStatusValue,
-  MessageStatusValueEnum
-} from "../../generated/definitions/MessageStatusValue";
+  RejectedMessageStatusValue,
+  RejectedMessageStatusValueEnum
+} from "../../generated/definitions/RejectedMessageStatusValue";
+import {
+  NotRejectedMessageStatusValue,
+  NotRejectedMessageStatusValueEnum
+} from "../../generated/definitions/NotRejectedMessageStatusValue";
+import {
+  RejectionReason,
+  RejectionReasonEnum
+} from "../../generated/definitions/RejectionReason";
 import { Timestamp } from "../../generated/definitions/Timestamp";
 
 import { CosmosErrors } from "../utils/cosmosdb_model";
@@ -23,12 +31,9 @@ export const MESSAGE_STATUS_COLLECTION_NAME = "message-status";
 export const MESSAGE_STATUS_MODEL_ID_FIELD = "messageId" as const;
 export const MESSAGE_STATUS_MODEL_PK_FIELD = "messageId" as const;
 
-// We cannot intersect with MessageStatus
-// as it is a *strict* interface
-export const MessageStatus = t.intersection([
+export const CommonMessageStatus = t.intersection([
   t.interface({
     messageId: NonEmptyString,
-    status: MessageStatusValue,
     updatedAt: Timestamp,
     // eslint-disable-next-line sort-keys
     isRead: withDefault(t.boolean, false),
@@ -39,6 +44,30 @@ export const MessageStatus = t.intersection([
     // fiscalCode is optional due to retro-compatibility
     fiscalCode: FiscalCode
   })
+]);
+
+const RejectedMessageStatus = t.intersection([
+  CommonMessageStatus,
+  t.interface({
+    status: RejectedMessageStatusValue
+  }),
+  t.partial({
+    rejection_reason: withDefault(RejectionReason, RejectionReasonEnum.UNKNOWN)
+  })
+]);
+
+const NotRejectedMessageStatus = t.intersection([
+  CommonMessageStatus,
+  t.interface({
+    status: NotRejectedMessageStatusValue
+  })
+]);
+
+// We cannot intersect with MessageStatus
+// as it is a *strict* interface
+export const MessageStatus = t.union([
+  RejectedMessageStatus,
+  NotRejectedMessageStatus
 ]);
 
 export type MessageStatus = t.TypeOf<typeof MessageStatus>;
@@ -57,8 +86,21 @@ export const RetrievedMessageStatus = wrapWithKind(
 
 export type RetrievedMessageStatus = t.TypeOf<typeof RetrievedMessageStatus>;
 
+// --------------------------------------
+// MessageStatusUpdater
+// --------------------------------------
+
 export type MessageStatusUpdater = (
-  status: MessageStatusValueEnum
+  statusUpdate:
+    | {
+        readonly status: NotRejectedMessageStatusValueEnum;
+      }
+    | {
+        readonly rejection_reason: t.TypeOf<
+          typeof RejectedMessageStatus
+        >["rejection_reason"];
+        readonly status: RejectedMessageStatusValueEnum;
+      }
 ) => TE.TaskEither<CosmosErrors, RetrievedMessageStatus>;
 
 /**
@@ -70,7 +112,7 @@ export const getMessageStatusUpdater = (
   messageId: NonEmptyString,
   fiscalCode: FiscalCode
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-): MessageStatusUpdater => status =>
+): MessageStatusUpdater => statusUpdate =>
   pipe(
     messageStatusModel.findLastVersionByModelId([messageId]),
     TE.map(
@@ -84,8 +126,8 @@ export const getMessageStatusUpdater = (
     TE.chain(item =>
       messageStatusModel.upsert({
         ...item,
+        ...statusUpdate,
         kind: "INewMessageStatus",
-        status,
         updatedAt: new Date()
       })
     )
