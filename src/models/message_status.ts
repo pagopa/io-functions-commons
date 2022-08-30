@@ -31,6 +31,7 @@ export const MESSAGE_STATUS_COLLECTION_NAME = "message-status";
 export const MESSAGE_STATUS_MODEL_ID_FIELD = "messageId" as const;
 export const MESSAGE_STATUS_MODEL_PK_FIELD = "messageId" as const;
 
+type CommonMessageStatus = t.TypeOf<typeof CommonMessageStatus>;
 export const CommonMessageStatus = t.intersection([
   t.interface({
     messageId: NonEmptyString,
@@ -46,6 +47,7 @@ export const CommonMessageStatus = t.intersection([
   })
 ]);
 
+type RejectedMessageStatus = t.TypeOf<typeof RejectedMessageStatus>;
 const RejectedMessageStatus = t.intersection([
   CommonMessageStatus,
   t.interface({
@@ -56,6 +58,7 @@ const RejectedMessageStatus = t.intersection([
   })
 ]);
 
+type NotRejectedMessageStatus = t.TypeOf<typeof NotRejectedMessageStatus>;
 const NotRejectedMessageStatus = t.intersection([
   CommonMessageStatus,
   t.interface({
@@ -90,17 +93,17 @@ export type RetrievedMessageStatus = t.TypeOf<typeof RetrievedMessageStatus>;
 // MessageStatusUpdater
 // --------------------------------------
 
+export type MessageStatusUpdate =
+  | {
+      readonly status: NotRejectedMessageStatusValueEnum;
+    }
+  | {
+      readonly status: RejectedMessageStatusValueEnum;
+      readonly rejection_reason: RejectedMessageStatus["rejection_reason"];
+    };
+
 export type MessageStatusUpdater = (
-  statusUpdate:
-    | {
-        readonly status: NotRejectedMessageStatusValueEnum;
-      }
-    | {
-        readonly rejection_reason: t.TypeOf<
-          typeof RejectedMessageStatus
-        >["rejection_reason"];
-        readonly status: RejectedMessageStatusValueEnum;
-      }
+  statusUpdate: MessageStatusUpdate
 ) => TE.TaskEither<CosmosErrors, RetrievedMessageStatus>;
 
 /**
