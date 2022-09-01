@@ -1,4 +1,5 @@
 // eslint-disable @typescript-eslint/no-explicit-any
+import * as t from "io-ts";
 
 import * as E from "fp-ts/lib/Either";
 import * as O from "fp-ts/lib/Option";
@@ -7,15 +8,17 @@ import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import { Container, ResourceResponse } from "@azure/cosmos";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
-import { MessageStatusValueEnum } from "../../../generated/definitions/MessageStatusValue";
+import { NotRejectedMessageStatusValueEnum as MessageStatusValueEnum } from "../../../generated/definitions/NotRejectedMessageStatusValue";
+import { RejectedMessageStatusValueEnum } from "../../../generated/definitions/RejectedMessageStatusValue";
 import {
   getMessageStatusUpdater,
+  MessageStatus,
   MessageStatusModel,
   NewMessageStatus,
   RetrievedMessageStatus
 } from "../message_status";
 import { pipe } from "fp-ts/lib/function";
-import { PaymentStatusEnum } from "../../../generated/definitions/PaymentStatus";
+import { RejectionReasonEnum } from "../../../generated/definitions/RejectionReason";
 
 const aMessageId = "A_MESSAGE_ID" as NonEmptyString;
 const aFiscalCode = "RLDBSV36A78Y792X" as FiscalCode;
@@ -135,6 +138,59 @@ describe("findOneMessageStatusById", () => {
       expect(result.left.kind).toBe("COSMOS_DECODING_ERROR");
     }
   });
+
+  it("should resolve a REJECTED status with UNKNOWN rejection status, if it's not defined", async () => {
+    mockFetchAll.mockImplementationOnce(async () => ({
+      resources: [
+        {
+          ...aRetrievedMessageStatus,
+          status: RejectedMessageStatusValueEnum.REJECTED
+        }
+      ]
+    }));
+
+    const model = new MessageStatusModel(containerMock);
+    const result = await model.findLastVersionByModelId([aMessageId])();
+
+    expect(result).toEqual(
+      E.right(
+        O.some({
+          ...aRetrievedMessageStatus,
+          status: RejectedMessageStatusValueEnum.REJECTED,
+          rejection_reason: RejectionReasonEnum.UNKNOWN,
+          isRead: false,
+          isArchived: false
+        })
+      )
+    );
+  });
+
+  it("should resolve a REJECTED status with defined rejection status", async () => {
+    mockFetchAll.mockImplementationOnce(async () => ({
+      resources: [
+        {
+          ...aRetrievedMessageStatus,
+          status: RejectedMessageStatusValueEnum.REJECTED,
+          rejection_reason: RejectionReasonEnum.SERVICE_NOT_ALLOWED
+        }
+      ]
+    }));
+
+    const model = new MessageStatusModel(containerMock);
+    const result = await model.findLastVersionByModelId([aMessageId])();
+
+    expect(result).toEqual(
+      E.right(
+        O.some({
+          ...aRetrievedMessageStatus,
+          status: RejectedMessageStatusValueEnum.REJECTED,
+          rejection_reason: RejectionReasonEnum.SERVICE_NOT_ALLOWED,
+          isRead: false,
+          isArchived: false
+        })
+      )
+    );
+  });
 });
 
 describe("Update status", () => {
@@ -241,7 +297,7 @@ describe("getMessageStatusUpdater", () => {
 
     const updater = getMessageStatusUpdater(model, aNewMessageId, aFiscalCode);
 
-    const res = await updater(newStatus)();
+    const res = await updater({ status: newStatus })();
 
     expect(E.isRight(res)).toBe(true);
     if (E.isRight(res)) {
@@ -276,7 +332,14 @@ describe("getMessageStatusUpdater", () => {
 
     const updater = getMessageStatusUpdater(model, aNewMessageId, aFiscalCode);
 
-    const res = await updater(newStatus)();
+    // We expect this call to fail beause not-REJECTED status does not need rejection status
+    await updater({
+      status: newStatus,
+      // @ts-expect-error
+      rejection_reason: RejectionReasonEnum.SERVICE_NOT_ALLOWED
+    })();
+
+    const res = await updater({ status: newStatus })();
 
     expect(E.isRight(res)).toBe(true);
     if (E.isRight(res)) {
@@ -313,7 +376,7 @@ describe("getMessageStatusUpdater", () => {
 
     const updater = getMessageStatusUpdater(model, aNewMessageId, aFiscalCode);
 
-    const res = await updater(newStatus)();
+    const res = await updater({ status: newStatus })();
 
     expect(E.isRight(res)).toBe(true);
     if (E.isRight(res)) {
@@ -325,6 +388,43 @@ describe("getMessageStatusUpdater", () => {
           fiscalCode: aFiscalCode,
           isRead: true,
           isArchived: true
+        })
+      );
+    }
+  });
+
+  it("should handle a REJECTED message status asking for rejection reason", async () => {
+    const aNewMessageId = "ANonExistingId-1" as NonEmptyString;
+    const newStatus = RejectedMessageStatusValueEnum.REJECTED;
+
+    mockFetchAll.mockImplementation(async () => ({
+      resources: []
+    }));
+
+    const model = new MessageStatusModel(containerMock);
+
+    const updater = getMessageStatusUpdater(model, aNewMessageId, aFiscalCode);
+
+    // We expect this call to fail beause REJECTED status needs also a rejection reason
+    // @ts-expect-error
+    await updater(newStatus)();
+
+    const res = await updater({
+      status: newStatus,
+      rejection_reason: RejectionReasonEnum.SERVICE_NOT_ALLOWED
+    })();
+
+    expect(E.isRight(res)).toBe(true);
+    if (E.isRight(res)) {
+      expect(mockCreateItem.mock.calls[0][0]).toMatchObject(
+        expect.objectContaining({
+          version: 0,
+          status: newStatus,
+          rejection_reason: RejectionReasonEnum.SERVICE_NOT_ALLOWED,
+          messageId: aNewMessageId,
+          fiscalCode: aFiscalCode,
+          isRead: false,
+          isArchived: false
         })
       );
     }

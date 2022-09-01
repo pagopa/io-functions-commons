@@ -283,8 +283,28 @@ MaxAllowedPaymentAmount:
   minimum: 0
   maximum: 9999999999
   default: 0
-MessageStatusValue:
+RejectedMessageStatusValue:
   type: string
+  x-extensible-enum:
+    - REJECTED
+RejectionReason:
+  type: string
+  x-extensible-enum:
+    - SERVICE_NOT_ALLOWED
+    - USER_NOT_FOUND
+    - UNKNOWN
+NotRejectedMessageStatusValue:
+  type: string
+  x-extensible-enum:
+    - ACCEPTED
+    - THROTTLED
+    - FAILED
+    - PROCESSED
+MessageStatusValue:
+  x-one-of: true
+  allOf:
+    - $ref: "#/RejectedMessageStatusValue"
+    - $ref: "#/NotRejectedMessageStatusValue"
   description: |-
     The processing status of a message.
     "ACCEPTED": the message has been accepted and will be processed for delivery;
@@ -295,13 +315,6 @@ MessageStatusValue:
     "PROCESSED": the message was succesfully processed and is now stored in the user's inbox;
       we'll try to send a notification for each of the selected channels
     "REJECTED": either the recipient does not exist, or the sender has been blocked
-  x-extensible-enum:
-    - ACCEPTED
-    - THROTTLED
-    - FAILED
-    - PROCESSED
-    - REJECTED
-  example: ACCEPTED
 MessageStatus:
   type: object
   properties:

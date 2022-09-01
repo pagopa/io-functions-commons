@@ -23,7 +23,7 @@ import { CommonServiceMetadata as ApiCommonServiceMetadata } from "../../generat
 import { StandardServiceMetadata as ApiStandardServiceMetadata } from "../../generated/definitions/StandardServiceMetadata";
 import { ServiceScopeEnum } from "../../generated/definitions/ServiceScope";
 import { SpecialServiceCategoryEnum } from "../../generated/definitions/SpecialServiceCategory";
-import { MessageStatusValueEnum } from "../../generated/definitions/MessageStatusValue";
+import { NotRejectedMessageStatusValueEnum as MessageStatusValueEnum } from "../../generated/definitions/NotRejectedMessageStatusValue";
 import { MessageStatus } from "../../generated/definitions/MessageStatus";
 import { MessageStatusChange } from "../../generated/definitions/MessageStatusChange";
 import { MessageStatusAttributes } from "../../generated/definitions/MessageStatusAttributes";
