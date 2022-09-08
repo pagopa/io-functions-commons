@@ -775,7 +775,7 @@ IsReminderEnabled:
   type: boolean
   default: false
   description: |-
-    True if the user wants reminders about not read messages.
+    True if the user wants reminders about unread messages.
 IsTestProfile:
   type: boolean
   description: True if the user's profile is only for test purpose. 
