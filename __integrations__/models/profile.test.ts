@@ -445,4 +445,40 @@ describe("Models |> Profile", () => {
       context.dispose();
     }
   );
+
+  it.each`
+    inputValue   | expectedValue
+    ${undefined} | ${false}
+    ${null}      | ${false}
+    ${true}      | ${true}
+    ${false}     | ${false}
+  `(
+    "should save records when passing consistent isReminderEnabled = $inputValue",
+    async ({ inputValue, expectedValue }) => {
+      const context = createContext(PROFILE_MODEL_PK_FIELD);
+      await context.init();
+      const model = new ProfileModel(context.container);
+
+      const toBeSavedProfile: NewProfile = {
+        kind: "INewProfile" as const,
+        ...aProfile,
+        isReminderEnabled: inputValue
+      };
+
+      await pipe(
+        model.create(toBeSavedProfile),
+        te.bimap(
+          _ =>
+            fail(
+              `Should not have failed with isReminderEnabled = ${inputValue}`
+            ),
+          _ => {
+            expect(_.isReminderEnabled).toBe(expectedValue);
+          }
+        )
+      )();
+
+      context.dispose();
+    }
+  );
 });
