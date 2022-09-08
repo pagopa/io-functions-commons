@@ -17,6 +17,7 @@ import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { IsEmailEnabled } from "../../generated/definitions/IsEmailEnabled";
 import { IsEmailValidated } from "../../generated/definitions/IsEmailValidated";
 import { IsInboxEnabled } from "../../generated/definitions/IsInboxEnabled";
+import { IsReminderEnabled } from "../../generated/definitions/IsReminderEnabled";
 import { IsTestProfile } from "../../generated/definitions/IsTestProfile";
 import { IsWebhookEnabled } from "../../generated/definitions/IsWebhookEnabled";
 import { ServicesPreferencesModeEnum } from "../../generated/definitions/ServicesPreferencesMode";
@@ -99,6 +100,9 @@ export const Profile = t.intersection([
 
     // whether to store the content of messages sent to this citizen
     isInboxEnabled: IsInboxEnabled,
+
+    // opt-in flag for reminder functionality (defaults to false)
+    isReminderEnabled: IsReminderEnabled,
 
     // if true this profile is only for test purpose
     isTestProfile: IsTestProfile,

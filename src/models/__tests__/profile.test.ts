@@ -45,40 +45,54 @@ const aRetrievedProfile: RetrievedProfile = {
   ...aStoredProfile
 };
 
+const aRetrievedProfileWithEnabledReminder: RetrievedProfile = {
+  ...aRetrievedProfile,
+  isReminderEnabled: true
+};
+
 describe("findLastVersionByModelId", () => {
-  it("should resolve to an existing profile", async () => {
-    const containerMock = ({
-      items: {
-        create: jest.fn(),
-        query: jest.fn(() => ({
-          fetchAll: jest.fn(() =>
-            Promise.resolve({
-              resources: [aRetrievedProfile]
-            })
-          )
-        }))
+  it.each`
+    case                                        | retrievedProfile                        | expectedIsReminderEnabled
+    ${"existing profile"}                       | ${aRetrievedProfile}                    | ${false}
+    ${"existing profile with reminder enabled"} | ${aRetrievedProfileWithEnabledReminder} | ${true}
+  `(
+    "should resolve to an $case",
+    async ({ _, retrievedProfile, expectedIsReminderEnabled }) => {
+      const containerMock = ({
+        items: {
+          create: jest.fn(),
+          query: jest.fn(() => ({
+            fetchAll: jest.fn(() =>
+              Promise.resolve({
+                resources: [retrievedProfile]
+              })
+            )
+          }))
+        }
+      } as unknown) as Container;
+
+      const model = new ProfileModel(containerMock);
+
+      const result = await model.findLastVersionByModelId([aFiscalCode])();
+
+      expect(E.isRight(result)).toBeTruthy();
+      if (E.isRight(result)) {
+        expect(O.isSome(result.right)).toBeTruthy();
+        expect(O.toUndefined(result.right)).toEqual({
+          ...aRetrievedProfile,
+          isEmailEnabled: true,
+          isTestProfile: false,
+          servicePreferencesSettings: {
+            mode: ServicesPreferencesModeEnum.LEGACY,
+            version: PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION
+          },
+          // we make sure that last optional properties added are with default values
+          lastAppVersion: "UNKNOWN",
+          isReminderEnabled: expectedIsReminderEnabled
+        });
       }
-    } as unknown) as Container;
-
-    const model = new ProfileModel(containerMock);
-
-    const result = await model.findLastVersionByModelId([aFiscalCode])();
-
-    expect(E.isRight(result)).toBeTruthy();
-    if (E.isRight(result)) {
-      expect(O.isSome(result.right)).toBeTruthy();
-      expect(O.toUndefined(result.right)).toEqual({
-        ...aRetrievedProfile,
-        isEmailEnabled: true,
-        isTestProfile: false,
-        servicePreferencesSettings: {
-          mode: ServicesPreferencesModeEnum.LEGACY,
-          version: PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION
-        },
-        lastAppVersion: "UNKNOWN"
-      });
     }
-  });
+  );
 
   it("should resolve to empty if no profile is found", async () => {
     const containerMock = ({
