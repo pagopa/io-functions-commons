@@ -45,11 +45,6 @@ const aRetrievedProfile: RetrievedProfile = {
   ...aStoredProfile
 };
 
-const aRetrievedProfileWithEnabledReminder: RetrievedProfile = {
-  ...aRetrievedProfile,
-  isReminderEnabled: true
-};
-
 const aLastAppVersion = "1.0.0";
 
 describe("findLastVersionByModelId", () => {
