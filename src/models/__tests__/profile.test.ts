@@ -50,21 +50,38 @@ const aRetrievedProfileWithEnabledReminder: RetrievedProfile = {
   isReminderEnabled: true
 };
 
+const aLastAppVersion = "1.0.0";
+
 describe("findLastVersionByModelId", () => {
   it.each`
-    case                                        | retrievedProfile                        | expectedIsReminderEnabled
-    ${"existing profile"}                       | ${aRetrievedProfile}                    | ${false}
-    ${"existing profile with reminder enabled"} | ${aRetrievedProfileWithEnabledReminder} | ${true}
+    case                                         | lastAppVersion     | expectedLastAppVersion | isReminderEnabled | expectedIsReminderEnabled
+    ${"existing profile"}                        | ${undefined}       | ${"UNKNOWN"}           | ${undefined}      | ${false}
+    ${"existing profile with last app version"}  | ${aLastAppVersion} | ${aLastAppVersion}     | ${undefined}      | ${false}
+    ${"existing profile with reminder enabled"}  | ${undefined}       | ${"UNKNOWN"}           | ${true}           | ${true}
+    ${"existing profile with reminder disabled"} | ${undefined}       | ${"UNKNOWN"}           | ${false}          | ${false}
+    ${"existing profile with all props"}         | ${aLastAppVersion} | ${aLastAppVersion}     | ${true}           | ${true}
   `(
     "should resolve to an $case",
-    async ({ _, retrievedProfile, expectedIsReminderEnabled }) => {
+    async ({
+      _,
+      lastAppVersion,
+      expectedLastAppVersion,
+      isReminderEnabled,
+      expectedIsReminderEnabled
+    }) => {
       const containerMock = ({
         items: {
           create: jest.fn(),
           query: jest.fn(() => ({
             fetchAll: jest.fn(() =>
               Promise.resolve({
-                resources: [retrievedProfile]
+                resources: [
+                  {
+                    ...aRetrievedProfile,
+                    lastAppVersion,
+                    isReminderEnabled
+                  }
+                ]
               })
             )
           }))
@@ -87,7 +104,7 @@ describe("findLastVersionByModelId", () => {
             version: PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION
           },
           // we make sure that last optional properties added are with default values
-          lastAppVersion: "UNKNOWN",
+          lastAppVersion: expectedLastAppVersion,
           isReminderEnabled: expectedIsReminderEnabled
         });
       }

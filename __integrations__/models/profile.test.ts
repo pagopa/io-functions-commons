@@ -449,7 +449,6 @@ describe("Models |> Profile", () => {
   it.each`
     inputValue   | expectedValue
     ${undefined} | ${false}
-    ${null}      | ${false}
     ${true}      | ${true}
     ${false}     | ${false}
   `(
