@@ -263,7 +263,63 @@ describe("AzureApiAuthMiddleware", () => {
   });
 });
 
+enum DummyEnum {
+  "uno" = "uno",
+  "due" = "due"
+}
 describe("AzureAllowBodyPayloadMiddleware", () => {
+  it.each([
+    {
+      requestValue: DummyEnum.uno,
+      expectedValue: DummyEnum.uno,
+      requestGroup: UserGroup.ApiMessageRead,
+      expectedGroup: UserGroup.ApiMessageRead
+    },
+    {
+      requestValue: DummyEnum.uno,
+      expectedValue: DummyEnum.uno,
+      requestGroup: UserGroup.ApiMessageRead,
+      expectedGroup: UserGroup.ApiMessageWrite
+    },
+    {
+      requestValue: DummyEnum.uno,
+      expectedValue: DummyEnum.due,
+      requestGroup: UserGroup.ApiMessageRead,
+      expectedGroup: UserGroup.ApiMessageWrite
+    }
+  ])(
+    "should match only a specific enum when the permission match the value %s",
+    async ({ requestValue, expectedValue, requestGroup, expectedGroup }) => {
+      const headers = {
+        ...someHeaders,
+        "x-user-groups": requestGroup
+      };
+      const aPayload = { value: requestValue };
+      const mockRequest = {
+        header: jest.fn(lookup(headers)),
+        body: aPayload
+      };
+      const aMatchingCodec = t.interface({
+        value: t.literal(expectedValue)
+      });
+      const allowedGroupSet = new Set([expectedGroup]);
+
+      const middleware = AzureAllowBodyPayloadMiddleware(
+        aMatchingCodec,
+        allowedGroupSet
+      );
+
+      const result = await middleware(mockRequest as any);
+
+      expect(E.isRight(result)).toBe(
+        requestValue !== expectedValue || requestGroup === expectedGroup
+      );
+      expect(E.isRight(aMatchingCodec.decode(aPayload))).toBe(
+        requestValue === expectedValue
+      ); // test is wrong if it fails
+    }
+  );
+
   it("should success if pattern is not matched", async () => {
     const headers = {
       ...someHeaders
@@ -361,8 +417,10 @@ describe("AzureAllowBodyPayloadMiddleware", () => {
       result,
       E.fold(
         _ => {
-          expect(_.kind).toBe("IResponseErrorForbiddenNotAuthorized")
-          expect(_.detail).toContain("You are not allowed here: No valid scopes, you are not allowed to send such payloads. Ask the administrator to give you the required permissions.")
+          expect(_.kind).toBe("IResponseErrorForbiddenNotAuthorized");
+          expect(_.detail).toContain(
+            "You are not allowed here: No valid scopes, you are not allowed to send such payloads. Ask the administrator to give you the required permissions."
+          );
         },
         _ => fail("Expecting left")
       )
@@ -395,8 +453,10 @@ describe("AzureAllowBodyPayloadMiddleware", () => {
       result,
       E.fold(
         _ => {
-          expect(_.kind).toBe("IResponseErrorForbiddenNoAuthorizationGroups")
-          expect(_.detail).toContain("User has no valid scopes: No valid scopes, you are not allowed to send such payloads. Ask the administrator to give you the required permissions.")
+          expect(_.kind).toBe("IResponseErrorForbiddenNoAuthorizationGroups");
+          expect(_.detail).toContain(
+            "User has no valid scopes: No valid scopes, you are not allowed to send such payloads. Ask the administrator to give you the required permissions."
+          );
         },
         _ => fail("Expecting left")
       )
@@ -429,7 +489,7 @@ describe("AzureAllowBodyPayloadMiddleware", () => {
     pipe(
       result,
       E.fold(
-        _ =>{
+        _ => {
           expect(_.kind).toBe("IResponseErrorForbiddenNoAuthorizationGroups");
           expect(_.detail).toContain("a custom detail");
         },
@@ -472,5 +532,4 @@ describe("AzureAllowBodyPayloadMiddleware", () => {
       )
     );
   });
-
 });
