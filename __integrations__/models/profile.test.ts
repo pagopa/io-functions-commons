@@ -447,12 +447,12 @@ describe("Models |> Profile", () => {
   );
 
   it.each`
-    inputValue   | expectedValue
-    ${undefined} | ${false}
-    ${true}      | ${true}
-    ${false}     | ${false}
+    inputValue    | expectedValue
+    ${undefined}  | ${"UNSET"}
+    ${"ENABLED"}  | ${"ENABLED"}
+    ${"DISABLED"} | ${"DISABLED"}
   `(
-    "should save records when passing consistent isReminderEnabled = $inputValue",
+    "should save records when passing consistent reminderStatus = $inputValue",
     async ({ inputValue, expectedValue }) => {
       const context = createContext(PROFILE_MODEL_PK_FIELD);
       await context.init();
@@ -461,18 +461,16 @@ describe("Models |> Profile", () => {
       const toBeSavedProfile: NewProfile = {
         kind: "INewProfile" as const,
         ...aProfile,
-        isReminderEnabled: inputValue
+        reminderStatus: inputValue
       };
 
       await pipe(
         model.create(toBeSavedProfile),
         te.bimap(
           _ =>
-            fail(
-              `Should not have failed with isReminderEnabled = ${inputValue}`
-            ),
+            fail(`Should not have failed with reminderStatus = ${inputValue}`),
           _ => {
-            expect(_.isReminderEnabled).toBe(expectedValue);
+            expect(_.reminderStatus).toBe(expectedValue);
           }
         )
       )();
