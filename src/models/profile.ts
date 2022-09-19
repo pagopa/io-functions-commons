@@ -101,9 +101,6 @@ export const Profile = t.intersection([
     // whether to store the content of messages sent to this citizen
     isInboxEnabled: IsInboxEnabled,
 
-    // opt-in flag for reminder functionality (defaults to false)
-    reminderStatus: ReminderStatus,
-
     // if true this profile is only for test purpose
     isTestProfile: IsTestProfile,
 
@@ -118,7 +115,10 @@ export const Profile = t.intersection([
 
     // array of user's preferred languages in ISO-3166-1-2 format
     // https://it.wikipedia.org/wiki/ISO_3166-2
-    preferredLanguages: PreferredLanguages
+    preferredLanguages: PreferredLanguages,
+
+    // opt-in flag for reminder functionality (defaults to false)
+    reminderStatus: ReminderStatus
   })
 ]);
 
