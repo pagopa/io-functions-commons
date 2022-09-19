@@ -17,13 +17,13 @@ import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { IsEmailEnabled } from "../../generated/definitions/IsEmailEnabled";
 import { IsEmailValidated } from "../../generated/definitions/IsEmailValidated";
 import { IsInboxEnabled } from "../../generated/definitions/IsInboxEnabled";
-import { IsReminderEnabled } from "../../generated/definitions/IsReminderEnabled";
 import { IsTestProfile } from "../../generated/definitions/IsTestProfile";
 import { IsWebhookEnabled } from "../../generated/definitions/IsWebhookEnabled";
 import { ServicesPreferencesModeEnum } from "../../generated/definitions/ServicesPreferencesMode";
 import { PreferredLanguages } from "../../generated/definitions/PreferredLanguages";
 
 import { wrapWithKind } from "../utils/types";
+import { ReminderStatus } from "../../generated/definitions/ReminderStatus";
 
 export const PROFILE_COLLECTION_NAME = "profiles";
 export const PROFILE_MODEL_PK_FIELD = "fiscalCode" as const;
@@ -102,7 +102,7 @@ export const Profile = t.intersection([
     isInboxEnabled: IsInboxEnabled,
 
     // opt-in flag for reminder functionality (defaults to false)
-    isReminderEnabled: IsReminderEnabled,
+    reminderStatus: ReminderStatus,
 
     // if true this profile is only for test purpose
     isTestProfile: IsTestProfile,

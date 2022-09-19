@@ -49,20 +49,20 @@ const aLastAppVersion = "1.0.0";
 
 describe("findLastVersionByModelId", () => {
   it.each`
-    case                                         | lastAppVersion     | expectedLastAppVersion | isReminderEnabled | expectedIsReminderEnabled
-    ${"existing profile"}                        | ${undefined}       | ${"UNKNOWN"}           | ${undefined}      | ${false}
-    ${"existing profile with last app version"}  | ${aLastAppVersion} | ${aLastAppVersion}     | ${undefined}      | ${false}
-    ${"existing profile with reminder enabled"}  | ${undefined}       | ${"UNKNOWN"}           | ${true}           | ${true}
-    ${"existing profile with reminder disabled"} | ${undefined}       | ${"UNKNOWN"}           | ${false}          | ${false}
-    ${"existing profile with all props"}         | ${aLastAppVersion} | ${aLastAppVersion}     | ${true}           | ${true}
+    case                                         | lastAppVersion     | expectedLastAppVersion | reminderStatus | expectedReminderStatus
+    ${"existing profile"}                        | ${undefined}       | ${"UNKNOWN"}           | ${undefined}      | ${"UNSET"}
+    ${"existing profile with last app version"}  | ${aLastAppVersion} | ${aLastAppVersion}     | ${undefined}      | ${"UNSET"}
+    ${"existing profile with reminder enabled"}  | ${undefined}       | ${"UNKNOWN"}           | ${"ENABLED"}      | ${"ENABLED"}
+    ${"existing profile with reminder disabled"} | ${undefined}       | ${"UNKNOWN"}           | ${"DISABLED"}     | ${"DISABLED"}
+    ${"existing profile with all props"}         | ${aLastAppVersion} | ${aLastAppVersion}     | ${"ENABLED"}      | ${"ENABLED"}
   `(
     "should resolve to an $case",
     async ({
       _,
       lastAppVersion,
       expectedLastAppVersion,
-      isReminderEnabled,
-      expectedIsReminderEnabled
+      reminderStatus,
+      expectedReminderStatus
     }) => {
       const containerMock = ({
         items: {
@@ -74,7 +74,7 @@ describe("findLastVersionByModelId", () => {
                   {
                     ...aRetrievedProfile,
                     lastAppVersion,
-                    isReminderEnabled
+                    reminderStatus
                   }
                 ]
               })
@@ -100,7 +100,7 @@ describe("findLastVersionByModelId", () => {
           },
           // we make sure that last optional properties added are with default values
           lastAppVersion: expectedLastAppVersion,
-          isReminderEnabled: expectedIsReminderEnabled
+          reminderStatus: expectedReminderStatus
         });
       }
     }

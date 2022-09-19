@@ -689,8 +689,8 @@ Profile:
       $ref: "#/IsWebhookEnabled"
     is_email_enabled:
       $ref: "#/IsEmailEnabled"
-    is_reminder_enabled:
-      $ref: "#/IsReminderEnabled"
+    reminder_status:
+      $ref: "#/ReminderStatus"
     last_app_version:
       $ref: "#/AppVersion"
     version:
@@ -736,8 +736,8 @@ ExtendedProfile:
       $ref: "#/IsEmailEnabled"
     is_email_validated:
       $ref: "#/IsEmailValidated"
-    is_reminder_enabled:
-      $ref: "#/IsReminderEnabled"
+    reminder_status:
+      $ref: "#/ReminderStatus"
     is_test_profile:
       $ref: "#/IsTestProfile"
     last_app_version:
@@ -771,11 +771,16 @@ IsWebhookEnabled:
 IsEmailEnabled:
   type: boolean
   description: True if the recipient of a message wants to forward the notifications to his email address.
-IsReminderEnabled:
-  type: boolean
-  default: false
-  description: |-
-    True if the user wants reminders about unread messages.
+ReminderStatus:
+  type: string
+  x-extensible-enum:
+    - UNSET
+    - ENABLED
+    - DISABLED
+  default: UNSET
+  example: ENABLED
+  description:
+    Api definition of reminder opt-in status
 IsTestProfile:
   type: boolean
   description: True if the user's profile is only for test purpose. 
