@@ -101,7 +101,11 @@ export enum UserGroup {
   ApiMessageReadAdvanced = "ApiMessageReadAdvanced",
 
   // 3rd party Message handling
-  ApiThirdPartyMessageWrite = "ApiThirdPartyMessageWrite"
+  ApiThirdPartyMessageWrite = "ApiThirdPartyMessageWrite",
+
+  // Push Notification
+  ApiNewMessageNotify = "ApiNewMessageNotify",
+  ApiReminderNotify = "ApiReminderNotify"
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
