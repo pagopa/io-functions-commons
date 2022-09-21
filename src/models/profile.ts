@@ -117,7 +117,7 @@ export const Profile = t.intersection([
     // https://it.wikipedia.org/wiki/ISO_3166-2
     preferredLanguages: PreferredLanguages,
 
-    // opt-in flag for reminder functionality (defaults to false)
+    // opt-in flag for reminder functionality (defaults to UNSET)
     reminderStatus: ReminderStatus
   })
 ]);
