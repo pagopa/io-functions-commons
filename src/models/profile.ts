@@ -23,6 +23,7 @@ import { ServicesPreferencesModeEnum } from "../../generated/definitions/Service
 import { PreferredLanguages } from "../../generated/definitions/PreferredLanguages";
 
 import { wrapWithKind } from "../utils/types";
+import { ReminderStatus } from "../../generated/definitions/ReminderStatus";
 
 export const PROFILE_COLLECTION_NAME = "profiles";
 export const PROFILE_MODEL_PK_FIELD = "fiscalCode" as const;
@@ -114,7 +115,10 @@ export const Profile = t.intersection([
 
     // array of user's preferred languages in ISO-3166-1-2 format
     // https://it.wikipedia.org/wiki/ISO_3166-2
-    preferredLanguages: PreferredLanguages
+    preferredLanguages: PreferredLanguages,
+
+    // opt-in flag for reminder functionality (defaults to UNSET)
+    reminderStatus: ReminderStatus
   })
 ]);
 

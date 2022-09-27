@@ -45,40 +45,69 @@ const aRetrievedProfile: RetrievedProfile = {
   ...aStoredProfile
 };
 
+const aLastAppVersion = "1.0.0";
+
 describe("findLastVersionByModelId", () => {
-  it("should resolve to an existing profile", async () => {
-    const containerMock = ({
-      items: {
-        create: jest.fn(),
-        query: jest.fn(() => ({
-          fetchAll: jest.fn(() =>
-            Promise.resolve({
-              resources: [aRetrievedProfile]
-            })
-          )
-        }))
+  it.each`
+    case                                                           | lastAppVersion     | expectedLastAppVersion | reminderStatus | expectedReminderStatus
+    ${"existing profile with no props"}                            | ${undefined}       | ${"UNKNOWN"}           | ${undefined}   | ${"UNSET"}
+    ${"existing profile with no props and unset reminder"}         | ${undefined}       | ${"UNKNOWN"}           | ${"UNSET"}     | ${"UNSET"}
+    ${"existing profile with reminder enabled"}                    | ${undefined}       | ${"UNKNOWN"}           | ${"ENABLED"}   | ${"ENABLED"}
+    ${"existing profile with reminder disabled"}                   | ${undefined}       | ${"UNKNOWN"}           | ${"DISABLED"}  | ${"DISABLED"}
+    ${"existing profile with last app version"}                    | ${aLastAppVersion} | ${aLastAppVersion}     | ${undefined}   | ${"UNSET"}
+    ${"existing profile with last app version and unset reminder"} | ${aLastAppVersion} | ${aLastAppVersion}     | ${"UNSET"}     | ${"UNSET"}
+    ${"existing profile with all props with reminder enabled"}     | ${aLastAppVersion} | ${aLastAppVersion}     | ${"ENABLED"}   | ${"ENABLED"}
+    ${"existing profile with all props with reminder disabled"}    | ${aLastAppVersion} | ${aLastAppVersion}     | ${"DISABLED"}  | ${"DISABLED"}
+  `(
+    "should resolve to an $case",
+    async ({
+      _,
+      lastAppVersion,
+      expectedLastAppVersion,
+      reminderStatus,
+      expectedReminderStatus
+    }) => {
+      const containerMock = ({
+        items: {
+          create: jest.fn(),
+          query: jest.fn(() => ({
+            fetchAll: jest.fn(() =>
+              Promise.resolve({
+                resources: [
+                  {
+                    ...aRetrievedProfile,
+                    lastAppVersion,
+                    reminderStatus
+                  }
+                ]
+              })
+            )
+          }))
+        }
+      } as unknown) as Container;
+
+      const model = new ProfileModel(containerMock);
+
+      const result = await model.findLastVersionByModelId([aFiscalCode])();
+
+      expect(E.isRight(result)).toBeTruthy();
+      if (E.isRight(result)) {
+        expect(O.isSome(result.right)).toBeTruthy();
+        expect(O.toUndefined(result.right)).toEqual({
+          ...aRetrievedProfile,
+          isEmailEnabled: true,
+          isTestProfile: false,
+          servicePreferencesSettings: {
+            mode: ServicesPreferencesModeEnum.LEGACY,
+            version: PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION
+          },
+          // we make sure that last optional properties added are with default values
+          lastAppVersion: expectedLastAppVersion,
+          reminderStatus: expectedReminderStatus
+        });
       }
-    } as unknown) as Container;
-
-    const model = new ProfileModel(containerMock);
-
-    const result = await model.findLastVersionByModelId([aFiscalCode])();
-
-    expect(E.isRight(result)).toBeTruthy();
-    if (E.isRight(result)) {
-      expect(O.isSome(result.right)).toBeTruthy();
-      expect(O.toUndefined(result.right)).toEqual({
-        ...aRetrievedProfile,
-        isEmailEnabled: true,
-        isTestProfile: false,
-        servicePreferencesSettings: {
-          mode: ServicesPreferencesModeEnum.LEGACY,
-          version: PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION
-        },
-        lastAppVersion: "UNKNOWN"
-      });
     }
-  });
+  );
 
   it("should resolve to empty if no profile is found", async () => {
     const containerMock = ({

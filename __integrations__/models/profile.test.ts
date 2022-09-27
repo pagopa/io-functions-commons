@@ -445,4 +445,37 @@ describe("Models |> Profile", () => {
       context.dispose();
     }
   );
+
+  it.each`
+    inputValue    | expectedValue
+    ${undefined}  | ${"UNSET"}
+    ${"ENABLED"}  | ${"ENABLED"}
+    ${"DISABLED"} | ${"DISABLED"}
+  `(
+    "should save records when passing consistent reminderStatus = $inputValue",
+    async ({ inputValue, expectedValue }) => {
+      const context = createContext(PROFILE_MODEL_PK_FIELD);
+      await context.init();
+      const model = new ProfileModel(context.container);
+
+      const toBeSavedProfile: NewProfile = {
+        kind: "INewProfile" as const,
+        ...aProfile,
+        reminderStatus: inputValue
+      };
+
+      await pipe(
+        model.create(toBeSavedProfile),
+        te.bimap(
+          _ =>
+            fail(`Should not have failed with reminderStatus = ${inputValue}`),
+          _ => {
+            expect(_.reminderStatus).toBe(expectedValue);
+          }
+        )
+      )();
+
+      context.dispose();
+    }
+  );
 });
