@@ -49,12 +49,15 @@ const aLastAppVersion = "1.0.0";
 
 describe("findLastVersionByModelId", () => {
   it.each`
-    case                                         | lastAppVersion     | expectedLastAppVersion | reminderStatus | expectedReminderStatus
-    ${"existing profile"}                        | ${undefined}       | ${"UNKNOWN"}           | ${undefined}      | ${"UNSET"}
-    ${"existing profile with last app version"}  | ${aLastAppVersion} | ${aLastAppVersion}     | ${undefined}      | ${"UNSET"}
-    ${"existing profile with reminder enabled"}  | ${undefined}       | ${"UNKNOWN"}           | ${"ENABLED"}      | ${"ENABLED"}
-    ${"existing profile with reminder disabled"} | ${undefined}       | ${"UNKNOWN"}           | ${"DISABLED"}     | ${"DISABLED"}
-    ${"existing profile with all props"}         | ${aLastAppVersion} | ${aLastAppVersion}     | ${"ENABLED"}      | ${"ENABLED"}
+    case                                                           | lastAppVersion     | expectedLastAppVersion | reminderStatus | expectedReminderStatus
+    ${"existing profile with no props"}                            | ${undefined}       | ${"UNKNOWN"}           | ${undefined}   | ${"UNSET"}
+    ${"existing profile with no props and unset reminder"}         | ${undefined}       | ${"UNKNOWN"}           | ${"UNSET"}     | ${"UNSET"}
+    ${"existing profile with reminder enabled"}                    | ${undefined}       | ${"UNKNOWN"}           | ${"ENABLED"}   | ${"ENABLED"}
+    ${"existing profile with reminder disabled"}                   | ${undefined}       | ${"UNKNOWN"}           | ${"DISABLED"}  | ${"DISABLED"}
+    ${"existing profile with last app version"}                    | ${aLastAppVersion} | ${aLastAppVersion}     | ${undefined}   | ${"UNSET"}
+    ${"existing profile with last app version and unset reminder"} | ${aLastAppVersion} | ${aLastAppVersion}     | ${"UNSET"}     | ${"UNSET"}
+    ${"existing profile with all props with reminder enabled"}     | ${aLastAppVersion} | ${aLastAppVersion}     | ${"ENABLED"}   | ${"ENABLED"}
+    ${"existing profile with all props with reminder disabled"}    | ${aLastAppVersion} | ${aLastAppVersion}     | ${"DISABLED"}  | ${"DISABLED"}
   `(
     "should resolve to an $case",
     async ({
