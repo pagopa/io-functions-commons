@@ -118,7 +118,10 @@ export const Profile = t.intersection([
     preferredLanguages: PreferredLanguages,
 
     // opt-in flag for reminder functionality (defaults to UNSET)
-    reminderStatus: ReminderStatus
+    reminderStatus: withDefault(
+      t.union([ReminderStatus, t.literal("UNSET")]),
+      "UNSET"
+    )
   })
 ]);
 
