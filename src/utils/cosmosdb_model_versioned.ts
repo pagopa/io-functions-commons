@@ -14,6 +14,7 @@ import {
 import {
   Container,
   ItemDefinition,
+  JSONValue,
   RequestOptions,
   SqlQuerySpec
 } from "@azure/cosmos";
@@ -177,17 +178,17 @@ export abstract class CosmosdbModelVersioned<
    */
 
   public updateTTLForAllVersion(
-    searchKey: DocumentSearchKey<TR, CosmosDocumentIdKey, PartitionKey>,
+    searchKey: DocumentSearchKey<TR, ModelIdKey, PartitionKey>,
     ttl: NonNegativeNumber
   ): TE.TaskEither<CosmosErrors, ReadonlyArray<TR>> {
     return pipe(
-      this.findAllVersionByPartitionKey(searchKey),
-      TE.map(x => pipe(x, RA.rights)),
+      this.findAllVersionsByPartitionKey(searchKey),
+      TE.map(RA.rights),
       TE.chain(documentList =>
         RA.sequence(TE.ApplicativeSeq)(
           documentList.map(document =>
             super.updateTTL(
-              [document.id, searchKey[0]] as DocumentSearchKey<
+              ([document.id, searchKey[0]] as unknown) as DocumentSearchKey<
                 TR,
                 CosmosDocumentIdKey,
                 PartitionKey
@@ -205,10 +206,10 @@ export abstract class CosmosdbModelVersioned<
    * Given a searchKey returns all the version of a document
    */
 
-  public findAllVersionByPartitionKey(
-    searchKey: DocumentSearchKey<TR, CosmosDocumentIdKey, PartitionKey>
+  public findAllVersionsByPartitionKey(
+    searchKey: DocumentSearchKey<TR, ModelIdKey, PartitionKey>
   ): TE.TaskEither<CosmosErrors, ReadonlyArray<t.Validation<TR>>> {
-    const [partitionKey] = searchKey;
+    const partitionKey = searchKey.length === 1 ? searchKey[0] : searchKey[1];
     return pipe(
       TE.tryCatch(
         () =>
@@ -217,12 +218,12 @@ export abstract class CosmosdbModelVersioned<
               parameters: [
                 {
                   name: "@partitionKey",
-                  value: partitionKey
+                  value: partitionKey as JSONValue
                 }
               ],
               query: `SELECT * FROM m WHERE m.${
                 this.partitionKey ? this.partitionKey : this.modelIdKey
-              } = @partitionKey ORDER BY m.version DESC`
+              } = @partitionKey`
             })
           ),
         toCosmosErrorResponse

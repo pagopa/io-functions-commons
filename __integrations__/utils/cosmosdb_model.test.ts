@@ -11,10 +11,13 @@ import {
   CosmosdbModel,
   CosmosResource
 } from "../../src/utils/cosmosdb_model";
+
+import { CosmosdbModelVersioned, RetrievedVersionedModel } from "../../src/utils/cosmosdb_model_versioned";
 import { createContext } from "../models/cosmos_utils";
 
 const MyDocument = t.intersection([t.interface({
   pk: t.string,
+  id: t.string,
   test: t.string,
 }), t.partial({messageId: t.string})]);
 type MyDocument = t.TypeOf<typeof MyDocument>;
@@ -32,6 +35,21 @@ class MyModel extends CosmosdbModel<
 > {
   constructor(c: Container) {
     super(c, NewMyDocument, RetrievedMyDocument);
+  }
+}
+
+const RetrievedMyVersionedDocument = t.intersection([MyDocument, RetrievedVersionedModel]);
+type RetrievedMyVersionedDocument = t.TypeOf<typeof RetrievedMyVersionedDocument>;
+
+class MyVersionedModel extends CosmosdbModelVersioned<
+  MyDocument,
+  NewMyDocument,
+  RetrievedMyVersionedDocument,
+  "id",
+  "pk"
+>{
+  constructor(c: Container){
+    super(c, NewMyDocument, RetrievedMyVersionedDocument, "id", "pk");
   }
 }
 
@@ -192,6 +210,37 @@ describe("find", () => {
       expect(O.isNone(result.right)).toBeTruthy();
     }
   });
+
+  it("should return 3 documents", async () => {
+    const model = new MyVersionedModel(context.container);
+
+    await model.upsert({
+      id: testId,
+      pk: testPartition,
+      test: "test"
+    })();
+
+    await model.upsert({
+      id: "2testId" as NonEmptyString,
+      pk: testPartition,
+      test: "test"
+    })();
+
+    await model.upsert({
+      id: "3testId" as NonEmptyString,
+      pk: "invalidPartition",
+      test: "test"
+    })();
+
+    const result = await model.findAllVersionsByPartitionKey([testId, testPartition])();
+
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      // expect(O.isNone(result.right)).toBeTruthy();
+      expect(result.right).toHaveLength(2)
+    }
+  });
+
 });
 
 afterEach(() => context.dispose())
