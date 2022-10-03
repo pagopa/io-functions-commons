@@ -3,7 +3,7 @@ import * as t from "io-ts";
 import * as E from "fp-ts/lib/Either";
 import * as O from "fp-ts/lib/Option";
 
-import { Container, ErrorResponse, ResourceResponse } from "@azure/cosmos";
+import { Container, ErrorResponse } from "@azure/cosmos";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import {
@@ -13,10 +13,10 @@ import {
 } from "../../src/utils/cosmosdb_model";
 import { createContext } from "../models/cosmos_utils";
 
-const MyDocument = t.interface({
+const MyDocument = t.intersection([t.interface({
   pk: t.string,
-  test: t.string
-});
+  test: t.string,
+}), t.partial({messageId: t.string})]);
 type MyDocument = t.TypeOf<typeof MyDocument>;
 
 const NewMyDocument = t.intersection([MyDocument, BaseModel]);
@@ -49,6 +49,7 @@ class MyPartitionedModel extends CosmosdbModel<
 
 const testId = "test-id-1" as NonEmptyString;
 const testPartition = "test-partition";
+const anotherTestId = "test-id-2" as NonEmptyString;
 
 const aDocument = {
   id: testId,
@@ -56,16 +57,24 @@ const aDocument = {
   test: "test"
 };
 
+const aDocumentWithTtl = {
+  ...aDocument,
+  ttl: 300
+}
+
 const errorResponse: ErrorResponse = new Error();
 // eslint-disable-next-line functional/immutable-data
 errorResponse.code = 500;
 
 jest.setTimeout(60000);
 
+const context = createContext("id");
+
+beforeEach(async () => await context.init())
+
 describe("create", () => {
+
   it("should create a document", async () => {
-    const context = await createContext("id");
-    await context.init();
     const model = new MyModel(context.container);
     const result = await model.create(aDocument)();
     expect(E.isRight(result));
@@ -76,14 +85,26 @@ describe("create", () => {
         })
       );
     }
-    context.dispose();
   });
+
+  it("should create a document with ttl", async () => {
+    const model = new MyModel(context.container);
+    const result = await model.create(aDocumentWithTtl)();
+    expect(E.isRight(result));
+    if (E.isRight(result)) {
+      expect(result.right).toEqual(
+        expect.objectContaining({
+          ...aDocumentWithTtl
+        })
+      );
+    }
+  });
+
 });
 
 describe("upsert", () => {
+
   it("should create a document", async () => {
-    const context = await createContext("id");
-    await context.init();
     const model = new MyModel(context.container);
     const result = await model.upsert(aDocument)();
     expect(E.isRight(result));
@@ -94,16 +115,43 @@ describe("upsert", () => {
         })
       );
     }
-    context.dispose();
   });
+
+  it("should create a document with ttl", async () => {
+    const model = new MyModel(context.container);
+    const result = await model.upsert(aDocumentWithTtl)();
+    expect(E.isRight(result));
+    if (E.isRight(result)) {
+      expect(result.right).toEqual(
+        expect.objectContaining({
+          ...aDocumentWithTtl
+        })
+      );
+    }
+  });
+
 });
 
 describe("find", () => {
-  it("should retrieve an existing document", async () => {
-    const context = await createContext("id");
-    await context.init();
+
+  it("should retrieve an existing document with ttl", async () => {
     const model = new MyModel(context.container);
-    await model.upsert(aDocument)();
+    await model.create(aDocumentWithTtl)();
+    const result = await model.find([testId])();
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(O.isSome(result.right)).toBeTruthy();
+      expect(O.toUndefined(result.right)).toEqual(
+        expect.objectContaining({
+          ...aDocumentWithTtl
+        })
+      );
+    }
+  });
+
+  it("should retrieve an existing document", async () => {
+    const model = new MyModel(context.container);
+    await model.create(aDocument)();
     const result = await model.find([testId])();
     expect(E.isRight(result)).toBeTruthy();
     if (E.isRight(result)) {
@@ -114,13 +162,12 @@ describe("find", () => {
         })
       );
     }
-    context.dispose();
   });
 
   it("should retrieve an existing document for a model with a partition", async () => {
-    const context = await createContext("pk");
-    await context.init();
-    const model = new MyPartitionedModel(context.container);
+    const contextPk = createContext("pk");
+    await contextPk.init();
+    const model = new MyPartitionedModel(contextPk.container);
     await model.upsert(aDocument)();
     const result = await model.find([testId, testPartition])();
 
@@ -133,21 +180,21 @@ describe("find", () => {
         })
       );
     }
-    context.dispose();
+    contextPk.dispose();
   });
 
   it("should return an empty option if the document does not exist", async () => {
-    const context = await createContext("id");
-    await context.init();
     const model = new MyModel(context.container);
-    const result = await model.find([testId])();
+    await model.create(aDocument)();
+    const result = await model.find([anotherTestId])();
     expect(E.isRight(result)).toBeTruthy();
     if (E.isRight(result)) {
       expect(O.isNone(result.right)).toBeTruthy();
     }
-    context.dispose();
   });
 });
+
+afterEach(() => context.dispose())
 
 /**************** @zeit/cosmosdb-server do not support "patch" yet *****************/
 // const anotherTest = "another-test";
@@ -181,3 +228,26 @@ describe("find", () => {
 //     }
 //   });
 // });
+// cannot run this test cause of patch support missing, this test was a success with a cosmos db inside io-d-comos-free
+// describe("Update ttl", () => {
+//   it("should find all version of a message", async () => {
+//     const model = new MyVersionedModel(context.container);
+//     await model.upsert({
+//       id: testId,
+//       pk: "asd",
+//       messageId: testId,
+//       test: "test"
+//     })();
+//     await model.upsert({
+//       id: testId,
+//       pk: "asd",
+//       messageId: testId,
+//       test: "test"
+//     })();
+//     await pipe(
+//       model.updateTTLForAllVersion([testId, testPartition], 200 as NonNegativeNumber),
+//       TE.map((documents) => documents.map(d => expect(d.ttl).toBe(200))),
+//     )()
+//   })
+// })
+

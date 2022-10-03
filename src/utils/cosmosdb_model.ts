@@ -23,6 +23,7 @@ import {
 import * as RA from "fp-ts/ReadonlyArray";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { flow, pipe } from "fp-ts/lib/function";
+import { NonNegativeNumber } from "@pagopa/ts-commons/lib/numbers";
 import * as R from "./record";
 import { mapAsyncIterable } from "./async";
 import { isDefined } from "./types";
@@ -71,6 +72,7 @@ export type CosmosResource = t.TypeOf<typeof CosmosResource>;
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 export const CosmosResource = t.intersection([
   BaseModel,
+  t.partial({ ttl: NonNegativeNumber }),
   t.interface({
     _etag: t.string,
     _rid: t.string,
@@ -79,7 +81,9 @@ export const CosmosResource = t.intersection([
   })
   // this cast is used to keep CosmosResource aligned
   // with @azure/cosmos/Resource type definition
-]) as t.Type<Resource & { readonly id: NonEmptyString }>;
+]) as t.Type<
+  Resource & { readonly id: NonEmptyString; readonly ttl?: NonNegativeNumber }
+>;
 
 // An empty response from a Cosmos operation
 export const CosmosEmptyResponse = {
@@ -262,6 +266,19 @@ export abstract class CosmosdbModel<
         flow(this.retrievedItemT.decode, E.mapLeft(CosmosDecodingError))
       )
     );
+  }
+
+  /**
+   * Add or update the ttl of the document identified by the searchKey
+   */
+
+  public updateTTL(
+    searchKey: DocumentSearchKey<TR, CosmosDocumentIdKey, PartitionKey>,
+    ttl: NonNegativeNumber
+  ): TE.TaskEither<CosmosErrors, TR> {
+    return this.patch(searchKey, { ttl } as {
+      readonly ttl: NonNegativeNumber;
+    } & T);
   }
 
   /**

@@ -3,10 +3,12 @@ import * as t from "io-ts";
 import * as O from "fp-ts/lib/Option";
 import { TaskEither } from "fp-ts/lib/TaskEither";
 import * as TE from "fp-ts/lib/TaskEither";
+import * as RA from "fp-ts/lib/ReadonlyArray";
 
 import {
   INonNegativeIntegerTag,
-  NonNegativeInteger
+  NonNegativeInteger,
+  NonNegativeNumber
 } from "@pagopa/ts-commons/lib/numbers";
 
 import {
@@ -21,10 +23,13 @@ import {
   BaseModel,
   CosmosdbModel,
   CosmosDecodingError,
+  CosmosDocumentIdKey,
   CosmosErrors,
   CosmosResource,
-  DocumentSearchKey
+  DocumentSearchKey,
+  toCosmosErrorResponse
 } from "./cosmosdb_model";
+import { asyncIterableToArray } from "./async";
 
 /**
  * Maps the fields of a versioned
@@ -167,6 +172,66 @@ export abstract class CosmosdbModelVersioned<
   }
 
   /**
+   * Add the given ttl at all the version of the document identified by
+   * the searchKey
+   */
+
+  public updateTTLForAllVersion(
+    searchKey: DocumentSearchKey<TR, CosmosDocumentIdKey, PartitionKey>,
+    ttl: NonNegativeNumber
+  ): TE.TaskEither<CosmosErrors, ReadonlyArray<TR>> {
+    return pipe(
+      this.findAllVersionByPartitionKey(searchKey),
+      TE.map(x => pipe(x, RA.rights)),
+      TE.chain(documentList =>
+        RA.sequence(TE.ApplicativeSeq)(
+          documentList.map(document =>
+            super.updateTTL(
+              [document.id, searchKey[0]] as DocumentSearchKey<
+                TR,
+                CosmosDocumentIdKey,
+                PartitionKey
+              >,
+              ttl
+            )
+          )
+        )
+      ),
+      TE.mapLeft(toCosmosErrorResponse)
+    );
+  }
+
+  /**
+   * Given a searchKey returns all the version of a document
+   */
+
+  public findAllVersionByPartitionKey(
+    searchKey: DocumentSearchKey<TR, CosmosDocumentIdKey, PartitionKey>
+  ): TE.TaskEither<CosmosErrors, ReadonlyArray<t.Validation<TR>>> {
+    const [partitionKey] = searchKey;
+    return pipe(
+      TE.tryCatch(
+        () =>
+          asyncIterableToArray(
+            this.getQueryIterator({
+              parameters: [
+                {
+                  name: "@partitionKey",
+                  value: partitionKey
+                }
+              ],
+              query: `SELECT * FROM m WHERE m.${
+                this.partitionKey ? this.partitionKey : this.modelIdKey
+              } = @partitionKey ORDER BY m.version DESC`
+            })
+          ),
+        toCosmosErrorResponse
+      ),
+      TE.map(dbResponse => dbResponse[0])
+    );
+  }
+
+  /**
    *  Find the last version of a document.
    *
    *  Pass the partitionKey field / values if it differs from the modelId
@@ -294,6 +359,7 @@ export abstract class CosmosdbModelVersioned<
       _self: null,
       _ts: null,
       id: null,
+      ttl: null,
       version: null
     };
 
