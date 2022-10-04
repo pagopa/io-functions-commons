@@ -228,7 +228,7 @@ export abstract class CosmosdbModelVersioned<
           ),
         toCosmosErrorResponse
       ),
-      TE.map(dbResponse => dbResponse[0])
+      TE.map(RA.flatten)
     );
   }
 

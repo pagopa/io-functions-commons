@@ -13,7 +13,6 @@ import {
 } from "@azure/cosmos";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { BaseModel } from "../cosmosdb_model";
 import {
   CosmosdbModelVersioned,
   generateVersionedModelId,
@@ -46,7 +45,6 @@ type MyDocument = t.TypeOf<typeof MyDocument>;
 const RetrievedMyDocument = t.intersection([
   MyDocument,
   RetrievedVersionedModel,
-  BaseModel
 ]);
 type RetrievedMyDocument = t.TypeOf<typeof RetrievedMyDocument>;
 
@@ -101,6 +99,13 @@ const aRetrievedExistingDocument: RetrievedMyDocument = {
   id: documentId(aMyDocumentId, 1),
   version: 1 as NonNegativeInteger
 };
+
+async function* yieldValues<T>(elements: T[]): AsyncIterable<T> {
+  for (const e of elements) {
+    yield e;
+  }
+}
+
 const containerMock = {
   item: jest.fn(),
   items: {
@@ -108,9 +113,9 @@ const containerMock = {
       .fn()
       .mockImplementation(async doc => new ResourceResponse(doc, {}, 200, 200)),
     query: jest.fn().mockReturnValue({
-      fetchAll: async () => new FeedResponse([], {}, false)
+      fetchAll: async () => new FeedResponse([], {}, false),
     }),
-    upsert: jest.fn()
+    upsert: jest.fn(),
   }
 };
 const container = (containerMock as unknown) as Container;
@@ -283,3 +288,23 @@ describe("findLastVersionByModelId", () => {
     }
   });
 });
+
+describe("findAllVersionsByPartitionKey", () => {
+
+  it("should return 3 documents", async () => {
+
+    containerMock.items.query.mockReturnValueOnce({
+      getAsyncIterator: () => yieldValues([new FeedResponse([aRetrievedExistingDocument], {}, false), new FeedResponse([aRetrievedExistingDocument, aRetrievedExistingDocument], {}, false)])
+    });
+     
+    const model = new MyModel(container);
+    const result = await model.findAllVersionsByPartitionKey([aModelIdValue])();
+    if(E.isRight(result))  {
+      expect(result.right).toHaveLength(3) 
+  }
+
+  })
+
+})
+
+
