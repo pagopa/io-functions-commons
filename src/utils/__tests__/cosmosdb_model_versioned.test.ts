@@ -3,7 +3,7 @@ import * as t from "io-ts";
 import * as E from "fp-ts/lib/Either";
 import * as O from "fp-ts/lib/Option";
 
-import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
+import { NonNegativeInteger, NonNegativeNumber } from "@pagopa/ts-commons/lib/numbers";
 
 import {
   Container,
@@ -107,7 +107,7 @@ async function* yieldValues<T>(elements: T[]): AsyncIterable<T> {
 }
 
 const containerMock = {
-  item: jest.fn(),
+  item: jest.fn(() => ({patch: jest.fn(() => Promise.resolve({resource: {...aRetrievedExistingDocument, ttl: 300}}))})),
   items: {
     create: jest
       .fn()
@@ -307,4 +307,18 @@ describe("findAllVersionsByPartitionKey", () => {
 
 })
 
+describe("updateTTLForAllVersions", () => {
 
+  it("should add the ttl property to 3 documents", async () => {
+    containerMock.items.query.mockReturnValueOnce({
+      getAsyncIterator: () => yieldValues([new FeedResponse([aRetrievedExistingDocument], {}, false), new FeedResponse([aRetrievedExistingDocument, aRetrievedExistingDocument], {}, false)]),
+    });
+    const model = new MyModel(container);
+    const result = await model.updateTTLForAllVersion([aModelIdValue], 300 as NonNegativeNumber)();
+    if(E.isRight(result))  {
+      //checking that the ttl has been defined for all documents
+      expect(result.right.every(e => e.ttl)).toBeTruthy();
+    }
+  })
+
+})

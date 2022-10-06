@@ -7,6 +7,7 @@ import { Container, ErrorResponse, ResourceResponse } from "@azure/cosmos";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { BaseModel, CosmosdbModel, CosmosResource } from "../cosmosdb_model";
+import { NonNegativeNumber } from "@pagopa/ts-commons/lib/numbers";
 
 beforeEach(() => {
   jest.resetAllMocks();
@@ -375,3 +376,32 @@ describe("patch", () => {
     }
   });
 });
+
+describe("updateTTL", () => {
+
+  it("should add a ttl field", async () => {
+    containerMock.item.mockReturnValueOnce({ patch: patchMock });
+
+    patchMock.mockImplementationOnce(() =>
+      Promise.resolve({
+        resource: {
+          ...aDocument,
+          ...someMetadata,
+          test: anotherTest,
+          ttl: 300
+        }
+      })
+    )
+
+    const model = new MyModel(container);
+    const result = await model.updateTTL([testId], 300 as NonNegativeNumber)();
+
+    expect(patchMock).toBeCalledTimes(1);
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(patchMock).toHaveBeenCalledWith(expect.objectContaining({"operations": [{"op": "add", "path": "/ttl", "value": 300}]}), undefined);
+      expect(patchMock).toHaveReturnedTimes(1);
+    }
+  })
+
+})

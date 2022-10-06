@@ -77,6 +77,7 @@ const aDocument = {
 
 const aDocumentWithTtl = {
   ...aDocument,
+  id: anotherTestId,
   ttl: 300
 }
 
@@ -86,13 +87,11 @@ errorResponse.code = 500;
 
 jest.setTimeout(60000);
 
-const context = createContext("id");
-
-beforeEach(async () => await context.init())
-
 describe("create", () => {
 
   it("should create a document", async () => {
+    const context = createContext("id");
+    await context.init();
     const model = new MyModel(context.container);
     const result = await model.create(aDocument)();
     expect(E.isRight(result));
@@ -103,9 +102,12 @@ describe("create", () => {
         })
       );
     }
+    context.dispose();
   });
 
   it("should create a document with ttl", async () => {
+    const context = createContext("id");
+    await context.init();
     const model = new MyModel(context.container);
     const result = await model.create(aDocumentWithTtl)();
     expect(E.isRight(result));
@@ -116,13 +118,15 @@ describe("create", () => {
         })
       );
     }
+    context.dispose();
   });
-
 });
 
 describe("upsert", () => {
 
   it("should create a document", async () => {
+    const context = createContext("id");
+    await context.init();
     const model = new MyModel(context.container);
     const result = await model.upsert(aDocument)();
     expect(E.isRight(result));
@@ -133,9 +137,12 @@ describe("upsert", () => {
         })
       );
     }
+    context.dispose();
   });
 
   it("should create a document with ttl", async () => {
+    const context = createContext("id");
+    await context.init();
     const model = new MyModel(context.container);
     const result = await model.upsert(aDocumentWithTtl)();
     expect(E.isRight(result));
@@ -146,6 +153,7 @@ describe("upsert", () => {
         })
       );
     }
+    context.dispose();
   });
 
 });
@@ -153,9 +161,11 @@ describe("upsert", () => {
 describe("find", () => {
 
   it("should retrieve an existing document with ttl", async () => {
+    const context = createContext("id");
+    await context.init();
     const model = new MyModel(context.container);
     await model.create(aDocumentWithTtl)();
-    const result = await model.find([testId])();
+    const result = await model.find([anotherTestId])();
     expect(E.isRight(result)).toBeTruthy();
     if (E.isRight(result)) {
       expect(O.isSome(result.right)).toBeTruthy();
@@ -165,9 +175,12 @@ describe("find", () => {
         })
       );
     }
+    context.dispose();
   });
 
   it("should retrieve an existing document", async () => {
+    const context = createContext("id");
+    await context.init();
     const model = new MyModel(context.container);
     await model.create(aDocument)();
     const result = await model.find([testId])();
@@ -180,6 +193,7 @@ describe("find", () => {
         })
       );
     }
+    context.dispose();
   });
 
   it("should retrieve an existing document for a model with a partition", async () => {
@@ -202,6 +216,8 @@ describe("find", () => {
   });
 
   it("should return an empty option if the document does not exist", async () => {
+    const context = createContext("id");
+    await context.init();
     const model = new MyModel(context.container);
     await model.create(aDocument)();
     const result = await model.find([anotherTestId])();
@@ -209,9 +225,12 @@ describe("find", () => {
     if (E.isRight(result)) {
       expect(O.isNone(result.right)).toBeTruthy();
     }
+    context.dispose();
   });
 
-  it("should return 3 documents", async () => {
+  it("should return all documents belonging to the same partition key", async () => {
+    const context = createContext("id");
+    await context.init();
     const model = new MyVersionedModel(context.container);
 
     await model.upsert({
@@ -239,11 +258,10 @@ describe("find", () => {
       // expect(O.isNone(result.right)).toBeTruthy();
       expect(result.right).toHaveLength(2)
     }
+    context.dispose();
   });
 
 });
-
-afterEach(() => context.dispose())
 
 /**************** @zeit/cosmosdb-server do not support "patch" yet *****************/
 // const anotherTest = "another-test";
@@ -280,6 +298,7 @@ afterEach(() => context.dispose())
 // cannot run this test cause of patch support missing, this test was a success with a cosmos db inside io-d-comos-free
 // describe("Update ttl", () => {
 //   it("should find all version of a message", async () => {
+//     const context = createContext("id");
 //     const model = new MyVersionedModel(context.container);
 //     await model.upsert({
 //       id: testId,

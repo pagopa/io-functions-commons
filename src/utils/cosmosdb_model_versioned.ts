@@ -181,23 +181,23 @@ export abstract class CosmosdbModelVersioned<
     searchKey: DocumentSearchKey<TR, ModelIdKey, PartitionKey>,
     ttl: NonNegativeNumber
   ): TE.TaskEither<CosmosErrors, ReadonlyArray<TR>> {
+    const partitionKey = searchKey.length === 1 ? searchKey[0] : searchKey[1];
     return pipe(
       this.findAllVersionsByPartitionKey(searchKey),
       TE.map(RA.rights),
-      TE.chain(documentList =>
-        RA.sequence(TE.ApplicativeSeq)(
-          documentList.map(document =>
-            super.updateTTL(
-              ([document.id, searchKey[0]] as unknown) as DocumentSearchKey<
-                TR,
-                CosmosDocumentIdKey,
-                PartitionKey
-              >,
-              ttl
-            )
+      TE.map(
+        RA.map(document =>
+          super.updateTTL(
+            ([document.id, partitionKey] as unknown) as DocumentSearchKey<
+              TR,
+              CosmosDocumentIdKey,
+              PartitionKey
+            >,
+            ttl
           )
         )
       ),
+      TE.chain(RA.sequence(TE.ApplicativeSeq)),
       TE.mapLeft(toCosmosErrorResponse)
     );
   }
