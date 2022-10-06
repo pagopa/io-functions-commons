@@ -1,6 +1,5 @@
 import * as E from "fp-ts/lib/Either";
 import * as O from "fp-ts/lib/Option";
-import { mocked } from "ts-jest/utils";
 
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
@@ -212,12 +211,12 @@ describe("createProfile", () => {
     const result = await model.create(newProfile)();
 
     expect(containerMock.items.create).toHaveBeenCalledTimes(1);
-    expect(mocked(containerMock.items.create).mock.calls[0][0].kind).toEqual(
-      "INewProfile"
-    );
-    expect(mocked(containerMock.items.create).mock.calls[0][0]).toHaveProperty(
-      "fiscalCode",
-      newProfile.fiscalCode
+    expect(containerMock.items.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: newProfile.kind,
+        fiscalCode: newProfile.fiscalCode
+      }),
+      expect.anything()
     );
     expect(E.isRight(result)).toBeTruthy();
     if (E.isRight(result)) {
@@ -275,17 +274,15 @@ describe("updateProfile", () => {
     const result = await model.update(aProfileWithDifferentEmail)();
 
     expect(containerMock.items.create).toHaveBeenCalledTimes(1);
-    expect(mocked(containerMock.items.create).mock.calls[0][0].kind).toEqual(
-      "INewProfile"
+    expect(containerMock.items.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: "INewProfile",
+        fiscalCode: aProfileWithDifferentEmail.fiscalCode,
+        email: aProfileWithDifferentEmail.email
+      }),
+      expect.anything()
     );
-    expect(mocked(containerMock.items.create).mock.calls[0][0]).toHaveProperty(
-      "fiscalCode",
-      aFiscalCode
-    );
-    expect(mocked(containerMock.items.create).mock.calls[0][0]).toHaveProperty(
-      "email",
-      aProfileWithDifferentEmail.email
-    );
+
     expect(E.isRight(result)).toBeTruthy();
     if (E.isRight(result)) {
       const updatedProfile = result.right;
