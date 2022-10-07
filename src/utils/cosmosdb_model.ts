@@ -33,9 +33,12 @@ export type CosmosDocumentIdKey = typeof CosmosDocumentIdKey;
 
 // For basic models, the identity field is always the id of cosmos
 export type BaseModel = t.TypeOf<typeof BaseModel>;
-export const BaseModel = t.interface({
-  id: NonEmptyString
-});
+export const BaseModel = t.intersection([
+  t.interface({
+    id: NonEmptyString
+  }),
+  t.partial({ ttl: NonNegativeNumber })
+]);
 
 // The set of keys for a model
 // T might not include base model fields ("id"), but we know they are mandatory in cosmos documents
@@ -72,7 +75,6 @@ export type CosmosResource = t.TypeOf<typeof CosmosResource>;
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 export const CosmosResource = t.intersection([
   BaseModel,
-  t.partial({ ttl: NonNegativeNumber }),
   t.interface({
     _etag: t.string,
     _rid: t.string,
@@ -81,9 +83,7 @@ export const CosmosResource = t.intersection([
   })
   // this cast is used to keep CosmosResource aligned
   // with @azure/cosmos/Resource type definition
-]) as t.Type<
-  Resource & { readonly id: NonEmptyString; readonly ttl?: NonNegativeNumber }
->;
+]) as t.Type<Resource & { readonly id: NonEmptyString }>;
 
 // An empty response from a Cosmos operation
 export const CosmosEmptyResponse = {

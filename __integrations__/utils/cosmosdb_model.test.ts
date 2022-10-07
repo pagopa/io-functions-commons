@@ -14,6 +14,7 @@ import {
 
 import { CosmosdbModelVersioned, RetrievedVersionedModel } from "../../src/utils/cosmosdb_model_versioned";
 import { createContext } from "../models/cosmos_utils";
+import { NonNegativeNumber } from "@pagopa/ts-commons/lib/numbers";
 
 const MyDocument = t.intersection([t.interface({
   pk: t.string,
@@ -78,7 +79,7 @@ const aDocument = {
 const aDocumentWithTtl = {
   ...aDocument,
   id: anotherTestId,
-  ttl: 300
+  ttl: 300 as NonNegativeNumber
 }
 
 const errorResponse: ErrorResponse = new Error();
