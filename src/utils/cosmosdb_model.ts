@@ -40,6 +40,9 @@ export const BaseModel = t.intersection([
   t.partial({ ttl: NonNegativeNumber })
 ]);
 
+export const ReadonlyBaseModel = t.readonly(BaseModel);
+export type ReadonlyBaseModel = t.TypeOf<typeof ReadonlyBaseModel>;
+
 // The set of keys for a model
 // T might not include base model fields ("id"), but we know they are mandatory in cosmos documents
 // Quick win would be to narrow T to extend BaseModel, but that way we'd lose usage flexibility
@@ -83,7 +86,7 @@ export const CosmosResource = t.intersection([
   })
   // this cast is used to keep CosmosResource aligned
   // with @azure/cosmos/Resource type definition
-]) as t.Type<Resource & { readonly id: NonEmptyString }>;
+]) as t.Type<Resource & ReadonlyBaseModel>;
 
 // An empty response from a Cosmos operation
 export const CosmosEmptyResponse = {
