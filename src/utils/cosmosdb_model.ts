@@ -227,7 +227,7 @@ export abstract class CosmosdbModel<
    */
   public patch(
     searchKey: DocumentSearchKey<TR, CosmosDocumentIdKey, PartitionKey>,
-    partialDocument: Partial<T>,
+    partialDocument: Partial<TR>,
     condition?: string,
     options?: RequestOptions
   ): TE.TaskEither<CosmosErrors, TR> {
@@ -279,7 +279,7 @@ export abstract class CosmosdbModel<
     // this cast was necessary even making patch accept a Partial<TR>
     return this.patch(searchKey, { ttl } as {
       readonly ttl: NonNegativeNumber;
-    } & T);
+    } & TR);
   }
 
   /**
