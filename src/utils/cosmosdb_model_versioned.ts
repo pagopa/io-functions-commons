@@ -188,7 +188,7 @@ export abstract class CosmosdbModelVersioned<
       TE.map(
         RA.map(document =>
           super.updateTTL(
-            ([document.id, partitionKey] as unknown) as DocumentSearchKey<
+            [document.id, partitionKey] as DocumentSearchKey<
               TR,
               CosmosDocumentIdKey,
               PartitionKey
