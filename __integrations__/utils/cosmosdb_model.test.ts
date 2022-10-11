@@ -12,15 +12,21 @@ import {
   CosmosResource
 } from "../../src/utils/cosmosdb_model";
 
-import { CosmosdbModelVersioned, RetrievedVersionedModel } from "../../src/utils/cosmosdb_model_versioned";
+import {
+  CosmosdbModelVersioned,
+  RetrievedVersionedModel
+} from "../../src/utils/cosmosdb_model_versioned";
 import { createContext } from "../models/cosmos_utils";
 import { NonNegativeNumber } from "@pagopa/ts-commons/lib/numbers";
 
-const MyDocument = t.intersection([t.interface({
-  pk: t.string,
-  id: t.string,
-  test: t.string,
-}), t.partial({messageId: t.string})]);
+const MyDocument = t.intersection([
+  t.interface({
+    pk: t.string,
+    id: t.string,
+    test: t.string
+  }),
+  t.partial({ messageId: t.string })
+]);
 type MyDocument = t.TypeOf<typeof MyDocument>;
 
 const NewMyDocument = t.intersection([MyDocument, BaseModel]);
@@ -39,8 +45,13 @@ class MyModel extends CosmosdbModel<
   }
 }
 
-const RetrievedMyVersionedDocument = t.intersection([MyDocument, RetrievedVersionedModel]);
-type RetrievedMyVersionedDocument = t.TypeOf<typeof RetrievedMyVersionedDocument>;
+const RetrievedMyVersionedDocument = t.intersection([
+  MyDocument,
+  RetrievedVersionedModel
+]);
+type RetrievedMyVersionedDocument = t.TypeOf<
+  typeof RetrievedMyVersionedDocument
+>;
 
 class MyVersionedModel extends CosmosdbModelVersioned<
   MyDocument,
@@ -48,8 +59,8 @@ class MyVersionedModel extends CosmosdbModelVersioned<
   RetrievedMyVersionedDocument,
   "id",
   "pk"
->{
-  constructor(c: Container){
+> {
+  constructor(c: Container) {
     super(c, NewMyDocument, RetrievedMyVersionedDocument, "id", "pk");
   }
 }
@@ -80,7 +91,7 @@ const aDocumentWithTtl = {
   ...aDocument,
   id: anotherTestId,
   ttl: 300 as NonNegativeNumber
-}
+};
 
 const errorResponse: ErrorResponse = new Error();
 // eslint-disable-next-line functional/immutable-data
@@ -89,7 +100,6 @@ errorResponse.code = 500;
 jest.setTimeout(60000);
 
 describe("create", () => {
-
   it("should create a document", async () => {
     const context = createContext("id");
     await context.init();
@@ -102,6 +112,7 @@ describe("create", () => {
           ...aDocument
         })
       );
+      expect(result.right).not.toHaveProperty("ttl");
     }
     context.dispose();
   });
@@ -124,7 +135,6 @@ describe("create", () => {
 });
 
 describe("upsert", () => {
-
   it("should create a document", async () => {
     const context = createContext("id");
     await context.init();
@@ -137,6 +147,7 @@ describe("upsert", () => {
           ...aDocument
         })
       );
+      expect(result.right).not.toHaveProperty("ttl");
     }
     context.dispose();
   });
@@ -156,11 +167,9 @@ describe("upsert", () => {
     }
     context.dispose();
   });
-
 });
 
 describe("find", () => {
-
   it("should retrieve an existing document with ttl", async () => {
     const context = createContext("id");
     await context.init();
@@ -252,16 +261,18 @@ describe("find", () => {
       test: "test"
     })();
 
-    const result = await model.findAllVersionsByPartitionKey([testId, testPartition])();
+    const result = await model.findAllVersionsByPartitionKey([
+      testId,
+      testPartition
+    ])();
 
     expect(E.isRight(result)).toBeTruthy();
     if (E.isRight(result)) {
       // expect(O.isNone(result.right)).toBeTruthy();
-      expect(result.right).toHaveLength(2)
+      expect(result.right).toHaveLength(2);
     }
     context.dispose();
   });
-
 });
 
 /**************** @zeit/cosmosdb-server do not support "patch" yet *****************/
@@ -319,4 +330,3 @@ describe("find", () => {
 //     )()
 //   })
 // })
-
