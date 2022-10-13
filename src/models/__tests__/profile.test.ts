@@ -20,6 +20,8 @@ import { pipe } from "fp-ts/lib/function";
 
 const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
 
+const anEmail = "new@example.com" as EmailString;
+
 const aRawProfile = {
   acceptedTosVersion: 1,
   fiscalCode: aFiscalCode,
@@ -220,10 +222,7 @@ describe("createProfile", () => {
     );
     expect(E.isRight(result)).toBeTruthy();
     if (E.isRight(result)) {
-      expect(result.right.fiscalCode).toEqual(newProfile.fiscalCode);
-      expect(result.right.id).toEqual(`${aFiscalCode}-${"0".repeat(16)}`);
-      expect(result.right.version).toEqual(0);
-      expect(result.right.isTestProfile).toEqual(false);
+      expect(result.right).toStrictEqual(aRetrievedProfile);
     }
   });
 
@@ -282,7 +281,7 @@ describe("updateProfile", () => {
               ...aRetrievedProfile,
               id: `${aFiscalCode}-${"0".repeat(15)}1`,
               version: 1,
-              email: "new@example.com"
+              email: anEmail
             }
           })
         )
@@ -293,7 +292,14 @@ describe("updateProfile", () => {
 
     const aProfileWithDifferentEmail = {
       ...aRetrievedProfile,
-      email: "new@example.com" as EmailString
+      email: anEmail
+    };
+
+    const aRetrievedUpdatedProfile = {
+      ...aRetrievedProfile,
+      email: anEmail,
+      id: `${aFiscalCode}-${"0".repeat(15)}1`,
+      version: 1
     };
 
     const result = await model.update(aProfileWithDifferentEmail)();
@@ -310,11 +316,7 @@ describe("updateProfile", () => {
 
     expect(E.isRight(result)).toBeTruthy();
     if (E.isRight(result)) {
-      const updatedProfile = result.right;
-      expect(updatedProfile.fiscalCode).toEqual(aRetrievedProfile.fiscalCode);
-      expect(updatedProfile.id).toEqual(`${aFiscalCode}-${"0".repeat(15)}1`);
-      expect(updatedProfile.version).toEqual(1);
-      expect(updatedProfile.email).toEqual("new@example.com");
+      expect(result.right).toStrictEqual(aRetrievedUpdatedProfile);
     }
   });
 
