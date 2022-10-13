@@ -245,6 +245,31 @@ describe("createProfile", () => {
       expect(result.left.kind).toEqual("COSMOS_ERROR_RESPONSE");
     }
   });
+
+  it("should get COSMOS_EMPTY_RESPONSE in case of empty resource", async () => {
+    const containerMock = ({
+      items: {
+        create: jest.fn().mockReturnValue(
+          // this scenario is unlikely to happen because the cosmos SDK should reject the promise
+          // if something went wrong
+          Promise.resolve({
+            resource: undefined
+          })
+        )
+      }
+    } as unknown) as Container;
+
+    const model = new ProfileModel(containerMock);
+
+    const result = await model.create(newProfile)();
+
+    expect(containerMock.items.create).toHaveBeenCalledTimes(1);
+
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toEqual("COSMOS_EMPTY_RESPONSE");
+    }
+  });
 });
 
 describe("updateProfile", () => {
