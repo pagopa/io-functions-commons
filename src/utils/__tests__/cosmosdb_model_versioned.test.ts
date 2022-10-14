@@ -3,7 +3,12 @@ import * as t from "io-ts";
 import * as E from "fp-ts/lib/Either";
 import * as O from "fp-ts/lib/Option";
 
-import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
+import * as TE from "fp-ts/lib/Either";
+
+import {
+  NonNegativeInteger,
+  NonNegativeNumber
+} from "@pagopa/ts-commons/lib/numbers";
 
 import {
   Container,
@@ -118,6 +123,12 @@ const container = (containerMock as unknown) as Container;
 const errorResponse: ErrorResponse = new Error();
 // eslint-disable-next-line functional/immutable-data
 errorResponse.code = 500;
+
+async function* yieldValues<T>(elements: T[]): AsyncIterable<T> {
+  for (const e of elements) {
+    yield e;
+  }
+}
 
 describe("upsert", () => {
   it.each`
@@ -280,6 +291,28 @@ describe("findLastVersionByModelId", () => {
       if (result.left.kind === "COSMOS_ERROR_RESPONSE") {
         expect(result.left.error.code).toBe(500);
       }
+    }
+  });
+});
+
+describe("findAllVersionsByPartitionKey", () => {
+  it("should return 3 documents", async () => {
+    containerMock.items.query.mockReturnValueOnce({
+      getAsyncIterator: () =>
+        yieldValues([
+          new FeedResponse([aRetrievedExistingDocument], {}, false),
+          new FeedResponse(
+            [aRetrievedExistingDocument, aRetrievedExistingDocument],
+            {},
+            false
+          )
+        ])
+    });
+
+    const model = new MyModel(container);
+    const result = await model.findAllVersionsByPartitionKey([aModelIdValue])();
+    if (E.isRight(result)) {
+      expect(result.right).toHaveLength(3);
     }
   });
 });
