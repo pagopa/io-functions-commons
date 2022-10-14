@@ -12,6 +12,10 @@ import {
   CosmosResource
 } from "../../src/utils/cosmosdb_model";
 import { createContext } from "../models/cosmos_utils";
+import {
+  CosmosdbModelVersioned,
+  RetrievedVersionedModel
+} from "../../src/utils/cosmosdb_model_versioned";
 
 const MyDocument = t.interface({
   pk: t.string,
@@ -149,6 +153,61 @@ describe("find", () => {
   });
 });
 
+describe("findAllVersionsByPartitionKey", () => {
+  class MyVersionedModel extends CosmosdbModelVersioned<
+    MyDocument,
+    NewMyDocument,
+    RetrievedMyVersionedDocument,
+    "pk"
+  > {
+    constructor(c: Container) {
+      super(c, NewMyDocument, RetrievedMyVersionedDocument, "pk");
+    }
+  }
+
+  const RetrievedMyVersionedDocument = t.intersection([
+    MyDocument,
+    RetrievedVersionedModel
+  ]);
+
+  type RetrievedMyVersionedDocument = t.TypeOf<
+    typeof RetrievedMyVersionedDocument
+  >;
+
+  it("should return all documents belonging to the same partition key", async () => {
+    const context = createContext("id");
+    await context.init();
+    const model = new MyVersionedModel(context.container);
+
+    await model.upsert({
+      id: testId,
+      pk: testPartition,
+      test: "test"
+    })();
+
+    await model.upsert({
+      id: "2testId" as NonEmptyString,
+      pk: testPartition,
+      test: "test"
+    })();
+
+    await model.upsert({
+      id: "3testId" as NonEmptyString,
+      pk: "invalidPartition",
+      test: "test"
+    })();
+
+    const result = await model.findAllVersionsByPartitionKey([testPartition])();
+
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      // expect(O.isNone(result.right)).toBeTruthy();
+      expect(result.right).toHaveLength(2);
+    }
+    context.dispose();
+  });
+});
+
 /**************** @zeit/cosmosdb-server do not support "patch" yet *****************/
 // const anotherTest = "another-test";
 // describe("patch", () => {
@@ -183,28 +242,6 @@ describe("find", () => {
 // });
 
 // describe("updateTTLForAllVersions", () => {
-
-// const RetrievedMyVersionedDocument = t.intersection([
-//   MyDocument,
-//   RetrievedVersionedModel
-// ]);
-
-// type RetrievedMyVersionedDocument = t.TypeOf<
-//   typeof RetrievedMyVersionedDocument
-// >;
-
-// const MESSAGE_ID = "messageId";
-
-// class MyVersionedModel extends CosmosdbModelVersioned<
-//   MyDocument,
-//   NewMyDocument,
-//   RetrievedMyVersionedDocument,
-//   typeof MESSAGE_ID
-// > {
-//   constructor(c: Container) {
-//     super(c, NewMyDocument, RetrievedMyVersionedDocument, MESSAGE_ID);
-//   }
-// }
 
 //   it("should update the ttl for all the versions", async () => {
 //     const context = createContext(MESSAGE_ID);
