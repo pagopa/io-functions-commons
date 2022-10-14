@@ -7,6 +7,7 @@ import * as TE from "fp-ts/lib/TaskEither";
 import { TaskEither } from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 import { PromiseType } from "@pagopa/ts-commons/lib/types";
+import { NonNegativeNumber } from "@pagopa/ts-commons/lib/numbers";
 
 import {
   Container,
@@ -15,6 +16,7 @@ import {
   FeedResponse,
   ItemDefinition,
   ItemResponse,
+  OperationInput,
   PatchOperationType,
   RequestOptions,
   Resource,
@@ -32,9 +34,12 @@ export type CosmosDocumentIdKey = typeof CosmosDocumentIdKey;
 
 // For basic models, the identity field is always the id of cosmos
 export type BaseModel = t.TypeOf<typeof BaseModel>;
-export const BaseModel = t.interface({
-  id: NonEmptyString
-});
+export const BaseModel = t.intersection([
+  t.interface({
+    id: NonEmptyString
+  }),
+  t.partial({ ttl: NonNegativeNumber })
+]);
 
 // The set of keys for a model
 // T might not include base model fields ("id"), but we know they are mandatory in cosmos documents
@@ -210,6 +215,19 @@ export abstract class CosmosdbModel<
       this.retrievedItemT,
       this.container.items.upsert.bind(this.container.items)
     )(newDocument, options);
+  }
+
+  public batch(
+    // eslint-disable-next-line
+    operations: OperationInput[],
+    partitionKey?: NonEmptyString,
+    options?: RequestOptions
+    // eslint-disable-next-line
+  ): TE.TaskEither<CosmosErrors, any> {
+    return TE.tryCatch(
+      () => this.container.items.batch(operations, partitionKey, options),
+      toCosmosErrorResponse
+    );
   }
 
   /**

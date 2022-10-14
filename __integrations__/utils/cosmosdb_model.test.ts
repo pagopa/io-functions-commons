@@ -3,7 +3,7 @@ import * as t from "io-ts";
 import * as E from "fp-ts/lib/Either";
 import * as O from "fp-ts/lib/Option";
 
-import { Container, ErrorResponse, ResourceResponse } from "@azure/cosmos";
+import { Container, ErrorResponse } from "@azure/cosmos";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import {
@@ -179,5 +179,57 @@ describe("find", () => {
 //         })
 //       );
 //     }
+//   });
+// });
+
+// describe("updateTTLForAllVersions", () => {
+
+// const RetrievedMyVersionedDocument = t.intersection([
+//   MyDocument,
+//   RetrievedVersionedModel
+// ]);
+
+// type RetrievedMyVersionedDocument = t.TypeOf<
+//   typeof RetrievedMyVersionedDocument
+// >;
+
+// const MESSAGE_ID = "messageId";
+
+// class MyVersionedModel extends CosmosdbModelVersioned<
+//   MyDocument,
+//   NewMyDocument,
+//   RetrievedMyVersionedDocument,
+//   typeof MESSAGE_ID
+// > {
+//   constructor(c: Container) {
+//     super(c, NewMyDocument, RetrievedMyVersionedDocument, MESSAGE_ID);
+//   }
+// }
+
+//   it("should update the ttl for all the versions", async () => {
+//     const context = createContext(MESSAGE_ID);
+//     await context.init();
+//     const model = new MyVersionedModel(context.container);
+
+//     const toInsert = { ...aDocument, messageId: testId };
+
+//     // await model.create(toInsert)();
+
+//     await model.upsert(toInsert)();
+//     await model.upsert(toInsert)();
+//     await model.upsert(toInsert)();
+
+//     const result = await model.updateTTLForAllVersions(
+//       [testId],
+//       300 as NonNegativeNumber
+//     )();
+
+//     if (E.isRight(result)) {
+//       console.log("RIGHT: ", result.right);
+//     } else {
+//       console.log("LEFT: ", result.left);
+//     }
+
+//     // context.dispose();
 //   });
 // });
