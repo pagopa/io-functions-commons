@@ -42,7 +42,7 @@ class MyModel extends CosmosdbModelVersionedTTL<
   }
 }
 
-describe("findAllVersionsByPartitionKey", () => {
+describe("findAllVersionsBySearchKey", () => {
   it("should return 3 documents", async () => {
     containerMock.items.query.mockReturnValueOnce({
       getAsyncIterator: () =>
@@ -57,7 +57,7 @@ describe("findAllVersionsByPartitionKey", () => {
     });
 
     const model = new MyModel(container);
-    const result = await model.findAllVersionsByPartitionKey([aModelIdValue])();
+    const result = await model.findAllVersionsBySearchKey([aModelIdValue])();
     if (E.isRight(result)) {
       expect(result.right).toHaveLength(3);
     }

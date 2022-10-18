@@ -155,7 +155,7 @@ describe("find", () => {
   });
 });
 
-describe("findAllVersionsByPartitionKey", () => {
+describe("findAllVersionsBySearchKey", () => {
   class MyVersionedModel extends CosmosdbModelVersionedTTL<
     MyDocument,
     NewMyDocument,
@@ -199,7 +199,7 @@ describe("findAllVersionsByPartitionKey", () => {
       test: "test"
     })();
 
-    const result = await model.findAllVersionsByPartitionKey([testPartition])();
+    const result = await model.findAllVersionsBySearchKey([testPartition])();
 
     expect(E.isRight(result)).toBeTruthy();
     if (E.isRight(result)) {

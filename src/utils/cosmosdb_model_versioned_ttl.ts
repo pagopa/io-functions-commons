@@ -69,7 +69,7 @@ export class CosmosdbModelVersionedTTL<
     // eslint-disable-next-line
   ): TE.TaskEither<CosmosErrors, TE.TaskEither<never, readonly any[]>> {
     return pipe(
-      this.findAllVersionsByPartitionKey(searchKey),
+      this.findAllVersionsBySearchKey(searchKey),
       TE.map(RA.rights),
       TE.map(
         RA.map(doc => ({
@@ -126,7 +126,7 @@ export class CosmosdbModelVersionedTTL<
    * Given a searchKey returns all the version of a document
    */
 
-  public findAllVersionsByPartitionKey(
+  public findAllVersionsBySearchKey(
     searchKey: DocumentSearchKey<TR, ModelIdKey, PartitionKey>
   ): TE.TaskEither<CosmosErrors, ReadonlyArray<t.Validation<TR>>> {
     const partitionKey = searchKey.length === 1 ? searchKey[0] : searchKey[1];
