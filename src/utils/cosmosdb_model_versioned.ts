@@ -3,19 +3,15 @@ import * as t from "io-ts";
 import * as O from "fp-ts/lib/Option";
 import { TaskEither } from "fp-ts/lib/TaskEither";
 import * as TE from "fp-ts/lib/TaskEither";
-import * as RA from "fp-ts/lib/ReadonlyArray";
 
 import {
   INonNegativeIntegerTag,
-  NonNegativeInteger,
-  NonNegativeNumber
+  NonNegativeInteger
 } from "@pagopa/ts-commons/lib/numbers";
 
 import {
   Container,
   ItemDefinition,
-  JSONValue,
-  PatchOperationType,
   RequestOptions,
   SqlQuerySpec
 } from "@azure/cosmos";
@@ -25,13 +21,10 @@ import {
   BaseModel,
   CosmosdbModel,
   CosmosDecodingError,
-  CosmosErrorResponse,
   CosmosErrors,
   CosmosResource,
-  DocumentSearchKey,
-  toCosmosErrorResponse
+  DocumentSearchKey
 } from "./cosmosdb_model";
-import { asyncIterableToArray } from "./async";
 
 /**
  * Maps the fields of a versioned
@@ -170,95 +163,6 @@ export abstract class CosmosdbModelVersioned<
       this.toBaseType(o),
       incVersion(o.version),
       requestOptions
-    );
-  }
-
-  public updateTTLForAllVersions(
-    searchKey: DocumentSearchKey<TR, ModelIdKey, PartitionKey>,
-    ttl: NonNegativeNumber
-    // eslint-disable-next-line
-  ): TaskEither<CosmosErrors, TaskEither<never, readonly any[]>> {
-    return pipe(
-      this.findAllVersionsByPartitionKey(searchKey),
-      TE.map(RA.rights),
-      TE.map(
-        RA.map(doc => ({
-          id: doc.id,
-          operationType: "Patch" as const,
-          resourceBody: {
-            operations: [
-              {
-                /**
-                    add will replace the path with the passed value if the path alreadye exists,
-                    otherwise it will add the path
-                 */
-                op: PatchOperationType.add,
-                path: `/ttl`,
-                value: ttl
-              }
-            ]
-          }
-        }))
-      ),
-      TE.map(RA.chunksOf(100)),
-      TE.map(
-        RA.map(x =>
-          pipe(x, RA.toArray, operations =>
-            super.batch(
-              operations,
-              `${
-                searchKey.length === 1 ? searchKey[0] : searchKey[1]
-              }` as NonEmptyString
-            )
-          )
-        )
-      ),
-      TE.chainW(TE.sequenceSeqArray),
-      TE.chainW(responses =>
-        pipe(
-          responses,
-          RA.filter(response => response.code !== 200),
-          TE.fromPredicate(
-            errors => errors.length === 0,
-            _ =>
-              CosmosErrorResponse({
-                message: `Error updating ttl for ${searchKey}`,
-                name: `Error updating ttl`
-              })
-          ),
-          TE.map(() => TE.right(responses))
-        )
-      )
-    );
-  }
-
-  /**
-   * Given a searchKey returns all the version of a document
-   */
-
-  public findAllVersionsByPartitionKey(
-    searchKey: DocumentSearchKey<TR, ModelIdKey, PartitionKey>
-  ): TE.TaskEither<CosmosErrors, ReadonlyArray<t.Validation<TR>>> {
-    const partitionKey = searchKey.length === 1 ? searchKey[0] : searchKey[1];
-    return pipe(
-      TE.tryCatch(
-        () =>
-          asyncIterableToArray(
-            this.getQueryIterator({
-              parameters: [
-                {
-                  name: "@partitionKey",
-                  value: partitionKey as JSONValue
-                }
-              ],
-              query: `SELECT * FROM m WHERE m.${
-                this.partitionKey ? this.partitionKey : this.modelIdKey
-              } = @partitionKey`
-            })
-          ),
-        toCosmosErrorResponse
-      ),
-      TE.map(RA.flatten)
     );
   }
 

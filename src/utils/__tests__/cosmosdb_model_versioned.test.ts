@@ -295,24 +295,24 @@ describe("findLastVersionByModelId", () => {
   });
 });
 
-describe("findAllVersionsByPartitionKey", () => {
-  it("should return 3 documents", async () => {
-    containerMock.items.query.mockReturnValueOnce({
-      getAsyncIterator: () =>
-        yieldValues([
-          new FeedResponse([aRetrievedExistingDocument], {}, false),
-          new FeedResponse(
-            [aRetrievedExistingDocument, aRetrievedExistingDocument],
-            {},
-            false
-          )
-        ])
-    });
+// describe("findAllVersionsByPartitionKey", () => {
+//   it("should return 3 documents", async () => {
+//     containerMock.items.query.mockReturnValueOnce({
+//       getAsyncIterator: () =>
+//         yieldValues([
+//           new FeedResponse([aRetrievedExistingDocument], {}, false),
+//           new FeedResponse(
+//             [aRetrievedExistingDocument, aRetrievedExistingDocument],
+//             {},
+//             false
+//           )
+//         ])
+//     });
 
-    const model = new MyModel(container);
-    const result = await model.findAllVersionsByPartitionKey([aModelIdValue])();
-    if (E.isRight(result)) {
-      expect(result.right).toHaveLength(3);
-    }
-  });
-});
+//     const model = new MyModel(container);
+//     const result = await model.findAllVersionsByPartitionKey([aModelIdValue])();
+//     if (E.isRight(result)) {
+//       expect(result.right).toHaveLength(3);
+//     }
+//   });
+// });
