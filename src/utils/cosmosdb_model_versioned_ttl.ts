@@ -1,15 +1,4 @@
 import {
-  BaseModel,
-  CosmosErrorResponse,
-  CosmosErrors,
-  DocumentSearchKey,
-  toCosmosErrorResponse
-} from "./cosmosdb_model";
-import {
-  CosmosdbModelVersioned,
-  RetrievedVersionedModel
-} from "./cosmosdb_model_versioned";
-import {
   Container,
   ItemDefinition,
   JSONValue,
@@ -23,17 +12,27 @@ import * as RA from "fp-ts/lib/ReadonlyArray";
 import { NonNegativeNumber } from "@pagopa/ts-commons/lib/numbers";
 import { pipe } from "fp-ts/lib/function";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import {
+  CosmosdbModelVersioned,
+  RetrievedVersionedModel
+} from "./cosmosdb_model_versioned";
+import {
+  CosmosErrorResponse,
+  CosmosErrors,
+  DocumentSearchKey,
+  toCosmosErrorResponse
+} from "./cosmosdb_model";
 import { asyncIterableToArray } from "./async";
 
 /**
   The purpose of this class is to isolate the `updateTTL` logic, 
   it should be used only for those models which does not generate a lot 
   of versions because the logic to update the ttl is quite expensive.
-
+ 
   NB: 
   if You have more than 100 versions the update operation could not be transactional, 
   see https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/transactional-batch?tabs=dotnet
-*/
+ */
 
 export class CosmosdbModelVersionedTTL<
   T,
@@ -61,7 +60,7 @@ export class CosmosdbModelVersionedTTL<
   /**
     Using transactionalBatch updates the ttl field for all the versions of the document
     identified by the searchKey.
-  */
+   */
 
   public updateTTLForAllVersions(
     searchKey: DocumentSearchKey<TR, ModelIdKey, PartitionKey>,
