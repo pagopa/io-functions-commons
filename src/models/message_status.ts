@@ -21,11 +21,9 @@ import {
 import { Timestamp } from "../../generated/definitions/Timestamp";
 
 import { CosmosErrors } from "../utils/cosmosdb_model";
-import {
-  CosmosdbModelVersioned,
-  RetrievedVersionedModel
-} from "../utils/cosmosdb_model_versioned";
+import { RetrievedVersionedModel } from "../utils/cosmosdb_model_versioned";
 import { wrapWithKind } from "../utils/types";
+import { CosmosdbModelVersionedTTL } from "../utils/cosmosdb_model_versioned_ttl";
 
 export const MESSAGE_STATUS_COLLECTION_NAME = "message-status";
 export const MESSAGE_STATUS_MODEL_ID_FIELD = "messageId" as const;
@@ -139,7 +137,7 @@ export const getMessageStatusUpdater = (
 /**
  * A model for handling MessageStatus
  */
-export class MessageStatusModel extends CosmosdbModelVersioned<
+export class MessageStatusModel extends CosmosdbModelVersionedTTL<
   MessageStatus,
   NewMessageStatus,
   RetrievedMessageStatus,
