@@ -3,12 +3,18 @@ import * as t from "io-ts";
 import * as E from "fp-ts/lib/Either";
 import * as O from "fp-ts/lib/Option";
 
-import * as TE from "fp-ts/lib/Either";
-
 import {
-  NonNegativeInteger,
-  NonNegativeNumber
-} from "@pagopa/ts-commons/lib/numbers";
+  aModelIdField,
+  aModelIdValue,
+  aModelPartitionField,
+  aModelPartitionValue,
+  aRetrievedExistingDocument,
+  documentId,
+  aMyDocument,
+  someMetadata,
+  MyDocument,
+  RetrievedMyDocument
+} from "../../../__mocks__/mocks";
 
 import {
   Container,
@@ -17,43 +23,11 @@ import {
   ResourceResponse
 } from "@azure/cosmos";
 
-import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { BaseModel } from "../cosmosdb_model";
-import {
-  CosmosdbModelVersioned,
-  generateVersionedModelId,
-  RetrievedVersionedModel
-} from "../cosmosdb_model_versioned";
+import { CosmosdbModelVersioned } from "../cosmosdb_model_versioned";
 
 beforeEach(() => {
   jest.clearAllMocks();
 });
-
-const aModelIdField = "aModelIdField" as const;
-const aModelPartitionField = "aModelPartitionField" as const;
-const aModelIdValue = "aModelIdValue";
-const aModelPartitionValue = 123;
-
-// test stub that compose a document id from the pair (modelId, version)
-const documentId = (modelId: string, version: number): NonEmptyString =>
-  generateVersionedModelId<MyDocument, typeof aModelIdField>(
-    modelId,
-    version as NonNegativeInteger
-  );
-
-const MyDocument = t.interface({
-  [aModelIdField]: t.string,
-  [aModelPartitionField]: t.number,
-  test: t.string
-});
-type MyDocument = t.TypeOf<typeof MyDocument>;
-
-const RetrievedMyDocument = t.intersection([
-  MyDocument,
-  RetrievedVersionedModel,
-  BaseModel
-]);
-type RetrievedMyDocument = t.TypeOf<typeof RetrievedMyDocument>;
 
 class MyModel extends CosmosdbModelVersioned<
   MyDocument,
@@ -85,27 +59,6 @@ class MyPartitionedModel extends CosmosdbModelVersioned<
   }
 }
 
-const aMyDocumentId = aModelIdValue + "-000000000000000";
-
-const aMyDocument = {
-  [aModelIdField]: aModelIdValue,
-  [aModelPartitionField]: aModelPartitionValue,
-  test: "aNewMyDocument"
-};
-
-const someMetadata = {
-  _etag: "_etag",
-  _rid: "_rid",
-  _self: "_self",
-  _ts: 1
-};
-
-const aRetrievedExistingDocument: RetrievedMyDocument = {
-  ...someMetadata,
-  ...aMyDocument,
-  id: documentId(aMyDocumentId, 1),
-  version: 1 as NonNegativeInteger
-};
 const containerMock = {
   item: jest.fn(),
   items: {
@@ -123,12 +76,6 @@ const container = (containerMock as unknown) as Container;
 const errorResponse: ErrorResponse = new Error();
 // eslint-disable-next-line functional/immutable-data
 errorResponse.code = 500;
-
-async function* yieldValues<T>(elements: T[]): AsyncIterable<T> {
-  for (const e of elements) {
-    yield e;
-  }
-}
 
 describe("upsert", () => {
   it.each`
@@ -294,25 +241,3 @@ describe("findLastVersionByModelId", () => {
     }
   });
 });
-
-// describe("findAllVersionsByPartitionKey", () => {
-//   it("should return 3 documents", async () => {
-//     containerMock.items.query.mockReturnValueOnce({
-//       getAsyncIterator: () =>
-//         yieldValues([
-//           new FeedResponse([aRetrievedExistingDocument], {}, false),
-//           new FeedResponse(
-//             [aRetrievedExistingDocument, aRetrievedExistingDocument],
-//             {},
-//             false
-//           )
-//         ])
-//     });
-
-//     const model = new MyModel(container);
-//     const result = await model.findAllVersionsByPartitionKey([aModelIdValue])();
-//     if (E.isRight(result)) {
-//       expect(result.right).toHaveLength(3);
-//     }
-//   });
-// });
