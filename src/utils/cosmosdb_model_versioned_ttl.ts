@@ -11,10 +11,7 @@ import * as t from "io-ts";
 import * as TE from "fp-ts/lib/TaskEither";
 import * as RA from "fp-ts/lib/ReadonlyArray";
 
-import {
-  NonNegativeInteger,
-  NonNegativeNumber
-} from "@pagopa/ts-commons/lib/numbers";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { pipe } from "fp-ts/lib/function";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { errorsToReadableMessages } from "@pagopa/ts-commons/lib/reporters";
