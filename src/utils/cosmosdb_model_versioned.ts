@@ -294,7 +294,6 @@ export abstract class CosmosdbModelVersioned<
       _self: null,
       _ts: null,
       id: null,
-      ttl: null,
       version: null
     };
 

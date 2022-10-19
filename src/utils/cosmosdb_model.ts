@@ -7,7 +7,6 @@ import * as TE from "fp-ts/lib/TaskEither";
 import { TaskEither } from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 import { PromiseType } from "@pagopa/ts-commons/lib/types";
-import { NonNegativeNumber } from "@pagopa/ts-commons/lib/numbers";
 
 import {
   Container,
@@ -16,7 +15,6 @@ import {
   FeedResponse,
   ItemDefinition,
   ItemResponse,
-  OperationInput,
   PatchOperationType,
   RequestOptions,
   Resource,
@@ -34,12 +32,9 @@ export type CosmosDocumentIdKey = typeof CosmosDocumentIdKey;
 
 // For basic models, the identity field is always the id of cosmos
 export type BaseModel = t.TypeOf<typeof BaseModel>;
-export const BaseModel = t.intersection([
-  t.interface({
-    id: NonEmptyString
-  }),
-  t.partial({ ttl: NonNegativeNumber })
-]);
+export const BaseModel = t.interface({
+  id: NonEmptyString
+});
 
 // The set of keys for a model
 // T might not include base model fields ("id"), but we know they are mandatory in cosmos documents
@@ -70,18 +65,21 @@ export type DocumentSearchKey<
     : never
   : never;
 
+export type AzureCosmosResource = t.TypeOf<typeof AzureCosmosResource>;
+export const AzureCosmosResource = t.interface({
+  _etag: t.string,
+  _rid: t.string,
+  _self: t.string,
+  _ts: t.number
+});
+
 // An io-ts definition of Cosmos Resource runtime type
 // IDs are enforced to be non-empty string, as we're sure they are always valued when coming from db.
 export type CosmosResource = t.TypeOf<typeof CosmosResource>;
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 export const CosmosResource = t.intersection([
   BaseModel,
-  t.interface({
-    _etag: t.string,
-    _rid: t.string,
-    _self: t.string,
-    _ts: t.number
-  })
+  AzureCosmosResource
   // this cast is used to keep CosmosResource aligned
   // with @azure/cosmos/Resource type definition
 ]) as t.Type<Resource & { readonly id: NonEmptyString }>;
@@ -215,19 +213,6 @@ export abstract class CosmosdbModel<
       this.retrievedItemT,
       this.container.items.upsert.bind(this.container.items)
     )(newDocument, options);
-  }
-
-  public batch(
-    // eslint-disable-next-line
-    operations: OperationInput[],
-    partitionKey?: NonEmptyString,
-    options?: RequestOptions
-    // eslint-disable-next-line
-  ): TE.TaskEither<CosmosErrors, any> {
-    return TE.tryCatch(
-      () => this.container.items.batch(operations, partitionKey, options),
-      toCosmosErrorResponse
-    );
   }
 
   /**
