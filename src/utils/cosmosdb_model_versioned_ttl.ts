@@ -86,7 +86,7 @@ export class CosmosdbModelVersionedTTL<
    */
   public updateTTLForAllVersions(
     searchKey: DocumentSearchKey<TR, ModelIdKey, PartitionKey>,
-    ttl: NonNegativeNumber
+    ttl: RetrievedVersionedModelTTL["ttl"]
   ): TE.TaskEither<CosmosErrors, number> {
     return pipe(
       this.findAllVersionsBySearchKey(searchKey),
@@ -184,7 +184,7 @@ export class CosmosdbModelVersionedTTL<
    */
   private batch(
     operations: ReadonlyArray<PatchOperationInput>,
-    partitionKey?: NonEmptyString
+    partitionKey: NonEmptyString
   ): TE.TaskEither<CosmosErrors, Response<BatchResult>> {
     return pipe(
       TE.tryCatch(

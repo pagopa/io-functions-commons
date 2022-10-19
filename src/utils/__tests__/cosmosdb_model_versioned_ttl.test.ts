@@ -1,8 +1,14 @@
-import { Container, FeedResponse, ResourceResponse } from "@azure/cosmos";
+import {
+  Container,
+  FeedResponse,
+  PatchOperationInput,
+  ResourceResponse
+} from "@azure/cosmos";
 import {
   aModelIdField,
   aModelIdValue,
   aRetrievedExistingDocument,
+  documentId,
   MyDocument,
   RetrievedMyDocument
 } from "../../../__mocks__/mocks";
@@ -10,6 +16,35 @@ import {
 import * as E from "fp-ts/lib/Either";
 
 import { CosmosdbModelVersionedTTL } from "../cosmosdb_model_versioned_ttl";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+
+const retrievedDocumentV0 = aRetrievedExistingDocument;
+const retrievedDocumentV1 = {
+  ...aRetrievedExistingDocument,
+  id: documentId(aModelIdValue, 1),
+  version: 1
+};
+const retrievedDocumentV2 = {
+  ...aRetrievedExistingDocument,
+  id: documentId(aModelIdValue, 2),
+  version: 2
+};
+
+const mockBatch = jest
+  .fn()
+  .mockImplementation(
+    async (
+      operations: ReadonlyArray<PatchOperationInput>,
+      partitionKey: NonEmptyString
+    ) => {
+      return {
+        headers: [],
+        result: operations.map(_ => ({ statusCode: 200 })),
+        code: 200
+      };
+    }
+  );
 
 const containerMock = {
   item: jest.fn(),
@@ -18,8 +53,17 @@ const containerMock = {
       .fn()
       .mockImplementation(async doc => new ResourceResponse(doc, {}, 200, 200)),
     query: jest.fn().mockReturnValue({
-      fetchAll: async () => new FeedResponse([], {}, false)
+      getAsyncIterator: () =>
+        yieldValues([
+          new FeedResponse([retrievedDocumentV0], {}, false),
+          new FeedResponse(
+            [retrievedDocumentV1, retrievedDocumentV2],
+            {},
+            false
+          )
+        ])
     }),
+    batch: mockBatch,
     upsert: jest.fn()
   }
 };
@@ -44,22 +88,137 @@ class MyModel extends CosmosdbModelVersionedTTL<
 
 describe("findAllVersionsBySearchKey", () => {
   it("should return 3 documents", async () => {
-    containerMock.items.query.mockReturnValueOnce({
-      getAsyncIterator: () =>
-        yieldValues([
-          new FeedResponse([aRetrievedExistingDocument], {}, false),
-          new FeedResponse(
-            [aRetrievedExistingDocument, aRetrievedExistingDocument],
-            {},
-            false
-          )
-        ])
-    });
-
     const model = new MyModel(container);
     const result = await model.findAllVersionsBySearchKey([aModelIdValue])();
+
+    expect(E.isRight(result)).toBeTruthy();
     if (E.isRight(result)) {
       expect(result.right).toHaveLength(3);
     }
+  });
+});
+
+describe("updateTTLForAllVersions", () => {
+  const expectedOperations = [
+    retrievedDocumentV0,
+    retrievedDocumentV1,
+    retrievedDocumentV2
+  ].map(d => ({
+    id: d.id,
+    operationType: "Patch",
+    resourceBody: { operations: [{ op: "add", path: "/ttl", value: 42 }] }
+  }));
+
+  it("should add ttl for all documents", async () => {
+    const model = new MyModel(container);
+    const result = await model.updateTTLForAllVersions(
+      [aModelIdValue],
+      42 as NonNegativeInteger
+    )();
+
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(result.right).toEqual(3);
+    }
+
+    expect(mockBatch).toHaveBeenLastCalledWith(
+      expectedOperations,
+      aModelIdValue
+    );
+  });
+
+  it("should return a CosmosError if batch fails", async () => {
+    mockBatch.mockImplementationOnce(() => {
+      return Promise.reject(Error("an Error"));
+    });
+
+    const model = new MyModel(container);
+    const result = await model.updateTTLForAllVersions(
+      [aModelIdValue],
+      42 as NonNegativeInteger
+    )();
+
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left.kind).toEqual("COSMOS_ERROR_RESPONSE");
+    }
+
+    expect(mockBatch).toHaveBeenLastCalledWith(
+      expectedOperations,
+      aModelIdValue
+    );
+  });
+
+  it("should return a CosmosError if some updates fail", async () => {
+    mockBatch.mockImplementationOnce(
+      async (
+        operations: ReadonlyArray<PatchOperationInput>,
+        partitionKey: NonEmptyString
+      ) => {
+        return {
+          headers: [],
+          result: operations.map(_ => ({ statusCode: 404 })),
+          code: 207
+        };
+      }
+    );
+
+    const model = new MyModel(container);
+    const result = await model.updateTTLForAllVersions(
+      [aModelIdValue],
+      42 as NonNegativeInteger
+    )();
+
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left).toEqual({
+        error: {
+          message: `Error updating ttl for ${aModelIdValue}`,
+          name: "Error updating ttl"
+        },
+        kind: "COSMOS_ERROR_RESPONSE"
+      });
+    }
+
+    expect(mockBatch).toHaveBeenLastCalledWith(
+      expectedOperations,
+      aModelIdValue
+    );
+  });
+
+  it("should return a CosmosError if batch returns a unexpected value", async () => {
+    mockBatch.mockImplementationOnce(
+      async (
+        operations: ReadonlyArray<PatchOperationInput>,
+        partitionKey: NonEmptyString
+      ) => {
+        return {
+          headers: [],
+          result: operations.map(_ => ({ statusCode: "200" })),
+          code: 200
+        };
+      }
+    );
+
+    const model = new MyModel(container);
+    const result = await model.updateTTLForAllVersions(
+      [aModelIdValue],
+      42 as NonNegativeInteger
+    )();
+
+    expect(E.isLeft(result)).toBeTruthy();
+    if (E.isLeft(result)) {
+      expect(result.left).toMatchObject({
+        error: expect.objectContaining({
+          name: `Error decoding batch result`
+        }),
+        kind: "COSMOS_ERROR_RESPONSE"
+      });
+    }
+
+    expect(mockBatch).toHaveBeenLastCalledWith(
+      expectedOperations,
+      aModelIdValue
+    );
   });
 });

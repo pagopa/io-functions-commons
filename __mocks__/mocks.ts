@@ -72,8 +72,6 @@ export const aModelPartitionField = "aModelPartitionField" as const;
 export const aModelIdValue = "aModelIdValue";
 export const aModelPartitionValue = 123;
 
-export const aMyDocumentId = aModelIdValue + "-000000000000000";
-
 export const MyDocument = t.interface({
   [aModelIdField]: t.string,
   [aModelPartitionField]: t.number,
@@ -111,6 +109,6 @@ export const documentId = (modelId: string, version: number): NonEmptyString =>
 export const aRetrievedExistingDocument: RetrievedMyDocument = {
   ...someMetadata,
   ...aMyDocument,
-  id: documentId(aMyDocumentId, 1),
-  version: 1 as NonNegativeInteger
+  id: documentId(aModelIdValue, 0),
+  version: 0 as NonNegativeInteger
 };
