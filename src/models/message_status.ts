@@ -21,9 +21,11 @@ import {
 import { Timestamp } from "../../generated/definitions/Timestamp";
 
 import { CosmosErrors } from "../utils/cosmosdb_model";
-import { RetrievedVersionedModel } from "../utils/cosmosdb_model_versioned";
 import { wrapWithKind } from "../utils/types";
-import { CosmosdbModelVersionedTTL } from "../utils/cosmosdb_model_versioned_ttl";
+import {
+  CosmosdbModelVersionedTTL,
+  RetrievedVersionedModelTTL
+} from "../utils/cosmosdb_model_versioned_ttl";
 
 export const MESSAGE_STATUS_COLLECTION_NAME = "message-status";
 export const MESSAGE_STATUS_MODEL_ID_FIELD = "messageId" as const;
@@ -81,7 +83,7 @@ export const NewMessageStatus = wrapWithKind(
 export type NewMessageStatus = t.TypeOf<typeof NewMessageStatus>;
 
 export const RetrievedMessageStatus = wrapWithKind(
-  t.intersection([MessageStatus, RetrievedVersionedModel]),
+  t.intersection([MessageStatus, RetrievedVersionedModelTTL]),
   "IRetrievedMessageStatus" as const
 );
 
