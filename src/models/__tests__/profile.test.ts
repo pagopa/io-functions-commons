@@ -216,7 +216,13 @@ describe("createProfile", () => {
     expect(containerMock.items.create).toHaveBeenCalledWith(
       expect.objectContaining({
         kind: newProfile.kind,
-        fiscalCode: newProfile.fiscalCode
+        fiscalCode: newProfile.fiscalCode,
+        // id and version are generated before calling the create.
+        // for a new profile:
+        // id: <fiscalcode>-"0".repeat(16) for a new profile
+        // version: 0
+        id: aRetrievedProfile.id,
+        version: 0
       }),
       expect.anything()
     );
@@ -226,7 +232,7 @@ describe("createProfile", () => {
     }
   });
 
-  it("should reject the promise in case of error", async () => {
+  it("should fail with a left value in case of error", async () => {
     const containerMock = ({
       items: {
         create: jest.fn().mockReturnValue(Promise.reject())
@@ -309,7 +315,9 @@ describe("updateProfile", () => {
       expect.objectContaining({
         kind: "INewProfile",
         fiscalCode: aProfileWithDifferentEmail.fiscalCode,
-        email: aProfileWithDifferentEmail.email
+        email: aProfileWithDifferentEmail.email,
+        version: aRetrievedUpdatedProfile.version,
+        id: aRetrievedUpdatedProfile.id
       }),
       expect.anything()
     );
