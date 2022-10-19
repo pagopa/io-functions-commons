@@ -23,14 +23,13 @@ import {
   VersionedModel
 } from "./cosmosdb_model_versioned";
 import {
-  AzureCosmosResource,
-  BaseModel,
   CosmosErrorResponse,
   CosmosErrors,
   DocumentSearchKey,
   toCosmosErrorResponse
 } from "./cosmosdb_model";
 import { asyncIterableToArray } from "./async";
+import { CosmosResourceTTL } from "./cosmosdb_model_ttl";
 
 type BatchResult = t.TypeOf<typeof BatchResult>;
 const BatchResult = t.readonlyArray(t.type({ statusCode: NonNegativeInteger }));
@@ -44,21 +43,6 @@ const BatchResult = t.readonlyArray(t.type({ statusCode: NonNegativeInteger }));
   if You have more than 100 versions the update operation could not be transactional, 
   see https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/transactional-batch?tabs=dotnet
  */
-
-// For basic models, the identity field is always the id of cosmos
-export type BaseModelTTL = t.TypeOf<typeof BaseModelTTL>;
-export const BaseModelTTL = t.intersection([
-  BaseModel,
-  t.partial({ ttl: t.union([NonNegativeInteger, t.literal(-1)]) })
-]);
-
-// An io-ts definition of Cosmos Resource runtime type
-// IDs are enforced to be non-empty string, as we're sure they are always valued when coming from db.
-export type CosmosResourceTTL = t.TypeOf<typeof CosmosResourceTTL>;
-export const CosmosResourceTTL = t.intersection([
-  BaseModelTTL,
-  AzureCosmosResource
-]);
 
 export const RetrievedVersionedModelTTL = t.intersection([
   CosmosResourceTTL,

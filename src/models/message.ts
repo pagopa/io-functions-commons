@@ -17,7 +17,6 @@ import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import {
   BaseModel,
-  CosmosdbModel,
   CosmosDecodingError,
   CosmosErrors,
   CosmosResource,
