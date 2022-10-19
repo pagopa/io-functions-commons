@@ -2,27 +2,38 @@ import {
   Container,
   ItemDefinition,
   JSONValue,
-  PatchOperationType
+  PatchOperationInput,
+  PatchOperationType,
+  Response
 } from "@azure/cosmos";
 
 import * as t from "io-ts";
 import * as TE from "fp-ts/lib/TaskEither";
 import * as RA from "fp-ts/lib/ReadonlyArray";
 
-import { NonNegativeNumber } from "@pagopa/ts-commons/lib/numbers";
+import {
+  NonNegativeInteger,
+  NonNegativeNumber
+} from "@pagopa/ts-commons/lib/numbers";
 import { pipe } from "fp-ts/lib/function";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { errorsToReadableMessages } from "@pagopa/ts-commons/lib/reporters";
 import {
   CosmosdbModelVersioned,
-  RetrievedVersionedModel
+  VersionedModel
 } from "./cosmosdb_model_versioned";
 import {
+  AzureCosmosResource,
+  BaseModel,
   CosmosErrorResponse,
   CosmosErrors,
   DocumentSearchKey,
   toCosmosErrorResponse
 } from "./cosmosdb_model";
 import { asyncIterableToArray } from "./async";
+
+type BatchResult = t.TypeOf<typeof BatchResult>;
+const BatchResult = t.readonlyArray(t.type({ statusCode: NonNegativeInteger }));
 
 /**
   The purpose of this class is to isolate the `updateTTL` logic, 
@@ -34,10 +45,34 @@ import { asyncIterableToArray } from "./async";
   see https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/transactional-batch?tabs=dotnet
  */
 
+// For basic models, the identity field is always the id of cosmos
+export type BaseModelTTL = t.TypeOf<typeof BaseModelTTL>;
+export const BaseModelTTL = t.intersection([
+  BaseModel,
+  t.partial({ ttl: t.union([NonNegativeInteger, t.literal(-1)]) })
+]);
+
+// An io-ts definition of Cosmos Resource runtime type
+// IDs are enforced to be non-empty string, as we're sure they are always valued when coming from db.
+export type CosmosResourceTTL = t.TypeOf<typeof CosmosResourceTTL>;
+export const CosmosResourceTTL = t.intersection([
+  BaseModelTTL,
+  AzureCosmosResource
+]);
+
+export const RetrievedVersionedModelTTL = t.intersection([
+  CosmosResourceTTL,
+  VersionedModel
+]);
+
+export type RetrievedVersionedModelTTL = t.TypeOf<
+  typeof RetrievedVersionedModelTTL
+>;
+
 export class CosmosdbModelVersionedTTL<
   T,
   TN extends Readonly<T>,
-  TR extends Readonly<T & RetrievedVersionedModel>,
+  TR extends Readonly<T & RetrievedVersionedModelTTL>,
   ModelIdKey extends keyof T,
   PartitionKey extends keyof T = ModelIdKey
 > extends CosmosdbModelVersioned<T, TN, TR, ModelIdKey, PartitionKey> {
@@ -58,15 +93,17 @@ export class CosmosdbModelVersionedTTL<
   }
 
   /**
-    Using transactionalBatch updates the ttl field for all the versions of the document
-    identified by the searchKey.
+   * Using transactionalBatch updates the ttl field for all the versions
+   * of the document identified by the searchKey.
+   *
+   * @param searchKey
+   * @param ttl
+   * @returns Either a Cosmos Error or the number of updated elements
    */
-
   public updateTTLForAllVersions(
     searchKey: DocumentSearchKey<TR, ModelIdKey, PartitionKey>,
     ttl: NonNegativeNumber
-    // eslint-disable-next-line
-  ): TE.TaskEither<CosmosErrors, TE.TaskEither<never, readonly any[]>> {
+  ): TE.TaskEither<CosmosErrors, number> {
     return pipe(
       this.findAllVersionsBySearchKey(searchKey),
       TE.map(RA.rights),
@@ -77,10 +114,7 @@ export class CosmosdbModelVersionedTTL<
           resourceBody: {
             operations: [
               {
-                /**
-                    add will replace the path with the passed value if the path alreadye exists,
-                    otherwise it will add the path
-                 */
+                // `add` will create or update the path with the passed value
                 op: PatchOperationType.add,
                 path: `/ttl`,
                 value: ttl
@@ -91,9 +125,9 @@ export class CosmosdbModelVersionedTTL<
       ),
       TE.map(RA.chunksOf(100)),
       TE.map(
-        RA.map(x =>
-          pipe(x, RA.toArray, operations =>
-            super.batch(
+        RA.map(chunk =>
+          pipe(chunk, RA.toArray, operations =>
+            this.batch(
               operations,
               `${
                 searchKey.length === 1 ? searchKey[0] : searchKey[1]
@@ -115,7 +149,13 @@ export class CosmosdbModelVersionedTTL<
                 name: `Error updating ttl`
               })
           ),
-          TE.map(() => TE.right(responses))
+          TE.chainW(() =>
+            pipe(
+              responses,
+              RA.reduce(0, (v, r) => v + (r.result?.length ?? 0)),
+              TE.right
+            )
+          )
         )
       )
     );
@@ -148,6 +188,39 @@ export class CosmosdbModelVersionedTTL<
         toCosmosErrorResponse
       ),
       TE.map(RA.flatten)
+    );
+  }
+
+  /**
+   * Batch operation. It only works with PatchOperationInput
+   *
+   * @param operations
+   * @param partitionKey
+   * @returns
+   */
+  private batch(
+    operations: ReadonlyArray<PatchOperationInput>,
+    partitionKey?: NonEmptyString
+  ): TE.TaskEither<CosmosErrors, Response<BatchResult>> {
+    return pipe(
+      TE.tryCatch(
+        () => this.container.items.batch(RA.toArray(operations), partitionKey),
+        toCosmosErrorResponse
+      ),
+      TE.chain(response =>
+        pipe(
+          response.result,
+          BatchResult.decode,
+          TE.fromEither,
+          TE.mapLeft(error =>
+            CosmosErrorResponse({
+              message: errorsToReadableMessages(error).join(", "),
+              name: `Error decoding batch result`
+            })
+          ),
+          TE.map(batchResult => ({ ...response, result: batchResult }))
+        )
+      )
     );
   }
 }
