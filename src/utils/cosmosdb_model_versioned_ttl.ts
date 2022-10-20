@@ -122,8 +122,8 @@ export class CosmosdbModelVersionedTTL<
               TE.fromPredicate(
                 response => response.code === 200,
                 _ => {
-                  const firstChunkId = chunk[0]?.id ?? -1;
-                  const lastChunkId = chunk[chunk.length - 1]?.id ?? -1;
+                  const firstChunkId = chunk[0].id;
+                  const lastChunkId = chunk[chunk.length - 1].id;
 
                   return CosmosErrorResponse({
                     message: `Error updating ttl for ${searchKey} - chunk from ${firstChunkId} to ${lastChunkId}`,
@@ -139,24 +139,8 @@ export class CosmosdbModelVersionedTTL<
       TE.chainW(responses =>
         pipe(
           responses,
-          RA.filter(response => response.code !== 200),
-          TE.fromPredicate(
-            errors => errors.length === 0,
-            _ =>
-              // Responses have status code 200, since check has been make within previous step
-              // so, this should never happen
-              CosmosErrorResponse({
-                message: `Error updating ttl for ${searchKey}. WARNING: This error should never happen!`,
-                name: `Error updating ttl`
-              })
-          ),
-          TE.chainW(() =>
-            pipe(
-              responses,
-              RA.reduce(0, (v, r) => v + (r.result?.length ?? 0)),
-              TE.right
-            )
-          )
+          RA.reduce(0, (v, r) => v + (r.result?.length ?? 0)),
+          TE.right
         )
       )
     );

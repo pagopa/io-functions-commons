@@ -86,6 +86,8 @@ class MyModel extends CosmosdbModelVersionedTTL<
   }
 }
 
+beforeEach(() => jest.clearAllMocks());
+
 describe("findAllVersionsBySearchKey", () => {
   it("should return 3 documents", async () => {
     const model = new MyModel(container);
@@ -235,5 +237,22 @@ describe("updateTTLForAllVersions", () => {
       expectedOperations,
       aModelIdValue
     );
+  });
+
+  it("should never call the batch method if the findAllVersionsBySearchKey returns an empty array", async () => {
+    containerMock.items.query.mockReturnValueOnce({
+      getAsyncIterator: () => yieldValues([])
+    });
+
+    const model = new MyModel(container);
+
+    const result = await model.updateTTLForAllVersions(
+      [aModelIdValue],
+      42 as NonNegativeInteger
+    )();
+
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) expect(result.right).toEqual(0);
+    expect(mockBatch).not.toHaveBeenCalled();
   });
 });
