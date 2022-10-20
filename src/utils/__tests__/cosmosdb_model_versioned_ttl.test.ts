@@ -185,8 +185,11 @@ describe("updateTTLForAllVersions", () => {
     if (E.isLeft(result)) {
       expect(result.left).toEqual({
         error: {
-          message: `Error updating ttl for ${aModelIdValue}`,
-          name: "Error updating ttl"
+          message: `Error updating ttl for ${aModelIdValue} - chunk from ${documentId(
+            aModelIdValue,
+            0
+          )} to ${documentId(aModelIdValue, 2)}`,
+          name: `Error updating ttl`
         },
         kind: "COSMOS_ERROR_RESPONSE"
       });
