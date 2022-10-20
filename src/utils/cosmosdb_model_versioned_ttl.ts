@@ -13,7 +13,6 @@ import * as RA from "fp-ts/lib/ReadonlyArray";
 
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { pipe } from "fp-ts/lib/function";
-import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { errorsToReadableMessages } from "@pagopa/ts-commons/lib/reporters";
 import {
   CosmosdbModelVersioned,
@@ -85,6 +84,10 @@ export class CosmosdbModelVersionedTTL<
     searchKey: DocumentSearchKey<TR, ModelIdKey, PartitionKey>,
     ttl: RetrievedVersionedModelTTL["ttl"]
   ): TE.TaskEither<CosmosErrors, number> {
+    const partitionKey = ((searchKey.length === 1
+      ? searchKey[0]
+      : searchKey[1]) as unknown) as TN[PartitionKey];
+
     return pipe(
       this.findAllVersionsBySearchKey(searchKey),
       TE.map(RA.rights),
@@ -108,12 +111,7 @@ export class CosmosdbModelVersionedTTL<
       TE.map(
         RA.map(chunk =>
           pipe(chunk, RA.toArray, operations =>
-            this.batch(
-              operations,
-              `${
-                searchKey.length === 1 ? searchKey[0] : searchKey[1]
-              }` as NonEmptyString
-            )
+            this.batch(operations, partitionKey)
           )
         )
       ),
@@ -181,11 +179,12 @@ export class CosmosdbModelVersionedTTL<
    */
   private batch(
     operations: ReadonlyArray<PatchOperationInput>,
-    partitionKey: NonEmptyString
+    partitionKey: TN[PartitionKey]
   ): TE.TaskEither<CosmosErrors, Response<BatchResult>> {
     return pipe(
       TE.tryCatch(
-        () => this.container.items.batch(RA.toArray(operations), partitionKey),
+        () =>
+          this.container.items.batch(RA.toArray(operations), `${partitionKey}`),
         toCosmosErrorResponse
       ),
       TE.chain(response =>
