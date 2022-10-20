@@ -24,6 +24,7 @@ import { PreferredLanguages } from "../../generated/definitions/PreferredLanguag
 
 import { wrapWithKind } from "../utils/types";
 import { ReminderStatus } from "../../generated/definitions/ReminderStatus";
+import { PushNotificationsContentType } from "../../generated/definitions/PushNotificationsContentType";
 
 export const PROFILE_COLLECTION_NAME = "profiles";
 export const PROFILE_MODEL_PK_FIELD = "fiscalCode" as const;
@@ -120,6 +121,14 @@ export const Profile = t.intersection([
     // opt-in flag for reminder functionality (defaults to UNSET)
     reminderStatus: withDefault(
       t.union([ReminderStatus, t.literal("UNSET")]),
+      "UNSET"
+    ),
+
+    // This parameter specifies how a specific user wants to visualize push notifications.
+    // FULL leads to descriptive push notifications while ANONYMOUS leads to silent ones.
+    // (defaults to UNSET)
+    pushNotificationsContentType: withDefault(
+      t.union([PushNotificationsContentType, t.literal("UNSET")]),
       "UNSET"
     )
   })

@@ -112,6 +112,50 @@ describe("findLastVersionByModelId", () => {
     }
   );
 
+  it.each`
+    case                                                              | pushNotificationsContentType | expectedPushNotificationsContentType
+    ${"existing profile with pushNotificationsContentType empty"}     | ${undefined}                 | ${"UNSET"}
+    ${"existing profile with pushNotificationsContentType FULL"}      | ${"FULL"}                    | ${"FULL"}
+    ${"existing profile with pushNotificationsContentType ANONYMOUS"} | ${"ANONYMOUS"}               | ${"ANONYMOUS"}
+  `(
+    "should resolve to an $case",
+    async ({
+      pushNotificationsContentType,
+      expectedPushNotificationsContentType
+    }) => {
+      const containerMock = ({
+        items: {
+          create: jest.fn(),
+          query: jest.fn(() => ({
+            fetchAll: jest.fn(() =>
+              Promise.resolve({
+                resources: [
+                  {
+                    ...aRetrievedProfile,
+                    pushNotificationsContentType
+                  }
+                ]
+              })
+            )
+          }))
+        }
+      } as unknown) as Container;
+
+      const model = new ProfileModel(containerMock);
+
+      const result = await model.findLastVersionByModelId([aFiscalCode])();
+
+      expect(E.isRight(result)).toBeTruthy();
+      if (E.isRight(result)) {
+        expect(O.isSome(result.right)).toBeTruthy();
+        expect(O.toUndefined(result.right)).toEqual({
+          ...aRetrievedProfile,
+          pushNotificationsContentType: expectedPushNotificationsContentType
+        });
+      }
+    }
+  );
+
   it("should resolve to empty if no profile is found", async () => {
     const containerMock = ({
       items: {

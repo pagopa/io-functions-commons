@@ -7,7 +7,8 @@ import {
   PROFILE_MODEL_PK_FIELD,
   ProfileModel,
   PROFILE_SERVICE_PREFERENCES_SETTINGS_LEGACY_VERSION,
-  NewProfile
+  NewProfile,
+  RetrievedProfile
 } from "../../src/models/profile";
 import { createContext } from "./cosmos_utils";
 import { fromOption } from "fp-ts/lib/Either";
@@ -471,6 +472,43 @@ describe("Models |> Profile", () => {
             fail(`Should not have failed with reminderStatus = ${inputValue}`),
           _ => {
             expect(_.reminderStatus).toBe(expectedValue);
+          }
+        )
+      )();
+
+      context.dispose();
+    }
+  );
+
+  it.each`
+    inputValue     | expectedValue
+    ${undefined}   | ${"UNSET"}
+    ${"FULL"}      | ${"FULL"}
+    ${"ANONYMOUS"} | ${"ANONYMOUS"}
+  `(
+    "should save records when passing consistent pushNotificationsContentType= $inputValue",
+    async ({ inputValue, expectedValue }) => {
+      const context = createContext(PROFILE_MODEL_PK_FIELD);
+      await context.init();
+      const model = new ProfileModel(context.container);
+
+      const toBeSavedProfile: NewProfile = {
+        kind: "INewProfile" as const,
+        ...aProfile,
+        pushNotificationsContentType: inputValue
+      };
+
+      await pipe(
+        model.create(toBeSavedProfile),
+        te.bimap(
+          _ =>
+            fail(
+              `Should not have failed with pushNotificationsContentType= ${inputValue}`
+            ),
+          (retrievedProfile: RetrievedProfile) => {
+            expect(retrievedProfile.pushNotificationsContentType).toBe(
+              expectedValue
+            );
           }
         )
       )();

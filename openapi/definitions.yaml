@@ -693,6 +693,8 @@ Profile:
       $ref: "#/ReminderStatus"
     last_app_version:
       $ref: "#/AppVersion"
+    push_notifications_content_type:
+      $ref: "#/PushNotificationsContentType"
     version:
       type: integer
   required:
@@ -742,6 +744,8 @@ ExtendedProfile:
       $ref: "#/IsTestProfile"
     last_app_version:
       $ref: "#/AppVersion"
+    push_notifications_content_type:
+      $ref: "#/PushNotificationsContentType"
     version:
       type: integer
   required:
@@ -788,6 +792,15 @@ AppVersion:
   pattern: '^((0|[1-9]\\d*)\\.){2}(0|[1-9]\\d*)(\\.(0|[1-9]\\d*)){0,1}$'
   description: A string field in Semantic Versioning format
   example: "1.10.11"
+PushNotificationsContentType:
+  type: string
+  x-extensible-enum:
+    - FULL
+    - ANONYMOUS
+  example: FULL
+  description: |-
+    This parameter specifies how a specific user wants to visualize push notifications.
+    FULL leads to descriptive push notifications while ANONYMOUS leads to silent ones.
 TimeToLiveSeconds:
   type: integer
   default: 3600
