@@ -8,11 +8,15 @@ import {
 } from "@azure/cosmos";
 
 import * as t from "io-ts";
+
+import { pipe } from "fp-ts/lib/function";
+import { contramap } from "fp-ts/lib/Ord";
+import * as N from "fp-ts/lib/number";
+import * as E from "fp-ts/Either";
 import * as TE from "fp-ts/lib/TaskEither";
 import * as RA from "fp-ts/lib/ReadonlyArray";
 
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
-import { pipe } from "fp-ts/lib/function";
 import { errorsToReadableMessages } from "@pagopa/ts-commons/lib/reporters";
 import {
   CosmosdbModelVersioned,
@@ -148,6 +152,11 @@ export class CosmosdbModelVersionedTTL<
     searchKey: DocumentSearchKey<TR, ModelIdKey, PartitionKey>
   ): TE.TaskEither<CosmosErrors, ReadonlyArray<t.Validation<TR>>> {
     const partitionKey = searchKey.length === 1 ? searchKey[0] : searchKey[1];
+    const byVersion = pipe(
+      N.Ord,
+      contramap((p: t.Validation<TR>) => (E.isLeft(p) ? -1 : p.right.version))
+    );
+
     return pipe(
       TE.tryCatch(
         () =>
@@ -166,7 +175,8 @@ export class CosmosdbModelVersionedTTL<
           ),
         toCosmosErrorResponse
       ),
-      TE.map(RA.flatten)
+      TE.map(RA.flatten),
+      TE.map(RA.sortBy([byVersion]))
     );
   }
 

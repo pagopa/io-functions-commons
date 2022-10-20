@@ -55,9 +55,9 @@ const containerMock = {
     query: jest.fn().mockReturnValue({
       getAsyncIterator: () =>
         yieldValues([
-          new FeedResponse([retrievedDocumentV0], {}, false),
+          new FeedResponse([retrievedDocumentV2], {}, false),
           new FeedResponse(
-            [retrievedDocumentV1, retrievedDocumentV2],
+            [retrievedDocumentV0, retrievedDocumentV1],
             {},
             false
           )
@@ -94,6 +94,18 @@ describe("findAllVersionsBySearchKey", () => {
     expect(E.isRight(result)).toBeTruthy();
     if (E.isRight(result)) {
       expect(result.right).toHaveLength(3);
+
+      // Check that results are returned in right order
+      result.right.map((r, i) => {
+        expect(r).toEqual(
+          E.right(
+            expect.objectContaining({
+              id: documentId(aModelIdValue, i),
+              version: i
+            })
+          )
+        );
+      });
     }
   });
 });
