@@ -118,17 +118,17 @@ export const Profile = t.intersection([
     // https://it.wikipedia.org/wiki/ISO_3166-2
     preferredLanguages: PreferredLanguages,
 
-    // opt-in flag for reminder functionality (defaults to UNSET)
-    reminderStatus: withDefault(
-      t.union([ReminderStatus, t.literal("UNSET")]),
-      "UNSET"
-    ),
-
     // This parameter specifies how a specific user wants to visualize push notifications.
     // FULL leads to descriptive push notifications while ANONYMOUS leads to silent ones.
     // (defaults to UNSET)
     pushNotificationsContentType: withDefault(
       t.union([PushNotificationsContentType, t.literal("UNSET")]),
+      "UNSET"
+    ),
+
+    // opt-in flag for reminder functionality (defaults to UNSET)
+    reminderStatus: withDefault(
+      t.union([ReminderStatus, t.literal("UNSET")]),
       "UNSET"
     )
   })
