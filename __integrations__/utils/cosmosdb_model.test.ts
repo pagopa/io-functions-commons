@@ -203,72 +203,8 @@ describe("findAllVersionsBySearchKey", () => {
 
     expect(E.isRight(result)).toBeTruthy();
     if (E.isRight(result)) {
-      // expect(O.isNone(result.right)).toBeTruthy();
       expect(result.right).toHaveLength(2);
     }
     context.dispose();
   });
 });
-
-/**************** @zeit/cosmosdb-server do not support "patch" yet *****************/
-// const anotherTest = "another-test";
-// describe("patch", () => {
-//   it("GIVEN an existing document WHEN patch a value THEN return a task either containing the updated document", async () => {
-//     const context = await createContext("id");
-//     await context.init();
-//     const model = new MyModel(context.container);
-//     await model.upsert(aDocument)();
-//     const result = await model.patch([testId], { test: anotherTest })();
-//     console.log(JSON.stringify(result));
-//     expect(E.isRight(result)).toBeTruthy();
-//     if (E.isRight(result)) {
-//       expect(result.right.test).toEqual(anotherTest);
-//     }
-//     context.dispose();
-//   });
-
-//   it("GIVEN an not existing document WHEN patch a value THEN return a task either containing a 404 error", async () => {
-//     const context = await createContext("id");
-//     await context.init();
-//     const model = new MyModel(context.container);
-//     const result = await model.patch([testId], { test: anotherTest })();
-//     expect(E.isLeft(result)).toBeTruthy();
-//     if (E.isLeft(result)) {
-//       expect(result.left).toEqual(
-//         expect.objectContaining({
-//           error: expect.objectContaining({ code: 404 })
-//         })
-//       );
-//     }
-//   });
-// });
-
-// describe("updateTTLForAllVersions", () => {
-
-//   it("should update the ttl for all the versions", async () => {
-//     const context = createContext(MESSAGE_ID);
-//     await context.init();
-//     const model = new MyVersionedModel(context.container);
-
-//     const toInsert = { ...aDocument, messageId: testId };
-
-//     // await model.create(toInsert)();
-
-//     await model.upsert(toInsert)();
-//     await model.upsert(toInsert)();
-//     await model.upsert(toInsert)();
-
-//     const result = await model.updateTTLForAllVersions(
-//       [testId],
-//       300 as NonNegativeNumber
-//     )();
-
-//     if (E.isRight(result)) {
-//       console.log("RIGHT: ", result.right);
-//     } else {
-//       console.log("LEFT: ", result.left);
-//     }
-
-//     // context.dispose();
-//   });
-// });
