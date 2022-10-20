@@ -3,7 +3,7 @@ import * as t from "io-ts";
 import * as E from "fp-ts/lib/Either";
 import * as O from "fp-ts/lib/Option";
 
-import { Container, ErrorResponse, ResourceResponse } from "@azure/cosmos";
+import { Container, ErrorResponse } from "@azure/cosmos";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import {
@@ -12,6 +12,12 @@ import {
   CosmosResource
 } from "../../src/utils/cosmosdb_model";
 import { createContext } from "../models/cosmos_utils";
+import {
+  CosmosdbModelVersioned,
+  RetrievedVersionedModel
+} from "../../src/utils/cosmosdb_model_versioned";
+
+import { CosmosdbModelVersionedTTL } from "../../src/utils/cosmosdb_model_versioned_ttl";
 
 const MyDocument = t.interface({
   pk: t.string,
@@ -149,35 +155,56 @@ describe("find", () => {
   });
 });
 
-/**************** @zeit/cosmosdb-server do not support "patch" yet *****************/
-// const anotherTest = "another-test";
-// describe("patch", () => {
-//   it("GIVEN an existing document WHEN patch a value THEN return a task either containing the updated document", async () => {
-//     const context = await createContext("id");
-//     await context.init();
-//     const model = new MyModel(context.container);
-//     await model.upsert(aDocument)();
-//     const result = await model.patch([testId], { test: anotherTest })();
-//     console.log(JSON.stringify(result));
-//     expect(E.isRight(result)).toBeTruthy();
-//     if (E.isRight(result)) {
-//       expect(result.right.test).toEqual(anotherTest);
-//     }
-//     context.dispose();
-//   });
+describe("findAllVersionsBySearchKey", () => {
+  class MyVersionedModel extends CosmosdbModelVersionedTTL<
+    MyDocument,
+    NewMyDocument,
+    RetrievedMyVersionedDocument,
+    "pk"
+  > {
+    constructor(c: Container) {
+      super(c, NewMyDocument, RetrievedMyVersionedDocument, "pk");
+    }
+  }
 
-//   it("GIVEN an not existing document WHEN patch a value THEN return a task either containing a 404 error", async () => {
-//     const context = await createContext("id");
-//     await context.init();
-//     const model = new MyModel(context.container);
-//     const result = await model.patch([testId], { test: anotherTest })();
-//     expect(E.isLeft(result)).toBeTruthy();
-//     if (E.isLeft(result)) {
-//       expect(result.left).toEqual(
-//         expect.objectContaining({
-//           error: expect.objectContaining({ code: 404 })
-//         })
-//       );
-//     }
-//   });
-// });
+  const RetrievedMyVersionedDocument = t.intersection([
+    MyDocument,
+    RetrievedVersionedModel
+  ]);
+
+  type RetrievedMyVersionedDocument = t.TypeOf<
+    typeof RetrievedMyVersionedDocument
+  >;
+
+  it("should return all documents belonging to the same partition key", async () => {
+    const context = createContext("id");
+    await context.init();
+    const model = new MyVersionedModel(context.container);
+
+    await model.upsert({
+      id: testId,
+      pk: testPartition,
+      test: "test"
+    })();
+
+    await model.upsert({
+      id: "2testId" as NonEmptyString,
+      pk: testPartition,
+      test: "test"
+    })();
+
+    await model.upsert({
+      id: "3testId" as NonEmptyString,
+      pk: "invalidPartition",
+      test: "test"
+    })();
+
+    const result = await model.findAllVersionsBySearchKey([testPartition])();
+
+    expect(E.isRight(result)).toBeTruthy();
+    if (E.isRight(result)) {
+      expect(result.right).toHaveLength(2);
+    }
+    context.dispose();
+  });
+});

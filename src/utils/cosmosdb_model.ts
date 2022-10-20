@@ -65,18 +65,21 @@ export type DocumentSearchKey<
     : never
   : never;
 
+export type AzureCosmosResource = t.TypeOf<typeof AzureCosmosResource>;
+export const AzureCosmosResource = t.interface({
+  _etag: t.string,
+  _rid: t.string,
+  _self: t.string,
+  _ts: t.number
+});
+
 // An io-ts definition of Cosmos Resource runtime type
 // IDs are enforced to be non-empty string, as we're sure they are always valued when coming from db.
 export type CosmosResource = t.TypeOf<typeof CosmosResource>;
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 export const CosmosResource = t.intersection([
   BaseModel,
-  t.interface({
-    _etag: t.string,
-    _rid: t.string,
-    _self: t.string,
-    _ts: t.number
-  })
+  AzureCosmosResource
   // this cast is used to keep CosmosResource aligned
   // with @azure/cosmos/Resource type definition
 ]) as t.Type<Resource & { readonly id: NonEmptyString }>;

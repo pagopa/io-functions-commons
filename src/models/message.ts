@@ -17,7 +17,6 @@ import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import {
   BaseModel,
-  CosmosdbModel,
   CosmosDecodingError,
   CosmosErrors,
   CosmosResource,
@@ -40,6 +39,7 @@ import { wrapWithKind } from "../utils/types";
 import { NewMessageContent } from "../../generated/definitions/NewMessageContent";
 import { FeatureLevelType } from "../../generated/definitions/FeatureLevelType";
 import { BlobNotFoundCode } from "../utils/azure_storage";
+import { CosmosdbModelTTL } from "../utils/cosmosdb_model_ttl";
 
 export const MESSAGE_COLLECTION_NAME = "messages";
 export const MESSAGE_MODEL_PK_FIELD = "fiscalCode" as const;
@@ -200,7 +200,7 @@ export const defaultPageSize = 100 as NonNegativeInteger;
 /**
  * A model for handling Messages
  */
-export class MessageModel extends CosmosdbModel<
+export class MessageModel extends CosmosdbModelTTL<
   Message,
   NewMessage,
   RetrievedMessage,
@@ -308,9 +308,9 @@ export class MessageModel extends CosmosdbModel<
         TE.fromEither(
           E.tryCatch(
             () =>
-              this.getQueryIterator(querySpec, { maxItemCount: pageSize })[
-                Symbol.asyncIterator
-              ](),
+              this.getQueryIterator(querySpec, {
+                maxItemCount: pageSize
+              })[Symbol.asyncIterator](),
             toCosmosErrorResponse
           )
         )
