@@ -483,6 +483,7 @@ describe("Models |> Profile", () => {
   it.each`
     inputValue     | expectedValue
     ${undefined}   | ${"UNSET"}
+    ${"UNSET"}     | ${"UNSET"}
     ${"FULL"}      | ${"FULL"}
     ${"ANONYMOUS"} | ${"ANONYMOUS"}
   `(

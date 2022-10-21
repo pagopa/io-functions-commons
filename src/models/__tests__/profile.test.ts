@@ -115,6 +115,7 @@ describe("findLastVersionByModelId", () => {
   it.each`
     case                                                              | pushNotificationsContentType | expectedPushNotificationsContentType
     ${"existing profile with pushNotificationsContentType empty"}     | ${undefined}                 | ${"UNSET"}
+    ${"existing profile with pushNotificationsContentType UNSET"}     | ${"UNSET"}                   | ${"UNSET"}
     ${"existing profile with pushNotificationsContentType FULL"}      | ${"FULL"}                    | ${"FULL"}
     ${"existing profile with pushNotificationsContentType ANONYMOUS"} | ${"ANONYMOUS"}               | ${"ANONYMOUS"}
   `(

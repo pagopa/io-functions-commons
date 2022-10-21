@@ -2,6 +2,10 @@ import * as t from "io-ts";
 import * as E from "fp-ts/lib/Either";
 import { pipe } from "fp-ts/lib/function";
 
+export const UNSET = t.literal("UNSET");
+export type UNSET = t.TypeOf<typeof UNSET>;
+export const UNSET_VALUE: UNSET = "UNSET";
+
 // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
 export function isDefined<T>(o: T | undefined | null): o is T {
   return o !== undefined && o !== null;

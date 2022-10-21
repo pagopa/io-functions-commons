@@ -22,7 +22,7 @@ import { IsWebhookEnabled } from "../../generated/definitions/IsWebhookEnabled";
 import { ServicesPreferencesModeEnum } from "../../generated/definitions/ServicesPreferencesMode";
 import { PreferredLanguages } from "../../generated/definitions/PreferredLanguages";
 
-import { wrapWithKind } from "../utils/types";
+import { UNSET, UNSET_VALUE, wrapWithKind } from "../utils/types";
 import { ReminderStatus } from "../../generated/definitions/ReminderStatus";
 import { PushNotificationsContentType } from "../../generated/definitions/PushNotificationsContentType";
 
@@ -122,15 +122,12 @@ export const Profile = t.intersection([
     // FULL leads to descriptive push notifications while ANONYMOUS leads to silent ones.
     // (defaults to UNSET)
     pushNotificationsContentType: withDefault(
-      t.union([PushNotificationsContentType, t.literal("UNSET")]),
-      "UNSET"
+      t.union([PushNotificationsContentType, UNSET]),
+      UNSET_VALUE
     ),
 
     // opt-in flag for reminder functionality (defaults to UNSET)
-    reminderStatus: withDefault(
-      t.union([ReminderStatus, t.literal("UNSET")]),
-      "UNSET"
-    )
+    reminderStatus: withDefault(t.union([ReminderStatus, UNSET]), UNSET_VALUE)
   })
 ]);
 
