@@ -50,6 +50,15 @@ const aRetrievedProfile: RetrievedProfile = {
 
 const aLastAppVersion = "1.0.0";
 
+const newProfile: NewProfile = {
+  kind: "INewProfile",
+  ...aRawProfile,
+  servicePreferencesSettings: {
+    mode: ServicesPreferencesModeEnum.LEGACY,
+    version: -1
+  }
+};
+
 describe("findLastVersionByModelId", () => {
   it.each`
     case                                                           | lastAppVersion     | expectedLastAppVersion | reminderStatus | expectedReminderStatus
@@ -126,7 +135,6 @@ describe("findLastVersionByModelId", () => {
     }) => {
       const containerMock = ({
         items: {
-          create: jest.fn(),
           query: jest.fn(() => ({
             fetchAll: jest.fn(() =>
               Promise.resolve({
@@ -233,15 +241,6 @@ describe("Profile codec", () => {
 });
 
 describe("createProfile", () => {
-  const newProfile: NewProfile = {
-    kind: "INewProfile",
-    ...aRawProfile,
-    servicePreferencesSettings: {
-      mode: ServicesPreferencesModeEnum.LEGACY,
-      version: -1
-    }
-  };
-
   it("should create a new profile", async () => {
     const containerMock = ({
       items: {
@@ -320,6 +319,51 @@ describe("createProfile", () => {
       expect(result.left.kind).toEqual("COSMOS_EMPTY_RESPONSE");
     }
   });
+
+  it.each`
+    case                                                              | pushNotificationsContentType | expectedPushNotificationsContentType
+    ${"existing profile with pushNotificationsContentType empty"}     | ${undefined}                 | ${"UNSET"}
+    ${"existing profile with pushNotificationsContentType UNSET"}     | ${"UNSET"}                   | ${"UNSET"}
+    ${"existing profile with pushNotificationsContentType FULL"}      | ${"FULL"}                    | ${"FULL"}
+    ${"existing profile with pushNotificationsContentType ANONYMOUS"} | ${"ANONYMOUS"}               | ${"ANONYMOUS"}
+  `(
+    "should create a profile with pushNotificationsContentType=$expectedPushNotificationsContentType when passing $pushNotificationsContentType",
+    async ({
+      pushNotificationsContentType,
+      expectedPushNotificationsContentType
+    }) => {
+      const containerMock = ({
+        items: {
+          create: jest.fn().mockReturnValue(
+            Promise.resolve({
+              resource: {
+                ...aRetrievedProfile,
+                pushNotificationsContentType
+              }
+            })
+          )
+        }
+      } as unknown) as Container;
+
+      const model = new ProfileModel(containerMock);
+
+      const newProfileWithNotificationsContentType: NewProfile = {
+        ...newProfile,
+        pushNotificationsContentType
+      };
+      const result = await model.create(
+        newProfileWithNotificationsContentType
+      )();
+
+      expect(E.isRight(result)).toBeTruthy();
+      if (E.isRight(result)) {
+        expect(result.right).toEqual({
+          ...aRetrievedProfile,
+          pushNotificationsContentType: expectedPushNotificationsContentType
+        });
+      }
+    }
+  );
 });
 
 describe("updateProfile", () => {
@@ -412,4 +456,109 @@ describe("updateProfile", () => {
       expect(result.left.kind).toEqual("COSMOS_EMPTY_RESPONSE");
     }
   });
+
+  it.each`
+    case                                                              | pushNotificationsContentType | expectedPushNotificationsContentType
+    ${"existing profile with pushNotificationsContentType empty"}     | ${undefined}                 | ${"UNSET"}
+    ${"existing profile with pushNotificationsContentType UNSET"}     | ${"UNSET"}                   | ${"UNSET"}
+    ${"existing profile with pushNotificationsContentType FULL"}      | ${"FULL"}                    | ${"FULL"}
+    ${"existing profile with pushNotificationsContentType ANONYMOUS"} | ${"ANONYMOUS"}               | ${"ANONYMOUS"}
+  `(
+    "should update a profile and return the decoded pushNotificationsContentType",
+    async ({
+      pushNotificationsContentType,
+      expectedPushNotificationsContentType
+    }) => {
+      const containerMock = ({
+        items: {
+          create: jest.fn().mockReturnValue(
+            Promise.resolve({
+              resource: {
+                ...aRetrievedProfile,
+                pushNotificationsContentType,
+                version: 1
+              }
+            })
+          )
+        }
+      } as unknown) as Container;
+
+      const model = new ProfileModel(containerMock);
+
+      const result = await model.update({
+        ...aRetrievedProfile,
+        pushNotificationsContentType
+      })();
+
+      expect(E.isRight(result)).toBeTruthy();
+      if (E.isRight(result)) {
+        expect(result.right).toEqual({
+          ...aRetrievedProfile,
+          pushNotificationsContentType: expectedPushNotificationsContentType,
+          version: 1
+        });
+      }
+    }
+  );
+});
+
+describe("upsertProfile", () => {
+  it.each`
+    case                                                              | pushNotificationsContentType | expectedPushNotificationsContentType
+    ${"existing profile with pushNotificationsContentType empty"}     | ${undefined}                 | ${"UNSET"}
+    ${"existing profile with pushNotificationsContentType UNSET"}     | ${"UNSET"}                   | ${"UNSET"}
+    ${"existing profile with pushNotificationsContentType FULL"}      | ${"FULL"}                    | ${"FULL"}
+    ${"existing profile with pushNotificationsContentType ANONYMOUS"} | ${"ANONYMOUS"}               | ${"ANONYMOUS"}
+  `(
+    "should upsert a profile and return the decoded pushNotificationsContentType",
+    async ({
+      pushNotificationsContentType,
+      expectedPushNotificationsContentType
+    }) => {
+      const containerMock = ({
+        items: {
+          create: jest.fn().mockReturnValue(
+            Promise.resolve({
+              resource: {
+                ...aRetrievedProfile,
+                pushNotificationsContentType,
+                version: 1
+              }
+            })
+          ),
+          query: jest.fn().mockReturnValue({
+            fetchAll: jest.fn().mockReturnValue(
+              Promise.resolve({
+                resources: [
+                  {
+                    ...aRetrievedProfile,
+                    pushNotificationsContentType
+                  }
+                ]
+              })
+            )
+          })
+        }
+      } as unknown) as Container;
+
+      const model = new ProfileModel(containerMock);
+
+      const newProfileWithNotificationsContentType: NewProfile = {
+        ...newProfile,
+        pushNotificationsContentType
+      };
+      const result = await model.upsert(
+        newProfileWithNotificationsContentType
+      )();
+
+      expect(E.isRight(result)).toBeTruthy();
+      if (E.isRight(result)) {
+        expect(result.right).toEqual({
+          ...aRetrievedProfile,
+          pushNotificationsContentType: expectedPushNotificationsContentType,
+          version: 1
+        });
+      }
+    }
+  );
 });
