@@ -510,6 +510,20 @@ describe("updateProfile", () => {
         pushNotificationsContentType
       })();
 
+      expect(containerMock.items.create).toBeCalledTimes(1);
+      expect(containerMock.items.create).toBeCalledWith(
+        expect.objectContaining({
+          version: 1,
+          pushNotificationsContentType: expectedPushNotificationsContentType,
+          kind: "INewProfile",
+          id: generateVersionedModelId<Profile, "fiscalCode">(
+            aRetrievedProfile.fiscalCode,
+            1 as NonNegativeInteger
+          ),
+          fiscalCode: aRetrievedProfile.fiscalCode
+        }),
+        expect.anything()
+      );
       expect(E.isRight(result)).toBeTruthy();
       if (E.isRight(result)) {
         expect(result.right).toEqual({
