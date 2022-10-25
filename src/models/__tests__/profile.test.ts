@@ -366,12 +366,7 @@ describe("createProfile", () => {
             0 as NonNegativeInteger
           ),
           version: 0,
-          // the decoder here sets the field to UNSET for undefined values
-          pushNotificationsContentType:
-            newProfileWithNotificationsContentType.pushNotificationsContentType !==
-            undefined
-              ? newProfileWithNotificationsContentType.pushNotificationsContentType
-              : "UNSET"
+          pushNotificationsContentType: expectedPushNotificationsContentType
         }),
         expect.anything()
       );
