@@ -22,8 +22,9 @@ import { IsWebhookEnabled } from "../../generated/definitions/IsWebhookEnabled";
 import { ServicesPreferencesModeEnum } from "../../generated/definitions/ServicesPreferencesMode";
 import { PreferredLanguages } from "../../generated/definitions/PreferredLanguages";
 
-import { wrapWithKind } from "../utils/types";
+import { UNSET, UNSET_VALUE, wrapWithKind } from "../utils/types";
 import { ReminderStatus } from "../../generated/definitions/ReminderStatus";
+import { PushNotificationsContentType } from "../../generated/definitions/PushNotificationsContentType";
 
 export const PROFILE_COLLECTION_NAME = "profiles";
 export const PROFILE_MODEL_PK_FIELD = "fiscalCode" as const;
@@ -117,11 +118,16 @@ export const Profile = t.intersection([
     // https://it.wikipedia.org/wiki/ISO_3166-2
     preferredLanguages: PreferredLanguages,
 
+    // This parameter specifies how a specific user wants to visualize push notifications.
+    // FULL leads to descriptive push notifications while ANONYMOUS leads to silent ones.
+    // (defaults to UNSET)
+    pushNotificationsContentType: withDefault(
+      t.union([PushNotificationsContentType, UNSET]),
+      UNSET_VALUE
+    ),
+
     // opt-in flag for reminder functionality (defaults to UNSET)
-    reminderStatus: withDefault(
-      t.union([ReminderStatus, t.literal("UNSET")]),
-      "UNSET"
-    )
+    reminderStatus: withDefault(t.union([ReminderStatus, UNSET]), UNSET_VALUE)
   })
 ]);
 
