@@ -17,6 +17,7 @@ import {
 import { Container } from "@azure/cosmos";
 import { ServicesPreferencesModeEnum } from "../../../generated/definitions/ServicesPreferencesMode";
 import { pipe } from "fp-ts/lib/function";
+import { generateVersionedModelId } from "../../utils/cosmosdb_model_versioned";
 
 const aFiscalCode = "FRLFRC74E04B157I" as FiscalCode;
 
@@ -355,6 +356,25 @@ describe("createProfile", () => {
         newProfileWithNotificationsContentType
       )();
 
+      expect(containerMock.items.create).toBeCalledTimes(1);
+      expect(containerMock.items.create).toBeCalledWith(
+        expect.objectContaining({
+          kind: newProfileWithNotificationsContentType.kind,
+          fiscalCode: newProfileWithNotificationsContentType.fiscalCode,
+          id: generateVersionedModelId<Profile, "fiscalCode">(
+            newProfileWithNotificationsContentType.fiscalCode,
+            0 as NonNegativeInteger
+          ),
+          version: 0,
+          // the decoder here sets the field to UNSET for undefined values
+          pushNotificationsContentType:
+            newProfileWithNotificationsContentType.pushNotificationsContentType !==
+            undefined
+              ? newProfileWithNotificationsContentType.pushNotificationsContentType
+              : "UNSET"
+        }),
+        expect.anything()
+      );
       expect(E.isRight(result)).toBeTruthy();
       if (E.isRight(result)) {
         expect(result.right).toEqual({
