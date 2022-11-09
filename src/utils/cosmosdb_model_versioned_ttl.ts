@@ -94,53 +94,67 @@ export class CosmosdbModelVersionedTTL<
 
     return pipe(
       this.findAllVersionsBySearchKey(searchKey),
-      TE.map(RA.rights),
-      TE.map(
-        RA.map(doc => ({
-          id: doc.id,
-          operationType: "Patch" as const,
-          resourceBody: {
-            operations: [
-              {
-                // `add` will create or update the path with the passed value
-                op: PatchOperationType.add,
-                path: `/ttl`,
-                value: ttl
+      TE.chain(versions =>
+        pipe(
+          versions,
+          TE.of,
+          TE.map(RA.rights),
+          TE.map(
+            RA.map(doc => ({
+              id: doc.id,
+              operationType: "Patch" as const,
+              resourceBody: {
+                operations: [
+                  {
+                    // `add` will create or update the path with the passed value
+                    op: PatchOperationType.add,
+                    path: `/ttl`,
+                    value: ttl
+                  }
+                ]
               }
-            ]
-          }
-        }))
-      ),
-      TE.map(RA.chunksOf(100)),
-      TE.map(
-        RA.map(chunk =>
-          pipe(
-            chunk,
-            RA.toArray,
-            operations => this.batch(operations, partitionKey),
-            TE.chainW(
-              TE.fromPredicate(
-                response => response.code === 200,
-                _ => {
-                  const firstChunkId = chunk[0].id;
-                  const lastChunkId = chunk[chunk.length - 1].id;
+            }))
+          ),
+          TE.map(RA.chunksOf(100)),
+          TE.map(
+            RA.map(chunk =>
+              pipe(
+                chunk,
+                RA.toArray,
+                operations => this.batch(operations, partitionKey),
+                TE.chainW(
+                  TE.fromPredicate(
+                    response => response.code === 200,
+                    _ => {
+                      const firstChunkId = chunk[0].id;
+                      const lastChunkId = chunk[chunk.length - 1].id;
 
-                  return CosmosErrorResponse({
-                    message: `Error updating ttl for ${searchKey} - chunk from ${firstChunkId} to ${lastChunkId}`,
-                    name: `Error updating ttl`
-                  });
-                }
+                      return CosmosErrorResponse({
+                        message: `Error updating ttl for ${searchKey} - chunk from ${firstChunkId} to ${lastChunkId}`,
+                        name: `Error updating ttl`
+                      });
+                    }
+                  )
+                )
               )
             )
+          ),
+          TE.chainW(TE.sequenceSeqArray),
+          TE.chainW(responses =>
+            pipe(
+              responses,
+              RA.reduce(0, (v, r) => v + (r.result?.length ?? 0)),
+              TE.right
+            )
+          ),
+          TE.filterOrElseW(
+            batchRecordsCount => batchRecordsCount === versions.length,
+            batchRecordsCount =>
+              CosmosErrorResponse({
+                message: `The message status versions found count (${versions.length}) do not match with the batch updated count (${batchRecordsCount})`,
+                name: `Error updating ttl`
+              })
           )
-        )
-      ),
-      TE.chainW(TE.sequenceSeqArray),
-      TE.chainW(responses =>
-        pipe(
-          responses,
-          RA.reduce(0, (v, r) => v + (r.result?.length ?? 0)),
-          TE.right
         )
       )
     );
