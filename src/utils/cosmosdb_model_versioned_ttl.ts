@@ -151,7 +151,11 @@ export class CosmosdbModelVersionedTTL<
             batchRecordsCount => batchRecordsCount === versions.length,
             batchRecordsCount =>
               CosmosErrorResponse({
-                message: `The message status versions found count (${versions.length}) do not match with the batch updated count (${batchRecordsCount})`,
+                message: `The message status versions found count (${
+                  versions.length
+                }) do not match with the batch updated count (${batchRecordsCount}). The valid decoded message status count is ${
+                  RA.rights(versions).length
+                }`,
                 name: `Error updating ttl`
               })
           )
