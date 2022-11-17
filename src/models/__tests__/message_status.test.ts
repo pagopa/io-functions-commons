@@ -3,7 +3,10 @@ import * as t from "io-ts";
 
 import * as E from "fp-ts/lib/Either";
 import * as O from "fp-ts/lib/Option";
-import { NonNegativeNumber } from "@pagopa/ts-commons/lib/numbers";
+import {
+  NonNegativeInteger,
+  NonNegativeNumber
+} from "@pagopa/ts-commons/lib/numbers";
 import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import { Container, ResourceResponse } from "@azure/cosmos";
@@ -19,6 +22,7 @@ import {
 } from "../message_status";
 import { pipe } from "fp-ts/lib/function";
 import { RejectionReasonEnum } from "../../../generated/definitions/RejectionReason";
+import { Ttl } from "../../utils/cosmosdb_model_ttl";
 
 const aMessageId = "A_MESSAGE_ID" as NonEmptyString;
 const aFiscalCode = "RLDBSV36A78Y792X" as FiscalCode;
@@ -425,6 +429,45 @@ describe("getMessageStatusUpdater", () => {
           fiscalCode: aFiscalCode,
           isRead: false,
           isArchived: false
+        })
+      );
+    }
+  });
+
+  it("should handle a REJECTED message status with a ttl", async () => {
+    const aNewMessageId = "ANonExistingId-1" as NonEmptyString;
+    const newStatus = RejectedMessageStatusValueEnum.REJECTED;
+
+    mockFetchAll.mockImplementation(async () => ({
+      resources: []
+    }));
+
+    const model = new MessageStatusModel(containerMock);
+
+    const updater = getMessageStatusUpdater(model, aNewMessageId, aFiscalCode);
+
+    // We expect this call to fail beause REJECTED status needs also a rejection reason
+    // @ts-expect-error
+    await updater(newStatus)();
+
+    const res = await updater({
+      status: newStatus,
+      ttl: 200 as Ttl,
+      rejection_reason: RejectionReasonEnum.SERVICE_NOT_ALLOWED
+    })();
+
+    expect(E.isRight(res)).toBe(true);
+    if (E.isRight(res)) {
+      expect(mockCreateItem.mock.calls[0][0]).toMatchObject(
+        expect.objectContaining({
+          version: 0,
+          status: newStatus,
+          rejection_reason: RejectionReasonEnum.SERVICE_NOT_ALLOWED,
+          messageId: aNewMessageId,
+          fiscalCode: aFiscalCode,
+          isRead: false,
+          isArchived: false,
+          ttl: 200
         })
       );
     }
