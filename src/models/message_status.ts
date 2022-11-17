@@ -26,6 +26,7 @@ import {
   CosmosdbModelVersionedTTL,
   RetrievedVersionedModelTTL
 } from "../utils/cosmosdb_model_versioned_ttl";
+import { Ttl } from "../utils/cosmosdb_model_ttl";
 
 export const MESSAGE_STATUS_COLLECTION_NAME = "message-status";
 export const MESSAGE_STATUS_MODEL_ID_FIELD = "messageId" as const;
@@ -100,6 +101,7 @@ export type MessageStatusUpdate =
   | {
       readonly status: RejectedMessageStatusValueEnum;
       readonly rejection_reason: RejectedMessageStatus["rejection_reason"];
+      readonly ttl?: Ttl;
     };
 
 export type MessageStatusUpdater = (

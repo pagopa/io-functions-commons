@@ -21,6 +21,7 @@ import { pipe } from "fp-ts/lib/function";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { RejectedMessageStatusValueEnum } from "../../generated/definitions/RejectedMessageStatusValue";
 import { RejectionReasonEnum } from "../../generated/definitions/RejectionReason";
+import { Ttl } from "../../src/utils/cosmosdb_model_ttl";
 
 const aMessageId = "A_MESSAGE_ID" as NonEmptyString;
 const aFiscalCode = "RLDBSV36A78Y792X" as FiscalCode;
@@ -209,6 +210,42 @@ describe("Models |> Message-Status", () => {
         id: `${anotherMessageId}-${"0".repeat(16)}` as NonEmptyString,
         status: RejectedMessageStatusValueEnum.REJECTED,
         rejection_reason: RejectionReasonEnum.USER_NOT_FOUND,
+        version: 0,
+        isRead: false,
+        isArchived: false
+      });
+    }
+
+    context.dispose();
+  });
+
+  it("should create a REJECTED message-status using getMessageStatusUpdater with ttl", async () => {
+    const context = createContext(MESSAGE_STATUS_MODEL_PK_FIELD);
+    await context.init();
+    const model = new MessageStatusModel(context.container);
+
+    const anotherMessageId = "ANOTHER_MESSAGE_ID" as NonEmptyString;
+
+    const updater = getMessageStatusUpdater(
+      model,
+      anotherMessageId,
+      aFiscalCode
+    );
+    const result = await updater({
+      status: RejectedMessageStatusValueEnum.REJECTED,
+      ttl: 200 as Ttl,
+      rejection_reason: RejectionReasonEnum.USER_NOT_FOUND
+    })();
+
+    expect(E.isRight(result)).toBe(true);
+
+    if (E.isRight(result)) {
+      expect(result.right).toMatchObject({
+        messageId: anotherMessageId,
+        id: `${anotherMessageId}-${"0".repeat(16)}` as NonEmptyString,
+        status: RejectedMessageStatusValueEnum.REJECTED,
+        rejection_reason: RejectionReasonEnum.USER_NOT_FOUND,
+        ttl: 200,
         version: 0,
         isRead: false,
         isArchived: false

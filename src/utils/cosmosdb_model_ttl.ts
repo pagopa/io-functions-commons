@@ -19,11 +19,14 @@ import {
   see https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/transactional-batch?tabs=dotnet
  */
 
+export const Ttl = t.union([NonNegativeInteger, t.literal(-1)]);
+export type Ttl = t.TypeOf<typeof BaseModelTTL>;
+
 // For basic models, the identity field is always the id of cosmos
 export type BaseModelTTL = t.TypeOf<typeof BaseModelTTL>;
 export const BaseModelTTL = t.intersection([
   BaseModel,
-  t.partial({ ttl: t.union([NonNegativeInteger, t.literal(-1)]) })
+  t.partial({ ttl: Ttl })
 ]);
 
 // An io-ts definition of Cosmos Resource runtime type
