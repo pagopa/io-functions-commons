@@ -20,7 +20,7 @@ import {
  */
 
 export const Ttl = t.union([NonNegativeInteger, t.literal(-1)]);
-export type Ttl = t.TypeOf<typeof BaseModelTTL>;
+export type Ttl = t.TypeOf<typeof Ttl>;
 
 // For basic models, the identity field is always the id of cosmos
 export type BaseModelTTL = t.TypeOf<typeof BaseModelTTL>;
