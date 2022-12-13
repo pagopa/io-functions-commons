@@ -10,7 +10,7 @@
   "keywords": [],
   "author": "",
   "dependencies": {
-    "express": "^4.0.0"
+    "express": "^4.17.3"
   },
   "devDependencies": {
     "@types/jest": "^25.2.1",
