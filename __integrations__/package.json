@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "@types/jest": "^25.2.1",
-    "@types/node": "^13.11.0",
+    "@types/node": "^18.11.18",
     "dotenv-cli": "^4.1.0",
     "jest": "^25.2.7",
     "ts-jest": "^25.3.1"
