@@ -711,24 +711,26 @@
     write-yaml-file "^4.1.3"
     yargs "^15.0.1"
 
-"@pagopa/ts-commons@^10.3.0":
-  version "10.5.0"
-  resolved "https://registry.yarnpkg.com/@pagopa/ts-commons/-/ts-commons-10.5.0.tgz#5c22cf3bc16af087beac5b0dfb3eef8f9231ab80"
-  integrity sha512-gD0X6inD0knEU4IJtHGqJ622AIAq11pdstrFDpt87tHLRsTpOk9EJ/4yhrokGPhfInKbOEkIV1TydUZIqEQ6Vw==
+"@pagopa/ts-commons@^10.13.0":
+  version "10.13.0"
+  resolved "https://registry.yarnpkg.com/@pagopa/ts-commons/-/ts-commons-10.13.0.tgz#d8828a4b4f29e6ad0674c9fcea55eab41240725f"
+  integrity sha512-NE1RXpi5R7DlG9HdXCZZYj7DLodPMTEsusdDmCjJBlvsHRLlRsvGUx2mgA4oh+iFA+nGE9mDIbBoTN9lwGjqfQ==
   dependencies:
     abort-controller "^3.0.0"
     agentkeepalive "^4.1.4"
     applicationinsights "^1.8.10"
     fp-ts "^2.11.0"
     io-ts "^2.2.16"
+    jose "^4.11.2"
     json-set-map "^1.1.2"
     node-fetch "^2.6.0"
+    semver "^7.3.7"
     validator "^13.7.0"
 
-"@pagopa/ts-commons@^10.9.0":
-  version "10.9.0"
-  resolved "https://registry.yarnpkg.com/@pagopa/ts-commons/-/ts-commons-10.9.0.tgz#ca50f8f9b09499667b6f3532c897453918ed7c76"
-  integrity sha512-hnWpA8Le8ylxKGGj+IALFBhOQDgLDl8vb3opKr3MHVdkcvm4GONZkotGnnSQ3Bh/tasgmPbeOa4wAHJSLTRmXQ==
+"@pagopa/ts-commons@^10.3.0":
+  version "10.5.0"
+  resolved "https://registry.yarnpkg.com/@pagopa/ts-commons/-/ts-commons-10.5.0.tgz#5c22cf3bc16af087beac5b0dfb3eef8f9231ab80"
+  integrity sha512-gD0X6inD0knEU4IJtHGqJ622AIAq11pdstrFDpt87tHLRsTpOk9EJ/4yhrokGPhfInKbOEkIV1TydUZIqEQ6Vw==
   dependencies:
     abort-controller "^3.0.0"
     agentkeepalive "^4.1.4"
@@ -4721,6 +4723,11 @@ jest@^24.9.0:
     import-local "^2.0.0"
     jest-cli "^24.9.0"
 
+jose@^4.11.2:
+  version "4.11.2"
+  resolved "https://registry.yarnpkg.com/jose/-/jose-4.11.2.tgz#d9699307c02e18ff56825843ba90e2fae9f09e23"
+  integrity sha512-njj0VL2TsIxCtgzhO+9RRobBvws4oYyCM8TpvoUQwl/MbIM3NFJRR9+e6x0sS5xXaP1t6OCBkaBME98OV9zU5A==
+
 js-beautify@^1.6.14:
   version "1.14.0"
   resolved "https://registry.yarnpkg.com/js-beautify/-/js-beautify-1.14.0.tgz#2ce790c555d53ce1e3d7363227acf5dc69024c2d"
@@ -7192,6 +7199,13 @@ semver@^7.2.1, semver@^7.3.4, semver@^7.3.5:
   version "7.3.5"
   resolved "https://registry.yarnpkg.com/semver/-/semver-7.3.5.tgz#0b621c879348d8998e4b0e4be94b3f12e6018ef7"
   integrity sha512-PoeGJYh8HK4BTO/a9Tf6ZG3veo/A7ZVsYrSA6J8ny9nb3B1VrpkuN+z9OE5wfE5p6H4LchYZsegiQgbJD94ZFQ==
+  dependencies:
+    lru-cache "^6.0.0"
+
+semver@^7.3.7:
+  version "7.3.8"
+  resolved "https://registry.yarnpkg.com/semver/-/semver-7.3.8.tgz#07a78feafb3f7b32347d725e33de7e2a2df67798"
+  integrity sha512-NB1ctGL5rlHrPJtFDVIVzTyQylMLu9N9VICA6HSFJo8MCGVTMW6gfpicwKmmK/dAjTOrqu5l63JJOpDSrAis3A==
   dependencies:
     lru-cache "^6.0.0"
 
