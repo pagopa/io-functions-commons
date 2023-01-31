@@ -56,7 +56,7 @@ const defaultFetchAgent = toFetch(
  */
 export const getMailerTransporter = (
   config: MailerConfig,
-  fetchAgent: typeof fetch = defaultFetchAgent
+  fetchAgent: typeof fetch
 ): MailerTransporter => {
   const maybeTransportOpts: Option<
     | Transport

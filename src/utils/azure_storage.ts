@@ -254,7 +254,7 @@ export const getBlobAsObject = async <A, O, I>(
           )
         );
       } catch (e) {
-        return E.left(e);
+        return E.left(new Error(`${e}`));
       }
     })
   );
