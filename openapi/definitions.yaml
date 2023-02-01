@@ -1551,3 +1551,9 @@ ReadStatus:
   example: UNREAD
   description:
     Api definition of read status enumeration
+Ulid:
+  type: string
+  description: Ulid string.
+  format: Ulid
+  x-import: '@pagopa/ts-commons/lib/strings'
+  example: 01ARZ3NDEKTSV4RRFFQ69G5FAV
