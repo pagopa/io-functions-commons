@@ -5,25 +5,13 @@
  * Ideally this is the only file that's needed to be imported when apps want to send email.
  */
 
-import { agent } from "@pagopa/ts-commons";
-import {
-  AbortableFetch,
-  setFetchTimeout,
-  toFetch
-} from "@pagopa/ts-commons/lib/fetch";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { Millisecond } from "@pagopa/ts-commons/lib/units";
 import { Option } from "fp-ts/lib/Option";
 import * as O from "fp-ts/lib/Option";
 
-import {
-  MailerConfig,
-  MailhogMailerConfig,
-  MailupMailerConfig,
-  MultiTrasnsportMailerConfig,
-  SendgridMailerConfig
-} from "./config";
-
+import { AbortableFetch, setFetchTimeout } from "@pagopa/ts-commons/lib/fetch";
+import { Millisecond } from "@pagopa/ts-commons/lib/units";
+import { agent } from "@pagopa/ts-commons";
 import {
   createMailTransporter,
   getTransportsForConnections,
@@ -34,11 +22,27 @@ import {
   Transport
 } from "./transports";
 
+import {
+  MailerConfig,
+  MailhogMailerConfig,
+  MailupMailerConfig,
+  MultiTrasnsportMailerConfig,
+  SendgridMailerConfig
+} from "./config";
+
 // expects a never value. return a constant or the value itself
 const defaultNever = <T>(e: never, retVal: T = e): T => retVal;
 
+// this method can be removed after we migrate @pagopa/ts-commons to node 18 so we can use the new
+// implementation of  toFetch
+// eslint-disable-next-line
+const toRemoveToFetch = (f: any) => (
+  input: RequestInfo | URL,
+  init?: RequestInit
+) => f(input, init).e1;
+
 // Some transports require http connections, this is the default client
-const defaultFetchAgent = toFetch(
+const defaultFetchAgent = toRemoveToFetch(
   setFetchTimeout(
     5000 as Millisecond, // 5 seconds timeout by default
     AbortableFetch(agent.getHttpsFetch(process.env))
@@ -56,7 +60,7 @@ const defaultFetchAgent = toFetch(
  */
 export const getMailerTransporter = (
   config: MailerConfig,
-  fetchAgent: typeof fetch
+  fetchAgent: typeof fetch = defaultFetchAgent
 ): MailerTransporter => {
   const maybeTransportOpts: Option<
     | Transport
