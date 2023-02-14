@@ -85,9 +85,12 @@ const mockGetDatabaseAccount = jest
   .fn()
   .mockImplementation(mockGetDatabaseAccountOk);
 
+const mockDispose = jest.fn();
+
 function mockCosmosClient() {
   jest.spyOn(healthcheck, "buildCosmosClient").mockReturnValue(({
-    getDatabaseAccount: mockGetDatabaseAccount
+    getDatabaseAccount: mockGetDatabaseAccount,
+    dispose: mockDispose
   } as unknown) as CosmosClient);
 }
 
@@ -199,39 +202,41 @@ describe("healthcheck - storage account", () => {
 
 describe("healthcheck - cosmos db", () => {
   beforeAll(() => {
-    jest.clearAllMocks();
     mockCosmosClient();
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it("should return no error", async done => {
-    expect.assertions(1);
+    expect.assertions(2);
 
     pipe(
       checkAzureCosmosDbHealth("", ""),
       TE.map(_ => {
         expect(true).toBeTruthy();
+        expect(mockDispose).toBeCalledTimes(1);
         done();
       }),
       TE.mapLeft(_ => {
-        expect(true).toBeFalsy();
-        done();
+        fail();
       })
     )();
   });
 
   it("should return an error if CosmosClient fails", async done => {
-    expect.assertions(1);
+    expect.assertions(2);
 
     mockGetDatabaseAccount.mockImplementationOnce(mockGetDatabaseAccountKO);
 
     pipe(
       checkAzureCosmosDbHealth("", ""),
       TE.map(_ => {
-        expect(false).toBeTruthy();
-        done();
+        fail();
       }),
       TE.mapLeft(_ => {
         expect(true).toBeTruthy();
+        expect(mockDispose).toBeCalledTimes(1);
         done();
       })
     )();
