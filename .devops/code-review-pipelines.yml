@@ -57,7 +57,7 @@ stages:
           - template: templates/node-job-setup/template.yaml@pagopaCommons
 
           - script: |
-              yarn generate:definitions && generate:lollipop-definitions
+              yarn generate:definitions && yarn generate:lollipop-definitions
             displayName: 'Generate code'
 
           - script: |
