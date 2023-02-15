@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "yarn generate:definitions && tsc",
+    "build": "yarn generate:definitions && yarn generate:lollipop-definitions && tsc",
     "postversion": "git push && git push --tags",
     "test": "jest -i",
     "test:coverage": "jest --coverage",
@@ -20,6 +20,7 @@
     "lint": "eslint . -c .eslintrc.js --ext .ts,.tsx",
     "generate": "npm-run-all generate:*",
     "generate:definitions": "rimraf ./generated && gen-api-models --api-spec ./openapi/index.yaml --out-dir ./generated/definitions",
+    "generate:lollipop-definitions": "rimraf ./generated/definitions/lollipop && gen-api-models --api-spec ./openapi/lollipop_definitions.yaml --out-dir ./generated/definitions/lollipop",
     "generate:templates": "gulp generate:templates",
     "preversion": "auto-changelog  --config .auto-changelog.json --unreleased --commit-limit false --stdout --template preview.hbs",
     "version": "auto-changelog -p --config .auto-changelog.json --unreleased && git add CHANGELOG.md"
