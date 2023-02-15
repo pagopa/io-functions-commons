@@ -1,3 +1,13 @@
+ApplicationInfo:
+  type: object
+  properties:
+    name: 
+      type: string
+    version: 
+      type: string
+  required:
+    - name
+    - version
 ProblemJson:
   type: object
   properties:
