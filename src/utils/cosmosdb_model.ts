@@ -89,6 +89,10 @@ export const CosmosEmptyResponse = {
   kind: "COSMOS_EMPTY_RESPONSE"
 } as const;
 
+export const CosmosConflictResponse = {
+  kind: "COSMOS_CONFLICT_RESPONSE"
+} as const;
+
 // Error while decoding object from an Cosmos operation
 export const CosmosDecodingError = (error: t.Errors) =>
   ({
@@ -106,6 +110,7 @@ export const CosmosErrorResponse = (error: ErrorResponse) =>
 // Union of all possible errors from a Cosmos operation
 export type CosmosErrors =
   | typeof CosmosEmptyResponse
+  | typeof CosmosConflictResponse
   | ReturnType<typeof CosmosDecodingError>
   | ReturnType<typeof CosmosErrorResponse>;
 
