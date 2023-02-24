@@ -119,7 +119,7 @@ describe("AssertionFileName - decode", () => {
     expect(res).toMatchObject(E.right(val));
   });
 
-  it("should not decode an invalid assertionRef", () => {
+  it("should not decode an invalid AssertionFileName", () => {
     const val = "INVALID";
 
     const res = AssertionType.decode(val);
@@ -149,7 +149,7 @@ describe("AssertionFileName - is", () => {
     expect(res).toBeTruthy();
   });
 
-  it("should not check an invalid assertionRef", () => {
+  it("should not check an invalid AssertionFileName", () => {
     const val = "INVALID";
 
     const res = AssertionType.is(val);
