@@ -39,6 +39,11 @@ components:
         - $ref: "#/components/schemas/AssertionRefSha384"
         - $ref: "#/components/schemas/AssertionRefSha512"
 
+    AssertionFileName:
+      type: string
+      description: fiscal code - AssertionRefSha256 | AssertionRefSha384 | AssertionRefSha512
+      pattern: "^[A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]-(sha256-[A-Za-z0-9-_=]{1,44}|sha384-[A-Za-z0-9-_=]{1,66}|sha512-[A-Za-z0-9-_=]{1,88})$"
+
     OperationId:
       type: string
       minLength: 1
