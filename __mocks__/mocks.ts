@@ -1,5 +1,5 @@
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
-import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { MaxAllowedPaymentAmount } from "../generated/definitions/MaxAllowedPaymentAmount";
 import { OrganizationFiscalCode } from "../generated/definitions/OrganizationFiscalCode";
 import {
@@ -27,6 +27,7 @@ const aCosmosResourceMetadata: Omit<CosmosResource, "id"> = {
   _ts: 1
 };
 
+export const aFiscalCode = "RLDBSV36A78Y792X" as FiscalCode;
 export const anOrganizationFiscalCode = "01234567890" as OrganizationFiscalCode;
 
 export const aService: Service = {
