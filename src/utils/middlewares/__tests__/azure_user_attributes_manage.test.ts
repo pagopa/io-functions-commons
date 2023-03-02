@@ -254,4 +254,29 @@ describe("AzureUserAttributesManageMiddleware", () => {
       expect(attributes.authorizedCIDRs).toBe(anAuthorizedCIDRs.cidrs);
     }
   });
+
+  //TODO: The test MUST be removed after io-function-services update
+  it("should return the user custom attributes if the subscription is a MANAGE subscription and authorizedCIDRs in not defined", async () => {
+    const headers: IHeaders = {
+      "x-subscription-id": aManageSubscriptionId,
+      "x-user-email": anUserEmail
+    };
+
+    const mockRequest = {
+      header: jest.fn(lookup(headers))
+    };
+
+    const middleware = AzureUserAttributesManageMiddleware();
+
+    const result = await middleware(mockRequest as any);
+    expect(mockRequest.header.mock.calls[0][0]).toBe("x-user-email");
+    expect(mockRequest.header.mock.calls[1][0]).toBe("x-subscription-id");
+    expect(E.isRight(result));
+    if (E.isRight(result)) {
+      const attributes = result.right;
+      expect(attributes.email).toBe(anUserEmail);
+      expect(attributes.kind).toBe("IAzureUserAttributesManage");
+      expect(attributes.authorizedCIDRs).toStrictEqual(anAuthorizedCIDRs.cidrs);
+    }
+  });
 });

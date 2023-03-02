@@ -47,7 +47,7 @@ export type IAzureUserAttributesManage = Omit<
  * On success, the middleware provides an *IAzureUserAttributesManage*.
  */
 export const AzureUserAttributesManageMiddleware = (
-  authorizedCIDRsModel: AuthorizedCIDRsModel
+  authorizedCIDRsModel?: AuthorizedCIDRsModel
 ): IRequestMiddleware<
   | "IResponseErrorForbiddenNotAuthorized"
   | "IResponseErrorQuery"
@@ -101,53 +101,71 @@ export const AzureUserAttributesManageMiddleware = (
 
   if (subscriptionId.startsWith("MANAGE-")) {
     // MANAGE Flow
-    const errorOrMaybeAuthorizedCIDRs = await authorizedCIDRsModel.find([
-      subscriptionId
-    ])();
+    // TODO: The condition MUST be removed after io-function-services update
+    if (authorizedCIDRsModel) {
+      const errorOrMaybeAuthorizedCIDRs = await authorizedCIDRsModel.find([
+        subscriptionId
+      ])();
 
-    if (E.isLeft(errorOrMaybeAuthorizedCIDRs)) {
-      winston.error(
-        `No CIDRs found for subscription|${subscriptionId}|${JSON.stringify(
-          errorOrMaybeAuthorizedCIDRs.left
-        )}`
-      );
-      return E.left<
-        IResponse<"IResponseErrorQuery">,
+      if (E.isLeft(errorOrMaybeAuthorizedCIDRs)) {
+        winston.error(
+          `No CIDRs found for subscription|${subscriptionId}|${JSON.stringify(
+            errorOrMaybeAuthorizedCIDRs.left
+          )}`
+        );
+        return E.left<
+          IResponse<"IResponseErrorQuery">,
+          IAzureUserAttributesManage
+        >(
+          ResponseErrorQuery(
+            `Error while retrieving CIDRs tied to the provided subscription id`,
+            errorOrMaybeAuthorizedCIDRs.left
+          )
+        );
+      }
+
+      const maybeAuthorizedCIDRs = errorOrMaybeAuthorizedCIDRs.right;
+
+      if (isNone(maybeAuthorizedCIDRs)) {
+        winston.error(
+          `IAzureUserAttributesManage|CIDRs not found|${subscriptionId}`
+        );
+        return E.left<
+          IResponse<"IResponseErrorForbiddenNotAuthorized">,
+          IAzureUserAttributesManage
+        >(ResponseErrorForbiddenNotAuthorized);
+      }
+
+      const authInfo: IAzureUserAttributesManage = {
+        authorizedCIDRs: maybeAuthorizedCIDRs.value.cidrs
+          ? maybeAuthorizedCIDRs.value.cidrs
+          : new Set((["0.0.0.0/0"] as unknown) as ReadonlyArray<CIDR>),
+        email: userEmail,
+        kind: "IAzureUserAttributesManage"
+      };
+
+      return E.right<
+        IResponse<
+          "IResponseErrorForbiddenNotAuthorized" | "IResponseErrorInternal"
+        >,
         IAzureUserAttributesManage
-      >(
-        ResponseErrorQuery(
-          `Error while retrieving CIDRs tied to the provided subscription id`,
-          errorOrMaybeAuthorizedCIDRs.left
-        )
-      );
-    }
+      >(authInfo);
+    } else {
+      const authInfo: IAzureUserAttributesManage = {
+        authorizedCIDRs: new Set((["0.0.0.0/0"] as unknown) as ReadonlyArray<
+          CIDR
+        >),
+        email: userEmail,
+        kind: "IAzureUserAttributesManage"
+      };
 
-    const maybeAuthorizedCIDRs = errorOrMaybeAuthorizedCIDRs.right;
-
-    if (isNone(maybeAuthorizedCIDRs)) {
-      winston.error(
-        `IAzureUserAttributesManage|CIDRs not found|${subscriptionId}`
-      );
-      return E.left<
-        IResponse<"IResponseErrorForbiddenNotAuthorized">,
+      return E.right<
+        IResponse<
+          "IResponseErrorForbiddenNotAuthorized" | "IResponseErrorInternal"
+        >,
         IAzureUserAttributesManage
-      >(ResponseErrorForbiddenNotAuthorized);
+      >(authInfo);
     }
-
-    const authInfo: IAzureUserAttributesManage = {
-      authorizedCIDRs: maybeAuthorizedCIDRs.value.cidrs
-        ? maybeAuthorizedCIDRs.value.cidrs
-        : new Set((["0.0.0.0/0"] as unknown) as ReadonlyArray<CIDR>),
-      email: userEmail,
-      kind: "IAzureUserAttributesManage"
-    };
-
-    return E.right<
-      IResponse<
-        "IResponseErrorForbiddenNotAuthorized" | "IResponseErrorInternal"
-      >,
-      IAzureUserAttributesManage
-    >(authInfo);
   } else {
     return E.left<
       IResponse<"IResponseErrorForbiddenNotAuthorized">,
