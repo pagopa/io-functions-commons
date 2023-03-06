@@ -213,6 +213,8 @@ export const clientIPAndCidrTuple = (
             withDefaultSubnet
           )
         )
-      : toAuthorizedCIDRs([])
+      : toAuthorizedCIDRs(
+          Array.from(userAttributes.authorizedCIDRs).map(withDefaultSubnet)
+        )
   );
 };
