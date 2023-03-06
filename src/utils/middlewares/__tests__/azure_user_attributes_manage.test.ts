@@ -4,7 +4,7 @@ import * as O from "fp-ts/lib/Option";
 
 import { EmailString, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { AzureUserAttributesManageMiddleware } from "../azure_user_attributes_manage";
-import { AuthorizedCIDRs } from "../../../models/authorized_cidrs";
+import { SubscriptionCIDRs } from "../../../models/subscription_cidrs";
 import { CIDR } from "../../../../generated/definitions/CIDR";
 import { CosmosErrors, toCosmosErrorResponse } from "../../cosmosdb_model";
 
@@ -21,14 +21,14 @@ function lookup(h: IHeaders): (k: string) => string | undefined {
 const anUserEmail = "test@example.com" as EmailString;
 const aSubscriptionId = "MySubscriptionId" as NonEmptyString;
 const aManageSubscriptionId = "MANAGE-MySubscriptionId" as NonEmptyString;
-const anAuthorizedCIDRs: AuthorizedCIDRs = {
-  id: "MANAGE-123" as NonEmptyString,
+const aSubscriptionCIDRs: SubscriptionCIDRs = {
+  subscriptionId: "MANAGE-123" as NonEmptyString,
   cidrs: new Set((["0.0.0.0/0"] as unknown) as CIDR[])
 };
 
 describe("AzureUserAttributesManageMiddleware", () => {
   it("should fail on empty user email", async () => {
-    const authorizedCIDRsModel = jest.fn();
+    const subscriptionCIDRsModel = jest.fn();
 
     const headers: IHeaders = {
       "x-user-email": ""
@@ -39,7 +39,7 @@ describe("AzureUserAttributesManageMiddleware", () => {
     };
 
     const middleware = AzureUserAttributesManageMiddleware(
-      authorizedCIDRsModel as any
+      subscriptionCIDRsModel as any
     );
 
     const result = await middleware(mockRequest as any);
@@ -52,7 +52,7 @@ describe("AzureUserAttributesManageMiddleware", () => {
   });
 
   it("should fail on invalid user email", async () => {
-    const authorizedCIDRsModel = jest.fn();
+    const subscriptionCIDRsModel = jest.fn();
 
     const headers: IHeaders = {
       "x-user-email": "xyz"
@@ -63,7 +63,7 @@ describe("AzureUserAttributesManageMiddleware", () => {
     };
 
     const middleware = AzureUserAttributesManageMiddleware(
-      authorizedCIDRsModel as any
+      subscriptionCIDRsModel as any
     );
 
     const result = await middleware(mockRequest as any);
@@ -76,7 +76,7 @@ describe("AzureUserAttributesManageMiddleware", () => {
   });
 
   it("should fail on invalid key", async () => {
-    const authorizedCIDRsModel = jest.fn();
+    const subscriptionCIDRsModel = jest.fn();
 
     const headers: IHeaders = {
       "x-subscription-id": undefined,
@@ -88,7 +88,7 @@ describe("AzureUserAttributesManageMiddleware", () => {
     };
 
     const middleware = AzureUserAttributesManageMiddleware(
-      authorizedCIDRsModel as any
+      subscriptionCIDRsModel as any
     );
 
     const result = await middleware(mockRequest as any);
@@ -101,8 +101,8 @@ describe("AzureUserAttributesManageMiddleware", () => {
   });
 
   it("should fail and return an ErrorForbiddenNotAuthorized if the subscription is not a MANAGE subscription", async () => {
-    const authorizedCIDRsModel = {
-      find: jest.fn()
+    const subscriptionCIDRsModel = {
+      findLastVersionByModelId: jest.fn()
     };
 
     const headers: IHeaders = {
@@ -115,13 +115,13 @@ describe("AzureUserAttributesManageMiddleware", () => {
     };
 
     const middleware = AzureUserAttributesManageMiddleware(
-      authorizedCIDRsModel as any
+      subscriptionCIDRsModel as any
     );
 
     const result = await middleware(mockRequest as any);
     expect(mockRequest.header.mock.calls[0][0]).toBe("x-user-email");
     expect(mockRequest.header.mock.calls[1][0]).toBe("x-subscription-id");
-    expect(authorizedCIDRsModel.find).not.toBeCalled();
+    expect(subscriptionCIDRsModel.findLastVersionByModelId).not.toBeCalled();
 
     expect(E.isLeft(result));
     if (E.isLeft(result)) {
@@ -130,8 +130,10 @@ describe("AzureUserAttributesManageMiddleware", () => {
   });
 
   it("should fail on a subscription cidrs find error", async () => {
-    const authorizedCIDRsModel = {
-      find: jest.fn(() => TE.left(toCosmosErrorResponse("") as CosmosErrors))
+    const subscriptionCIDRsModel = {
+      findLastVersionByModelId: jest.fn(() =>
+        TE.left(toCosmosErrorResponse("") as CosmosErrors)
+      )
     };
 
     const headers: IHeaders = {
@@ -144,15 +146,15 @@ describe("AzureUserAttributesManageMiddleware", () => {
     };
 
     const middleware = AzureUserAttributesManageMiddleware(
-      authorizedCIDRsModel as any
+      subscriptionCIDRsModel as any
     );
 
     const result = await middleware(mockRequest as any);
     expect(mockRequest.header.mock.calls[0][0]).toBe("x-user-email");
     expect(mockRequest.header.mock.calls[1][0]).toBe("x-subscription-id");
-    expect(authorizedCIDRsModel.find).toHaveBeenCalledWith([
-      mockRequest.header("x-subscription-id")
-    ]);
+    expect(
+      subscriptionCIDRsModel.findLastVersionByModelId
+    ).toHaveBeenCalledWith([mockRequest.header("x-subscription-id")]);
     expect(E.isLeft(result)).toBeTruthy();
     if (E.isLeft(result)) {
       expect(result.left.kind).toEqual("IResponseErrorQuery");
@@ -160,8 +162,8 @@ describe("AzureUserAttributesManageMiddleware", () => {
   });
 
   it("should fail and return an ErrorForbiddenNotAuthorized if subscription cidrs return a None", async () => {
-    const authorizedCIDRsModel = {
-      find: jest.fn(() => TE.fromEither(E.right(O.none)))
+    const subscriptionCIDRsModel = {
+      findLastVersionByModelId: jest.fn(() => TE.fromEither(E.right(O.none)))
     };
 
     const headers: IHeaders = {
@@ -174,15 +176,15 @@ describe("AzureUserAttributesManageMiddleware", () => {
     };
 
     const middleware = AzureUserAttributesManageMiddleware(
-      authorizedCIDRsModel as any
+      subscriptionCIDRsModel as any
     );
 
     const result = await middleware(mockRequest as any);
     expect(mockRequest.header.mock.calls[0][0]).toBe("x-user-email");
     expect(mockRequest.header.mock.calls[1][0]).toBe("x-subscription-id");
-    expect(authorizedCIDRsModel.find).toHaveBeenCalledWith([
-      mockRequest.header("x-subscription-id")
-    ]);
+    expect(
+      subscriptionCIDRsModel.findLastVersionByModelId
+    ).toHaveBeenCalledWith([mockRequest.header("x-subscription-id")]);
     expect(E.isLeft(result)).toBeTruthy();
     if (E.isLeft(result)) {
       expect(result.left.kind).toEqual("IResponseErrorForbiddenNotAuthorized");
@@ -190,8 +192,10 @@ describe("AzureUserAttributesManageMiddleware", () => {
   });
 
   it("should return a default cidrs if the subscription cidrs does not exist", async () => {
-    const authorizedCIDRsModel = {
-      find: jest.fn(() => TE.fromEither(E.right(O.some(O.none))))
+    const subscriptionCIDRsModel = {
+      findLastVersionByModelId: jest.fn(() =>
+        TE.fromEither(E.right(O.some(O.none)))
+      )
     };
 
     const headers: IHeaders = {
@@ -204,15 +208,15 @@ describe("AzureUserAttributesManageMiddleware", () => {
     };
 
     const middleware = AzureUserAttributesManageMiddleware(
-      authorizedCIDRsModel as any
+      subscriptionCIDRsModel as any
     );
 
     const result = await middleware(mockRequest as any);
     expect(mockRequest.header.mock.calls[0][0]).toBe("x-user-email");
     expect(mockRequest.header.mock.calls[1][0]).toBe("x-subscription-id");
-    expect(authorizedCIDRsModel.find).toHaveBeenCalledWith([
-      mockRequest.header("x-subscription-id")
-    ]);
+    expect(
+      subscriptionCIDRsModel.findLastVersionByModelId
+    ).toHaveBeenCalledWith([mockRequest.header("x-subscription-id")]);
     expect(E.isRight(result)).toBeTruthy();
     if (E.isRight(result)) {
       expect(result.right.kind).toEqual("IAzureUserAttributesManage");
@@ -223,8 +227,10 @@ describe("AzureUserAttributesManageMiddleware", () => {
   });
 
   it("should return the user custom attributes if the subscription is a MANAGE subscription", async () => {
-    const authorizedCIDRsModel = {
-      find: jest.fn(() => TE.fromEither(E.right(O.some(anAuthorizedCIDRs))))
+    const subscriptionCIDRsModel = {
+      findLastVersionByModelId: jest.fn(() =>
+        TE.fromEither(E.right(O.some(aSubscriptionCIDRs)))
+      )
     };
 
     const headers: IHeaders = {
@@ -237,46 +243,21 @@ describe("AzureUserAttributesManageMiddleware", () => {
     };
 
     const middleware = AzureUserAttributesManageMiddleware(
-      authorizedCIDRsModel as any
+      subscriptionCIDRsModel as any
     );
 
     const result = await middleware(mockRequest as any);
     expect(mockRequest.header.mock.calls[0][0]).toBe("x-user-email");
     expect(mockRequest.header.mock.calls[1][0]).toBe("x-subscription-id");
-    expect(authorizedCIDRsModel.find).toHaveBeenCalledWith([
-      mockRequest.header("x-subscription-id")
-    ]);
+    expect(
+      subscriptionCIDRsModel.findLastVersionByModelId
+    ).toHaveBeenCalledWith([mockRequest.header("x-subscription-id")]);
     expect(E.isRight(result));
     if (E.isRight(result)) {
       const attributes = result.right;
       expect(attributes.email).toBe(anUserEmail);
       expect(attributes.kind).toBe("IAzureUserAttributesManage");
-      expect(attributes.authorizedCIDRs).toBe(anAuthorizedCIDRs.cidrs);
-    }
-  });
-
-  //TODO: The test MUST be removed after io-function-services update
-  it("should return the user custom attributes if the subscription is a MANAGE subscription and authorizedCIDRs in not defined", async () => {
-    const headers: IHeaders = {
-      "x-subscription-id": aManageSubscriptionId,
-      "x-user-email": anUserEmail
-    };
-
-    const mockRequest = {
-      header: jest.fn(lookup(headers))
-    };
-
-    const middleware = AzureUserAttributesManageMiddleware();
-
-    const result = await middleware(mockRequest as any);
-    expect(mockRequest.header.mock.calls[0][0]).toBe("x-user-email");
-    expect(mockRequest.header.mock.calls[1][0]).toBe("x-subscription-id");
-    expect(E.isRight(result));
-    if (E.isRight(result)) {
-      const attributes = result.right;
-      expect(attributes.email).toBe(anUserEmail);
-      expect(attributes.kind).toBe("IAzureUserAttributesManage");
-      expect(attributes.authorizedCIDRs).toStrictEqual(anAuthorizedCIDRs.cidrs);
+      expect(attributes.authorizedCIDRs).toBe(aSubscriptionCIDRs.cidrs);
     }
   });
 });
