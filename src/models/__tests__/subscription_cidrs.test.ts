@@ -91,7 +91,7 @@ describe("Authorized CIDRs", () => {
     expect(E.isRight(result)).toBeTruthy();
   });
 
-  it("should return an existing service", async () => {
+  it("GIVEN a valid subscriptionId WHEN the client findLastVersionByModelId is called THEN return the retrieved subscriptionCIDRs", async () => {
     mockFetchAll.mockImplementationOnce(() =>
       Promise.resolve({
         resources: [aRetrievedSubscriptionCIDRs]

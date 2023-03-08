@@ -129,15 +129,13 @@ export const AzureUserAttributesManageMiddleware = (
         `IAzureUserAttributesManage|CIDRs not found|${subscriptionId}`
       );
       return E.left<
-        IResponse<"IResponseErrorForbiddenNotAuthorized">,
+        IResponse<"IResponseErrorInternal">,
         IAzureUserAttributesManage
-      >(ResponseErrorForbiddenNotAuthorized);
+      >(ResponseErrorInternal(`Missing CIDRs for ${subscriptionId}`));
     }
 
     const authInfo: IAzureUserAttributesManage = {
-      authorizedCIDRs: maybeAuthorizedCIDRs.value.cidrs
-        ? maybeAuthorizedCIDRs.value.cidrs
-        : new Set((["0.0.0.0/0"] as unknown) as ReadonlyArray<CIDR>),
+      authorizedCIDRs: maybeAuthorizedCIDRs.value.cidrs,
       email: userEmail,
       kind: "IAzureUserAttributesManage"
     };

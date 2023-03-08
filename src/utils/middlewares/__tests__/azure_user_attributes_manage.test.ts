@@ -161,7 +161,7 @@ describe("AzureUserAttributesManageMiddleware", () => {
     }
   });
 
-  it("should fail and return an ErrorForbiddenNotAuthorized if subscription cidrs return a None", async () => {
+  it("should return a ResponseErrorInternal if the subscription exists on APIM but not exists on CosmosDB", async () => {
     const subscriptionCIDRsModel = {
       findLastVersionByModelId: jest.fn(() => TE.fromEither(E.right(O.none)))
     };
@@ -187,14 +187,21 @@ describe("AzureUserAttributesManageMiddleware", () => {
     ).toHaveBeenCalledWith([mockRequest.header("x-subscription-id")]);
     expect(E.isLeft(result)).toBeTruthy();
     if (E.isLeft(result)) {
-      expect(result.left.kind).toEqual("IResponseErrorForbiddenNotAuthorized");
+      expect(result.left.kind).toEqual("IResponseErrorInternal");
     }
   });
 
-  it("should return a default cidrs if the subscription cidrs does not exist", async () => {
+  it("should return the user custom attributes if the subscription is a MANAGE subscription and cidrs is an empty array", async () => {
     const subscriptionCIDRsModel = {
       findLastVersionByModelId: jest.fn(() =>
-        TE.fromEither(E.right(O.some(O.none)))
+        TE.fromEither(
+          E.right(
+            O.some({
+              ...aSubscriptionCIDRs,
+              cidrs: new Set(([] as unknown) as CIDR[])
+            })
+          )
+        )
       )
     };
 
@@ -221,7 +228,7 @@ describe("AzureUserAttributesManageMiddleware", () => {
     if (E.isRight(result)) {
       expect(result.right.kind).toEqual("IAzureUserAttributesManage");
       expect(result.right.authorizedCIDRs).toEqual(
-        new Set((["0.0.0.0/0"] as unknown) as CIDR[])
+        new Set(([] as unknown) as CIDR[])
       );
     }
   });

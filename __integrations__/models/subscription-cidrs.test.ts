@@ -11,6 +11,7 @@ import * as e from "fp-ts/lib/Either";
 import * as te from "fp-ts/lib/TaskEither";
 import { pipe } from "fp-ts/lib/function";
 import { toAuthorizedCIDRs } from "../../src/models/service";
+import { isNone } from "fp-ts/lib/Option";
 
 const aSubscriptionCIDRs: SubscriptionCIDRs = pipe(
   SubscriptionCIDRs.decode({
@@ -114,6 +115,23 @@ describe("Models |> SubscriptionCIDRs", () => {
         }
       )
     )();
+
+    context.dispose();
+  });
+
+  it("should return a None if try to get a not existing subscriptionCIDRs", async () => {
+    const context = createContext(SUBSCRIPTION_CIDRS_MODEL_PK_FIELD);
+    await context.init();
+    const model = new SubscriptionCIDRsModel(context.container);
+
+    const errorOrMaybeAuthorizedCIDRs = await model.findLastVersionByModelId([
+      "aNotExistingSubscriptionId" as NonEmptyString
+    ])();
+
+    expect(e.isRight(errorOrMaybeAuthorizedCIDRs)).toBeTruthy();
+    if (e.isRight(errorOrMaybeAuthorizedCIDRs)) {
+      expect(isNone(errorOrMaybeAuthorizedCIDRs.right)).toBeTruthy();
+    }
 
     context.dispose();
   });
