@@ -205,16 +205,12 @@ export const clientIPAndCidrTuple = (
    */
   const withDefaultSubnet = (ip: CIDR): CIDR =>
     ip.indexOf("/") !== -1 ? ip : (`${ip}/32` as CIDR);
+  const cidrs =
+    userAttributes.kind === "IAzureUserAttributes"
+      ? userAttributes.service.authorizedCIDRs
+      : userAttributes.authorizedCIDRs;
   return Tuple2(
     clientIp,
-    userAttributes.kind === "IAzureUserAttributes"
-      ? toAuthorizedCIDRs(
-          Array.from(userAttributes.service.authorizedCIDRs).map(
-            withDefaultSubnet
-          )
-        )
-      : toAuthorizedCIDRs(
-          Array.from(userAttributes.authorizedCIDRs).map(withDefaultSubnet)
-        )
+    toAuthorizedCIDRs(Array.from(cidrs).map(withDefaultSubnet))
   );
 };
