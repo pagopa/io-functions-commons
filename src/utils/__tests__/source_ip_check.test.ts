@@ -14,6 +14,7 @@ import {
   clientIPAndCidrTuple
 } from "../source_ip_check";
 import { IAzureUserAttributesManage } from "../middlewares/azure_user_attributes_manage";
+import { CIDR } from "../../../generated/definitions/CIDR";
 
 describe("checkSourceIpForHandler", () => {
   // a sample request handler that gets the source IP and allowed CIDRs
@@ -99,16 +100,19 @@ describe("clientIPAndCidrTuple", () => {
       toAuthorizedCIDRs(["192.168.1.0/32", "192.168.1.1/24"])
     );
   });
-  it("should return empty tuple if userAttribute is of IAzureUserAttributeManage kind", () => {
+  it("should return  authorizedCIDRs tuple if userAttribute is of IAzureUserAttributeManage kind", () => {
     const userAttributesManage: IAzureUserAttributesManage = {
       email: "email@example.com" as EmailString,
-      kind: "IAzureUserAttributesManage"
+      kind: "IAzureUserAttributesManage",
+      authorizedCIDRs: new Set((["0.0.0.0/0"] as unknown) as ReadonlyArray<
+        CIDR
+      >)
     };
     const resultTuple = clientIPAndCidrTuple(
       expectedClientIp,
       userAttributesManage
     );
     expect(resultTuple.e1).toBe(expectedClientIp);
-    expect(resultTuple.e2).toStrictEqual(toAuthorizedCIDRs([]));
+    expect(resultTuple.e2).toStrictEqual(toAuthorizedCIDRs(["0.0.0.0/0"]));
   });
 });

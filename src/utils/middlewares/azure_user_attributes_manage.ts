@@ -10,7 +10,12 @@ import {
   ResponseErrorForbiddenNotAuthorized,
   ResponseErrorInternal
 } from "@pagopa/ts-commons/lib/responses";
+import winston = require("winston");
+import { isNone } from "fp-ts/lib/Option";
 import { IRequestMiddleware } from "../request_middleware";
+import { SubscriptionCIDRsModel } from "../../models/subscription_cidrs";
+import { ResponseErrorQuery } from "../response";
+import { CIDR } from "../../../generated/definitions/CIDR";
 import { IAzureUserAttributes } from "./azure_user_attributes";
 
 // The user email will be passed in this header by the API Gateway
@@ -24,7 +29,11 @@ const HEADER_USER_SUBSCRIPTION_KEY = "x-subscription-id";
 export type IAzureUserAttributesManage = Omit<
   IAzureUserAttributes,
   "service" | "kind"
-> & { readonly kind: "IAzureUserAttributesManage" };
+> & {
+  readonly kind: "IAzureUserAttributesManage";
+  // authorized source CIDRs
+  readonly authorizedCIDRs: ReadonlySet<CIDR>;
+};
 
 /**
  * A middleware that will extract custom user attributes from the request, that supports **MANAGE** flow.
@@ -37,15 +46,21 @@ export type IAzureUserAttributesManage = Omit<
  *
  * On success, the middleware provides an *IAzureUserAttributesManage*.
  */
-export const AzureUserAttributesManageMiddleware = (): IRequestMiddleware<
-  "IResponseErrorForbiddenNotAuthorized" | "IResponseErrorInternal",
+export const AzureUserAttributesManageMiddleware = (
+  subscriptionCIDRsModel: SubscriptionCIDRsModel
+): IRequestMiddleware<
+  | "IResponseErrorForbiddenNotAuthorized"
+  | "IResponseErrorQuery"
+  | "IResponseErrorInternal",
   IAzureUserAttributesManage
 > => async (
   request
 ): Promise<
   E.Either<
     IResponse<
-      "IResponseErrorForbiddenNotAuthorized" | "IResponseErrorInternal"
+      | "IResponseErrorForbiddenNotAuthorized"
+      | "IResponseErrorQuery"
+      | "IResponseErrorInternal"
     >,
     IAzureUserAttributesManage
   >
@@ -86,7 +101,41 @@ export const AzureUserAttributesManageMiddleware = (): IRequestMiddleware<
 
   if (subscriptionId.startsWith("MANAGE-")) {
     // MANAGE Flow
+    const errorOrMaybeAuthorizedCIDRs = await subscriptionCIDRsModel.findLastVersionByModelId(
+      [subscriptionId]
+    )();
+
+    if (E.isLeft(errorOrMaybeAuthorizedCIDRs)) {
+      winston.error(
+        `No CIDRs found for subscription|${subscriptionId}|${JSON.stringify(
+          errorOrMaybeAuthorizedCIDRs.left
+        )}`
+      );
+      return E.left<
+        IResponse<"IResponseErrorQuery">,
+        IAzureUserAttributesManage
+      >(
+        ResponseErrorQuery(
+          `Error while retrieving CIDRs tied to the provided subscription id`,
+          errorOrMaybeAuthorizedCIDRs.left
+        )
+      );
+    }
+
+    const maybeAuthorizedCIDRs = errorOrMaybeAuthorizedCIDRs.right;
+
+    if (isNone(maybeAuthorizedCIDRs)) {
+      winston.error(
+        `IAzureUserAttributesManage|CIDRs not found|${subscriptionId}`
+      );
+      return E.left<
+        IResponse<"IResponseErrorInternal">,
+        IAzureUserAttributesManage
+      >(ResponseErrorInternal(`Missing CIDRs for ${subscriptionId}`));
+    }
+
     const authInfo: IAzureUserAttributesManage = {
+      authorizedCIDRs: maybeAuthorizedCIDRs.value.cidrs,
       email: userEmail,
       kind: "IAzureUserAttributesManage"
     };
