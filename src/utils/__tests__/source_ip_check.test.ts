@@ -100,7 +100,7 @@ describe("clientIPAndCidrTuple", () => {
       toAuthorizedCIDRs(["192.168.1.0/32", "192.168.1.1/24"])
     );
   });
-  it("should return empty tuple if userAttribute is of IAzureUserAttributeManage kind", () => {
+  it("should return  authorizedCIDRs tuple if userAttribute is of IAzureUserAttributeManage kind", () => {
     const userAttributesManage: IAzureUserAttributesManage = {
       email: "email@example.com" as EmailString,
       kind: "IAzureUserAttributesManage",
@@ -113,6 +113,6 @@ describe("clientIPAndCidrTuple", () => {
       userAttributesManage
     );
     expect(resultTuple.e1).toBe(expectedClientIp);
-    expect(resultTuple.e2).toStrictEqual(toAuthorizedCIDRs([]));
+    expect(resultTuple.e2).toStrictEqual(toAuthorizedCIDRs(["0.0.0.0/0"]));
   });
 });
