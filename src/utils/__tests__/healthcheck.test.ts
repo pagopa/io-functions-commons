@@ -9,7 +9,6 @@ import {
   checkAzureCosmosDbHealth,
   checkUrlHealth,
   HealthCheck,
-  HealthProblem,
   toHealthProblems
 } from "../healthcheck";
 
@@ -18,7 +17,6 @@ import * as healthcheck from "../healthcheck";
 import { pipe } from "fp-ts/lib/function";
 
 import * as TE from "fp-ts/lib/TaskEither";
-import { right } from "fp-ts/lib/Either";
 import { CosmosClient } from "@azure/cosmos";
 
 import * as t from "io-ts";
