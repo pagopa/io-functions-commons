@@ -105,7 +105,10 @@ export enum UserGroup {
 
   // Push Notification
   ApiNewMessageNotify = "ApiNewMessageNotify",
-  ApiReminderNotify = "ApiReminderNotify"
+  ApiReminderNotify = "ApiReminderNotify",
+
+  // LolliPOP
+  ApiLollipopAssertionRead = "ApiLollipopAssertionRead"
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 

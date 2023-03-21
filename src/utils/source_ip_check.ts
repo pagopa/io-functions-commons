@@ -18,6 +18,7 @@ import { CIDR } from "../../generated/definitions/CIDR";
 import { toAuthorizedCIDRs } from "../models/service";
 import { ClientIp } from "./middlewares/client_ip_middleware";
 import { IAzureUserAttributes } from "./middlewares/azure_user_attributes";
+import { IAzureUserAttributesManage } from "./middlewares/azure_user_attributes_manage";
 
 /**
  * Whether IP is contained in the provided CIDRs
@@ -197,17 +198,19 @@ export function checkSourceIpForHandler<P1, P2, P3, P4, P5, P6, P7, O>(
  */
 export const clientIPAndCidrTuple = (
   clientIp: ClientIp,
-  userAttributes: IAzureUserAttributes
+  userAttributes: IAzureUserAttributes | IAzureUserAttributesManage
 ): ITuple2<ClientIp, ReadonlySet<string>> => {
   /**
    * Add the default /32 subnet to an IP without any subnet.
    */
   const withDefaultSubnet = (ip: CIDR): CIDR =>
     ip.indexOf("/") !== -1 ? ip : (`${ip}/32` as CIDR);
+  const cidrs =
+    userAttributes.kind === "IAzureUserAttributes"
+      ? userAttributes.service.authorizedCIDRs
+      : userAttributes.authorizedCIDRs;
   return Tuple2(
     clientIp,
-    toAuthorizedCIDRs(
-      Array.from(userAttributes.service.authorizedCIDRs).map(withDefaultSubnet)
-    )
+    toAuthorizedCIDRs(Array.from(cidrs).map(withDefaultSubnet))
   );
 };

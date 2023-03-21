@@ -102,6 +102,7 @@ stages:
                 package.json
                 dist/**/*
                 openapi/definitions.yaml
+                openapi/lollipop_definitions.yaml
             displayName: 'Copy bundle files'
           
           - publish: $(System.DefaultWorkingDirectory)/bundle
