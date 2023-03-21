@@ -64,8 +64,6 @@ describe("Mailer", () => {
       `http://${aMailhogConfig.MAILHOG_HOSTNAME}:8025/api/v2/messages`
     ).then(e => e.json());
 
-    console.log(result);
-
     expect(E.isRight(result)).toBe(true);
     // checks if any of the retrieved messages is the one we sent
     expect(items).toEqual(
