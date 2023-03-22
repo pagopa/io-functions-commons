@@ -13,14 +13,19 @@ export class ApplicationInsightTransport extends Transport {
   }
 
   public log(
-    { level, ...properties }: w.LogEntry,
+    { level, name, ...properties }: w.LogEntry,
     callback: (err: Error | undefined, cont: boolean) => void
   ): void {
     if (!this.silent) {
       this.telemetryClient.trackEvent({
-        name: `${this.eventNamePrefix}.${level}.${properties?.name ??
+        name: `${this.eventNamePrefix}.${level}.${name ??
           "global"}`.toLowerCase(),
-        properties,
+        // Warning: this entries operations is needed becouse winston add three Symbol properties to meta object given to log method: we want to strip this additional properties
+        // https://github.com/winstonjs/winston/tree/v3.8.2#streams-objectmode-and-info-objects
+        properties: Object.entries(properties).reduce(
+          (acc, [k, v]) => (typeof k === "symbol" ? acc : { ...acc, [k]: v }),
+          {} as Record<string, unknown>
+        ),
         tagOverrides: { samplingEnabled: "false" }
       });
     }
