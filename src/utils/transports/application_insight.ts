@@ -13,12 +13,12 @@ export class ApplicationInsightTransport extends Transport {
   }
 
   public log(
-    { level, ...properties }: w.LogEntry,
+    { level, name, ...properties }: w.LogEntry,
     callback: (err: Error | undefined, cont: boolean) => void
   ): void {
     if (!this.silent) {
       this.telemetryClient.trackEvent({
-        name: `${this.eventNamePrefix}.${level}.${properties?.name ??
+        name: `${this.eventNamePrefix}.${level}.${name ??
           "global"}`.toLowerCase(),
         properties,
         tagOverrides: { samplingEnabled: "false" }
