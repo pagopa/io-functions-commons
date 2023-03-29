@@ -4,7 +4,6 @@ jest.mock("winston");
 
 import * as E from "fp-ts/lib/Either";
 
-// eslint-disable-next-line import/no-internal-modules
 import * as Mail from "nodemailer/lib/mailer";
 
 import * as nodemailer from "nodemailer";
