@@ -9,7 +9,11 @@ import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { Option } from "fp-ts/lib/Option";
 import * as O from "fp-ts/lib/Option";
 
-import { AbortableFetch, setFetchTimeout } from "@pagopa/ts-commons/lib/fetch";
+import {
+  AbortableFetch,
+  setFetchTimeout,
+  toFetch
+} from "@pagopa/ts-commons/lib/fetch";
 import { Millisecond } from "@pagopa/ts-commons/lib/units";
 import { agent } from "@pagopa/ts-commons";
 import {
@@ -33,16 +37,8 @@ import {
 // expects a never value. return a constant or the value itself
 const defaultNever = <T>(e: never, retVal: T = e): T => retVal;
 
-// this method can be removed after we migrate @pagopa/ts-commons to node 18 so we can use the new
-// implementation of  toFetch
-// eslint-disable-next-line
-const toRemoveToFetch = (f: any) => (
-  input: RequestInfo | URL,
-  init?: RequestInit
-) => f(input, init).e1;
-
 // Some transports require http connections, this is the default client
-const defaultFetchAgent = toRemoveToFetch(
+const defaultFetchAgent = toFetch(
   setFetchTimeout(
     5000 as Millisecond, // 5 seconds timeout by default
     AbortableFetch(agent.getHttpsFetch(process.env))
