@@ -162,7 +162,7 @@ describe("sendMail", () => {
       await aNodemailerTransporter.sendMail(anEmailMessage);
     } catch (e) {
       expect(e).toBeInstanceOf(Error);
-      expect((<Error>e).message).toContain("foo");
+      expect((e as Error).message).toContain("foo");
     }
   });
 
@@ -179,7 +179,7 @@ describe("sendMail", () => {
       await aNodemailerTransporter.sendMail(anEmailMessage);
     } catch (e) {
       expect(e).toBeInstanceOf(Error);
-      expect((<Error>e).message).toContain("400");
+      expect((e as Error).message).toContain("400");
     }
   });
 
@@ -200,7 +200,7 @@ describe("sendMail", () => {
       await aNodemailerTransporter.sendMail(anEmailMessage);
     } catch (e) {
       expect(e).toBeInstanceOf(Error);
-      expect((<Error>e).message).toContain("foobar");
+      expect((e as Error).message).toContain("foobar");
     }
   });
 });
