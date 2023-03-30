@@ -32,7 +32,7 @@
     "@pagopa/openapi-codegen-ts": "^11.0.0",
     "@types/express": "^4.17.12",
     "@types/jest": "^24.9.1",
-    "@types/node": "10.14.1",
+    "@types/node": "~18.13.0",
     "@types/node-fetch": "^2.5.7",
     "@types/nodemailer": "^6.4.2",
     "@types/nodemailer-sendgrid": "^1.0.0",
@@ -55,7 +55,7 @@
   },
   "dependencies": {
     "@azure/cosmos": "^3.17.1",
-    "@pagopa/ts-commons": "^10.13.0",
+    "@pagopa/ts-commons": "^11.0.0",
     "applicationinsights": "^1.8.10",
     "azure-storage": "^2.10.5",
     "cidr-matcher": "^2.1.1",

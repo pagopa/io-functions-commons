@@ -4,8 +4,7 @@ jest.mock("winston");
 
 import * as E from "fp-ts/lib/Either";
 
-// eslint-disable-next-line import/no-internal-modules
-import Mail = require("nodemailer/lib/mailer");
+import * as Mail from "nodemailer/lib/mailer";
 
 import * as nodemailer from "nodemailer";
 
@@ -163,7 +162,7 @@ describe("sendMail", () => {
       await aNodemailerTransporter.sendMail(anEmailMessage);
     } catch (e) {
       expect(e).toBeInstanceOf(Error);
-      expect(e.message).toContain("foo");
+      expect((e as Error).message).toContain("foo");
     }
   });
 
@@ -180,7 +179,7 @@ describe("sendMail", () => {
       await aNodemailerTransporter.sendMail(anEmailMessage);
     } catch (e) {
       expect(e).toBeInstanceOf(Error);
-      expect(e.message).toContain("400");
+      expect((e as Error).message).toContain("400");
     }
   });
 
@@ -201,7 +200,7 @@ describe("sendMail", () => {
       await aNodemailerTransporter.sendMail(anEmailMessage);
     } catch (e) {
       expect(e).toBeInstanceOf(Error);
-      expect(e.message).toContain("foobar");
+      expect((e as Error).message).toContain("foobar");
     }
   });
 });
