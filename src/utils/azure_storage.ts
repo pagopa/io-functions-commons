@@ -254,7 +254,8 @@ export const getBlobAsObject = async <A, O, I>(
           )
         );
       } catch (e) {
-        return E.left(new Error(`${e}`));
+        // e will always be an instance of SyntaxError here which is a subclass of Error
+        return E.left(e as Error);
       }
     })
   );
