@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/io-functions-commons",
-  "version": "27.6.0",
+  "version": "28.0.0",
   "description": "Common code for Azure functions",
   "repository": "https://github.com/pagopa/io-functions-commons",
   "author": "https://www.pagopa.gov.it",
