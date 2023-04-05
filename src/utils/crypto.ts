@@ -71,7 +71,7 @@ export const validateDigestHeader = (
   }
 
   // Validate
-  const contentDigestPattern = new RegExp("(.+)=:(.+):");
+  const contentDigestPattern = new RegExp("(sha-256|sha-512)=:(.+):");
   const contentDigestParts = contentDigestPattern.exec(contentDigestHeader);
   if (!contentDigestParts || contentDigestParts.length === 0) {
     throw new Error("Content-digest header invalid");
