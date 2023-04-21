@@ -405,7 +405,7 @@ BaseEnrichedMessage:
     has_attachments:
       type: boolean
       default: false
-    has_preconditions:
+    has_precondition:
       type: boolean
       default: false
   required:
@@ -556,10 +556,10 @@ ThirdPartyMessageWithContent:
           $ref: "#/ThirdPartyMessage"
       required:
         - third_party_message
-ThirdPartyMessagePreconditions:
+ThirdPartyMessagePrecondition:
     type: object
-    title: ThirdPartyMessagePreconditions
-    description: Describes a message preconditions
+    title: ThirdPartyMessagePrecondition
+    description: Describes a message precondition
     properties:
       title:
         type: string
