@@ -405,6 +405,9 @@ BaseEnrichedMessage:
     has_attachments:
       type: boolean
       default: false
+    has_preconditions:
+      type: boolean
+      default: false
   required:
     - id
     - fiscal_code
@@ -553,6 +556,18 @@ ThirdPartyMessageWithContent:
           $ref: "#/ThirdPartyMessage"
       required:
         - third_party_message
+ThirdPartyMessagePreconditions:
+    type: object
+    title: ThirdPartyMessagePreconditions
+    description: Describes a message preconditions
+    properties:
+      title:
+        type: string
+      markdown:
+        type: string
+    required:
+      - title
+      - markdown
 MessageResponseWithoutContent:
   type: object
   properties:
