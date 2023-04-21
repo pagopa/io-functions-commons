@@ -91,7 +91,7 @@ export function filterAsyncIterator<T, K extends T = T>(
         return value;
       }
       if (predicate(value)) {
-        yield value;
+        yield value as K;
       }
     }
   }

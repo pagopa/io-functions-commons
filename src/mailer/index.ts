@@ -5,25 +5,17 @@
  * Ideally this is the only file that's needed to be imported when apps want to send email.
  */
 
-import { agent } from "@pagopa/ts-commons";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { Option } from "fp-ts/lib/Option";
+import * as O from "fp-ts/lib/Option";
+
 import {
   AbortableFetch,
   setFetchTimeout,
   toFetch
 } from "@pagopa/ts-commons/lib/fetch";
-import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { Millisecond } from "@pagopa/ts-commons/lib/units";
-import { Option } from "fp-ts/lib/Option";
-import * as O from "fp-ts/lib/Option";
-
-import {
-  MailerConfig,
-  MailhogMailerConfig,
-  MailupMailerConfig,
-  MultiTrasnsportMailerConfig,
-  SendgridMailerConfig
-} from "./config";
-
+import { agent } from "@pagopa/ts-commons";
 import {
   createMailTransporter,
   getTransportsForConnections,
@@ -33,6 +25,14 @@ import {
   NodeMailerSendgrid,
   Transport
 } from "./transports";
+
+import {
+  MailerConfig,
+  MailhogMailerConfig,
+  MailupMailerConfig,
+  MultiTrasnsportMailerConfig,
+  SendgridMailerConfig
+} from "./config";
 
 // expects a never value. return a constant or the value itself
 const defaultNever = <T>(e: never, retVal: T = e): T => retVal;

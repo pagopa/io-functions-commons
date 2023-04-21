@@ -188,9 +188,9 @@ export class CosmosdbModelVersionedTTL<
                   value: partitionKey as JSONValue
                 }
               ],
-              query: `SELECT * FROM m WHERE m.${
+              query: `SELECT * FROM m WHERE m.${String(
                 this.partitionKey ? this.partitionKey : this.modelIdKey
-              } = @partitionKey`
+              )} = @partitionKey`
             })
           ),
         toCosmosErrorResponse
