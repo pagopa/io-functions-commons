@@ -405,6 +405,9 @@ BaseEnrichedMessage:
     has_attachments:
       type: boolean
       default: false
+    has_precondition:
+      type: boolean
+      default: false
   required:
     - id
     - fiscal_code
