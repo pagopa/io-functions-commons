@@ -59,7 +59,13 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/LollipopPublicKey'
-
+    LollipopAssertionRefHeader:
+      name: x-pagopa-lollipop-assertion-ref
+      in: header
+      description: The id of the assertion to retrieve
+      required: true
+      schema:
+        $ref: '#/components/schemas/AssertionRef'
     # --------------------------------------------
     # Standard HTTP Message Signatures headers
     # --------------------------------------------
@@ -92,13 +98,6 @@ components:
       required: true
       schema:
         $ref: "#/components/schemas/LollipopSignature"
-    LollipopAssertionRefHeader:
-      name: x-pagopa-lollipop-assertion-ref
-      in: header
-      description: The id of the assertion to retrieve
-      required: true
-      schema:
-        $ref: '#/components/schemas/AssertionRef'
   schemas:
     LollipopMethod:
       description: |
