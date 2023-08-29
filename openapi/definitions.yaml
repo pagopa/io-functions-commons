@@ -109,8 +109,6 @@ MessageContent:
           $ref: "#/PaymentData"
         prescription_data:
           $ref: "#/PrescriptionData"
-        legal_data:
-          $ref: '#/LegalData'
         eu_covid_cert:
           $ref: "#/EUCovidCert"
         third_party_data:
@@ -132,8 +130,6 @@ NewMessageContent:
           $ref: "#/EUCovidCert"
         third_party_data:
           $ref: "#/ThirdPartyData"
-        legal_data:
-          $ref: '#/LegalData'
 NewMessage:
   type: object
   properties:
@@ -169,27 +165,6 @@ PrescriptionData:
       $ref: "#/PrescriberFiscalCode"
   required:
     - nre
-LegalData:
-  type: object
-  properties:
-    sender_mail_from: 
-      type: string
-      minLength: 1
-    has_attachment:
-      type: boolean
-      default: false
-    message_unique_id:
-      type: string
-      minLength: 1
-    original_message_url:
-      type: string
-      minLength: 1
-    pec_server_service_id:
-      $ref: "#/ServiceId"
-  required:
-    - sender_mail_from
-    - has_attachment
-    - message_unique_id
 ThirdPartyData:
   type: object
   description: |-
@@ -529,24 +504,6 @@ MessageResponseWithContent:
       $ref: "#/MessageStatusValue"
   required:
     - message
-LegalMessageWithContent:
-  allOf:
-    - $ref: "#/CreatedMessageWithContent"
-    - type: object
-      properties:
-        legal_message:
-          $ref: "#/LegalMessage"
-      required:
-        - legal_message
-LegalMessageResponseWithContent:
-  allOf:
-    - $ref: "#/MessageResponseWithContent"
-    - type: object
-      properties:
-        message:
-          $ref: "#/LegalMessageWithContent"
-      required:
-        - message
 ThirdPartyMessageWithContent:
   allOf:
     - $ref: "#/CreatedMessageWithContent"
@@ -1335,7 +1292,6 @@ MessageCategoryBase:
     tag:
       type: string
       enum:
-        - LEGAL_MESSAGE
         - EU_COVID_CERT
         - GENERIC
   required:
@@ -1363,44 +1319,6 @@ MessageCategoryPN:
             - PN
       required:
         - tag
-LegalMessage:
-  type: object
-  properties:
-    eml: 
-      $ref: "#/LegalMessageEml"
-    cert_data:
-      $ref: "#/LegalMessageCertData"
-  required: 
-    - eml
-    - cert_data
-LegalMessageEml:
-  type: object
-  properties:
-    subject:
-      type: string
-    plain_text_content:
-      type: string
-    html_content:
-      type: string
-    attachments:
-      type: array
-      items:
-        $ref: '#/Attachment'
-  required:
-    - subject
-    - plain_text_content
-    - html_content
-    - attachments
-LegalMessageCertData:
-  type: object
-  properties:
-    header:
-      $ref: "#/CertDataHeader"
-    data:
-      $ref: "#/CertData"
-  required:
-    - header
-    - data
 CertData:
   type: object
   properties:

@@ -208,17 +208,6 @@ const aPaymentDataWithoutPayee: PaymentData = {
   notice_number: "177777777777777777" as PaymentNoticeNumber
 };
 
-const aContentWithLegalData = {
-  ...aContentWithoutPaymentData,
-  legal_data: {
-    sender_mail_from: "test@test.it",
-
-    has_attachment: true,
-
-    message_unique_id: "000001"
-  }
-};
-
 const aContentWithThirdPartyData = {
   ...aContentWithoutPaymentData,
   third_party_data: {
@@ -543,18 +532,6 @@ describe("Type definition", () => {
             ...aPaymentDataWithoutPayee,
             invalid_after_due_date: false
           })
-      )
-    );
-  });
-
-  it("should decode MessageContent with content with legal data", () => {
-    const decodedMessageContent = MessageContent.decode(aContentWithLegalData);
-
-    pipe(
-      decodedMessageContent,
-      E.fold(
-        () => fail(),
-        value => expect(value).toEqual(aContentWithLegalData)
       )
     );
   });
