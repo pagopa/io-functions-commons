@@ -69,9 +69,6 @@ export enum UserGroup {
   // messages: list all messages for any recipient
   ApiMessageList = "ApiMessageList",
 
-  // messages: read legal message
-  ApiLegalMessageRead = "ApiLegalMessageRead",
-
   // subscriptions: read access to the subscriptions feed
   ApiSubscriptionsFeedRead = "ApiSubscriptionsFeedRead",
 
@@ -86,15 +83,6 @@ export enum UserGroup {
 
   // messages: send messages with payee
   ApiMessageWriteWithPayee = "ApiMessageWriteWithPayee",
-
-  // messages: send messages with legal data
-  ApiMessageWriteWithLegalData = "ApiMessageWriteWithLegalData",
-
-  // messages: send messages with legal data without service impersonification
-  ApiMessageWriteWithLegalDataWithoutImpersonification = "ApiMessageWriteWithLegalDataWithoutImpersonification",
-
-  // legal messages: read sent legal message
-  ApiMessageReadWithLegalData = "ApiMessageReadWithLegalData",
 
   // Advanced Message handling (read / write)
   ApiMessageWriteAdvanced = "ApiMessageWriteAdvanced",

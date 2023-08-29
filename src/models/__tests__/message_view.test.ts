@@ -20,7 +20,6 @@ import { TimeToLiveSeconds } from "../../../generated/definitions/TimeToLiveSeco
 const aComponents: Components = {
   attachments: { has: false },
   euCovidCert: { has: false },
-  legalData: { has: false },
   payment: { has: false },
   thirdParty: { has: false }
 };

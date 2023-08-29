@@ -65,7 +65,6 @@ export type ThirdPartyComponent = t.TypeOf<typeof ThirdPartyComponent>;
 export const Components = t.interface({
   attachments: Component,
   euCovidCert: Component,
-  legalData: Component,
   payment: PaymentComponent,
   thirdParty: withDefault(ThirdPartyComponent, { has: false })
 });
