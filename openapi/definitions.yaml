@@ -209,6 +209,9 @@ ThirdPartyData:
     has_attachments:
       type: boolean
       default: false
+    has_precondition:
+      type: boolean
+      default: false
     summary:
       type: string
       minLength: 1

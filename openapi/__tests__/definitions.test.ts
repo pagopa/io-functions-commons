@@ -573,7 +573,8 @@ describe("Type definition", () => {
             ...aContentWithThirdPartyData,
             third_party_data: {
               ...aContentWithThirdPartyData.third_party_data,
-              has_attachments: false
+              has_attachments: false,
+              has_precondition: false
             }
           })
       )
