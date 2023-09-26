@@ -57,12 +57,12 @@ describe("ServicePayload definition", () => {
     email: "test@mail.it",
     pec: "pec@mail.it",
     phone: "333",
-    privacy_url: "http://privateurl.it",
+    privacy_url: "https://privateurl.it",
     scope: "LOCAL",
-    support_url: "http://supporturl.it",
+    support_url: "https://supporturl.it",
     token_name: "token",
-    tos_url: "http://weburlk.it",
-    web_url: "http://weburl.it"
+    tos_url: "https://weburlk.it",
+    web_url: "https://weburl.it"
   };
 
   const visibleService = {
@@ -96,12 +96,12 @@ describe("ServicePayload definition", () => {
       email: "test@mail.it",
       pec: "pec@mail.it",
       phone: "333",
-      privacy_url: "http://privateurl.it",
+      privacy_url: "https://privateurl.it",
       scope: "LOCAL",
-      support_url: "http://supporturl.it",
+      support_url: "https://supporturl.it",
       token_name: "token",
-      tos_url: "http://weburlk.it",
-      web_url: "http://weburl.it"
+      tos_url: "https://weburlk.it",
+      web_url: "https://weburl.it"
     }
   };
 
