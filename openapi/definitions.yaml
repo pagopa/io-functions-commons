@@ -210,8 +210,11 @@ ThirdPartyData:
       type: boolean
       default: false
     has_precondition:
-      type: boolean
-      default: false
+      type: string
+      x-extensible-enum:
+        - ALWAYS
+        - ONCE
+        - NEVER
     summary:
       type: string
       minLength: 1
