@@ -209,6 +209,12 @@ ThirdPartyData:
     has_attachments:
       type: boolean
       default: false
+    has_precondition:
+      type: string
+      x-extensible-enum:
+        - ALWAYS
+        - ONCE
+        - NEVER
     summary:
       type: string
       minLength: 1
