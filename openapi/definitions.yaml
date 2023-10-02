@@ -1505,9 +1505,6 @@ ThirdPartyAttachment:
       category:
         type: string
         default: DOCUMENT
-        x-extensible-enum:
-          - DOCUMENT
-          - F24
   required:
     - id
     - url
