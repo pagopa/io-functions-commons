@@ -948,8 +948,8 @@ describe("ThirdPartyMessage", () => {
   it("should decode a ThirdPartyMessage with attachments", async () => {
     const aThirdPartyMessage = {
       attachments: [
-        { id: "anId", url: "an/Url" },
-        { id: "anotherId", url: "another/Url", name: "anotherName" }
+        { id: "anId", url: "an/Url", category: "DOCUMENT" },
+        { id: "anotherId", url: "another/Url", name: "anotherName", category: "DOCUMENT" }
       ]
     };
 

@@ -1502,6 +1502,9 @@ ThirdPartyAttachment:
       url:
         type: string
         minLength: 1
+      category:
+        type: string
+        default: DOCUMENT
   required:
     - id
     - url
