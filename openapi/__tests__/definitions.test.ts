@@ -200,8 +200,7 @@ const aContentWithoutPaymentData = {
   subject:
     "A Subject of more than 80 characters. Try to reach this value with stupid words, and I will leave here because I like it",
   markdown:
-    "A markdown of more than 80 characters. Try to reach this value with stupid words, and I will leave here because I like it",
-  require_secure_channels: false
+    "A markdown of more than 80 characters. Try to reach this value with stupid words, and I will leave here because I like it"
 };
 
 const aPaymentDataWithoutPayee: PaymentData = {
