@@ -51,7 +51,8 @@ const MESSAGE_CONTAINER_NAME = "message-content" as NonEmptyString;
 const aMessageBodyMarkdown = "test".repeat(80) as MessageBodyMarkdown;
 const aGeneralMessageContent = {
   markdown: aMessageBodyMarkdown,
-  subject: "test".repeat(10) as MessageSubject
+  subject: "test".repeat(10) as MessageSubject,
+  require_secure_channels: false
 };
 
 const aMessageContent = {

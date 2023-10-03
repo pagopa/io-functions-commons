@@ -97,6 +97,11 @@ MessageContentBase:
       $ref: "#/MessageSubject"
     markdown:
       $ref: "#/MessageBodyMarkdown"
+    require_secure_channels:
+      type: boolean
+      default: false
+      description: |-
+        When true, messages won't trigger email notifications (only push).
   required:
     - subject
     - markdown
@@ -134,6 +139,11 @@ NewMessageContent:
           $ref: "#/ThirdPartyData"
         legal_data:
           $ref: '#/LegalData'
+        require_secure_channels:
+          type: boolean
+          default: false
+          description: |-
+            When true, messages won't trigger email notifications (only push).
 NewMessage:
   type: object
   properties:
