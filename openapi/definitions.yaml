@@ -1595,3 +1595,8 @@ Ulid:
   format: Ulid
   x-import: '@pagopa/ts-commons/lib/strings'
   example: 01ARZ3NDEKTSV4RRFFQ69G5FAV
+PathTraversalSafePathParam:
+  description:
+    A non empty string that is safe to be used in an url parameter to avoid path traversal attacks
+  type: string
+  pattern: "^[0-9a-zA-Z\\-\\._\\/+]+$"
