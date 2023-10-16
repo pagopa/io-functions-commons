@@ -1,12 +1,16 @@
-swagger: "2.0"
+openapi: 3.0.1
 info:
-  title: "IO APIs, shared specs"
+  title: IO APIs, shared specs
   version: "0.1"
+servers:
+- url: /
 paths:
-  "/dummy":
+  /dummy:
     get:
       responses:
-        "200":
-          description: "ok"
-definitions:
-  $ref: definitions.yaml
+        200:
+          description: ok
+          content: {}
+components:
+  schemas:
+    $ref: definitions.yaml

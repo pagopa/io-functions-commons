@@ -1,25 +1,25 @@
 ApplicationInfo:
+  required:
+  - name
+  - version
   type: object
   properties:
-    name: 
+    name:
       type: string
-    version: 
+    version:
       type: string
-  required:
-    - name
-    - version
 ProblemJson:
   type: object
   properties:
     type:
       type: string
-      format: uri
       description: |-
         An absolute URI that identifies the problem type. When dereferenced,
         it SHOULD provide human-readable documentation for the problem type
         (e.g., using HTML).
-      default: about:blank
+      format: uri
       example: https://example.com/problem/constraint-violation
+      default: about:blank
     title:
       type: string
       description: |-
@@ -27,7 +27,7 @@ ProblemJson:
         for engineers (usually not suited for non technical stakeholders and
         not localized); example: Service Unavailable
     status:
-      $ref: "#/HttpStatusCode"
+      $ref: '#/HttpStatusCode'
     detail:
       type: string
       description: |-
@@ -36,28 +36,27 @@ ProblemJson:
       example: There was an error processing the request
     instance:
       type: string
-      format: uri
       description: |-
         An absolute URI that identifies the specific occurrence of the problem.
         It may or may not yield further information if dereferenced.
+      format: uri
 NotificationChannel:
   type: string
-  description: |-
-    All notification channels.
-  x-extensible-enum:
-    - EMAIL
-    - WEBHOOK
+  description: All notification channels.
   example: EMAIL
+  x-extensible-enum:
+  - EMAIL
+  - WEBHOOK
 BlockedInboxOrChannel:
   type: string
   description: |-
     All notification channels plus the message inbox.
     These represent all the possible channels a user could block.
-  x-extensible-enum:
-    - EMAIL
-    - INBOX
-    - WEBHOOK
   example: INBOX
+  x-extensible-enum:
+  - EMAIL
+  - INBOX
+  - WEBHOOK
 NotificationChannelStatusValue:
   type: string
   description: |-
@@ -68,263 +67,257 @@ NotificationChannelStatusValue:
     "EXPIRED": the message expired before the notification could be sent;
       this means that the maximum message time to live was reached; no notification will be sent to this channel
     "FAILED": a permanent failure caused the process to exit with an error, no notification will be sent to this channel
-  x-extensible-enum:
-    - SENT
-    - THROTTLED
-    - EXPIRED
-    - FAILED
   example: SENT
+  x-extensible-enum:
+  - SENT
+  - THROTTLED
+  - EXPIRED
+  - FAILED
 NotificationChannelStatus:
+  required:
+  - channel
+  - status
+  - updated_at
   type: object
   properties:
     channel:
-      $ref: "#/NotificationChannel"
+      $ref: '#/NotificationChannel'
     status:
-      $ref: "#/NotificationChannelStatusValue"
+      $ref: '#/NotificationChannelStatusValue'
     updated_at:
-      $ref: "#/Timestamp"
+      $ref: '#/Timestamp'
     version:
       type: integer
-  required:
-    - channel
-    - status
-    - updated_at
-
 MessageContentBase:
+  required:
+  - markdown
+  - subject
   type: object
   properties:
     subject:
-      $ref: "#/MessageSubject"
+      $ref: '#/MessageSubject'
     markdown:
-      $ref: "#/MessageBodyMarkdown"
+      $ref: '#/MessageBodyMarkdown'
     require_secure_channels:
       type: boolean
-      description: |-
-        When true, messages won't trigger email notifications (only push).
-  required:
-    - subject
-    - markdown
+      description: When true, messages won't trigger email notifications (only
+        push).
 MessageContent:
   allOf:
-    - $ref: "#/MessageContentBase"
-    - type: object
-      properties:
-        payment_data:
-          $ref: "#/PaymentData"
-        prescription_data:
-          $ref: "#/PrescriptionData"
-        legal_data:
-          $ref: '#/LegalData'
-        eu_covid_cert:
-          $ref: "#/EUCovidCert"
-        third_party_data:
-          $ref: "#/ThirdPartyData"
-        due_date:
-          $ref: "#/Timestamp"
+  - $ref: '#/MessageContentBase'
+  - type: object
+    properties:
+      payment_data:
+        $ref: '#/PaymentData'
+      prescription_data:
+        $ref: '#/PrescriptionData'
+      legal_data:
+        $ref: '#/LegalData'
+      eu_covid_cert:
+        $ref: '#/EUCovidCert'
+      third_party_data:
+        $ref: '#/ThirdPartyData'
+      due_date:
+        $ref: '#/Timestamp'
 NewMessageContent:
   allOf:
-    - $ref: "#/MessageContentBase"
-    - type: object
-      properties:
-        payment_data:
-          $ref: "#/PaymentDataWithRequiredPayee"
-        due_date:
-          $ref: "#/Timestamp"
-        prescription_data:
-          $ref: "#/PrescriptionData"
-        eu_covid_cert:
-          $ref: "#/EUCovidCert"
-        third_party_data:
-          $ref: "#/ThirdPartyData"
-        legal_data:
-          $ref: '#/LegalData'
+  - $ref: '#/MessageContentBase'
+  - type: object
+    properties:
+      payment_data:
+        $ref: '#/PaymentDataWithRequiredPayee'
+      due_date:
+        $ref: '#/Timestamp'
+      prescription_data:
+        $ref: '#/PrescriptionData'
+      eu_covid_cert:
+        $ref: '#/EUCovidCert'
+      third_party_data:
+        $ref: '#/ThirdPartyData'
+      legal_data:
+        $ref: '#/LegalData'
 NewMessage:
+  required:
+  - content
   type: object
   properties:
     time_to_live:
-      $ref: "#/TimeToLiveSeconds"
+      $ref: '#/TimeToLiveSeconds'
     content:
-      $ref: "#/MessageContent"
+      $ref: '#/MessageContent'
     default_addresses:
-      $ref: "#/NewMessageDefaultAddresses"
+      $ref: '#/NewMessageDefaultAddresses'
     fiscal_code:
-      $ref: "#/FiscalCode"
+      $ref: '#/FiscalCode'
     feature_level_type:
-      $ref: "#/FeatureLevelType"
-  required:
-    - content
+      $ref: '#/FeatureLevelType'
 FeatureLevelType:
-   type: string
-   default: STANDARD
-   x-extensible-enum:
-     - STANDARD
-     - ADVANCED
-   example: STANDARD
+  type: string
+  example: STANDARD
+  default: STANDARD
+  x-extensible-enum:
+  - STANDARD
+  - ADVANCED
 PrescriptionData:
+  required:
+  - nre
   type: object
-  description: |-
-    Metadata needed to process medical prescriptions.
   properties:
     nre:
-      $ref: "#/PrescriptionNRE"
+      $ref: '#/PrescriptionNRE'
     iup:
-      $ref: "#/PrescriptionIUP"
+      $ref: '#/PrescriptionIUP'
     prescriber_fiscal_code:
-      $ref: "#/PrescriberFiscalCode"
-  required:
-    - nre
+      $ref: '#/PrescriberFiscalCode'
+  description: Metadata needed to process medical prescriptions.
 LegalData:
+  required:
+  - has_attachment
+  - message_unique_id
+  - sender_mail_from
   type: object
   properties:
-    sender_mail_from: 
-      type: string
+    sender_mail_from:
       minLength: 1
+      type: string
     has_attachment:
       type: boolean
       default: false
     message_unique_id:
-      type: string
       minLength: 1
+      type: string
     original_message_url:
-      type: string
       minLength: 1
+      type: string
     pec_server_service_id:
-      $ref: "#/ServiceId"
-  required:
-    - sender_mail_from
-    - has_attachment
-    - message_unique_id
+      $ref: '#/ServiceId'
 ThirdPartyData:
+  required:
+  - id
   type: object
-  description: |-
-    Payload containing all information needed to retrieve and visualize third party message details
   properties:
     id:
-      type: string
-      description: Unique id for retrieving third party enriched information about the message
       minLength: 1
+      type: string
+      description: Unique id for retrieving third party enriched information about
+        the message
     original_sender:
-        type: string
-        description: |-
-          Either a ServiceId or a simple string representing the sender name
-        minLength: 1
+      minLength: 1
+      type: string
+      description: Either a ServiceId or a simple string representing the sender
+        name
     original_receipt_date:
-      $ref: "#/Timestamp"
+      $ref: '#/Timestamp'
     has_attachments:
       type: boolean
       default: false
     has_precondition:
       type: string
       x-extensible-enum:
-        - ALWAYS
-        - ONCE
-        - NEVER
+      - ALWAYS
+      - ONCE
+      - NEVER
     summary:
-      type: string
       minLength: 1
-  required:
-    - id
+      type: string
+  description: Payload containing all information needed to retrieve and visualize
+    third party message details
 EUCovidCert:
+  required:
+  - auth_code
   type: object
-  description: |-
-    Paylod with access token to retrieve a EU Covid Certificate
   properties:
     auth_code:
       type: string
-  required:
-    - auth_code
+  description: Paylod with access token to retrieve a EU Covid Certificate
 PrescriptionIUP:
-  description: The field *Identificativo Unico di Prescrizione* identifies the medical prescription at regional level.
-  type: string
-  minLength: 1
   maxLength: 16
-PrescriptionNRE:
-  description: The field *Numero ricetta elettronica* identifies the medical prescription at national level.
+  minLength: 1
   type: string
-  minLength: 15
+  description: The field *Identificativo Unico di Prescrizione* identifies the
+    medical prescription at regional level.
+PrescriptionNRE:
   maxLength: 15
+  minLength: 15
+  type: string
+  description: The field *Numero ricetta elettronica* identifies the medical prescription
+    at national level.
 Payee:
+  required:
+  - fiscal_code
   type: object
-  description: |-
-    Metadata needed to explicit payment's payee.
   properties:
     fiscal_code:
-      $ref: "#/OrganizationFiscalCode"
-  required:
-    - fiscal_code
+      $ref: '#/OrganizationFiscalCode'
+  description: Metadata needed to explicit payment's payee.
 PaymentDataBase:
+  required:
+  - amount
+  - notice_number
   type: object
-  description: |-
-    Metadata needed to process pagoPA payments.
   properties:
     amount:
-      $ref: "#/PaymentAmount"
+      $ref: '#/PaymentAmount'
     notice_number:
-      $ref: "#/PaymentNoticeNumber"
+      $ref: '#/PaymentNoticeNumber'
     invalid_after_due_date:
       type: boolean
       default: false
-  required:
-    - amount
-    - notice_number
+  description: Metadata needed to process pagoPA payments.
 PaymentData:
   allOf:
-    - $ref: "#/PaymentDataBase"
-    - type: object
-      properties:
-        payee:
-          $ref: "#/Payee"
+  - $ref: '#/PaymentDataBase'
+  - type: object
+    properties:
+      payee:
+        $ref: '#/Payee'
 PaymentDataWithRequiredPayee:
   allOf:
-    - $ref: "#/PaymentDataBase"
-    - type: object
-      properties:
-        payee:
-          $ref: "#/Payee"
-      required:
-        - payee
+  - $ref: '#/PaymentDataBase'
+  - required:
+    - payee
+    type: object
+    properties:
+      payee:
+        $ref: '#/Payee'
 PaymentNoticeNumber:
-  description:
-    The field ["Numero Avviso"](https://pagopa-specifichepagamenti.readthedocs.io/it/latest/_docs/Capitolo7.html#il-numero-avviso-e-larchivio-dei-pagamenti-in-attesa)
-    of pagoPa, needed to identify the payment. Format is `<aux digit (1n)>[<application code> (2n)]<codice IUV (15|17n)>`.
-    See [pagoPa specs](https://www.agid.gov.it/sites/default/files/repository_files/specifiche_attuative_pagamenti_1_3_1_0.pdf) for more info on this field and the IUV.
+  pattern: ^[0123][0-9]{17}$
   type: string
-  pattern: "^[0123][0-9]{17}$"
+  description: The field ["Numero Avviso"](https://pagopa-specifichepagamenti.readthedocs.io/it/latest/_docs/Capitolo7.html#il-numero-avviso-e-larchivio-dei-pagamenti-in-attesa)
+    of pagoPa, needed to identify the payment. Format is `<aux digit (1n)>[<application
+    code> (2n)]<codice IUV (15|17n)>`. See [pagoPa specs](https://www.agid.gov.it/sites/default/files/repository_files/specifiche_attuative_pagamenti_1_3_1_0.pdf)
+    for more info on this field and the IUV.
 PaymentAmount:
-  description: |-
-    Amount of payment in euro cent. PagoPA accepts up to 9999999999 euro cents.
-  type: integer
+  maximum: 9999999999
   minimum: 1
-  maximum: 9999999999
-MaxAllowedPaymentAmount:
-  description: |-
-    Maximum amount in euro cents that a service is allowed to charge to a user.
   type: integer
-  minimum: 0
+  description: Amount of payment in euro cent. PagoPA accepts up to 9999999999
+    euro cents.
+MaxAllowedPaymentAmount:
   maximum: 9999999999
+  minimum: 0
+  type: integer
+  description: Maximum amount in euro cents that a service is allowed to charge
+    to a user.
   default: 0
 RejectedMessageStatusValue:
   type: string
   x-extensible-enum:
-    - REJECTED
+  - REJECTED
 RejectionReason:
   type: string
   x-extensible-enum:
-    - SERVICE_NOT_ALLOWED
-    - USER_NOT_FOUND
-    - UNKNOWN
+  - SERVICE_NOT_ALLOWED
+  - USER_NOT_FOUND
+  - UNKNOWN
 NotRejectedMessageStatusValue:
   type: string
   x-extensible-enum:
-    - ACCEPTED
-    - THROTTLED
-    - FAILED
-    - PROCESSED
+  - ACCEPTED
+  - THROTTLED
+  - FAILED
+  - PROCESSED
 MessageStatusValue:
-  x-one-of: true
-  allOf:
-    - $ref: "#/RejectedMessageStatusValue"
-    - $ref: "#/NotRejectedMessageStatusValue"
   description: |-
     The processing status of a message.
     "ACCEPTED": the message has been accepted and will be processed for delivery;
@@ -335,75 +328,86 @@ MessageStatusValue:
     "PROCESSED": the message was succesfully processed and is now stored in the user's inbox;
       we'll try to send a notification for each of the selected channels
     "REJECTED": either the recipient does not exist, or the sender has been blocked
+  allOf:
+  - $ref: '#/RejectedMessageStatusValue'
+  - $ref: '#/NotRejectedMessageStatusValue'
+  x-one-of: true
 MessageStatus:
+  required:
+  - status
+  - updated_at
   type: object
   properties:
     status:
-      $ref: "#/MessageStatusValue"
+      $ref: '#/MessageStatusValue'
     updated_at:
-      $ref: "#/Timestamp"
+      $ref: '#/Timestamp'
     version:
       type: integer
-  required:
-    - status
-    - updated_at
 MessageStatusWithAttributes:
   allOf:
-    - $ref: "#/MessageStatus"
-    - $ref: "#/MessageStatusAttributes"
+  - $ref: '#/MessageStatus'
+  - $ref: '#/MessageStatusAttributes'
 CreatedMessageWithContent:
+  required:
+  - content
+  - created_at
+  - fiscal_code
+  - id
+  - sender_service_id
   type: object
   properties:
     id:
       type: string
     fiscal_code:
-      $ref: "#/FiscalCode"
+      $ref: '#/FiscalCode'
     time_to_live:
-      $ref: "#/TimeToLiveSeconds"
+      $ref: '#/TimeToLiveSeconds'
     created_at:
-      $ref: "#/Timestamp"
+      $ref: '#/Timestamp'
     content:
-      $ref: "#/NewMessageContent"
+      $ref: '#/NewMessageContent'
     sender_service_id:
-      $ref: "#/ServiceId"
-  required:
-    - id
-    - fiscal_code
-    - created_at
-    - content
-    - sender_service_id
+      $ref: '#/ServiceId'
 CreatedMessageWithoutContent:
-  type: object
-  properties:
-    id:
-      type: string
-    fiscal_code:
-      $ref: "#/FiscalCode"
-    time_to_live:
-      $ref: "#/TimeToLiveSeconds"
-    created_at:
-      $ref: "#/Timestamp"
-    sender_service_id:
-      $ref: "#/ServiceId"
   required:
-    - id
-    - fiscal_code
-    - created_at
-    - sender_service_id
-
-BaseEnrichedMessage:
+  - created_at
+  - fiscal_code
+  - id
+  - sender_service_id
   type: object
   properties:
     id:
       type: string
     fiscal_code:
-      $ref: "#/FiscalCode"
+      $ref: '#/FiscalCode'
     time_to_live:
-      $ref: "#/TimeToLiveSeconds"
+      $ref: '#/TimeToLiveSeconds'
     created_at:
-      $ref: "#/Timestamp"
+      $ref: '#/Timestamp'
     sender_service_id:
-      $ref: "#/ServiceId"
+      $ref: '#/ServiceId'
+BaseEnrichedMessage:
+  required:
+  - created_at
+  - fiscal_code
+  - id
+  - message_title
+  - organization_name
+  - sender_service_id
+  - service_name
+  type: object
+  properties:
+    id:
+      type: string
+    fiscal_code:
+      $ref: '#/FiscalCode'
+    time_to_live:
+      $ref: '#/TimeToLiveSeconds'
+    created_at:
+      $ref: '#/Timestamp'
+    sender_service_id:
+      $ref: '#/ServiceId'
     service_name:
       type: string
     organization_name:
@@ -418,219 +422,190 @@ BaseEnrichedMessage:
     has_precondition:
       type: boolean
       default: false
-  required:
-    - id
-    - fiscal_code
-    - created_at
-    - sender_service_id
-    - service_name
-    - organization_name
-    - message_title
 EnrichedMessage:
   allOf:
-    - $ref: "#/BaseEnrichedMessage"
-    - $ref: "#/MessageStatusAttributes"
-
+  - $ref: '#/BaseEnrichedMessage'
+  - $ref: '#/MessageStatusAttributes'
 ExternalCreatedMessageWithoutContent:
   allOf:
-    - $ref: "#/CreatedMessageWithoutContent"
-    - type: object
-      properties:
-        feature_level_type:
-          $ref: "#/FeatureLevelType"
-      required:
-        - feature_level_type
+  - $ref: '#/CreatedMessageWithoutContent'
+  - required:
+    - feature_level_type
+    type: object
+    properties:
+      feature_level_type:
+        $ref: '#/FeatureLevelType'
 ExternalCreatedMessageWithContent:
   allOf:
-    - $ref: "#/CreatedMessageWithContent"
-    - type: object
-      properties:
-        feature_level_type:
-          $ref: "#/FeatureLevelType"
-      required:
-        - feature_level_type
+  - $ref: '#/CreatedMessageWithContent'
+  - required:
+    - feature_level_type
+    type: object
+    properties:
+      feature_level_type:
+        $ref: '#/FeatureLevelType'
 ExternalMessageResponseWithoutContent:
+  required:
+  - message
   type: object
   properties:
     message:
-      $ref: "#/ExternalCreatedMessageWithoutContent"
+      $ref: '#/ExternalCreatedMessageWithoutContent'
     notification:
-      $ref: "#/MessageResponseNotificationStatus"
+      $ref: '#/MessageResponseNotificationStatus'
     status:
-      $ref: "#/MessageStatusValue"
-    read_status: 
-      $ref: "#/ReadStatus"
-      description: |-
-        Describes whether a user has read the message or not
-        NOTE  : This value is only available for ADVANCED messages
-        NOTE 2: `UNAVAILABLE` will be returned if user revoked the permission to access to read status
+      $ref: '#/MessageStatusValue'
+    read_status:
+      $ref: '#/ReadStatus'
     payment_status:
-      $ref: "#/PaymentStatus"
-      description: |-
-        Describes the state of the related payment notice
-        NOTE: This value is only available for ADVANCED payment messages
-  required:
-    - message
+      $ref: '#/PaymentStatus'
 ExternalMessageResponseWithContent:
+  required:
+  - message
   type: object
   properties:
     message:
-      $ref: "#/ExternalCreatedMessageWithContent"
+      $ref: '#/ExternalCreatedMessageWithContent'
     notification:
-      $ref: "#/MessageResponseNotificationStatus"
+      $ref: '#/MessageResponseNotificationStatus'
     status:
-      $ref: "#/MessageStatusValue"
-    read_status: 
-      $ref: "#/ReadStatus"
-      description: |-
-        Describes whether a user has read the message or not
-        NOTE  : This value is only available for ADVANCED messages
-        NOTE 2: `UNAVAILABLE` will be returned if user revoked the permission to access to read status
+      $ref: '#/MessageStatusValue'
+    read_status:
+      $ref: '#/ReadStatus'
     payment_status:
-      $ref: "#/PaymentStatus"
-      description: |-
-        Describes the state of the related payment notice
-        NOTE: This value is only available for ADVANCED payment messages
-  required:
-    - message
-
+      $ref: '#/PaymentStatus'
 PublicMessage:
-  x-one-of: true
   allOf:
-    - $ref: "#/EnrichedMessage"
-    - $ref: "#/CreatedMessageWithoutContent" 
+  - $ref: '#/EnrichedMessage'
+  - $ref: '#/CreatedMessageWithoutContent'
+  x-one-of: true
 MessageResponseNotificationStatus:
   type: object
   properties:
     email:
-      $ref: "#/NotificationChannelStatusValue"
+      $ref: '#/NotificationChannelStatusValue'
     webhook:
-      $ref: "#/NotificationChannelStatusValue"
-
+      $ref: '#/NotificationChannelStatusValue'
 CreatedMessageWithContentAndEnrichedData:
   allOf:
-    - $ref: "#/CreatedMessageWithContent"
-    - $ref: "#/EnrichedMessage"
-
+  - $ref: '#/CreatedMessageWithContent'
+  - $ref: '#/EnrichedMessage'
 CreatedMessageWithContentResponse:
-  x-one-of: true
   allOf:
-    - $ref: "#/CreatedMessageWithContent"
-    - $ref: "#/CreatedMessageWithContentAndEnrichedData"
-
+  - $ref: '#/CreatedMessageWithContent'
+  - $ref: '#/CreatedMessageWithContentAndEnrichedData'
+  x-one-of: true
 InternalMessageResponseWithContent:
+  required:
+  - message
   type: object
   properties:
     message:
-      $ref: "#/CreatedMessageWithContentResponse"
+      $ref: '#/CreatedMessageWithContentResponse'
     status:
-      $ref: "#/MessageStatusValue"
-  required:
-    - message
-
+      $ref: '#/MessageStatusValue'
 MessageResponseWithContent:
+  required:
+  - message
   type: object
   properties:
     message:
-      $ref: "#/CreatedMessageWithContent"
+      $ref: '#/CreatedMessageWithContent'
     notification:
-      $ref: "#/MessageResponseNotificationStatus"
+      $ref: '#/MessageResponseNotificationStatus'
     status:
-      $ref: "#/MessageStatusValue"
-  required:
-    - message
+      $ref: '#/MessageStatusValue'
 LegalMessageWithContent:
   allOf:
-    - $ref: "#/CreatedMessageWithContent"
-    - type: object
-      properties:
-        legal_message:
-          $ref: "#/LegalMessage"
-      required:
-        - legal_message
+  - $ref: '#/CreatedMessageWithContent'
+  - required:
+    - legal_message
+    type: object
+    properties:
+      legal_message:
+        $ref: '#/LegalMessage'
 LegalMessageResponseWithContent:
   allOf:
-    - $ref: "#/MessageResponseWithContent"
-    - type: object
-      properties:
-        message:
-          $ref: "#/LegalMessageWithContent"
-      required:
-        - message
+  - $ref: '#/MessageResponseWithContent'
+  - required:
+    - message
+    type: object
+    properties:
+      message:
+        $ref: '#/LegalMessageWithContent'
 ThirdPartyMessageWithContent:
   allOf:
-    - $ref: "#/CreatedMessageWithContent"
-    - type: object
-      properties:
-        third_party_message:
-          $ref: "#/ThirdPartyMessage"
-      required:
-        - third_party_message
-ThirdPartyMessagePrecondition:
+  - $ref: '#/CreatedMessageWithContent'
+  - required:
+    - third_party_message
     type: object
-    title: ThirdPartyMessagePrecondition
-    description: Describes a message precondition
     properties:
-      title:
-        type: string
-      markdown:
-        type: string
-    required:
-      - title
-      - markdown
+      third_party_message:
+        $ref: '#/ThirdPartyMessage'
+ThirdPartyMessagePrecondition:
+  title: ThirdPartyMessagePrecondition
+  required:
+  - markdown
+  - title
+  type: object
+  properties:
+    title:
+      type: string
+    markdown:
+      type: string
+  description: Describes a message precondition
 MessageResponseWithoutContent:
+  required:
+  - message
   type: object
   properties:
     message:
-      $ref: "#/CreatedMessageWithoutContent"
+      $ref: '#/CreatedMessageWithoutContent'
     notification:
-      $ref: "#/MessageResponseNotificationStatus"
+      $ref: '#/MessageResponseNotificationStatus'
     status:
-      $ref: "#/MessageStatusValue"
-  required:
-    - message
+      $ref: '#/MessageStatusValue'
 FiscalCode:
   type: string
   description: User's fiscal code.
   format: FiscalCode
-  x-import: '@pagopa/ts-commons/lib/strings'
   example: SPNDNL80R13C555X
+  x-import: '@pagopa/ts-commons/lib/strings'
 PrescriberFiscalCode:
   type: string
   description: Fiscal code of the Doctor that made the prescription.
   format: FiscalCode
-  x-import: '@pagopa/ts-commons/lib/strings'
   example: TCNZRO80R13C555Y
+  x-import: '@pagopa/ts-commons/lib/strings'
 SandboxFiscalCode:
   type: string
-  description: |-
-    Sandbox user's fiscal code (used for development).
+  description: Sandbox user's fiscal code (used for development).
   format: SandboxFiscalCode
-  x-import: '@pagopa/ts-commons/lib/strings'
   example: SPNDNL80A13Y555X
+  x-import: '@pagopa/ts-commons/lib/strings'
 OrganizationFiscalCode:
   type: string
   description: Organization fiscal code.
   format: OrganizationFiscalCode
-  x-import: '@pagopa/ts-commons/lib/strings'
   example: "12345678901"
+  x-import: '@pagopa/ts-commons/lib/strings'
 MessageSubject:
+  maxLength: 120
+  minLength: 10
   type: string
   description: |-
     The (optional) subject of the message - note that only some notification
     channels support the display of a subject. When a subject is not provided,
     one gets generated from the client attributes.
-  minLength: 10
-  maxLength: 120
   example: Welcome new user !
 MessageBodyMarkdown:
+  maxLength: 10000
+  minLength: 80
   type: string
   description: |-
     The full version of the message, in plain text or Markdown format. The
     content of this field will be delivered to channels that don't have any
     limit in terms of content size (e.g. email, etc...).
-  minLength: 80
-  maxLength: 10000
   example: |-
     # This is a markdown header
 
@@ -639,105 +614,104 @@ MessageBodyMarkdown:
     Remember: this has to be a long text.
 PaginationResponse:
   type: object
-  description: Pagination response parameters.
   properties:
     prev:
       type: string
       description: Contains a value useful to get the previous page
-      example: "first_id_of_the_page"
+      example: first_id_of_the_page
     next:
       type: string
       description: Contains a value useful to get the next page
-      example: "last_id_of_the_page"  
+      example: last_id_of_the_page
+  description: Pagination response parameters.
 CreatedMessageWithoutContentCollection:
-  description: A collection of messages
+  required:
+  - items
   type: object
   properties:
     items:
       type: array
       items:
-        $ref: "#/CreatedMessageWithoutContent"
-  required:
-    - items
+        $ref: '#/CreatedMessageWithoutContent'
+  description: A collection of messages
 PaginatedCreatedMessageWithoutContentCollection:
   description: A paginated collection of messages
   allOf:
-    - $ref: "#/CreatedMessageWithoutContentCollection"
-    - $ref: "#/PaginationResponse"
+  - $ref: '#/CreatedMessageWithoutContentCollection'
+  - $ref: '#/PaginationResponse'
 PublicMessagesCollection:
-  description: A collection of messages
+  required:
+  - items
   type: object
   properties:
     items:
       type: array
       items:
-        $ref: "#/PublicMessage"
-  required:
-    - items
+        $ref: '#/PublicMessage'
+  description: A collection of messages
 PaginatedPublicMessagesCollection:
   description: A paginated collection of messages
   allOf:
-    - $ref: "#/PublicMessagesCollection"
-    - $ref: "#/PaginationResponse"
+  - $ref: '#/PublicMessagesCollection'
+  - $ref: '#/PaginationResponse'
 BlockedInboxOrChannels:
   type: object
   additionalProperties:
     type: array
     items:
-      $ref: "#/BlockedInboxOrChannel"
+      $ref: '#/BlockedInboxOrChannel'
   description: |-
     All the notification channels blocked by the user.
     Each channel is related to a specific service (sender).
 NewProfile:
+  required:
+  - is_email_validated
   type: object
+  properties:
+    email:
+      $ref: '#/EmailAddress'
+    is_email_validated:
+      $ref: '#/IsEmailValidated'
+    is_test_profile:
+      $ref: '#/IsTestProfile'
   description: |-
     Describes a new citizen's profile.
     Used for profile creation.
+Profile:
+  required:
+  - version
+  type: object
   properties:
     email:
-      $ref: "#/EmailAddress"
-    is_email_validated:
-      $ref: "#/IsEmailValidated"
-    is_test_profile:
-      $ref: "#/IsTestProfile"
-  required:
-    - is_email_validated
-Profile:
-  type: object
+      $ref: '#/EmailAddress'
+    service_preferences_settings:
+      $ref: '#/ServicePreferencesSettings'
+    blocked_inbox_or_channels:
+      $ref: '#/BlockedInboxOrChannels'
+    preferred_languages:
+      $ref: '#/PreferredLanguages'
+    is_inbox_enabled:
+      $ref: '#/IsInboxEnabled'
+    accepted_tos_version:
+      $ref: '#/AcceptedTosVersion'
+    is_webhook_enabled:
+      $ref: '#/IsWebhookEnabled'
+    is_email_enabled:
+      $ref: '#/IsEmailEnabled'
+    reminder_status:
+      $ref: '#/ReminderStatus'
+    last_app_version:
+      $ref: '#/AppVersion'
+    push_notifications_content_type:
+      $ref: '#/PushNotificationsContentType'
+    version:
+      type: integer
   description: |-
     Describes the citizen's profile.
     Used for profile update.
-  properties:
-    email:
-      $ref: "#/EmailAddress"
-    service_preferences_settings:
-      $ref: "#/ServicePreferencesSettings"
-    blocked_inbox_or_channels:
-      $ref: "#/BlockedInboxOrChannels"
-    preferred_languages:
-      $ref: "#/PreferredLanguages"
-    is_inbox_enabled:
-      $ref: "#/IsInboxEnabled"
-    accepted_tos_version:
-      $ref: "#/AcceptedTosVersion"
-    is_webhook_enabled:
-      $ref: "#/IsWebhookEnabled"
-    is_email_enabled:
-      $ref: "#/IsEmailEnabled"
-    reminder_status:
-      $ref: "#/ReminderStatus"
-    last_app_version:
-      $ref: "#/AppVersion"
-    push_notifications_content_type:
-      $ref: "#/PushNotificationsContentType"
-    version:
-      type: integer
-  required:
-    - version
 LimitedProfile:
-  description: |-
-    Describes the citizen's profile, mostly interesting for preferences
-    attributes.
+  required:
+  - sender_allowed
   type: object
   properties:
     sender_allowed:
@@ -746,522 +720,512 @@ LimitedProfile:
         True in case the service that made the request can send
         messages to the user identified by this profile (false otherwise).
     preferred_languages:
-      $ref: "#/PreferredLanguages"
-  required:
-    - sender_allowed
-ExtendedProfile:
+      $ref: '#/PreferredLanguages'
   description: |-
     Describes the citizen's profile, mostly interesting for preferences
     attributes.
+ExtendedProfile:
+  required:
+  - is_email_enabled
+  - is_email_validated
+  - is_inbox_enabled
+  - is_webhook_enabled
+  - service_preferences_settings
+  - version
   type: object
   properties:
     email:
-      $ref: "#/EmailAddress"
+      $ref: '#/EmailAddress'
     service_preferences_settings:
-      $ref: "#/ServicePreferencesSettings"
+      $ref: '#/ServicePreferencesSettings'
     blocked_inbox_or_channels:
-      $ref: "#/BlockedInboxOrChannels"
+      $ref: '#/BlockedInboxOrChannels'
     preferred_languages:
-      $ref: "#/PreferredLanguages"
+      $ref: '#/PreferredLanguages'
     is_inbox_enabled:
-      $ref: "#/IsInboxEnabled"
+      $ref: '#/IsInboxEnabled'
     accepted_tos_version:
-      $ref: "#/AcceptedTosVersion"
+      $ref: '#/AcceptedTosVersion'
     is_webhook_enabled:
-      $ref: "#/IsWebhookEnabled"
+      $ref: '#/IsWebhookEnabled'
     is_email_enabled:
-      $ref: "#/IsEmailEnabled"
+      $ref: '#/IsEmailEnabled'
     is_email_validated:
-      $ref: "#/IsEmailValidated"
+      $ref: '#/IsEmailValidated'
     reminder_status:
-      $ref: "#/ReminderStatus"
+      $ref: '#/ReminderStatus'
     is_test_profile:
-      $ref: "#/IsTestProfile"
+      $ref: '#/IsTestProfile'
     last_app_version:
-      $ref: "#/AppVersion"
+      $ref: '#/AppVersion'
     push_notifications_content_type:
-      $ref: "#/PushNotificationsContentType"
+      $ref: '#/PushNotificationsContentType'
     version:
       type: integer
-  required:
-    - is_email_enabled
-    - is_email_validated
-    - is_inbox_enabled
-    - is_webhook_enabled
-    - service_preferences_settings
-    - version
+  description: |-
+    Describes the citizen's profile, mostly interesting for preferences
+    attributes.
 IsEmailValidated:
   type: boolean
-  description: |-
-    True if the user email has been validated.
+  description: True if the user email has been validated.
 IsInboxEnabled:
   type: boolean
   description: |-
     True if the recipient of a message wants to store its content for
     later retrieval.
 AcceptedTosVersion:
-  type: number
   minimum: 1
-  description: |-
-    Version of latest terms of service accepted by the user.
+  type: number
+  description: Version of latest terms of service accepted by the user.
 IsWebhookEnabled:
   type: boolean
-  description: True if the recipient of a message wants to forward the notifications to the default webhook.
+  description: True if the recipient of a message wants to forward the notifications
+    to the default webhook.
 IsEmailEnabled:
   type: boolean
-  description: True if the recipient of a message wants to forward the notifications to his email address.
+  description: True if the recipient of a message wants to forward the notifications
+    to his email address.
 ReminderStatus:
   type: string
-  x-extensible-enum:
-    - ENABLED
-    - DISABLED
+  description: Api definition of reminder opt-in status
   example: ENABLED
-  description:
-    Api definition of reminder opt-in status
+  x-extensible-enum:
+  - ENABLED
+  - DISABLED
 IsTestProfile:
   type: boolean
-  description: True if the user's profile is only for test purpose. 
+  description: True if the user's profile is only for test purpose.
   default: false
 AppVersion:
+  pattern: ^((0|[1-9]\\d*)\\.){2}(0|[1-9]\\d*)(\\.(0|[1-9]\\d*)){0,1}$
   type: string
-  pattern: '^((0|[1-9]\\d*)\\.){2}(0|[1-9]\\d*)(\\.(0|[1-9]\\d*)){0,1}$'
   description: A string field in Semantic Versioning format
-  example: "1.10.11"
+  example: 1.10.11
 PushNotificationsContentType:
   type: string
-  x-extensible-enum:
-    - FULL
-    - ANONYMOUS
-  example: FULL
   description: |-
     This parameter specifies how a specific user wants to visualize push notifications.
     FULL leads to descriptive push notifications while ANONYMOUS leads to silent ones.
+  example: FULL
+  x-extensible-enum:
+  - FULL
+  - ANONYMOUS
 TimeToLiveSeconds:
+  maximum: 6.048E+5
+  minimum: 3.6E+3
   type: integer
-  default: 3600
-  minimum: 3600
-  maximum: 604800
   description: |-
     This parameter specifies for how long (in seconds) the system will
     try to deliver the message to the channels configured by the user.
   example: 3600
+  default: 3600
 HttpStatusCode:
+  maximum: 6E+2
+  exclusiveMaximum: true
+  minimum: 1E+2
   type: integer
-  format: int32
   description: |-
     The HTTP status code generated by the origin server for this occurrence
     of the problem.
-  minimum: 100
-  maximum: 600
-  exclusiveMaximum: true
+  format: int32
   example: 200
 NewMessageDefaultAddresses:
   type: object
+  properties:
+    email:
+      $ref: '#/EmailAddress'
   description: |-
     Default addresses for notifying the recipient of the message in case
     no address for the related channel is set in his profile.
-  properties:
-    email:
-      $ref: "#/EmailAddress"
 EmailAddress:
   type: string
   format: email
   example: foobar@example.com
 PreferredLanguage:
   type: string
-  x-extensible-enum:
-    - it_IT
-    - en_GB
-    - es_ES
-    - de_DE
-    - fr_FR
   example: it_IT
+  x-extensible-enum:
+  - it_IT
+  - en_GB
+  - es_ES
+  - de_DE
+  - fr_FR
 PreferredLanguages:
   type: array
-  items:
-    $ref: "#/PreferredLanguage"
   description: |-
     Indicates the User's preferred written or spoken languages in order
     of preference. Generally used for selecting a localized User interface. Valid
     values are concatenation of the ISO 639-1 two letter language code, an underscore,
     and the ISO 3166-1 2 letter country code; e.g., 'en_US' specifies the language
     English and country US.
+  items:
+    $ref: '#/PreferredLanguage'
 SenderMetadata:
   title: Sender metadata
-  description: Metadata associated to a sender (service).
+  required:
+  - department_name
+  - organization_name
+  - service_name
   type: object
   properties:
     service_name:
-      $ref: "#/ServiceName"
+      $ref: '#/ServiceName'
     organization_name:
-      $ref: "#/OrganizationName"
+      $ref: '#/OrganizationName'
     department_name:
-      $ref: "#/DepartmentName"
-  required:
-    - service_name
-    - organization_name
-    - department_name
+      $ref: '#/DepartmentName'
+  description: Metadata associated to a sender (service).
 ServicePayload:
   description: A payload used to create/update a service for a user.
-  x-one-of: true
   allOf:
-   - $ref: "#/VisibleServicePayload"
-   - $ref: "#/HiddenServicePayload"
+  - $ref: '#/VisibleServicePayload'
+  - $ref: '#/HiddenServicePayload'
+  x-one-of: true
 ExtendedServicePayload:
   allOf:
-    - $ref: "#/ServicePayload"
-    - type: object
-      properties:
-        service_metadata:
-          $ref: "#/ServiceMetadata"
+  - $ref: '#/ServicePayload'
+  - type: object
+    properties:
+      service_metadata:
+        $ref: '#/ServiceMetadata'
 CommonServicePayload:
-  description: Common properties for a ServicePayload
+  required:
+  - authorized_cidrs
+  - department_name
+  - organization_fiscal_code
+  - organization_name
+  - service_name
   type: object
   properties:
     service_name:
-      $ref: "#/ServiceName"
+      $ref: '#/ServiceName'
     department_name:
-      $ref: "#/DepartmentName"
+      $ref: '#/DepartmentName'
     organization_name:
-      $ref: "#/OrganizationName"
+      $ref: '#/OrganizationName'
     organization_fiscal_code:
-      $ref: "#/OrganizationFiscalCode"
+      $ref: '#/OrganizationFiscalCode'
     authorized_cidrs:
+      type: array
       description: |-
         Allowed source IPs or CIDRs for this service.
         When empty, every IP address it's authorized to call the IO API on behalf of the service.
-      type: array
       items:
-        $ref: "#/CIDR"
+        $ref: '#/CIDR'
     version:
       type: integer
     require_secure_channels:
       type: boolean
+      description: When true, messages won't trigger email notifications (only
+        push).
       default: false
-      description: |-
-        When true, messages won't trigger email notifications (only push).
-  required:
-    - service_name
-    - department_name
-    - organization_name
-    - organization_fiscal_code
-    - authorized_cidrs
+  description: Common properties for a ServicePayload
 VisibleServicePayload:
-  description: A payload used to create/update a service that appears in the service list.
+  description: A payload used to create/update a service that appears in the service
+    list.
   allOf:
-  - $ref: "#/CommonServicePayload"
-  - type: object
+  - $ref: '#/CommonServicePayload'
+  - required:
+    - is_visible
+    - service_metadata
+    type: object
     properties:
       is_visible:
         type: boolean
-        enum:
-          - true
-        description: |-
-          It indicates that service appears in the service list
+        description: It indicates that service appears in the service list
       service_metadata:
-        description: |-
-          That service can't handle some ServiceMetadata fields (es. category)
-        $ref: "#/CommonServiceMetadata"
-    required:
-      - is_visible
-      - service_metadata
+        $ref: '#/CommonServiceMetadata'
 HiddenServicePayload:
   description: A payload used to create/update a service that is hidden.
   allOf:
-  - $ref: "#/CommonServicePayload"
+  - $ref: '#/CommonServicePayload'
   - type: object
     properties:
       is_visible:
         type: boolean
+        description: It indicates that service is hidden
         default: false
         enum:
           - false
-        description: |-
-          It indicates that service is hidden
       service_metadata:
-        description: |-
-          That service can't handle some ServiceMetadata fields (es. category)
-        $ref: "#/CommonServiceMetadata"
-Service: 
+        $ref: '#/CommonServiceMetadata'
+Service:
   description: A service tied to user's subscription.
   allOf:
-  - $ref: "#/ExtendedServicePayload"
-  - type: object
+  - $ref: '#/ExtendedServicePayload'
+  - required:
+    - authorized_recipients
+    - service_id
+    type: object
     properties:
       id:
         type: string
       service_id:
-        $ref: "#/ServiceId"
+        $ref: '#/ServiceId'
       authorized_recipients:
+        type: array
         description: |-
           If non empty, the service will be able
           to send messages only to these fiscal codes.
-        type: array
         items:
-          $ref: "#/FiscalCode"
+          $ref: '#/FiscalCode'
       max_allowed_payment_amount:
-        $ref: "#/MaxAllowedPaymentAmount"
-    required:
-      - service_id
-      - authorized_recipients
+        $ref: '#/MaxAllowedPaymentAmount'
 CommonServiceMetadata:
+  required:
+  - scope
   type: object
-  description: A set of metadata properties related to this service.
   properties:
     description:
-      type: string
       minLength: 1
+      type: string
     web_url:
-      type: string
       minLength: 1
+      type: string
     app_ios:
-      type: string
       minLength: 1
+      type: string
     app_android:
-      type: string
       minLength: 1
+      type: string
     tos_url:
-      type: string
       minLength: 1
+      type: string
     privacy_url:
-      type: string
       minLength: 1
+      type: string
     address:
-      type: string
       minLength: 1
+      type: string
     phone:
-      type: string
       minLength: 1
+      type: string
     email:
-      type: string
       minLength: 1
+      type: string
     pec:
-      type: string
       minLength: 1
+      type: string
     cta:
-      type: string
       minLength: 1
-    token_name: 
       type: string
+    token_name:
       minLength: 1
+      type: string
     support_url:
-      type: string
       minLength: 1
+      type: string
     scope:
-      $ref: "#/ServiceScope"
-  required:
-    - scope
+      $ref: '#/ServiceScope'
+  description: A set of metadata properties related to this service.
 StandardServiceMetadata:
   allOf:
-    - $ref: "#/CommonServiceMetadata"
-    - type: object
-      properties:
-        category:
-          $ref: "#/StandardServiceCategory"
-      required:
-        - category
+  - $ref: '#/CommonServiceMetadata'
+  - required:
+    - category
+    type: object
+    properties:
+      category:
+        $ref: '#/StandardServiceCategory'
 SpecialServiceMetadata:
   allOf:
-    - $ref: "#/CommonServiceMetadata"
-    - type: object
-      properties:
-        category:
-          $ref: "#/SpecialServiceCategory"
-        custom_special_flow:
-          type: string
-          minLength: 1
-      required:
-        - category
+  - $ref: '#/CommonServiceMetadata'
+  - required:
+    - category
+    type: object
+    properties:
+      category:
+        $ref: '#/SpecialServiceCategory'
+      custom_special_flow:
+        minLength: 1
+        type: string
 ServiceMetadata:
-  x-one-of: true
   allOf:
-    - $ref: "#/StandardServiceMetadata"
-    - $ref: "#/SpecialServiceMetadata"
-    - $ref: "#/CommonServiceMetadata"
+  - $ref: '#/StandardServiceMetadata'
+  - $ref: '#/SpecialServiceMetadata'
+  - $ref: '#/CommonServiceMetadata'
+  x-one-of: true
 SpecialServiceCategory:
   type: string
   x-extensible-enum:
-    - SPECIAL
+  - SPECIAL
 StandardServiceCategory:
   type: string
   x-extensible-enum:
-    - STANDARD
+  - STANDARD
 ServiceCategory:
-  x-one-of: true
   allOf:
-    - $ref: "#/SpecialServiceCategory"
-    - $ref: "#/StandardServiceCategory"
+  - $ref: '#/SpecialServiceCategory'
+  - $ref: '#/StandardServiceCategory'
+  x-one-of: true
 ServiceScope:
   type: string
   x-extensible-enum:
-    - NATIONAL
-    - LOCAL
+  - NATIONAL
+  - LOCAL
 ServiceTupleCollection:
-  description: A collection of services tuples (service and version)
+  required:
+  - items
   type: object
   properties:
     items:
       type: array
       items:
-        $ref: "#/ServiceTuple"
-  required:
-    - items
+        $ref: '#/ServiceTuple'
+  description: A collection of services tuples (service and version)
 PaginatedServiceTupleCollection:
   description: A paginated collection of services tuples
   allOf:
-    - $ref: "#/ServiceTupleCollection"
-    - $ref: "#/PaginationResponse"
+  - $ref: '#/ServiceTupleCollection'
+  - $ref: '#/PaginationResponse'
 ServicePublic:
   title: Service (public)
-  description: A Service associated to an user's subscription.
+  required:
+  - department_name
+  - organization_fiscal_code
+  - organization_name
+  - service_id
+  - service_name
+  - version
   type: object
   properties:
     service_id:
-      $ref: "#/ServiceId"
+      $ref: '#/ServiceId'
     service_name:
-      $ref: "#/ServiceName"
+      $ref: '#/ServiceName'
     organization_name:
-      $ref: "#/OrganizationName"
+      $ref: '#/OrganizationName'
     department_name:
-      $ref: "#/DepartmentName"
+      $ref: '#/DepartmentName'
     organization_fiscal_code:
-      $ref: "#/OrganizationFiscalCode"
+      $ref: '#/OrganizationFiscalCode'
     available_notification_channels:
-      $ref: "#/AvailableNotificationChannels"
+      $ref: '#/AvailableNotificationChannels'
     version:
       type: integer
     service_metadata:
-      $ref: "#/ServiceMetadata"
-  required:
-    - service_id
-    - service_name
-    - organization_name
-    - department_name
-    - organization_fiscal_code
-    - version
+      $ref: '#/ServiceMetadata'
+  description: A Service associated to an user's subscription.
 ServiceId:
+  minLength: 1
   type: string
   description: |-
     The ID of the Service. Equals the subscriptionId of a registered
     API user.
-  minLength: 1
 ServiceTuple:
-  description: Service identifier and version used to return list of services.
+  required:
+  - service_id
+  - version
   type: object
   properties:
     service_id:
-      $ref: "#/ServiceId"
+      $ref: '#/ServiceId'
     scope:
-      $ref: "#/ServiceScope"
+      $ref: '#/ServiceScope'
     version:
       type: integer
-  required:
-    - service_id
-    - version
+  description: Service identifier and version used to return list of services.
 UserDataProcessing:
+  required:
+  - choice
+  - status
+  - version
   type: object
-  description: |-
-    A representation of a single user data processing request
   properties:
     choice:
-      $ref: "#/UserDataProcessingChoice"
+      $ref: '#/UserDataProcessingChoice'
     status:
-      $ref: "#/UserDataProcessingStatus"
+      $ref: '#/UserDataProcessingStatus'
     created_at:
-      $ref: "#/Timestamp"
+      $ref: '#/Timestamp'
     updated_at:
-      $ref: "#/Timestamp"
+      $ref: '#/Timestamp'
     version:
       type: integer
-  required:
-    - choice
-    - status
-    - version
+  description: A representation of a single user data processing request
 ServiceName:
+  minLength: 1
   type: string
   description: The name of the service. Will be added to the content of sent messages.
-  minLength: 1
 OrganizationName:
+  minLength: 1
   type: string
   description: |-
     The organization that runs the service. Will be added to the content
     of sent messages to identify the sender.
-  minLength: 1
 DepartmentName:
+  minLength: 1
   type: string
   description: |-
     The department inside the organization that runs the service. Will
     be added to the content of sent messages.
-  minLength: 1
 AvailableNotificationChannels:
-  description: |-
-    All the notification channels available for a service.
   type: array
+  description: All the notification channels available for a service.
   items:
-    $ref: "#/NotificationChannel"
+    $ref: '#/NotificationChannel'
 CIDR:
+  pattern: ^([0-9]{1,3}[.]){3}[0-9]{1,3}(/([0-9]|[1-2][0-9]|3[0-2]))?$
   type: string
   description: Describes a single IP or a range of IPs.
-  pattern: "^([0-9]{1,3}[.]){3}[0-9]{1,3}(/([0-9]|[1-2][0-9]|3[0-2]))?$"
 Timestamp:
   type: string
-  format: UTCISODateFromString
   description: A date-time field in ISO-8601 format and UTC timezone.
+  format: UTCISODateFromString
+  example: 2018-10-13T00:00:00.000Z
   x-import: '@pagopa/ts-commons/lib/dates'
-  example: "2018-10-13T00:00:00.000Z"
 HttpsUrl:
+  pattern: ^https://[-a-zA-Z0-9@:%._+~#=]{2,256}[.][a-z]{2,6}\\b([-a-zA-Z0-9@:%_+.~#?&/=]*)$
   type: string
-  format: uri
   description: An http(s) url.
-  pattern: "^https://[-a-zA-Z0-9@:%._+~#=]{2,256}[.][a-z]{2,6}\\\\b([-a-zA-Z0-9@:%_+.~#?&/=]*)$"
+  format: uri
 UserDataProcessingStatus:
   type: string
-  description: |-
-    The status of a user data processing request
-  enum:
-    - PENDING
-    - WIP
-    - CLOSED
-    - FAILED
-    - ABORTED
+  description: The status of a user data processing request
   example: PENDING
+  enum:
+  - PENDING
+  - WIP
+  - CLOSED
+  - FAILED
+  - ABORTED
 UserDataProcessingChoice:
   type: string
-  description: |-
-    User's choice to delete or download his own data.
-  enum:
-    - DOWNLOAD
-    - DELETE
+  description: User's choice to delete or download his own data.
   example: DOWNLOAD
+  enum:
+  - DOWNLOAD
+  - DELETE
 UserDataProcessingChoiceRequest:
+  required:
+  - choice
   type: object
-  description: |-
-    A request wrapper for User data processing choice
   properties:
     choice:
-      $ref: "#/UserDataProcessingChoice"
-  required:
-    - choice
+      $ref: '#/UserDataProcessingChoice'
+  description: A request wrapper for User data processing choice
 ServicePreferencesSettings:
-  description: |-
-    Describes the citizen's profile, mostly interesting for preferences
-    attributes.
+  required:
+  - mode
   type: object
   properties:
     mode:
-      $ref: "#/ServicesPreferencesMode"
-  required:
-    - mode
+      $ref: '#/ServicesPreferencesMode'
+  description: |-
+    Describes the citizen's profile, mostly interesting for preferences
+    attributes.
 ServicesPreferencesMode:
   type: string
   enum:
-    - LEGACY
-    - AUTO
-    - MANUAL
+  - LEGACY
+  - AUTO
+  - MANUAL
 BasicServicePreference:
-  description: |-
-    Define a set of required preferences of a Citizen for a given Service.
-    It's needed by Citizens to express how they want Services to get in touch with them.
+  required:
+  - is_email_enabled
+  - is_inbox_enabled
+  - is_webhook_enabled
+  - settings_version
   type: object
   properties:
     is_email_enabled:
@@ -1271,119 +1235,122 @@ BasicServicePreference:
     is_webhook_enabled:
       type: boolean
     settings_version:
-      type: integer
       minimum: 0
-  required:
-    - is_email_enabled
-    - is_inbox_enabled
-    - is_webhook_enabled
-    - settings_version
+      type: integer
+  description: |-
+    Define a set of required preferences of a Citizen for a given Service.
+    It's needed by Citizens to express how they want Services to get in touch with them.
 ServicePreference:
   description: |-
     Return the set of preferences of a Citizen for a given Service.
     It's needed by Citizens to read previoulsy expressed preferences.
   allOf:
-    - $ref: "#/BasicServicePreference"
-    - type: object
-      properties:
-        can_access_message_read_status:
-          type: boolean
-      required:
-        - can_access_message_read_status
+  - $ref: '#/BasicServicePreference'
+  - required:
+    - can_access_message_read_status
+    type: object
+    properties:
+      can_access_message_read_status:
+        type: boolean
 UpsertServicePreference:
   description: |-
     Define a set of preferences of a Citizen for a given Service.
     Extends the BasicServicePreference with new optional preferences for backward compatibility.
   allOf:
-    - $ref: "#/BasicServicePreference"
-    - type: object
-      properties:
-        can_access_message_read_status:
-          type: boolean
+  - $ref: '#/BasicServicePreference'
+  - type: object
+    properties:
+      can_access_message_read_status:
+        type: boolean
 ActivationStatus:
   type: string
   x-extensible-enum:
-    - ACTIVE
-    - INACTIVE
-    - PENDING
+  - ACTIVE
+  - INACTIVE
+  - PENDING
 Activation:
+  required:
+  - fiscal_code
+  - service_id
+  - status
+  - version
   type: object
   properties:
     service_id:
-      $ref: "#/ServiceId"
+      $ref: '#/ServiceId'
     fiscal_code:
-      $ref: "#/FiscalCode"
+      $ref: '#/FiscalCode'
     status:
-      $ref: "#/ActivationStatus"
+      $ref: '#/ActivationStatus'
     version:
-      type: integer
       minimum: 0
-  required:
-    - service_id
-    - fiscal_code
-    - status
-    - version
+      type: integer
 ActivationPayload:
+  required:
+  - fiscal_code
+  - status
   type: object
   properties:
     fiscal_code:
-      $ref: "#/FiscalCode"
+      $ref: '#/FiscalCode'
     status:
-      $ref: "#/ActivationStatus"
-  required:
-    - fiscal_code
-    - status
+      $ref: '#/ActivationStatus'
 MessageCategory:
-  x-one-of: true
   allOf:
-    - $ref: "#/MessageCategoryPayment"
-    - $ref: "#/MessageCategoryBase"
-    - $ref: "#/MessageCategoryPN"
+  - $ref: '#/MessageCategoryPayment'
+  - $ref: '#/MessageCategoryBase'
+  - $ref: '#/MessageCategoryPN'
+  x-one-of: true
 MessageCategoryBase:
+  required:
+  - tag
   type: object
   properties:
     tag:
       type: string
       enum:
-        - LEGAL_MESSAGE
-        - EU_COVID_CERT
-        - GENERIC
-  required:
-    - tag
+      - LEGAL_MESSAGE
+      - EU_COVID_CERT
+      - GENERIC
 MessageCategoryPayment:
+  required:
+  - rptId
+  - tag
   type: object
-  properties: 
+  properties:
     tag:
       type: string
       enum:
-        - PAYMENT
+      - PAYMENT
     rptId:
       type: string
-  required:
-    - tag
-    - rptId
 MessageCategoryPN:
   allOf:
-    - $ref: "#/ThirdPartyData"
-    - type: object
-      properties: 
-        tag:
-          type: string
-          enum:
-            - PN
-      required:
-        - tag
+  - $ref: '#/ThirdPartyData'
+  - required:
+    - tag
+    type: object
+    properties:
+      tag:
+        type: string
+        enum:
+        - PN
 LegalMessage:
+  required:
+  - cert_data
+  - eml
   type: object
   properties:
-    eml: 
-      $ref: "#/LegalMessageEml"
+    eml:
+      $ref: '#/LegalMessageEml'
     cert_data:
-      $ref: "#/LegalMessageCertData"
-  required: 
-    - eml
-    - cert_data
+      $ref: '#/LegalMessageCertData'
 LegalMessageEml:
+  required:
+  - attachments
+  - html_content
+  - plain_text_content
+  - subject
   type: object
   properties:
     subject:
@@ -1396,63 +1363,62 @@ LegalMessageEml:
       type: array
       items:
         $ref: '#/Attachment'
-  required:
-    - subject
-    - plain_text_content
-    - html_content
-    - attachments
 LegalMessageCertData:
+  required:
+  - data
+  - header
   type: object
   properties:
     header:
-      $ref: "#/CertDataHeader"
+      $ref: '#/CertDataHeader'
     data:
-      $ref: "#/CertData"
-  required:
-    - header
-    - data
+      $ref: '#/CertData'
 CertData:
+  required:
+  - envelope_id
+  - msg_id
+  - receipt_type
+  - sender_provider
+  - timestamp
   type: object
   properties:
     sender_provider:
-      type: string
       minLength: 1
+      type: string
     timestamp:
       type: string
       format: date-time
     envelope_id:
-      type: string
       minLength: 1
+      type: string
     msg_id:
-      type: string
       minLength: 1
+      type: string
     receipt_type:
       type: string
-  required:
-    - sender_provider
-    - timestamp
-    - envelope_id
-    - msg_id
-    - receipt_type
 CertDataHeader:
+  required:
+  - recipients
+  - sender
   type: object
   properties:
     sender:
-      type: string
       minLength: 1
+      type: string
     recipients:
-      type: string
       minLength: 1
+      type: string
     replies:
-      type: string
       minLength: 1
+      type: string
     object:
-      type: string
       minLength: 1
-  required:
-    - sender
-    - recipients
+      type: string
 Attachment:
+  required:
+  - content_type
+  - id
+  - name
   type: object
   properties:
     id:
@@ -1463,11 +1429,11 @@ Attachment:
       type: string
     url:
       type: string
-  required:
-    - id
-    - content_type
-    - name
 ImpersonatedService:
+  required:
+  - service_id
+  - user_email
+  - user_groups
   type: object
   properties:
     service_id:
@@ -1476,91 +1442,89 @@ ImpersonatedService:
       type: string
     user_email:
       type: string
-  required:
-    - service_id
-    - user_groups
-    - user_email
 ThirdPartyMessage:
   type: object
   properties:
-    attachments: 
+    attachments:
       type: array
-      items: 
-        $ref: "#/ThirdPartyAttachment"
-    # We expects additional properties to be free-form objects
+      items:
+        $ref: '#/ThirdPartyAttachment'
     details:
       type: object
       additionalProperties: true
 ThirdPartyAttachment:
+  required:
+  - id
+  - url
   type: object
   properties:
-      id:
-        type: string
-        minLength: 1
-      content_type:
-        type: string
-        minLength: 1
-      name:
-        type: string
-        minLength: 1
-      url:
-        type: string
-        minLength: 1
-      category:
-        type: string
-        default: DOCUMENT
-  required:
-    - id
-    - url
+    id:
+      minLength: 1
+      type: string
+    content_type:
+      minLength: 1
+      type: string
+    name:
+      minLength: 1
+      type: string
+    url:
+      minLength: 1
+      type: string
+    category:
+      type: string
+      default: DOCUMENT
 MessageStatusReadingChange:
+  required:
+  - change_type
+  - is_read
   type: object
   properties:
     change_type:
       type: string
-      enum: 
-        - reading
+      enum:
+      - reading
     is_read:
       type: boolean
       enum:
         - true
-  required:
-    - change_type
-    - is_read
 MessageStatusArchivingChange:
+  required:
+  - change_type
+  - is_archived
   type: object
   properties:
     change_type:
       type: string
-      enum: 
-        - archiving
+      enum:
+      - archiving
     is_archived:
       type: boolean
-  required:
-    - change_type
-    - is_archived
 MessageStatusBulkChange:
+  required:
+  - change_type
+  - is_archived
   type: object
   properties:
     change_type:
       type: string
-      enum: 
-        - bulk
+      enum:
+      - bulk
     is_archived:
       type: boolean
     is_read:
       type: boolean
       enum:
         - true
-  required:
-    - change_type
-    - is_archived
 MessageStatusChange:
-  x-one-of: true
   allOf:
-    - $ref: "#/MessageStatusReadingChange"
-    - $ref: "#/MessageStatusArchivingChange"
-    - $ref: "#/MessageStatusBulkChange"
+  - $ref: '#/MessageStatusReadingChange'
+  - $ref: '#/MessageStatusArchivingChange'
+  - $ref: '#/MessageStatusBulkChange'
+  x-one-of: true
 MessageStatusAttributes:
+  required:
+  - is_archived
+  - is_read
   type: object
   properties:
     is_read:
@@ -1569,34 +1533,29 @@ MessageStatusAttributes:
     is_archived:
       type: boolean
       default: false
-  required:
-    - is_read
-    - is_archived
 PaymentStatus:
   type: string
-  description: |-
-    Payment status enumeration
-  x-extensible-enum:
-    - PAID
-    - NOT_PAID
+  description: Payment status enumeration
   example: NOT_PAID
+  x-extensible-enum:
+  - PAID
+  - NOT_PAID
 ReadStatus:
   type: string
-  x-extensible-enum:
-    - UNAVAILABLE
-    - UNREAD
-    - READ
+  description: Api definition of read status enumeration
   example: UNREAD
-  description:
-    Api definition of read status enumeration
+  x-extensible-enum:
+  - UNAVAILABLE
+  - UNREAD
+  - READ
 Ulid:
   type: string
   description: Ulid string.
   format: Ulid
-  x-import: '@pagopa/ts-commons/lib/strings'
   example: 01ARZ3NDEKTSV4RRFFQ69G5FAV
+  x-import: '@pagopa/ts-commons/lib/strings'
 PathTraversalSafePathParam:
-  description:
-    A non empty string that is safe to be used in an url parameter to avoid path traversal attacks
+  pattern: ^[0-9a-zA-Z\-\._\/+]+$
   type: string
-  pattern: "^[0-9a-zA-Z\\-\\._\\/+]+$"
+  description: A non empty string that is safe to be used in an url parameter
+    to avoid path traversal attacks
