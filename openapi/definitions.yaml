@@ -773,6 +773,8 @@ ExtendedProfile:
       $ref: "#/IsEmailEnabled"
     is_email_validated:
       $ref: "#/IsEmailValidated"
+    is_email_already_taken:
+      $ref: "#/IsEmailAlreadyTaken"
     reminder_status:
       $ref: "#/ReminderStatus"
     is_test_profile:
@@ -786,6 +788,7 @@ ExtendedProfile:
   required:
     - is_email_enabled
     - is_email_validated
+    - is_email_already_taken
     - is_inbox_enabled
     - is_webhook_enabled
     - service_preferences_settings
@@ -794,6 +797,11 @@ IsEmailValidated:
   type: boolean
   description: |-
     True if the user email has been validated.
+IsEmailAlreadyTaken:
+  type: boolean
+  description: |-
+    True if the user email has been validated by another user.
+    If so, the user must provide a new email.
 IsInboxEnabled:
   type: boolean
   description: |-
