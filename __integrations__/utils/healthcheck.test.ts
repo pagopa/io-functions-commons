@@ -10,6 +10,6 @@ describe("checkAzureCosmosDbHealth", () => {
 
   it("should not pass on a wrong db url", async () => {
     const result = await checkAzureCosmosDbHealth("https://wrong-url", key)();
-    expect(E.isRight(result)).toBe(true);
+    expect(E.isRight(result)).toBe(false);
   });
 });
