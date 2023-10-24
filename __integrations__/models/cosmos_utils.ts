@@ -24,8 +24,8 @@ import {
 } from "../../src/utils/cosmosdb_model";
 import { getRequiredStringEnv } from "../../src/utils/env";
 
-const endpoint = getRequiredStringEnv("COSMOSDB_URI");
-const key = getRequiredStringEnv("COSMOSDB_KEY");
+export const endpoint = getRequiredStringEnv("COSMOSDB_URI");
+export const key = getRequiredStringEnv("COSMOSDB_KEY");
 const storageConnectionString = getRequiredStringEnv("STORAGE_CONN_STRING");
 
 const client = new CosmosClient({ endpoint, key });
@@ -33,7 +33,7 @@ export const cosmosDatabaseName = getRequiredStringEnv(
   "COSMOSDB_DATABASE_NAME"
 );
 
-const createDatabase = (dbName: string): TaskEither<CosmosErrors, Database> =>
+export const createDatabase = (dbName: string): TaskEither<CosmosErrors, Database> =>
   pipe(
     tryCatch<
       CosmosErrors,
