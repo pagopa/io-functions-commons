@@ -799,6 +799,7 @@ IsEmailValidated:
     True if the user email has been validated.
 IsEmailAlreadyTaken:
   type: boolean
+  default: false
   description: |-
     True if the user email has been validated by another user.
     If so, the user must provide a new email.
