@@ -101,8 +101,7 @@ stages:
                 CHANGELOG.md
                 package.json
                 dist/**/*
-                openapi/definitions.yaml
-                openapi/lollipop_definitions.yaml
+                openapi/*.yaml
             displayName: 'Copy bundle files'
           
           - publish: $(System.DefaultWorkingDirectory)/bundle
