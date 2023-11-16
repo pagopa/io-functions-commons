@@ -1625,3 +1625,6 @@ PathTraversalSafePathParam:
     A non empty string that is safe to be used in an url parameter to avoid path traversal attacks
   type: string
   pattern: "^[0-9a-zA-Z\\-\\._\\/+]+$"
+UnlockCode:
+  type: string
+  pattern: ^\\d{9}$
