@@ -229,6 +229,9 @@ ThirdPartyData:
         - ALWAYS
         - ONCE
         - NEVER
+    has_remote_content:
+      type: boolean
+      default: false
     summary:
       type: string
       minLength: 1

@@ -33,9 +33,10 @@ import { Change_typeEnum as ReadingChangeType } from "../../generated/definition
 import { Change_typeEnum as ArchinvingChangeType } from "../../generated/definitions/MessageStatusArchivingChange";
 import { FeatureLevelTypeEnum } from "../../generated/definitions/FeatureLevelType";
 import { ThirdPartyMessage } from "../../generated/definitions/ThirdPartyMessage";
-import { Semver } from "@pagopa/ts-commons/lib/strings";
+import { NonEmptyString, Semver } from "@pagopa/ts-commons/lib/strings";
 
 import { AppVersion } from "../../generated/definitions/AppVersion";
+import { ThirdPartyData } from "../../generated/definitions/ThirdPartyData";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -226,6 +227,8 @@ const aContentWithThirdPartyData = {
     original_sender: "Comune di Mêlée"
   }
 };
+
+const aThirdPartyId = "aThirdPartyId" as NonEmptyString
 
 const aPayee: Payee = { fiscal_code: anOrganizationFiscalCode };
 
@@ -573,7 +576,8 @@ describe("Type definition", () => {
             ...aContentWithThirdPartyData,
             third_party_data: {
               ...aContentWithThirdPartyData.third_party_data,
-              has_attachments: false
+              has_attachments: false,
+              has_remote_content: false
             }
           })
       )
@@ -962,6 +966,33 @@ describe("ThirdPartyMessage", () => {
     );
   });
 });
+
+describe("ThirdPartyData", () => {
+  it("should decode a ThirdPartyData adding has_attachments and has_remote_content to false if not provided", () => {
+    const aThirdPartyData = {id: aThirdPartyId}
+
+    const decoded = ThirdPartyData.decode(aThirdPartyData);
+
+    expect(decoded).toMatchObject(expect.objectContaining({_tag: "Right", right:{
+      id: aThirdPartyId,
+      has_attachments: false,
+      has_remote_content: false
+    }}))
+  })
+
+  it("should decode a ThirdPartyData with has_remote_content true if provided with true", () => {
+    const aThirdPartyData = {id: aThirdPartyId, has_remote_content: true}
+
+    const decoded = ThirdPartyData.decode(aThirdPartyData);
+
+    expect(decoded).toMatchObject(expect.objectContaining({_tag: "Right", right:{
+      id: aThirdPartyId,
+      has_attachments: false,
+      has_remote_content: true
+    }}))
+  })
+
+})
 
 /**
  * Semver type and AppVersion definition compatibility tests
