@@ -194,6 +194,16 @@ LegalData:
     - sender_mail_from
     - has_attachment
     - message_unique_id
+RemoteContentDetails:
+  type: object
+  properties:
+    markdown:
+      $ref: "#/MessageBodyMarkdown"
+    subject:
+      $ref: "#/MessageSubject"
+  required:
+    - markdown
+    - subject
 ThirdPartyData:
   type: object
   description: |-
