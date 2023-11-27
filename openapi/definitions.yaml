@@ -223,6 +223,9 @@ ThirdPartyData:
     has_attachments:
       type: boolean
       default: false
+    has_remote_content:
+      type: boolean
+      default: false
     has_precondition:
       type: string
       x-extensible-enum:
