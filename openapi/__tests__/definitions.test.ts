@@ -33,9 +33,10 @@ import { Change_typeEnum as ReadingChangeType } from "../../generated/definition
 import { Change_typeEnum as ArchinvingChangeType } from "../../generated/definitions/MessageStatusArchivingChange";
 import { FeatureLevelTypeEnum } from "../../generated/definitions/FeatureLevelType";
 import { ThirdPartyMessage } from "../../generated/definitions/ThirdPartyMessage";
-import { Semver } from "@pagopa/ts-commons/lib/strings";
+import { NonEmptyString, Semver } from "@pagopa/ts-commons/lib/strings";
 
 import { AppVersion } from "../../generated/definitions/AppVersion";
+import { ThirdPartyData } from "../../generated/definitions/ThirdPartyData";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -228,6 +229,8 @@ const aContentWithThirdPartyData = {
 };
 
 const aPayee: Payee = { fiscal_code: anOrganizationFiscalCode };
+
+const aThirdPartyId = "aThirdPartyId" as NonEmptyString;
 
 describe("NewMessage definition", () => {
   it("should decode STANDARD NewMessage with content but without payment data", () => {
@@ -573,7 +576,8 @@ describe("Type definition", () => {
             ...aContentWithThirdPartyData,
             third_party_data: {
               ...aContentWithThirdPartyData.third_party_data,
-              has_attachments: false
+              has_attachments: false,
+              has_remote_content: false
             }
           })
       )
@@ -949,7 +953,12 @@ describe("ThirdPartyMessage", () => {
     const aThirdPartyMessage = {
       attachments: [
         { id: "anId", url: "an/Url", category: "DOCUMENT" },
-        { id: "anotherId", url: "another/Url", name: "anotherName", category: "DOCUMENT" }
+        {
+          id: "anotherId",
+          url: "another/Url",
+          name: "anotherName",
+          category: "DOCUMENT"
+        }
       ]
     };
 
@@ -959,6 +968,42 @@ describe("ThirdPartyMessage", () => {
       decoded,
       E.map(d => expect(d).toEqual(aThirdPartyMessage)),
       E.mapLeft(_ => fail())
+    );
+  });
+});
+
+describe("ThirdPartyData", () => {
+  it("should decode a ThirdPartyData adding has_attachments and has_remote_content to false if not provided", () => {
+    const aThirdPartyData = { id: aThirdPartyId };
+
+    const decoded = ThirdPartyData.decode(aThirdPartyData);
+
+    expect(decoded).toMatchObject(
+      expect.objectContaining({
+        _tag: "Right",
+        right: {
+          id: aThirdPartyId,
+          has_attachments: false,
+          has_remote_content: false
+        }
+      })
+    );
+  });
+
+  it("should decode a ThirdPartyData with has_remote_content true if provided with true", () => {
+    const aThirdPartyData = { id: aThirdPartyId, has_remote_content: true };
+
+    const decoded = ThirdPartyData.decode(aThirdPartyData);
+
+    expect(decoded).toMatchObject(
+      expect.objectContaining({
+        _tag: "Right",
+        right: {
+          id: aThirdPartyId,
+          has_attachments: false,
+          has_remote_content: true
+        }
+      })
     );
   });
 });
