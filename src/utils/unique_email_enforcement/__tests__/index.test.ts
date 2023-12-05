@@ -9,25 +9,6 @@ const mocks = {
   email: "citizen@email.test.pagopa.it" as EmailString
 };
 
-jest.mock("@azure/data-tables", () => ({
-  default: {
-    TableClient: jest.fn().mockImplementation(() => {
-      return {
-        listEntities: async function*() {
-          yield {
-            partitionKey: "citizen@email.test.pagopa.it",
-            rowKey: "AAAAAA00A00A000A"
-          };
-          yield {
-            partitionKey: "citizen@email.test.pagopa.it",
-            rowKey: "AAAAAA00A00A000A"
-          };
-        }
-      };
-    })
-  }
-}));
-
 function generateProfileEmails(count: number) {
   return async function*(email: EmailString) {
     for (let i = 0; i < count; i++) {

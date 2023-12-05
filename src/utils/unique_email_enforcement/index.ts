@@ -14,8 +14,8 @@ export interface ProfileEmailReader {
 }
 
 export interface ProfileEmailWriter {
-  delete(profileEmail: ProfileEmail): Promise<void>;
-  insert(profileEmail: ProfileEmail): Promise<void>;
+  delete(p: ProfileEmail): Promise<void>;
+  insert(p: ProfileEmail): Promise<void>;
 }
 
 interface IsEmailAlreadyTakenDependencies {
