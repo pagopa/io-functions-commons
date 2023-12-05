@@ -19,7 +19,10 @@ const ProfileEmailToTableEntity = new t.Type<ProfileEmail, TableEntity>(
   ProfileEmail.is,
   flow(
     TableEntity.decode,
-    E.map(t => ({ email: t.partitionKey, fiscalCode: t.rowKey })),
+    E.map(({ partitionKey: email, rowKey: fiscalCode }) => ({
+      email,
+      fiscalCode
+    })),
     ProfileEmail.decode
   ),
   ({ email, fiscalCode }) => ({
@@ -43,10 +46,13 @@ export async function* toProfileEmailsAsyncIterator(
 
 export class DataTableProfileEmailsRepository
   implements ProfileEmailReader, ProfileEmailWriter {
-  constructor(private tableClient: TableClient) {}
+  constructor(private readonly tableClient: TableClient) {}
 
   // Generates an AsyncIterable<ProfileEmail>
-  public async *listProfileEmails(filter: EmailString | FiscalCode) {
+  /* eslint-disable require-yield */
+  public async *listProfileEmails(
+    filter: EmailString | FiscalCode
+  ): AsyncIterableIterator<ProfileEmail> {
     const queryOptions = {
       filter: EmailString.is(filter)
         ? odata`partitionKey eq ${filter.toLowerCase()}`
@@ -59,7 +65,7 @@ export class DataTableProfileEmailsRepository
     );
   }
 
-  public async insert(p: ProfileEmail) {
+  public async insert(p: ProfileEmail): Promise<void> {
     try {
       const entity = ProfileEmailToTableEntity.encode(p);
       await this.tableClient.createEntity(entity);
@@ -70,7 +76,7 @@ export class DataTableProfileEmailsRepository
     }
   }
 
-  public async delete(p: ProfileEmail) {
+  public async delete(p: ProfileEmail): Promise<void> {
     try {
       const entity = ProfileEmailToTableEntity.encode(p);
       await this.tableClient.deleteEntity(entity.partitionKey, entity.rowKey);
