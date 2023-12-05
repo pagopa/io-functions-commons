@@ -24,15 +24,15 @@ interface IsEmailAlreadyTakenDependencies {
 
 // Checks if the given e-mail is already taken
 // profileEmails returns all the ProfileEmail records that shares
-// the same e-mail. If count(records) > 1 then the e-mail is already taken.
+// the same e-mail. If count(records) >= 1 then the e-mail is already taken.
 export const isEmailAlreadyTaken = (email: EmailString) => async ({
   profileEmailReader: { profileEmails }
 }: IsEmailAlreadyTakenDependencies): Promise<boolean> => {
-  let count = 0;
-  for await (const _ of profileEmails(email)) {
-    if (++count > 1) {
-      return true;
-    }
+  const emails = profileEmails(email);
+  try {
+    const item = await emails.next();
+    return item.done === false;
+  } catch (cause) {
+    throw new Error("unable to obtain taken emails from storage");
   }
-  return false;
 };
