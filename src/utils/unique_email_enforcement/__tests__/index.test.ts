@@ -39,7 +39,7 @@ describe("isEmailAlreadyTaken", () => {
     ({ entries, expected }) => {
       const result = isEmailAlreadyTaken(mocks.email)({
         profileEmailReader: {
-          profileEmails: generateProfileEmails(entries)
+          listProfileEmails: generateProfileEmails(entries)
         }
       });
       expect(result).resolves.toBe(expected);

@@ -10,7 +10,7 @@ export const ProfileEmail = t.type({
 export type ProfileEmail = t.TypeOf<typeof ProfileEmail>;
 
 export interface ProfileEmailReader {
-  profileEmails(
+  listProfileEmails(
     filter: EmailString | FiscalCode
   ): AsyncIterableIterator<ProfileEmail>;
 }
@@ -28,9 +28,9 @@ interface IsEmailAlreadyTakenDependencies {
 // profileEmails returns all the ProfileEmail records that shares
 // the same e-mail. If count(records) >= 1 then the e-mail is already taken.
 export const isEmailAlreadyTaken = (email: EmailString) => async ({
-  profileEmailReader: { profileEmails }
+  profileEmailReader: { listProfileEmails }
 }: IsEmailAlreadyTakenDependencies): Promise<boolean> => {
-  const emails = profileEmails(email);
+  const emails = listProfileEmails(email);
   try {
     const item = await emails.next();
     return item.done === false;

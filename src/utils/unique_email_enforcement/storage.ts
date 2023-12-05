@@ -46,7 +46,7 @@ export class DataTableProfileEmailsRepository
   constructor(private tableClient: TableClient) {}
 
   // Generates an AsyncIterable<ProfileEmail>
-  async *profileEmails(filter: EmailString | FiscalCode) {
+  public async *listProfileEmails(filter: EmailString | FiscalCode) {
     const queryOptions = {
       filter: EmailString.is(filter)
         ? odata`partitionKey eq ${filter.toLowerCase()}`
@@ -59,7 +59,7 @@ export class DataTableProfileEmailsRepository
     );
   }
 
-  async insert(p: ProfileEmail) {
+  public async insert(p: ProfileEmail) {
     try {
       const entity = ProfileEmailToTableEntity.encode(p);
       await this.tableClient.createEntity(entity);
@@ -70,7 +70,7 @@ export class DataTableProfileEmailsRepository
     }
   }
 
-  async delete(p: ProfileEmail) {
+  public async delete(p: ProfileEmail) {
     try {
       const entity = ProfileEmailToTableEntity.encode(p);
       await this.tableClient.deleteEntity(entity.partitionKey, entity.rowKey);
