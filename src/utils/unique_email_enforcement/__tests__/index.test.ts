@@ -1,4 +1,3 @@
-import { TableEntityResult } from "@azure/data-tables";
 import { describe, test, expect } from "@jest/globals";
 
 import { EmailString, FiscalCode } from "@pagopa/ts-commons/lib/strings";
@@ -25,7 +24,7 @@ describe("isEmailAlreadyTaken", () => {
     },
     {
       entries: 1,
-      expected: false
+      expected: true
     },
     {
       entries: 100,

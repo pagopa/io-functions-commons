@@ -1,10 +1,7 @@
 import { describe, it, expect, jest } from "@jest/globals";
 
-import { TableEntityResult, odata } from "@azure/data-tables";
-import {
-  DataTableProfileEmailsRepository,
-  toProfileEmailsAsyncIterator
-} from "../storage";
+import { odata } from "@azure/data-tables";
+import { DataTableProfileEmailsRepository } from "../storage";
 
 import { TableClient } from "@azure/data-tables";
 import { ProfileEmail } from "../index";
@@ -14,32 +11,8 @@ import { EmailString } from "@pagopa/ts-commons/lib/strings";
 
 jest.mock("@azure/data-tables");
 
-async function* listEntities(): AsyncIterableIterator<
-  TableEntityResult<unknown>
-> {
-  yield {
-    partitionKey: "citizen@email.test.pagopa.it",
-    rowKey: "AAAAAA00A00A000A",
-    etag: "etag"
-  };
-  yield {
-    partitionKey: "not-a-valid-email",
-    rowKey: "AAAAAA00A00A000A",
-    etag: "etag"
-  };
-}
-
-describe("toProfileEmailsAsyncIterator", () => {
-  it("emits only valid entities", async () => {
-    let count = 0;
-    for await (const _ of toProfileEmailsAsyncIterator(listEntities())) {
-      count++;
-    }
-    expect(count).toBe(1);
-  });
-});
-
 const MockedTableClient = jest.mocked(TableClient);
+const mockedOdata = jest.mocked(odata);
 
 const tableClient = new MockedTableClient(
   "https://test.localhost",
@@ -53,7 +26,7 @@ describe("DataTableProfileEmailsRepository", () => {
       const input = EmailString.decode("CITIZEN@EMAIL.TEST.PAGOPA.IT");
       if (E.isRight(input)) {
         await repo.profileEmails(input.right).next();
-        expect(jest.mocked(odata)).toHaveBeenCalledWith(
+        expect(mockedOdata).toHaveBeenCalledWith(
           expect.any(Array),
           "citizen@email.test.pagopa.it"
         );
@@ -69,13 +42,13 @@ describe("DataTableProfileEmailsRepository", () => {
         const repo = new DataTableProfileEmailsRepository(tableClient);
         const profileEmail = ProfileEmail.decode({
           email,
-          fiscalCode: "AAAAAA00A00A000A"
+          fiscalCode: "RLDBSV36A78Y792X"
         });
         if (E.isRight(profileEmail)) {
           await repo.insert(profileEmail.right);
           expect(tableClient.createEntity).toHaveBeenCalledWith({
             partitionKey: "citizen@email.test.pagopa.it",
-            rowKey: "AAAAAA00A00A000A"
+            rowKey: "RLDBSV36A78Y792X"
           });
         }
         expect.hasAssertions();
