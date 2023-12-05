@@ -1,25 +1,11 @@
 import * as E from "fp-ts/lib/Either";
 import * as t from "io-ts";
+import { flow } from "fp-ts/lib/function";
 
 import { TableClient, odata, TableEntityResult } from "@azure/data-tables";
 import { EmailString } from "@pagopa/ts-commons/lib/strings";
 
 import { ProfileEmail, ProfileEmailReader, ProfileEmailWriter } from "./index";
-
-// Generates AsyncIterable<ProfileEmail> from AsyncIterable<TableEntityResult>
-export async function* toProfileEmailsAsyncIterator(
-  iterator: AsyncIterableIterator<TableEntityResult<unknown>>
-): AsyncIterableIterator<ProfileEmail> {
-  for await (const item of iterator) {
-    const profileEmail = ProfileEmail.decode({
-      email: item.partitionKey,
-      fiscalCode: item.rowKey
-    });
-    if (E.isRight(profileEmail)) {
-      yield profileEmail.right;
-    }
-  }
-}
 
 const TableEntity = t.type({
   partitionKey: t.string,
@@ -31,12 +17,28 @@ type TableEntity = t.TypeOf<typeof TableEntity>;
 const ProfileEmailToTableEntity = new t.Type<ProfileEmail, TableEntity>(
   "TableEntityFromProfileEmail",
   ProfileEmail.is,
-  ProfileEmail.decode,
+  flow(
+    TableEntity.decode,
+    E.map(t => ({ email: t.partitionKey, fiscalCode: t.rowKey })),
+    ProfileEmail.decode
+  ),
   ({ email, fiscalCode }) => ({
     partitionKey: email.toLowerCase(),
     rowKey: fiscalCode
   })
 );
+
+// Generates AsyncIterable<ProfileEmail> from AsyncIterable<TableEntityResult>
+export async function* toProfileEmailsAsyncIterator(
+  iterator: AsyncIterableIterator<TableEntityResult<unknown>>
+): AsyncIterableIterator<ProfileEmail> {
+  for await (const item of iterator) {
+    const profileEmail = ProfileEmailToTableEntity.decode(item);
+    if (E.isRight(profileEmail)) {
+      yield profileEmail.right;
+    }
+  }
+}
 
 export class DataTableProfileEmailsRepository
   implements ProfileEmailReader, ProfileEmailWriter {
