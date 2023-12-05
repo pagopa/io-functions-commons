@@ -34,9 +34,10 @@ export async function* toProfileEmailsAsyncIterator(
 ): AsyncIterableIterator<ProfileEmail> {
   for await (const item of iterator) {
     const profileEmail = ProfileEmailToTableEntity.decode(item);
-    if (E.isRight(profileEmail)) {
-      yield profileEmail.right;
+    if (E.isLeft(profileEmail)) {
+      throw new Error(`can't parse a profile email from the given entity`);
     }
+    yield profileEmail.right;
   }
 }
 
@@ -59,10 +60,10 @@ export class DataTableProfileEmailsRepository
     try {
       const entity = ProfileEmailToTableEntity.encode(p);
       await this.tableClient.createEntity(entity);
-    } catch (cause) {
-      throw new Error("error inserting ProfileEmail into table storage", {
-        cause
-      });
+    } catch {
+      throw new Error(
+        `unable to insert a new profile entity into ${this.tableClient.tableName} table`
+      );
     }
   }
 
@@ -70,10 +71,10 @@ export class DataTableProfileEmailsRepository
     try {
       const entity = ProfileEmailToTableEntity.encode(p);
       await this.tableClient.deleteEntity(entity.partitionKey, entity.rowKey);
-    } catch (cause) {
-      throw new Error("error deleting ProfileEmail from table storage", {
-        cause
-      });
+    } catch {
+      throw new Error(
+        `unable to delete the specified entity from ${this.tableClient.tableName} table`
+      );
     }
   }
 }
