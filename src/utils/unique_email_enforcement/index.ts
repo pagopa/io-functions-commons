@@ -10,14 +10,14 @@ export const ProfileEmail = t.type({
 export type ProfileEmail = t.TypeOf<typeof ProfileEmail>;
 
 export interface ProfileEmailReader {
-  listProfileEmails(
+  readonly listProfileEmails: (
     filter: EmailString | FiscalCode
-  ): AsyncIterableIterator<ProfileEmail>;
+  ) => AsyncIterableIterator<ProfileEmail>;
 }
 
 export interface ProfileEmailWriter {
-  delete(p: ProfileEmail): Promise<void>;
-  insert(p: ProfileEmail): Promise<void>;
+  readonly delete: (p: ProfileEmail) => Promise<void>;
+  readonly insert: (p: ProfileEmail) => Promise<void>;
 }
 
 interface IsEmailAlreadyTakenDependencies {
