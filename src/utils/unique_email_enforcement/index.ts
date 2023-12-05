@@ -10,7 +10,9 @@ export const ProfileEmail = t.type({
 export type ProfileEmail = t.TypeOf<typeof ProfileEmail>;
 
 export interface ProfileEmailReader {
-  profileEmails(email: EmailString): AsyncIterableIterator<ProfileEmail>;
+  profileEmails(
+    filter: EmailString | FiscalCode
+  ): AsyncIterableIterator<ProfileEmail>;
 }
 
 export interface ProfileEmailWriter {
