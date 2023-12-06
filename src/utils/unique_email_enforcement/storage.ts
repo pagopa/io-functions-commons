@@ -23,22 +23,15 @@ const ProfileEmailToTableEntity = new t.Type<ProfileEmail, TableEntity>(
   ProfileEmail.is,
   flow(
     TableEntity.decode,
-    E.map(({ partitionKey: email, rowKey: fiscalCode }) => ({
-      email,
-      fiscalCode
-    })),
-    ProfileEmail.decode
+    E.chain(({ partitionKey: email, rowKey: fiscalCode }) =>
+      ProfileEmail.decode({ email, fiscalCode })
+    )
   ),
   ({ email, fiscalCode }) => ({
     partitionKey: email.toLowerCase(),
     rowKey: fiscalCode
   })
 );
-
-// Generates AsyncIterable<ProfileEmail> from AsyncIterable<TableEntityResult>
-export async function* toProfileEmailsAsyncIterator(
-  iterator: AsyncIterableIterator<TableEntityResult<unknown>>
-): AsyncIterableIterator<ProfileEmail> {}
 
 export class DataTableProfileEmailsRepository
   implements IProfileEmailReader, IProfileEmailWriter {
@@ -50,8 +43,8 @@ export class DataTableProfileEmailsRepository
   ): AsyncIterableIterator<ProfileEmail> {
     const queryOptions = {
       filter: EmailString.is(filter)
-        ? odata`partitionKey eq ${filter.toLowerCase()}`
-        : odata`rowKey eq ${filter}`
+        ? odata`PartitionKey eq ${filter.toLowerCase()}`
+        : odata`RowKey eq ${filter}`
     };
     const list = this.tableClient.listEntities({
       queryOptions
@@ -65,7 +58,6 @@ export class DataTableProfileEmailsRepository
         yield profileEmail.right;
       }
     } catch (e) {
-      console.log(e);
       throw new Error(
         `unable to get entities from ${this.tableClient.tableName} table`
       );
