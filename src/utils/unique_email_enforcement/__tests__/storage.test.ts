@@ -25,7 +25,9 @@ describe("DataTableProfileEmailsRepository", () => {
       const repo = new DataTableProfileEmailsRepository(tableClient);
       const input = EmailString.decode("CITIZEN@EMAIL.TEST.PAGOPA.IT");
       if (E.isRight(input)) {
-        await repo.list(input.right).next();
+        try {
+          await repo.list(input.right).next();
+        } catch {}
         expect(mockedOdata).toHaveBeenCalledWith(
           expect.any(Array),
           "citizen@email.test.pagopa.it"

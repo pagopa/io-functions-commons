@@ -38,22 +38,13 @@ const ProfileEmailToTableEntity = new t.Type<ProfileEmail, TableEntity>(
 // Generates AsyncIterable<ProfileEmail> from AsyncIterable<TableEntityResult>
 export async function* toProfileEmailsAsyncIterator(
   iterator: AsyncIterableIterator<TableEntityResult<unknown>>
-): AsyncIterableIterator<ProfileEmail> {
-  for await (const item of iterator) {
-    const profileEmail = ProfileEmailToTableEntity.decode(item);
-    if (E.isLeft(profileEmail)) {
-      throw new Error(`can't parse a profile email from the given entity`);
-    }
-    yield profileEmail.right;
-  }
-}
+): AsyncIterableIterator<ProfileEmail> {}
 
 export class DataTableProfileEmailsRepository
   implements IProfileEmailReader, IProfileEmailWriter {
   constructor(private readonly tableClient: TableClient) {}
 
   // Generates an AsyncIterable<ProfileEmail>
-  /* eslint-disable require-yield */
   public async *list(
     filter: EmailString | FiscalCode
   ): AsyncIterableIterator<ProfileEmail> {
@@ -62,11 +53,23 @@ export class DataTableProfileEmailsRepository
         ? odata`partitionKey eq ${filter.toLowerCase()}`
         : odata`rowKey eq ${filter}`
     };
-    return toProfileEmailsAsyncIterator(
-      this.tableClient.listEntities({
-        queryOptions
-      })
-    );
+    const list = this.tableClient.listEntities({
+      queryOptions
+    });
+    try {
+      for await (const item of list) {
+        const profileEmail = ProfileEmailToTableEntity.decode(item);
+        if (E.isLeft(profileEmail)) {
+          throw new Error(`can't parse a profile email from the given entity`);
+        }
+        yield profileEmail.right;
+      }
+    } catch (e) {
+      console.log(e);
+      throw new Error(
+        `unable to get entities from ${this.tableClient.tableName} table`
+      );
+    }
   }
 
   public async insert(p: ProfileEmail): Promise<void> {
