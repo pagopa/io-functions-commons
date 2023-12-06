@@ -5,7 +5,11 @@ import { flow } from "fp-ts/lib/function";
 import { TableClient, odata, TableEntityResult } from "@azure/data-tables";
 import { EmailString, FiscalCode } from "@pagopa/ts-commons/lib/strings";
 
-import { ProfileEmail, ProfileEmailReader, ProfileEmailWriter } from "./index";
+import {
+  ProfileEmail,
+  IProfileEmailReader,
+  IProfileEmailWriter
+} from "./index";
 
 const TableEntity = t.type({
   partitionKey: t.string,
@@ -45,12 +49,12 @@ export async function* toProfileEmailsAsyncIterator(
 }
 
 export class DataTableProfileEmailsRepository
-  implements ProfileEmailReader, ProfileEmailWriter {
+  implements IProfileEmailReader, IProfileEmailWriter {
   constructor(private readonly tableClient: TableClient) {}
 
   // Generates an AsyncIterable<ProfileEmail>
   /* eslint-disable require-yield */
-  public async *listProfileEmails(
+  public async *list(
     filter: EmailString | FiscalCode
   ): AsyncIterableIterator<ProfileEmail> {
     const queryOptions = {
