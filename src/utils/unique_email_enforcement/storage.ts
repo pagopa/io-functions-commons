@@ -53,11 +53,16 @@ export class DataTableProfileEmailsRepository
       for await (const item of list) {
         const profileEmail = ProfileEmailToTableEntity.decode(item);
         if (E.isLeft(profileEmail)) {
-          throw new Error(`can't parse a profile email from the given entity`);
+          throw new Error(`can't parse a profile email from the given entity`, {
+            cause: "parsing"
+          });
         }
         yield profileEmail.right;
       }
     } catch (e) {
+      if (e instanceof Error && e.cause === "parsing") {
+        throw e;
+      }
       throw new Error(
         `unable to get entities from ${this.tableClient.tableName} table`
       );
