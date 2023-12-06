@@ -2,7 +2,7 @@ import * as E from "fp-ts/lib/Either";
 import * as t from "io-ts";
 import { flow } from "fp-ts/lib/function";
 
-import { TableClient, odata, TableEntityResult } from "@azure/data-tables";
+import { TableClient, odata } from "@azure/data-tables";
 import { EmailString, FiscalCode } from "@pagopa/ts-commons/lib/strings";
 
 import {
