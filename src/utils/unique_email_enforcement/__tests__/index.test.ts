@@ -9,9 +9,9 @@ const mocks = {
 };
 
 function generateProfileEmails(count: number) {
-  return async function*(email: EmailString) {
+  return async function*() {
     for (let i = 0; i < count; i++) {
-      yield { email, fiscalCode: "X" as FiscalCode };
+      yield { email: mocks.email, fiscalCode: "X" as FiscalCode };
     }
   };
 }
