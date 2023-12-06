@@ -38,8 +38,8 @@ describe("isEmailAlreadyTaken", () => {
     `${mocks.email} is used by $entries profiles, so isEmailAlreadyTaken should be $expected`,
     ({ entries, expected }) => {
       const result = isEmailAlreadyTaken(mocks.email)({
-        profileEmailReader: {
-          listProfileEmails: generateProfileEmails(entries)
+        profileEmails: {
+          list: generateProfileEmails(entries)
         }
       });
       expect(result).resolves.toBe(expected);
