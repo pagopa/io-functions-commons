@@ -45,8 +45,8 @@ stages:
       - job: lint_api
         steps:
           - template: templates/node-job-setup/template.yaml@pagopaCommons
-          - bash: |
-              npx oval validate -p openapi/index.yaml
+          - script: |
+              yarn openapi:validate
             displayName: 'Validate openAPI'
 
   - stage: Test
