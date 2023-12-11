@@ -2,7 +2,7 @@ import * as t from "io-ts";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { Container } from "@azure/cosmos";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
-import { withDefault } from "@pagopa/ts-commons/lib/types";
+import { enumType, withDefault } from "@pagopa/ts-commons/lib/types";
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { MessageStatusValue } from "../../generated/definitions/MessageStatusValue";
 import { ServiceId } from "../../generated/definitions/ServiceId";
@@ -14,6 +14,7 @@ import {
   PaymentStatus,
   PaymentStatusEnum
 } from "../../generated/definitions/PaymentStatus";
+import { Has_preconditionEnum } from "../../generated/definitions/ThirdPartyData";
 
 export const MESSAGE_VIEW_COLLECTION_NAME = "message-view";
 const MESSAGE_VIEW_MODEL_PK_FIELD = "fiscalCode";
@@ -50,9 +51,14 @@ export const ThirdPartyComponent = t.union([
     HasComponent,
     t.interface({
       has_attachments: withDefault(t.boolean, false),
+      has_remote_content: withDefault(t.boolean, false),
       id: NonEmptyString
     }),
     t.partial({
+      has_precondition: enumType<Has_preconditionEnum>(
+        Has_preconditionEnum,
+        "has_precondition"
+      ),
       original_receipt_date: Timestamp,
       original_sender: NonEmptyString,
       summary: NonEmptyString

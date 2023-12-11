@@ -115,7 +115,8 @@ describe("message_view", () => {
             ...messageViewWithThirdParty.components,
             thirdParty: {
               ...messageViewWithThirdParty.components.thirdParty,
-              has_attachments: false
+              has_attachments: false,
+              has_remote_content: false
             }
           }
         });
