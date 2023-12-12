@@ -3,10 +3,12 @@ import { Container } from "@azure/cosmos";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { ServiceId } from "../../../generated/definitions/ServiceId";
 import {
+  RemoteContentConfigurationModel,
   RemoteContentConfigurationBase,
   RemoteContentConfiguration,
   RetrievedRemoteContentConfiguration
 } from "../remote_content_configuration";
+import { Has_preconditionEnum } from "../../../generated/definitions/ThirdPartyData";
 import { pipe } from "fp-ts/lib/function";
 import { errorsToReadableMessages } from "@pagopa/ts-commons/lib/reporters";
 
@@ -21,7 +23,7 @@ const aRemoteContentEnvironmentConfiguration = {
 
 const aRemoteContentConfigurationWithNoEnv: RemoteContentConfigurationBase = {
   id: "anyid" as NonEmptyString,
-  has_precondition: false,
+  has_precondition: Has_preconditionEnum.ALWAYS,
   serviceId: "01GQQZ9HF5GAPRVKJM1VDAVFHM" as ServiceId,
   disableLollipopFor: [],
   isLollipopEnabled: false
@@ -55,7 +57,6 @@ const aRetrievedRemoteContentConfigurationWithTestEnv: RetrievedRemoteContentCon
   _self: "_self",
   _ts: 1
 };
-
 
 const aRemoteContentConfigurationWithBothEnv: RemoteContentConfiguration = {
   ...aRemoteContentConfigurationWithNoEnv,
@@ -93,38 +94,51 @@ const containerMock = ({
 
 describe("remote_content_config", () => {
   it("GIVEN a valid remote_content_config object with test environment WHEN the object is decoded THEN the decode succeed", async () => {
-    const result = RemoteContentConfiguration.decode(aRemoteContentConfigurationWithTestEnv);
-    expect(E.isRight(result)).toBeTruthy();
-  });
-
-  it("GIVEN a valid remote_content_config object with prod environment WHEN the object is decoded THEN the decode succeed", async () => {
-    const result = RemoteContentConfiguration.decode(aRemoteContentConfigurationWithProdEnv);
+    const result = RemoteContentConfiguration.decode(
+      aRemoteContentConfigurationWithTestEnv
+    );
     expect(E.isRight(result)).toBeTruthy();
   });
 
   it("GIVEN a retrieved remote_content_config object with test environment WHEN the object is decoded THEN the decode succeed", async () => {
-    const result = RemoteContentConfiguration.decode(aRetrievedRemoteContentConfigurationWithTestEnv);
+    const result = RemoteContentConfiguration.decode(
+      aRetrievedRemoteContentConfigurationWithTestEnv
+    );
+    expect(E.isRight(result)).toBeTruthy();
+  });
+
+  it("GIVEN a valid remote_content_config object with prod environment WHEN the object is decoded THEN the decode succeed", async () => {
+    const result = RemoteContentConfiguration.decode(
+      aRemoteContentConfigurationWithProdEnv
+    );
     expect(E.isRight(result)).toBeTruthy();
   });
 
   it("GIVEN a retrieved remote_content_config object with prod environment WHEN the object is decoded THEN the decode succeed", async () => {
-    const result = RemoteContentConfiguration.decode(aRetrievedRemoteContentConfigurationWithProdEnv);
+    const result = RemoteContentConfiguration.decode(
+      aRetrievedRemoteContentConfigurationWithProdEnv
+    );
     expect(E.isRight(result)).toBeTruthy();
   });
 
   it("GIVEN a valid remote_content_config object with both environments WHEN the object is decoded THEN the decode succeed", async () => {
-    const result = RemoteContentConfiguration.decode(aRemoteContentConfigurationWithBothEnv);
+    const result = RemoteContentConfiguration.decode(
+      aRemoteContentConfigurationWithBothEnv
+    );
     expect(E.isRight(result)).toBeTruthy();
   });
 
   it("GIVEN a retrieved remote_content_config object with both environment WHEN the object is decoded THEN the decode succeed", async () => {
-    const result = RemoteContentConfiguration.decode(aRetrievedRemoteContentConfigurationWithBothEnv);
+    const result = RemoteContentConfiguration.decode(
+      aRetrievedRemoteContentConfigurationWithBothEnv
+    );
     expect(E.isRight(result)).toBeTruthy();
   });
 
   it("GIVEN a not valid remote_content_config object with no environments WHEN the object is decoded THEN the decode fail", async () => {
-    const result = RemoteContentConfiguration.decode(aRemoteContentConfigurationWithNoEnv);
+    const result = RemoteContentConfiguration.decode(
+      aRemoteContentConfigurationWithNoEnv
+    );
     expect(E.isLeft(result)).toBeTruthy();
   });
-
 });
