@@ -1,11 +1,11 @@
 import * as t from "io-ts";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { Container } from "@azure/cosmos";
+import { enumType } from "@pagopa/ts-commons/lib/types";
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { ServiceId } from "../../generated/definitions/ServiceId";
 import { CosmosResource, CosmosdbModel } from "../utils/cosmosdb_model";
 import { Has_preconditionEnum } from "../../generated/definitions/ThirdPartyData";
-import { enumType } from "@pagopa/ts-commons/lib/types";
 
 export const REMOTE_CONTENT_CONFIGURATION_COLLECTION_NAME =
   "remote-content-configuration";
