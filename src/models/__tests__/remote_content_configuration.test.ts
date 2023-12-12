@@ -21,16 +21,14 @@ const aRemoteContentEnvironmentConfiguration = {
 
 const aRemoteContentConfigurationWithNoEnv: RemoteContentConfigurationBase = {
   id: "anyid" as NonEmptyString,
+  has_precondition: false,
   serviceId: "01GQQZ9HF5GAPRVKJM1VDAVFHM" as ServiceId,
   disableLollipopFor: [],
   isLollipopEnabled: false
 };
 
 const aRemoteContentConfigurationWithProdEnv: RemoteContentConfiguration = {
-  id: "anyid" as NonEmptyString,
-  serviceId: "01GQQZ9HF5GAPRVKJM1VDAVFHM" as ServiceId,
-  disableLollipopFor: [],
-  isLollipopEnabled: false,
+  ...aRemoteContentConfigurationWithNoEnv,
   prodEnvironment: aRemoteContentEnvironmentConfiguration
 };
 
@@ -43,10 +41,7 @@ const aRetrievedRemoteContentConfigurationWithProdEnv: RetrievedRemoteContentCon
 };
 
 const aRemoteContentConfigurationWithTestEnv: RemoteContentConfiguration = {
-  id: "anyid" as NonEmptyString,
-  serviceId: "01GQQZ9HF5GAPRVKJM1VDAVFHM" as ServiceId,
-  disableLollipopFor: [],
-  isLollipopEnabled: false,
+  ...aRemoteContentConfigurationWithNoEnv,
   testEnvironment: {
     ...aRemoteContentEnvironmentConfiguration,
     testUsers: []
@@ -63,10 +58,7 @@ const aRetrievedRemoteContentConfigurationWithTestEnv: RetrievedRemoteContentCon
 
 
 const aRemoteContentConfigurationWithBothEnv: RemoteContentConfiguration = {
-  id: "anyid" as NonEmptyString,
-  serviceId: "01GQQZ9HF5GAPRVKJM1VDAVFHM" as ServiceId,
-  disableLollipopFor: [],
-  isLollipopEnabled: false,
+  ...aRemoteContentConfigurationWithNoEnv,
   prodEnvironment: aRemoteContentEnvironmentConfiguration,
   testEnvironment: {
     ...aRemoteContentEnvironmentConfiguration,
@@ -126,7 +118,7 @@ describe("remote_content_config", () => {
   });
 
   it("GIVEN a retrieved remote_content_config object with both environment WHEN the object is decoded THEN the decode succeed", async () => {
-    const result = RemoteContentConfiguration.decode(aRemoteContentConfigurationWithBothEnv);
+    const result = RemoteContentConfiguration.decode(aRetrievedRemoteContentConfigurationWithBothEnv);
     expect(E.isRight(result)).toBeTruthy();
   });
 

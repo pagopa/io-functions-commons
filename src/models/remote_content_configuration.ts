@@ -49,6 +49,7 @@ export const RemoteContentTestEnvironmentConfig = t.intersection([
 
 const RemoteContentConfigurationR = t.interface({
   disableLollipopFor: t.readonlyArray(FiscalCode),
+  has_precondition: t.boolean,
   id: NonEmptyString,
   isLollipopEnabled: t.boolean,
   serviceId: ServiceId
