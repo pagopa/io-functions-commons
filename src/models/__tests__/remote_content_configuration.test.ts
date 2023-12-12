@@ -11,7 +11,7 @@ import { Has_preconditionEnum } from "../../../generated/definitions/ThirdPartyD
 const aRemoteContentEnvironmentConfiguration = {
   baseUrl: "https://anydomain.anytld/api/v1/anyapi" as NonEmptyString,
   detailsAuthentication: {
-    header_key_name: "X-Functions-Key" as NonEmptyString,
+    headerKeyName: "X-Functions-Key" as NonEmptyString,
     key: "anykey" as NonEmptyString,
     type: "API_KEY" as NonEmptyString
   }
@@ -19,7 +19,7 @@ const aRemoteContentEnvironmentConfiguration = {
 
 const aRemoteContentConfigurationWithNoEnv: RemoteContentConfigurationBase = {
   id: "anyid" as NonEmptyString,
-  has_precondition: Has_preconditionEnum.ALWAYS,
+  hasPrecondition: Has_preconditionEnum.ALWAYS,
   serviceId: "01GQQZ9HF5GAPRVKJM1VDAVFHM" as ServiceId,
   disableLollipopFor: [],
   isLollipopEnabled: false
