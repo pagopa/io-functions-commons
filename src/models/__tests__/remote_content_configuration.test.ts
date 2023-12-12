@@ -3,14 +3,11 @@ import { Container } from "@azure/cosmos";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { ServiceId } from "../../../generated/definitions/ServiceId";
 import {
-  RemoteContentConfigurationModel,
   RemoteContentConfigurationBase,
   RemoteContentConfiguration,
   RetrievedRemoteContentConfiguration
 } from "../remote_content_configuration";
 import { Has_preconditionEnum } from "../../../generated/definitions/ThirdPartyData";
-import { pipe } from "fp-ts/lib/function";
-import { errorsToReadableMessages } from "@pagopa/ts-commons/lib/reporters";
 
 const aRemoteContentEnvironmentConfiguration = {
   baseUrl: "https://anydomain.anytld/api/v1/anyapi" as NonEmptyString,
@@ -74,23 +71,6 @@ const aRetrievedRemoteContentConfigurationWithBothEnv: RetrievedRemoteContentCon
   _self: "_self",
   _ts: 1
 };
-
-const mockFetchAll = jest.fn();
-const mockGetAsyncIterator = jest.fn();
-const mockCreate = jest.fn();
-
-const containerMock = ({
-  items: {
-    readAll: jest.fn(() => ({
-      fetchAll: mockFetchAll,
-      getAsyncIterator: mockGetAsyncIterator
-    })),
-    create: mockCreate,
-    query: jest.fn(() => ({
-      fetchAll: mockFetchAll
-    }))
-  }
-} as unknown) as Container;
 
 describe("remote_content_config", () => {
   it("GIVEN a valid remote_content_config object with test environment WHEN the object is decoded THEN the decode succeed", async () => {
