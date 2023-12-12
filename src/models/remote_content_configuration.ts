@@ -12,13 +12,13 @@ export const REMOTE_CONTENT_CONFIGURATION_COLLECTION_NAME =
 const REMOTE_CONTENT_CONFIGURATION_MODEL_PK_FIELD = "serviceId";
 
 export const RemoteContentClientCert = t.interface({
-  client_cert: NonEmptyString,
-  client_key: NonEmptyString,
-  server_ca: NonEmptyString
+  clientCert: NonEmptyString,
+  clientKey: NonEmptyString,
+  serverCa: NonEmptyString
 });
 
 const RemoteContentAuthenticationDetails = t.interface({
-  header_key_name: NonEmptyString,
+  headerKeyName: NonEmptyString,
   key: NonEmptyString,
   type: NonEmptyString
 });
@@ -51,9 +51,9 @@ export const RemoteContentTestEnvironmentConfig = t.intersection([
 
 const RemoteContentConfigurationR = t.interface({
   disableLollipopFor: t.readonlyArray(FiscalCode),
-  has_precondition: enumType<Has_preconditionEnum>(
+  hasPrecondition: enumType<Has_preconditionEnum>(
     Has_preconditionEnum,
-    "has_precondition"
+    "hasPrecondition"
   ),
   id: NonEmptyString,
   isLollipopEnabled: t.boolean,
