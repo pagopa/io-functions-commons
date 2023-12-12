@@ -1,5 +1,4 @@
 import * as E from "fp-ts/lib/Either";
-import { Container } from "@azure/cosmos";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { ServiceId } from "../../../generated/definitions/ServiceId";
 import {
