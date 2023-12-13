@@ -3,7 +3,7 @@ import * as t from "io-ts";
 import { flow } from "fp-ts/lib/function";
 
 import { TableClient, odata } from "@azure/data-tables";
-import { EmailString, FiscalCode } from "@pagopa/ts-commons/lib/strings";
+import { EmailString } from "@pagopa/ts-commons/lib/strings";
 
 import {
   ProfileEmail,
@@ -38,13 +38,9 @@ export class DataTableProfileEmailsRepository
   constructor(private readonly tableClient: TableClient) {}
 
   // Generates an AsyncIterable<ProfileEmail>
-  public async *list(
-    filter: EmailString | FiscalCode
-  ): AsyncIterableIterator<ProfileEmail> {
+  public async *list(filter: EmailString): AsyncIterableIterator<ProfileEmail> {
     const queryOptions = {
-      filter: EmailString.is(filter)
-        ? odata`PartitionKey eq ${filter.toLowerCase()}`
-        : odata`RowKey eq ${filter}`
+      filter: odata`PartitionKey eq ${filter.toLowerCase()}`
     };
     const list = this.tableClient.listEntities({
       queryOptions
