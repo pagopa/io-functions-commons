@@ -37,6 +37,26 @@ export class DataTableProfileEmailsRepository
   implements IProfileEmailReader, IProfileEmailWriter {
   constructor(private readonly tableClient: TableClient) {}
 
+  public async get(p: ProfileEmail): Promise<ProfileEmail> {
+    try {
+      const entity = await this.tableClient.getEntity(
+        p.email.toLowerCase(),
+        p.fiscalCode
+      );
+      const profileEmail = ProfileEmailToTableEntity.decode(entity);
+      if (E.isLeft(profileEmail)) {
+        throw new Error(`can't parse a profile email from the given entity`, {
+          cause: "parsing"
+        });
+      }
+      return profileEmail.right;
+    } catch {
+      throw new Error(
+        `unable to get a profile entity from ${this.tableClient.tableName} table`
+      );
+    }
+  }
+
   // Generates an AsyncIterable<ProfileEmail>
   public async *list(filter: EmailString): AsyncIterableIterator<ProfileEmail> {
     const queryOptions = {

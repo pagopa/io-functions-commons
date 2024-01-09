@@ -1,6 +1,10 @@
 import { describe, it, expect, jest } from "@jest/globals";
 
-import { odata, TableEntityResult } from "@azure/data-tables";
+import {
+  GetTableEntityResponse,
+  odata,
+  TableEntityResult
+} from "@azure/data-tables";
 import { DataTableProfileEmailsRepository } from "../storage";
 
 import { TableClient } from "@azure/data-tables";
@@ -45,12 +49,47 @@ MockedTableClient.prototype.listEntities.mockReturnValue(
   new MockPagedAsyncIterableIterator()
 );
 
+MockedTableClient.prototype.getEntity.mockImplementation(
+  <T extends object = Record<string, unknown>>(
+    partitionKey: string,
+    rowKey: string
+  ) =>
+    Promise.resolve(({
+      "odata.metadata": "odata.metadata",
+      etag: "etag",
+      partitionKey,
+      rowKey,
+      timestamp: "2024-01-09T09:41:37.7269414Z"
+    } as unknown) as GetTableEntityResponse<TableEntityResult<T>>)
+);
+
 const tableClient = new MockedTableClient(
   "https://test.localhost",
   "test-table"
 );
 
 describe("DataTableProfileEmailsRepository", () => {
+  describe("get", () => {
+    it.each(["citizen@email.test.pagopa.it", "CITIZEN@EMAIL.TEST.PAGOPA.IT"])(
+      "normalizes input e-mail addresses",
+      async email => {
+        const repo = new DataTableProfileEmailsRepository(tableClient);
+        const profileEmail = ProfileEmail.decode({
+          email,
+          fiscalCode: "RLDBSV36A78Y792X"
+        });
+        if (E.isRight(profileEmail)) {
+          await repo.get(profileEmail.right);
+          expect(tableClient.getEntity).toHaveBeenCalledWith(
+            "citizen@email.test.pagopa.it",
+            "RLDBSV36A78Y792X"
+          );
+        }
+        expect.hasAssertions();
+      }
+    );
+  });
+
   describe("list", () => {
     it("normalizes input e-mail address", async () => {
       const repo = new DataTableProfileEmailsRepository(tableClient);
