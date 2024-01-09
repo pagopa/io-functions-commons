@@ -39,7 +39,8 @@ describe("isEmailAlreadyTaken", () => {
     ({ entries, expected }) => {
       const result = isEmailAlreadyTaken(mocks.email)({
         profileEmails: {
-          list: generateProfileEmails(entries)
+          list: generateProfileEmails(entries),
+          get: jest.fn()
         }
       });
       expect(result).resolves.toBe(expected);
