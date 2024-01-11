@@ -33,6 +33,9 @@ const ProfileEmailToTableEntity = new t.Type<ProfileEmail, TableEntity>(
   })
 );
 
+const isRestError = (u: unknown): u is RestError =>
+  u instanceof Error && u.name === "RestError";
+
 export class DataTableProfileEmailsRepository
   implements IProfileEmailReader, IProfileEmailWriter {
   constructor(private readonly tableClient: TableClient) {}
@@ -74,7 +77,7 @@ export class DataTableProfileEmailsRepository
         `unable to insert a new profile entity into ${this.tableClient.tableName} table`,
         {
           cause:
-            e instanceof RestError && e.statusCode === 409
+            isRestError(e) && e.statusCode === 409
               ? "DUPLICATE_ENTITY"
               : "TABLE_STORAGE_ERROR"
         }
@@ -91,7 +94,7 @@ export class DataTableProfileEmailsRepository
         `unable to delete the specified entity from ${this.tableClient.tableName} table`,
         {
           cause:
-            e instanceof RestError && e.statusCode === 404
+            isRestError(e) && e.statusCode === 404
               ? "RESOURCE_NOT_FOUND"
               : "TABLE_STORAGE_ERROR"
         }
