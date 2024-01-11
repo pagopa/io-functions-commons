@@ -69,27 +69,6 @@ const tableClient = new MockedTableClient(
 );
 
 describe("DataTableProfileEmailsRepository", () => {
-  describe("get", () => {
-    it.each(["citizen@email.test.pagopa.it", "CITIZEN@EMAIL.TEST.PAGOPA.IT"])(
-      "normalizes input e-mail addresses",
-      async email => {
-        const repo = new DataTableProfileEmailsRepository(tableClient);
-        const profileEmail = ProfileEmail.decode({
-          email,
-          fiscalCode: "RLDBSV36A78Y792X"
-        });
-        if (E.isRight(profileEmail)) {
-          await repo.get(profileEmail.right);
-          expect(tableClient.getEntity).toHaveBeenCalledWith(
-            "citizen@email.test.pagopa.it",
-            "RLDBSV36A78Y792X"
-          );
-        }
-        expect.hasAssertions();
-      }
-    );
-  });
-
   describe("list", () => {
     it("normalizes input e-mail address", async () => {
       const repo = new DataTableProfileEmailsRepository(tableClient);

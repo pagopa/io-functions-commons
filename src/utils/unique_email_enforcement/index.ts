@@ -10,7 +10,6 @@ export const ProfileEmail = t.type({
 export type ProfileEmail = t.TypeOf<typeof ProfileEmail>;
 
 export interface IProfileEmailReader {
-  readonly get: (p: ProfileEmail) => Promise<ProfileEmail>;
   readonly list: (filter: EmailString) => AsyncIterableIterator<ProfileEmail>;
 }
 
@@ -18,6 +17,27 @@ export interface IProfileEmailWriter {
   readonly delete: (p: ProfileEmail) => Promise<void>;
   readonly insert: (p: ProfileEmail) => Promise<void>;
 }
+
+type ProfileEmailWriterErrorCause =
+  | "ENTITY_NOT_FOUND"
+  | "DUPLICATE_ENTITY"
+  | "STORAGE_ERROR";
+
+/* eslint-disable functional/prefer-readonly-type */
+export class ProfileEmailWriterError extends Error {
+  public name = "ProfileEmailWriterError";
+  public cause: ProfileEmailWriterErrorCause;
+
+  constructor(message: string, cause: ProfileEmailWriterErrorCause) {
+    super(message);
+    this.cause = cause;
+  }
+
+  public static is(u: unknown): u is ProfileEmailWriterError {
+    return u instanceof Error && u.name === "ProfileEmailWriterError";
+  }
+}
+/* eslint-enable functional/prefer-readonly-type */
 
 // Checks if the given e-mail is already taken
 // profileEmails returns all the ProfileEmail records that shares

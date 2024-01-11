@@ -2,13 +2,14 @@ import * as E from "fp-ts/lib/Either";
 import * as t from "io-ts";
 import { flow } from "fp-ts/lib/function";
 
-import { TableClient, odata } from "@azure/data-tables";
+import { TableClient, odata, RestError } from "@azure/data-tables";
 import { EmailString } from "@pagopa/ts-commons/lib/strings";
 
 import {
   ProfileEmail,
   IProfileEmailReader,
-  IProfileEmailWriter
+  IProfileEmailWriter,
+  ProfileEmailWriterError
 } from "./index";
 
 const TableEntity = t.type({
@@ -33,29 +34,12 @@ const ProfileEmailToTableEntity = new t.Type<ProfileEmail, TableEntity>(
   })
 );
 
+const isRestError = (u: unknown): u is RestError =>
+  u instanceof Error && u.name === "RestError";
+
 export class DataTableProfileEmailsRepository
   implements IProfileEmailReader, IProfileEmailWriter {
   constructor(private readonly tableClient: TableClient) {}
-
-  public async get(p: ProfileEmail): Promise<ProfileEmail> {
-    try {
-      const entity = await this.tableClient.getEntity(
-        p.email.toLowerCase(),
-        p.fiscalCode
-      );
-      const profileEmail = ProfileEmailToTableEntity.decode(entity);
-      if (E.isLeft(profileEmail)) {
-        throw new Error(`can't parse a profile email from the given entity`, {
-          cause: "parsing"
-        });
-      }
-      return profileEmail.right;
-    } catch {
-      throw new Error(
-        `unable to get a profile entity from ${this.tableClient.tableName} table`
-      );
-    }
-  }
 
   // Generates an AsyncIterable<ProfileEmail>
   public async *list(filter: EmailString): AsyncIterableIterator<ProfileEmail> {
@@ -89,9 +73,12 @@ export class DataTableProfileEmailsRepository
     try {
       const entity = ProfileEmailToTableEntity.encode(p);
       await this.tableClient.createEntity(entity);
-    } catch {
-      throw new Error(
-        `unable to insert a new profile entity into ${this.tableClient.tableName} table`
+    } catch (e) {
+      throw new ProfileEmailWriterError(
+        `unable to insert a new profile entity into ${this.tableClient.tableName} table`,
+        isRestError(e) && e.statusCode === 409
+          ? "DUPLICATE_ENTITY"
+          : "STORAGE_ERROR"
       );
     }
   }
@@ -100,9 +87,14 @@ export class DataTableProfileEmailsRepository
     try {
       const entity = ProfileEmailToTableEntity.encode(p);
       await this.tableClient.deleteEntity(entity.partitionKey, entity.rowKey);
-    } catch {
-      throw new Error(
-        `unable to delete the specified entity from ${this.tableClient.tableName} table`
+    } catch (e) {
+      throw new ProfileEmailWriterError(
+        `unable to delete the specified entity from ${this.tableClient.tableName} table`,
+        isRestError(e) &&
+        e.statusCode === 404 &&
+        e.message.includes(`"ResourceNotFound"`)
+          ? "ENTITY_NOT_FOUND"
+          : "STORAGE_ERROR"
       );
     }
   }
