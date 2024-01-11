@@ -23,19 +23,21 @@ type ProfileEmailWriterErrorCause =
   | "DUPLICATE_ENTITY"
   | "STORAGE_ERROR";
 
+/* eslint-disable functional/prefer-readonly-type */
 export class ProfileEmailWriterError extends Error {
-  name = "ProfileEmailWriterError";
-  cause: ProfileEmailWriterErrorCause;
+  public name = "ProfileEmailWriterError";
+  public cause: ProfileEmailWriterErrorCause;
 
   constructor(message: string, cause: ProfileEmailWriterErrorCause) {
     super(message);
     this.cause = cause;
   }
 
-  static is(u: unknown): u is ProfileEmailWriterError {
+  public static is(u: unknown): u is ProfileEmailWriterError {
     return u instanceof Error && u.name === "ProfileEmailWriterError";
   }
 }
+/* eslint-enable functional/prefer-readonly-type */
 
 // Checks if the given e-mail is already taken
 // profileEmails returns all the ProfileEmail records that shares
