@@ -2,7 +2,7 @@ import * as E from "fp-ts/lib/Either";
 import * as t from "io-ts";
 import { flow } from "fp-ts/lib/function";
 
-import { TableClient, odata } from "@azure/data-tables";
+import { TableClient, odata, RestError } from "@azure/data-tables";
 import { EmailString } from "@pagopa/ts-commons/lib/strings";
 
 import {
@@ -37,26 +37,6 @@ export class DataTableProfileEmailsRepository
   implements IProfileEmailReader, IProfileEmailWriter {
   constructor(private readonly tableClient: TableClient) {}
 
-  public async get(p: ProfileEmail): Promise<ProfileEmail> {
-    try {
-      const entity = await this.tableClient.getEntity(
-        p.email.toLowerCase(),
-        p.fiscalCode
-      );
-      const profileEmail = ProfileEmailToTableEntity.decode(entity);
-      if (E.isLeft(profileEmail)) {
-        throw new Error(`can't parse a profile email from the given entity`, {
-          cause: "parsing"
-        });
-      }
-      return profileEmail.right;
-    } catch {
-      throw new Error(
-        `unable to get a profile entity from ${this.tableClient.tableName} table`
-      );
-    }
-  }
-
   // Generates an AsyncIterable<ProfileEmail>
   public async *list(filter: EmailString): AsyncIterableIterator<ProfileEmail> {
     const queryOptions = {
@@ -89,9 +69,15 @@ export class DataTableProfileEmailsRepository
     try {
       const entity = ProfileEmailToTableEntity.encode(p);
       await this.tableClient.createEntity(entity);
-    } catch {
+    } catch (e) {
       throw new Error(
-        `unable to insert a new profile entity into ${this.tableClient.tableName} table`
+        `unable to insert a new profile entity into ${this.tableClient.tableName} table`,
+        {
+          cause:
+            e instanceof RestError && e.statusCode === 409
+              ? "DUPLICATE_ENTITY"
+              : "TABLE_STORAGE_ERROR"
+        }
       );
     }
   }
@@ -100,9 +86,15 @@ export class DataTableProfileEmailsRepository
     try {
       const entity = ProfileEmailToTableEntity.encode(p);
       await this.tableClient.deleteEntity(entity.partitionKey, entity.rowKey);
-    } catch {
+    } catch (e) {
       throw new Error(
-        `unable to delete the specified entity from ${this.tableClient.tableName} table`
+        `unable to delete the specified entity from ${this.tableClient.tableName} table`,
+        {
+          cause:
+            e instanceof RestError && e.statusCode === 404
+              ? "RESOURCE_NOT_FOUND"
+              : "TABLE_STORAGE_ERROR"
+        }
       );
     }
   }

@@ -10,7 +10,6 @@ export const ProfileEmail = t.type({
 export type ProfileEmail = t.TypeOf<typeof ProfileEmail>;
 
 export interface IProfileEmailReader {
-  readonly get: (p: ProfileEmail) => Promise<ProfileEmail>;
   readonly list: (filter: EmailString) => AsyncIterableIterator<ProfileEmail>;
 }
 
