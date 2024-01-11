@@ -8,7 +8,8 @@ import { EmailString } from "@pagopa/ts-commons/lib/strings";
 import {
   ProfileEmail,
   IProfileEmailReader,
-  IProfileEmailWriter
+  IProfileEmailWriter,
+  ProfileEmailWriterError
 } from "./index";
 
 const TableEntity = t.type({
@@ -73,14 +74,11 @@ export class DataTableProfileEmailsRepository
       const entity = ProfileEmailToTableEntity.encode(p);
       await this.tableClient.createEntity(entity);
     } catch (e) {
-      throw new Error(
+      throw new ProfileEmailWriterError(
         `unable to insert a new profile entity into ${this.tableClient.tableName} table`,
-        {
-          cause:
-            isRestError(e) && e.statusCode === 409
-              ? "DUPLICATE_ENTITY"
-              : "TABLE_STORAGE_ERROR"
-        }
+        isRestError(e) && e.statusCode === 409
+          ? "DUPLICATE_ENTITY"
+          : "STORAGE_ERROR"
       );
     }
   }
@@ -90,14 +88,13 @@ export class DataTableProfileEmailsRepository
       const entity = ProfileEmailToTableEntity.encode(p);
       await this.tableClient.deleteEntity(entity.partitionKey, entity.rowKey);
     } catch (e) {
-      throw new Error(
+      throw new ProfileEmailWriterError(
         `unable to delete the specified entity from ${this.tableClient.tableName} table`,
-        {
-          cause:
-            isRestError(e) && e.statusCode === 404
-              ? "RESOURCE_NOT_FOUND"
-              : "TABLE_STORAGE_ERROR"
-        }
+        isRestError(e) &&
+        e.statusCode === 404 &&
+        e.message.includes(`"ResourceNotFound"`)
+          ? "ENTITY_NOT_FOUND"
+          : "STORAGE_ERROR"
       );
     }
   }

@@ -18,6 +18,25 @@ export interface IProfileEmailWriter {
   readonly insert: (p: ProfileEmail) => Promise<void>;
 }
 
+type ProfileEmailWriterErrorCause =
+  | "ENTITY_NOT_FOUND"
+  | "DUPLICATE_ENTITY"
+  | "STORAGE_ERROR";
+
+export class ProfileEmailWriterError extends Error {
+  name = "ProfileEmailWriterError";
+  cause: ProfileEmailWriterErrorCause;
+
+  constructor(message: string, cause: ProfileEmailWriterErrorCause) {
+    super(message);
+    this.cause = cause;
+  }
+
+  static is(u: unknown): u is ProfileEmailWriterError {
+    return u instanceof Error && u.name === "ProfileEmailWriterError";
+  }
+}
+
 // Checks if the given e-mail is already taken
 // profileEmails returns all the ProfileEmail records that shares
 // the same e-mail. If count(records) >= 1 then the e-mail is already taken.
