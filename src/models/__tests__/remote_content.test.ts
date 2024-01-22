@@ -19,8 +19,8 @@ const aRemoteContentEnvironmentConfiguration = {
 };
 
 const aRemoteContentConfigurationWithNoEnv: RemoteContentConfigurationBase = {
+  userId: "aUserId" as NonEmptyString,
   configurationId: "01HMRBX079WA5SGYBQP1A7FSKH" as Ulid,
-  id: "anyid" as NonEmptyString,
   name: "aName" as NonEmptyString,
   description: "a simple description" as NonEmptyString,
   hasPrecondition: Has_preconditionEnum.ALWAYS,
@@ -36,6 +36,9 @@ const aRemoteContentConfigurationWithProdEnv: RemoteContentConfiguration = {
 
 const aRetrievedRemoteContentConfigurationWithProdEnv: RetrievedRemoteContentConfiguration = {
   ...aRemoteContentConfigurationWithProdEnv,
+  id: `${aRemoteContentConfigurationWithProdEnv.configurationId}-${"0".repeat(
+    16
+  )}` as NonEmptyString,
   version: 0 as NonNegativeInteger,
   _etag: "_etag",
   _rid: "_rid",
@@ -53,6 +56,9 @@ const aRemoteContentConfigurationWithTestEnv: RemoteContentConfiguration = {
 
 const aRetrievedRemoteContentConfigurationWithTestEnv: RetrievedRemoteContentConfiguration = {
   ...aRemoteContentConfigurationWithTestEnv,
+  id: `${aRemoteContentConfigurationWithTestEnv.configurationId}-${"0".repeat(
+    16
+  )}` as NonEmptyString,
   version: 0 as NonNegativeInteger,
   _etag: "_etag",
   _rid: "_rid",
@@ -71,6 +77,9 @@ const aRemoteContentConfigurationWithBothEnv: RemoteContentConfiguration = {
 
 const aRetrievedRemoteContentConfigurationWithBothEnv: RetrievedRemoteContentConfiguration = {
   ...aRemoteContentConfigurationWithBothEnv,
+  id: `${aRemoteContentConfigurationWithProdEnv.configurationId}-${"0".repeat(
+    16
+  )}` as NonEmptyString,
   version: 0 as NonNegativeInteger,
   _etag: "_etag",
   _rid: "_rid",

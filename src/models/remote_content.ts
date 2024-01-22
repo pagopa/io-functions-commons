@@ -17,7 +17,7 @@ import { ServiceId } from "../../generated/definitions/ServiceId";
 export const REMOTE_CONTENT_CONFIGURATION_COLLECTION_NAME =
   "remote-content-configuration";
 
-const REMOTE_CONTENT_CONFIGURATION_MODEL_ID_FIELD = "configurationId";
+const REMOTE_CONTENT_CONFIGURATION_MODEL_PK_FIELD = "configurationId";
 
 export const RemoteContentClientCert = t.interface({
   clientCert: NonEmptyString,
@@ -65,10 +65,10 @@ const RemoteContentConfigurationR = t.interface({
     Has_preconditionEnum,
     "hasPrecondition"
   ),
-  id: NonEmptyString,
   isLollipopEnabled: t.boolean,
   name: NonEmptyString,
-  serviceId: ServiceId
+  serviceId: ServiceId,
+  userId: NonEmptyString
 });
 
 const RemoteContentConfigurationO = t.partial({});
@@ -110,14 +110,14 @@ export class RemoteContentConfigurationModel extends CosmosdbModelVersioned<
   RemoteContentConfiguration,
   RemoteContentConfiguration,
   RetrievedRemoteContentConfiguration,
-  typeof REMOTE_CONTENT_CONFIGURATION_MODEL_ID_FIELD
+  typeof REMOTE_CONTENT_CONFIGURATION_MODEL_PK_FIELD
 > {
   constructor(container: Container) {
     super(
       container,
       RemoteContentConfiguration,
       RetrievedRemoteContentConfiguration,
-      REMOTE_CONTENT_CONFIGURATION_MODEL_ID_FIELD
+      REMOTE_CONTENT_CONFIGURATION_MODEL_PK_FIELD
     );
   }
 }
