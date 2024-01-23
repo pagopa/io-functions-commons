@@ -2,9 +2,9 @@ import * as E from "fp-ts/lib/Either";
 import { NonEmptyString, Ulid } from "@pagopa/ts-commons/lib/strings";
 import { ServiceId } from "../../../generated/definitions/ServiceId";
 import {
-  RemoteContentConfigurationBase,
-  RemoteContentConfiguration,
-  RetrievedRemoteContentConfiguration
+  RCConfigurationBase,
+  RCConfiguration,
+  RetrievedRCConfiguration
 } from "../remote_content";
 import { Has_preconditionEnum } from "../../../generated/definitions/ThirdPartyData";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
@@ -18,7 +18,7 @@ const aRemoteContentEnvironmentConfiguration = {
   }
 };
 
-const aRemoteContentConfigurationWithNoEnv: RemoteContentConfigurationBase = {
+const aRemoteContentConfigurationWithNoEnv: RCConfigurationBase = {
   userId: "aUserId" as NonEmptyString,
   configurationId: "01HMRBX079WA5SGYBQP1A7FSKH" as Ulid,
   name: "aName" as NonEmptyString,
@@ -29,12 +29,12 @@ const aRemoteContentConfigurationWithNoEnv: RemoteContentConfigurationBase = {
   isLollipopEnabled: false
 };
 
-const aRemoteContentConfigurationWithProdEnv: RemoteContentConfiguration = {
+const aRemoteContentConfigurationWithProdEnv: RCConfiguration = {
   ...aRemoteContentConfigurationWithNoEnv,
   prodEnvironment: aRemoteContentEnvironmentConfiguration
 };
 
-const aRetrievedRemoteContentConfigurationWithProdEnv: RetrievedRemoteContentConfiguration = {
+const aRetrievedRemoteContentConfigurationWithProdEnv: RetrievedRCConfiguration = {
   ...aRemoteContentConfigurationWithProdEnv,
   id: `${aRemoteContentConfigurationWithProdEnv.configurationId}-${"0".repeat(
     16
@@ -46,7 +46,7 @@ const aRetrievedRemoteContentConfigurationWithProdEnv: RetrievedRemoteContentCon
   _ts: 1
 };
 
-const aRemoteContentConfigurationWithTestEnv: RemoteContentConfiguration = {
+const aRemoteContentConfigurationWithTestEnv: RCConfiguration = {
   ...aRemoteContentConfigurationWithNoEnv,
   testEnvironment: {
     ...aRemoteContentEnvironmentConfiguration,
@@ -54,7 +54,7 @@ const aRemoteContentConfigurationWithTestEnv: RemoteContentConfiguration = {
   }
 };
 
-const aRetrievedRemoteContentConfigurationWithTestEnv: RetrievedRemoteContentConfiguration = {
+const aRetrievedRemoteContentConfigurationWithTestEnv: RetrievedRCConfiguration = {
   ...aRemoteContentConfigurationWithTestEnv,
   id: `${aRemoteContentConfigurationWithTestEnv.configurationId}-${"0".repeat(
     16
@@ -66,7 +66,7 @@ const aRetrievedRemoteContentConfigurationWithTestEnv: RetrievedRemoteContentCon
   _ts: 1
 };
 
-const aRemoteContentConfigurationWithBothEnv: RemoteContentConfiguration = {
+const aRemoteContentConfigurationWithBothEnv: RCConfiguration = {
   ...aRemoteContentConfigurationWithNoEnv,
   prodEnvironment: aRemoteContentEnvironmentConfiguration,
   testEnvironment: {
@@ -75,7 +75,7 @@ const aRemoteContentConfigurationWithBothEnv: RemoteContentConfiguration = {
   }
 };
 
-const aRetrievedRemoteContentConfigurationWithBothEnv: RetrievedRemoteContentConfiguration = {
+const aRetrievedRemoteContentConfigurationWithBothEnv: RetrievedRCConfiguration = {
   ...aRemoteContentConfigurationWithBothEnv,
   id: `${aRemoteContentConfigurationWithProdEnv.configurationId}-${"0".repeat(
     16
@@ -89,51 +89,49 @@ const aRetrievedRemoteContentConfigurationWithBothEnv: RetrievedRemoteContentCon
 
 describe("remote_content", () => {
   it("GIVEN a valid remote_content object with test environment WHEN the object is decoded THEN the decode succeed", async () => {
-    const result = RemoteContentConfiguration.decode(
+    const result = RCConfiguration.decode(
       aRemoteContentConfigurationWithTestEnv
     );
     expect(E.isRight(result)).toBeTruthy();
   });
 
   it("GIVEN a retrieved remote_content object with test environment WHEN the object is decoded THEN the decode succeed", async () => {
-    const result = RemoteContentConfiguration.decode(
+    const result = RCConfiguration.decode(
       aRetrievedRemoteContentConfigurationWithTestEnv
     );
     expect(E.isRight(result)).toBeTruthy();
   });
 
   it("GIVEN a valid remote_content object with prod environment WHEN the object is decoded THEN the decode succeed", async () => {
-    const result = RemoteContentConfiguration.decode(
+    const result = RCConfiguration.decode(
       aRemoteContentConfigurationWithProdEnv
     );
     expect(E.isRight(result)).toBeTruthy();
   });
 
   it("GIVEN a retrieved remote_content object with prod environment WHEN the object is decoded THEN the decode succeed", async () => {
-    const result = RemoteContentConfiguration.decode(
+    const result = RCConfiguration.decode(
       aRetrievedRemoteContentConfigurationWithProdEnv
     );
     expect(E.isRight(result)).toBeTruthy();
   });
 
   it("GIVEN a valid remote_content object with both environments WHEN the object is decoded THEN the decode succeed", async () => {
-    const result = RemoteContentConfiguration.decode(
+    const result = RCConfiguration.decode(
       aRemoteContentConfigurationWithBothEnv
     );
     expect(E.isRight(result)).toBeTruthy();
   });
 
   it("GIVEN a retrieved remote_content object with both environment WHEN the object is decoded THEN the decode succeed", async () => {
-    const result = RemoteContentConfiguration.decode(
+    const result = RCConfiguration.decode(
       aRetrievedRemoteContentConfigurationWithBothEnv
     );
     expect(E.isRight(result)).toBeTruthy();
   });
 
   it("GIVEN a not valid remote_content object with no environments WHEN the object is decoded THEN the decode fail", async () => {
-    const result = RemoteContentConfiguration.decode(
-      aRemoteContentConfigurationWithNoEnv
-    );
+    const result = RCConfiguration.decode(aRemoteContentConfigurationWithNoEnv);
     expect(E.isLeft(result)).toBeTruthy();
   });
 });

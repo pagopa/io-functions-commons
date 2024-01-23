@@ -14,50 +14,43 @@ import {
 import { Has_preconditionEnum } from "../../generated/definitions/ThirdPartyData";
 import { ServiceId } from "../../generated/definitions/ServiceId";
 
-export const REMOTE_CONTENT_CONFIGURATION_COLLECTION_NAME =
-  "remote-content-configuration";
+export const RC_CONFIGURATION_COLLECTION_NAME = "remote-content-configuration";
 
-const REMOTE_CONTENT_CONFIGURATION_MODEL_PK_FIELD = "configurationId";
+const RC_CONFIGURATION_MODEL_PK_FIELD = "configurationId";
 
-export const RemoteContentClientCert = t.interface({
+export const RCClientCert = t.interface({
   clientCert: NonEmptyString,
   clientKey: NonEmptyString,
   serverCa: NonEmptyString
 });
 
-const RemoteContentAuthenticationDetails = t.interface({
+const RCAuthenticationDetails = t.interface({
   headerKeyName: NonEmptyString,
   key: NonEmptyString,
   type: NonEmptyString
 });
 
-export type RemoteContentAuthenticationConfig = t.TypeOf<
-  typeof RemoteContentAuthenticationConfig
->;
-export const RemoteContentAuthenticationConfig = t.intersection([
-  RemoteContentAuthenticationDetails,
-  t.partial({ cert: RemoteContentClientCert })
+export type RCAuthenticationConfig = t.TypeOf<typeof RCAuthenticationConfig>;
+export const RCAuthenticationConfig = t.intersection([
+  RCAuthenticationDetails,
+  t.partial({ cert: RCClientCert })
 ]);
 
-export type RemoteContentEnvironmentConfig = t.TypeOf<
-  typeof RemoteContentEnvironmentConfig
->;
-export const RemoteContentEnvironmentConfig = t.interface({
+export type RCEnvironmentConfig = t.TypeOf<typeof RCEnvironmentConfig>;
+export const RCEnvironmentConfig = t.interface({
   baseUrl: NonEmptyString,
-  detailsAuthentication: RemoteContentAuthenticationConfig
+  detailsAuthentication: RCAuthenticationConfig
 });
 
-export type RemoteContentTestEnvironmentConfig = t.TypeOf<
-  typeof RemoteContentTestEnvironmentConfig
->;
-export const RemoteContentTestEnvironmentConfig = t.intersection([
+export type RCTestEnvironmentConfig = t.TypeOf<typeof RCTestEnvironmentConfig>;
+export const RCTestEnvironmentConfig = t.intersection([
   t.interface({
     testUsers: t.readonlyArray(FiscalCode)
   }),
-  RemoteContentEnvironmentConfig
+  RCEnvironmentConfig
 ]);
 
-const RemoteContentConfigurationR = t.interface({
+const RCConfigurationR = t.interface({
   configurationId: Ulid,
   description: NonEmptyString,
   disableLollipopFor: t.readonlyArray(FiscalCode),
@@ -71,53 +64,49 @@ const RemoteContentConfigurationR = t.interface({
   userId: NonEmptyString
 });
 
-const RemoteContentConfigurationO = t.partial({});
+const RCConfigurationO = t.partial({});
 
-export const RemoteContentConfigurationBase = t.intersection([
-  RemoteContentConfigurationR,
-  RemoteContentConfigurationO
+export const RCConfigurationBase = t.intersection([
+  RCConfigurationR,
+  RCConfigurationO
 ]);
-export type RemoteContentConfigurationBase = t.TypeOf<
-  typeof RemoteContentConfigurationBase
->;
+export type RCConfigurationBase = t.TypeOf<typeof RCConfigurationBase>;
 
-export type RemoteContentConfiguration = t.TypeOf<
-  typeof RemoteContentConfiguration
->;
-export const RemoteContentConfiguration = t.intersection([
-  RemoteContentConfigurationBase,
+export type RCConfiguration = t.TypeOf<typeof RCConfiguration>;
+export const RCConfiguration = t.intersection([
+  RCConfigurationBase,
   t.union([
     t.intersection([
-      t.interface({ prodEnvironment: RemoteContentEnvironmentConfig }),
-      t.partial({ testEnvironment: RemoteContentTestEnvironmentConfig })
+      t.interface({ prodEnvironment: RCEnvironmentConfig }),
+      t.partial({ testEnvironment: RCTestEnvironmentConfig })
     ]),
     t.intersection([
-      t.partial({ prodEnvironment: RemoteContentEnvironmentConfig }),
-      t.interface({ testEnvironment: RemoteContentTestEnvironmentConfig })
+      t.partial({ prodEnvironment: RCEnvironmentConfig }),
+      t.interface({ testEnvironment: RCTestEnvironmentConfig })
     ])
   ])
 ]);
 
-export const RetrievedRemoteContentConfiguration = t.intersection([
-  RemoteContentConfiguration,
+export const RetrievedRCConfiguration = t.intersection([
+  RCConfiguration,
   RetrievedVersionedModel
 ]);
-export type RetrievedRemoteContentConfiguration = t.TypeOf<
-  typeof RetrievedRemoteContentConfiguration
+export type RetrievedRCConfiguration = t.TypeOf<
+  typeof RetrievedRCConfiguration
 >;
 
-export class RemoteContentConfigurationModel extends CosmosdbModelVersioned<
-  RemoteContentConfiguration,
-  RemoteContentConfiguration,
-  RetrievedRemoteContentConfiguration,
-  typeof REMOTE_CONTENT_CONFIGURATION_MODEL_PK_FIELD
+export class RCConfigurationModel extends CosmosdbModelVersioned<
+  RCConfiguration,
+  RCConfiguration,
+  RetrievedRCConfiguration,
+  typeof RC_CONFIGURATION_MODEL_PK_FIELD
 > {
   constructor(container: Container) {
     super(
       container,
-      RemoteContentConfiguration,
-      RetrievedRemoteContentConfiguration,
-      REMOTE_CONTENT_CONFIGURATION_MODEL_PK_FIELD
+      RCConfiguration,
+      RetrievedRCConfiguration,
+      RC_CONFIGURATION_MODEL_PK_FIELD
     );
   }
 }
