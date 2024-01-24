@@ -4,7 +4,7 @@ import {
   RCConfigurationBase,
   RCConfiguration,
   RetrievedRCConfiguration
-} from "../remote_content";
+} from "../rc_configuration";
 import { Has_preconditionEnum } from "../../../generated/definitions/ThirdPartyData";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 
