@@ -85,50 +85,50 @@ const aRetrievedRemoteContentConfigurationWithBothEnv: RetrievedRCConfiguration 
   _ts: 1
 };
 
-describe("remote_content", () => {
-  it("GIVEN a valid remote_content object with test environment WHEN the object is decoded THEN the decode succeed", async () => {
+describe("RC", () => {
+  it("GIVEN a valid RC object with test environment WHEN the object is decoded THEN the decode succeed", async () => {
     const result = RCConfiguration.decode(
       aRemoteContentConfigurationWithTestEnv
     );
     expect(E.isRight(result)).toBeTruthy();
   });
 
-  it("GIVEN a retrieved remote_content object with test environment WHEN the object is decoded THEN the decode succeed", async () => {
+  it("GIVEN a retrieved RC object with test environment WHEN the object is decoded THEN the decode succeed", async () => {
     const result = RCConfiguration.decode(
       aRetrievedRemoteContentConfigurationWithTestEnv
     );
     expect(E.isRight(result)).toBeTruthy();
   });
 
-  it("GIVEN a valid remote_content object with prod environment WHEN the object is decoded THEN the decode succeed", async () => {
+  it("GIVEN a valid RC object with prod environment WHEN the object is decoded THEN the decode succeed", async () => {
     const result = RCConfiguration.decode(
       aRemoteContentConfigurationWithProdEnv
     );
     expect(E.isRight(result)).toBeTruthy();
   });
 
-  it("GIVEN a retrieved remote_content object with prod environment WHEN the object is decoded THEN the decode succeed", async () => {
+  it("GIVEN a retrieved RC object with prod environment WHEN the object is decoded THEN the decode succeed", async () => {
     const result = RCConfiguration.decode(
       aRetrievedRemoteContentConfigurationWithProdEnv
     );
     expect(E.isRight(result)).toBeTruthy();
   });
 
-  it("GIVEN a valid remote_content object with both environments WHEN the object is decoded THEN the decode succeed", async () => {
+  it("GIVEN a valid RC object with both environments WHEN the object is decoded THEN the decode succeed", async () => {
     const result = RCConfiguration.decode(
       aRemoteContentConfigurationWithBothEnv
     );
     expect(E.isRight(result)).toBeTruthy();
   });
 
-  it("GIVEN a retrieved remote_content object with both environment WHEN the object is decoded THEN the decode succeed", async () => {
+  it("GIVEN a retrieved RC object with both environment WHEN the object is decoded THEN the decode succeed", async () => {
     const result = RCConfiguration.decode(
       aRetrievedRemoteContentConfigurationWithBothEnv
     );
     expect(E.isRight(result)).toBeTruthy();
   });
 
-  it("GIVEN a not valid remote_content object with no environments WHEN the object is decoded THEN the decode fail", async () => {
+  it("GIVEN a not valid RC object with no environments WHEN the object is decoded THEN the decode fail", async () => {
     const result = RCConfiguration.decode(aRemoteContentConfigurationWithNoEnv);
     expect(E.isLeft(result)).toBeTruthy();
   });
