@@ -1,6 +1,5 @@
 import * as E from "fp-ts/lib/Either";
 import { NonEmptyString, Ulid } from "@pagopa/ts-commons/lib/strings";
-import { ServiceId } from "../../../generated/definitions/ServiceId";
 import {
   RCConfigurationBase,
   RCConfiguration,
@@ -24,7 +23,6 @@ const aRemoteContentConfigurationWithNoEnv: RCConfigurationBase = {
   name: "aName" as NonEmptyString,
   description: "a simple description" as NonEmptyString,
   hasPrecondition: Has_preconditionEnum.ALWAYS,
-  serviceId: "01GQQZ9HF5GAPRVKJM1VDAVFHM" as ServiceId,
   disableLollipopFor: [],
   isLollipopEnabled: false
 };

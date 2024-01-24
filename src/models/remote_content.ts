@@ -12,7 +12,6 @@ import {
   RetrievedVersionedModel
 } from "../utils/cosmosdb_model_versioned";
 import { Has_preconditionEnum } from "../../generated/definitions/ThirdPartyData";
-import { ServiceId } from "../../generated/definitions/ServiceId";
 
 export const RC_CONFIGURATION_COLLECTION_NAME = "remote-content-configuration";
 
@@ -60,7 +59,6 @@ const RCConfigurationR = t.interface({
   ),
   isLollipopEnabled: t.boolean,
   name: NonEmptyString,
-  serviceId: ServiceId,
   userId: NonEmptyString
 });
 
