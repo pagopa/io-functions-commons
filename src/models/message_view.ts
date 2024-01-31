@@ -14,7 +14,7 @@ import {
   PaymentStatus,
   PaymentStatusEnum
 } from "../../generated/definitions/PaymentStatus";
-import { Has_preconditionEnum } from "../../generated/definitions/ThirdPartyData";
+import { HasPreconditionEnum } from "../../generated/definitions/HasPrecondition";
 
 export const MESSAGE_VIEW_COLLECTION_NAME = "message-view";
 const MESSAGE_VIEW_MODEL_PK_FIELD = "fiscalCode";
@@ -55,8 +55,8 @@ export const ThirdPartyComponent = t.union([
       id: NonEmptyString
     }),
     t.partial({
-      has_precondition: enumType<Has_preconditionEnum>(
-        Has_preconditionEnum,
+      has_precondition: enumType<HasPreconditionEnum>(
+        HasPreconditionEnum,
         "has_precondition"
       ),
       original_receipt_date: Timestamp,
