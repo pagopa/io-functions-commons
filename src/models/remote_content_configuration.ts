@@ -5,7 +5,7 @@ import { enumType } from "@pagopa/ts-commons/lib/types";
 import { FiscalCode } from "../../generated/definitions/FiscalCode";
 import { ServiceId } from "../../generated/definitions/ServiceId";
 import { CosmosResource, CosmosdbModel } from "../utils/cosmosdb_model";
-import { Has_preconditionEnum } from "../../generated/definitions/ThirdPartyData";
+import { HasPreconditionEnum } from "../../generated/definitions/HasPrecondition";
 
 export const REMOTE_CONTENT_CONFIGURATION_COLLECTION_NAME =
   "remote-content-configuration";
@@ -51,8 +51,8 @@ export const RemoteContentTestEnvironmentConfig = t.intersection([
 
 const RemoteContentConfigurationR = t.interface({
   disableLollipopFor: t.readonlyArray(FiscalCode),
-  hasPrecondition: enumType<Has_preconditionEnum>(
-    Has_preconditionEnum,
+  hasPrecondition: enumType<HasPreconditionEnum>(
+    HasPreconditionEnum,
     "hasPrecondition"
   ),
   id: NonEmptyString,

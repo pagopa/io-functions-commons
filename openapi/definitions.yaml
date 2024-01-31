@@ -227,11 +227,7 @@ ThirdPartyData:
       type: boolean
       default: false
     has_precondition:
-      type: string
-      x-extensible-enum:
-        - ALWAYS
-        - ONCE
-        - NEVER
+      $ref: "#/HasPrecondition"
     summary:
       type: string
       minLength: 1
@@ -239,6 +235,12 @@ ThirdPartyData:
       $ref: "#/Ulid"
   required:
     - id
+HasPrecondition:
+  type: string
+  x-extensible-enum:
+    - ALWAYS
+    - ONCE
+    - NEVER
 EUCovidCert:
   type: object
   description: |-
@@ -543,6 +545,139 @@ InternalMessageResponseWithContent:
       $ref: "#/MessageStatusValue"
   required:
     - message
+
+RCConfigurationResponse:
+  allOf:
+    - $ref: "#/RCConfigurationBase"
+    - $ref: "#/RCConfigurationEnvironment"
+  
+RCConfigurationBase:
+  type: object
+  properties:
+    userId: 
+      type: string
+      description: User id.
+    configurationId:
+      type: string
+      description: Ulid string.
+      format: Ulid
+      x-import: '@pagopa/ts-commons/lib/strings'
+      example: 01ARZ3NDEKTSV4RRFFQ69G5FAV
+    name:
+      type: string
+      description: Configuration name.
+    description:
+      type: string
+      description: Configuration description.
+    hasPrecondition:
+       $ref: "#/HasPrecondition"
+    disableLollipopFor:
+      type: array
+      items:
+        type: string
+        description: User for which lollipop shoulg be disabled
+    isLollipopEnabled:
+      type: boolean
+      description: Flag to check if lollipop is enabled
+  required:
+    - userId
+    - configurationId
+    - name
+    - description
+    - hasPrecondition
+    - disableLollipopFor
+    - isLollipopEnabled
+
+RCConfigurationEnvironment:
+  x-one-of: true
+  allOf:
+    - $ref: "#/RCConfigurationWithTestEnvironment"
+    - $ref: "#/RCConfigurationWithProdEnvironment"
+    - $ref: "#/RCConfigurationWithProdAndTestEnvironment"
+
+RCConfigurationWithTestEnvironment:
+  type: object
+  properties:
+    testEnvironment:
+      $ref: "#/RCConfigurationTestEnvironment"
+  required:
+    - testEnvironment
+
+RCConfigurationWithProdEnvironment:
+  type: object
+  properties:
+    prodEnvironment:
+      $ref: "#/RCConfigurationProdEnvironment"
+  required:
+    - prodEnvironment
+
+RCConfigurationWithProdAndTestEnvironment:
+  type: object
+  properties:
+    prodEnvironment:
+      $ref: "#/RCConfigurationProdEnvironment"
+    testEnvironment:
+      $ref: "#/RCConfigurationTestEnvironment"
+  required:
+    - prodEnvironment
+    - testEnvironment
+
+RCConfigurationProdEnvironment:
+  type: object
+  properties:
+    baseUrl:
+      type: string
+      description: Base url of the server.
+    detailsAuthentication:
+      $ref: "#/RCAuthenticationConfig"
+  required:
+    - baseUrl
+
+RCAuthenticationConfig:
+  type: object
+  properties:
+    headerKeyName:
+      type: string
+      description: header key name
+    key:
+      type: string
+      description: authentication config key
+    type:
+      type: string
+      description: authentication config type
+    cert:
+      $ref: "#/RCClientCert"
+  required:
+    - headerKeyName
+    - key
+    - type
+
+RCClientCert:
+  type: object
+  properties:
+    clientCert:
+      type: string
+      description: authentication config client cert
+    clientKey:
+      type: string
+      description: authentication config client key
+    serverCa:
+      type: string
+      description: authentication config server ca
+  required:
+    - clientCert
+    - clientKey
+    - serverCa
+
+RCConfigurationTestEnvironment:
+  allOf:
+    - $ref: "#/RCConfigurationProdEnvironment"
+    - type: object
+      properties:
+        testUsers:
+          type: array
+          items:
+            $ref: "#/FiscalCode"
 
 MessageResponseWithContent:
   type: object

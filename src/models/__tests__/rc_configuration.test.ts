@@ -1,11 +1,11 @@
 import * as E from "fp-ts/lib/Either";
 import { NonEmptyString, Ulid } from "@pagopa/ts-commons/lib/strings";
 import {
-  RCConfigurationBase,
   RCConfiguration,
   RetrievedRCConfiguration
 } from "../rc_configuration";
-import { Has_preconditionEnum } from "../../../generated/definitions/ThirdPartyData";
+import { RCConfigurationBase } from "../../../generated/definitions/RCConfigurationBase";
+import { HasPreconditionEnum } from "../../../generated/definitions/HasPrecondition";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 
 const aRemoteContentEnvironmentConfiguration = {
@@ -22,7 +22,7 @@ const aRemoteContentConfigurationWithNoEnv: RCConfigurationBase = {
   configurationId: "01HMRBX079WA5SGYBQP1A7FSKH" as Ulid,
   name: "aName" as NonEmptyString,
   description: "a simple description" as NonEmptyString,
-  hasPrecondition: Has_preconditionEnum.ALWAYS,
+  hasPrecondition: HasPreconditionEnum.ALWAYS,
   disableLollipopFor: [],
   isLollipopEnabled: false
 };
