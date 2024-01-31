@@ -546,7 +546,7 @@ InternalMessageResponseWithContent:
   required:
     - message
 
-RCConfigurationResponse:
+RCConfiguration:
   allOf:
     - $ref: "#/RCConfigurationBase"
     - $ref: "#/RCConfigurationEnvironment"
