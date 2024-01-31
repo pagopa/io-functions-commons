@@ -556,6 +556,7 @@ RCConfigurationBase:
   properties:
     userId: 
       type: string
+      minLength: 1
       description: User id.
     configurationId:
       type: string
@@ -565,9 +566,11 @@ RCConfigurationBase:
       example: 01ARZ3NDEKTSV4RRFFQ69G5FAV
     name:
       type: string
+      minLength: 1
       description: Configuration name.
     description:
       type: string
+      minLength: 1
       description: Configuration description.
     hasPrecondition:
        $ref: "#/HasPrecondition"
@@ -575,7 +578,8 @@ RCConfigurationBase:
       type: array
       items:
         type: string
-        description: User for which lollipop shoulg be disabled
+        minLength: 1
+        description: User for which lollipop should be disabled
     isLollipopEnabled:
       type: boolean
       description: Flag to check if lollipop is enabled
@@ -627,6 +631,7 @@ RCConfigurationProdEnvironment:
   properties:
     baseUrl:
       type: string
+      minLength: 1
       description: Base url of the server.
     detailsAuthentication:
       $ref: "#/RCAuthenticationConfig"
@@ -638,12 +643,15 @@ RCAuthenticationConfig:
   properties:
     headerKeyName:
       type: string
+      minLength: 1
       description: header key name
     key:
       type: string
+      minLength: 1
       description: authentication config key
     type:
       type: string
+      minLength: 1
       description: authentication config type
     cert:
       $ref: "#/RCClientCert"
@@ -657,12 +665,15 @@ RCClientCert:
   properties:
     clientCert:
       type: string
+      minLength: 1
       description: authentication config client cert
     clientKey:
       type: string
+      minLength: 1
       description: authentication config client key
     serverCa:
       type: string
+      minLength: 1
       description: authentication config server ca
   required:
     - clientCert
