@@ -546,24 +546,23 @@ InternalMessageResponseWithContent:
   required:
     - message
 
-RCConfiguration:
+NewRCConfiguration:
+  allOf:
+    - $ref: "#/NewRCConfigurationBase"
+    - $ref: "#/RCConfigurationEnvironment"
+
+RCConfigurationResponse:
   allOf:
     - $ref: "#/RCConfigurationBase"
     - $ref: "#/RCConfigurationEnvironment"
-  
-RCConfigurationBase:
+
+NewRCConfigurationBase:
   type: object
   properties:
     userId: 
       type: string
       minLength: 1
       description: User id.
-    configurationId:
-      type: string
-      description: Ulid string.
-      format: Ulid
-      x-import: '@pagopa/ts-commons/lib/strings'
-      example: 01ARZ3NDEKTSV4RRFFQ69G5FAV
     name:
       type: string
       minLength: 1
@@ -585,12 +584,25 @@ RCConfigurationBase:
       description: Flag to check if lollipop is enabled
   required:
     - userId
-    - configurationId
     - name
     - description
     - hasPrecondition
     - disableLollipopFor
     - isLollipopEnabled
+ 
+RCConfigurationBase:
+  allOf:
+      - $ref: "#/NewRCConfigurationBase"
+      - type: object
+        properties:
+          configurationId:
+            type: string
+            description: Ulid string.
+            format: Ulid
+            x-import: '@pagopa/ts-commons/lib/strings'
+            example: 01ARZ3NDEKTSV4RRFFQ69G5FAV
+        required:
+          - configurationId
 
 RCConfigurationEnvironment:
   x-one-of: true
