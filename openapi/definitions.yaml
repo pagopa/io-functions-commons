@@ -559,10 +559,6 @@ RCConfigurationResponse:
 NewRCConfigurationBase:
   type: object
   properties:
-    userId: 
-      type: string
-      minLength: 1
-      description: User id.
     name:
       type: string
       minLength: 1
@@ -601,8 +597,13 @@ RCConfigurationBase:
             format: Ulid
             x-import: '@pagopa/ts-commons/lib/strings'
             example: 01ARZ3NDEKTSV4RRFFQ69G5FAV
+          userId:
+            type: string
+            minLength: 1
+            description: User id.
         required:
           - configurationId
+          - userId
 
 RCConfigurationEnvironment:
   x-one-of: true
