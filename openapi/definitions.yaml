@@ -579,7 +579,6 @@ NewRCConfigurationBase:
       type: boolean
       description: Flag to check if lollipop is enabled
   required:
-    - userId
     - name
     - description
     - hasPrecondition
