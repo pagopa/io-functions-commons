@@ -559,10 +559,6 @@ RCConfigurationResponse:
 NewRCConfigurationBase:
   type: object
   properties:
-    userId: 
-      type: string
-      minLength: 1
-      description: User id.
     name:
       type: string
       minLength: 1
@@ -583,7 +579,6 @@ NewRCConfigurationBase:
       type: boolean
       description: Flag to check if lollipop is enabled
   required:
-    - userId
     - name
     - description
     - hasPrecondition
@@ -601,8 +596,13 @@ RCConfigurationBase:
             format: Ulid
             x-import: '@pagopa/ts-commons/lib/strings'
             example: 01ARZ3NDEKTSV4RRFFQ69G5FAV
+          userId:
+            type: string
+            minLength: 1
+            description: User id.
         required:
           - configurationId
+          - userId
 
 RCConfigurationEnvironment:
   x-one-of: true
