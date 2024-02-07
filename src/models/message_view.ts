@@ -1,5 +1,5 @@
 import * as t from "io-ts";
-import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { NonEmptyString, Ulid } from "@pagopa/ts-commons/lib/strings";
 import { Container } from "@azure/cosmos";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { enumType, withDefault } from "@pagopa/ts-commons/lib/types";
@@ -55,6 +55,7 @@ export const ThirdPartyComponent = t.union([
       id: NonEmptyString
     }),
     t.partial({
+      configuration_id: Ulid,
       has_precondition: enumType<HasPreconditionEnum>(
         HasPreconditionEnum,
         "has_precondition"

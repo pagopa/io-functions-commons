@@ -93,6 +93,22 @@ describe("message_view", () => {
     expect(E.isLeft(result)).toBeTruthy();
   });
 
+  it("GIVEN a valid message_view object with thirdParty WHEN the object contain an invalid configuration_id THEN the decode fails", async () => {
+    const messageViewWithThirdParty = {
+      ...aMessageView,
+      components: {
+        ...aMessageView.components,
+        thirdParty: {
+          has: true,
+          id: "AN_ID",
+          configuration_id: "anInvalidUlid"
+        }
+      }
+    };
+    const result = MessageView.decode(messageViewWithThirdParty);
+    expect(E.isLeft(result)).toBeTruthy();
+  });
+
   it("GIVEN a valid message_view object with thirdParty WHEN the object contains a valid id THEN the decode succeed", async () => {
     const messageViewWithThirdParty = {
       ...aMessageView,
@@ -100,7 +116,8 @@ describe("message_view", () => {
         ...aMessageView.components,
         thirdParty: {
           has: true,
-          id: "AN_ID"
+          id: "AN_ID",
+          configuration_id: "01ARZ3NDEKTSV4RRFFQ69G5FAV"
         }
       }
     };
@@ -229,6 +246,7 @@ describe("message_view", () => {
       );
     }
   });
+  
 
   it("GIVEN a valid message_view without third party object WHEN the object is decode THEN the decode succeed", async () => {
     const { thirdParty, ...componentsWithoutThirdParty } = aComponents;
