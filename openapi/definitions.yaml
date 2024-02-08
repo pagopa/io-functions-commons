@@ -572,9 +572,7 @@ NewRCConfigurationBase:
     disableLollipopFor:
       type: array
       items:
-        type: string
-        minLength: 1
-        description: User for which lollipop should be disabled
+        $ref: "#/FiscalCode"
     isLollipopEnabled:
       type: boolean
       description: Flag to check if lollipop is enabled
