@@ -567,40 +567,40 @@ NewRCConfigurationBase:
       type: string
       minLength: 1
       description: Configuration description.
-    hasPrecondition:
+    has_precondition:
        $ref: "#/HasPrecondition"
-    disableLollipopFor:
+    disable_lollipop_for:
       type: array
       items:
         $ref: "#/FiscalCode"
-    isLollipopEnabled:
+    is_lollipop_enabled:
       type: boolean
       description: Flag to check if lollipop is enabled
   required:
     - name
     - description
-    - hasPrecondition
-    - disableLollipopFor
-    - isLollipopEnabled
+    - has_precondition
+    - disable_lollipop_for
+    - is_lollipop_enabled
  
 RCConfigurationBase:
   allOf:
       - $ref: "#/NewRCConfigurationBase"
       - type: object
         properties:
-          configurationId:
+          configuration_id:
             type: string
             description: Ulid string.
             format: Ulid
             x-import: '@pagopa/ts-commons/lib/strings'
             example: 01ARZ3NDEKTSV4RRFFQ69G5FAV
-          userId:
+          user_id:
             type: string
             minLength: 1
             description: User id managed by APIM.
         required:
-          - configurationId
-          - userId
+          - configuration_id
+          - user_id
 
 RCConfigurationEnvironment:
   x-one-of: true
@@ -612,46 +612,46 @@ RCConfigurationEnvironment:
 RCConfigurationWithTestEnvironment:
   type: object
   properties:
-    testEnvironment:
+    test_environment:
       $ref: "#/RCConfigurationTestEnvironment"
   required:
-    - testEnvironment
+    - test_environment
 
 RCConfigurationWithProdEnvironment:
   type: object
   properties:
-    prodEnvironment:
+    prod_environment:
       $ref: "#/RCConfigurationProdEnvironment"
   required:
-    - prodEnvironment
+    - prod_environment
 
 RCConfigurationWithProdAndTestEnvironment:
   type: object
   properties:
-    prodEnvironment:
+    prod_environment:
       $ref: "#/RCConfigurationProdEnvironment"
-    testEnvironment:
+    test_environment:
       $ref: "#/RCConfigurationTestEnvironment"
   required:
-    - prodEnvironment
-    - testEnvironment
+    - prod_environment
+    - test_environment
 
 RCConfigurationProdEnvironment:
   type: object
   properties:
-    baseUrl:
+    base_url:
       type: string
       minLength: 1
       description: Base url of the server.
-    detailsAuthentication:
+    details_authentication:
       $ref: "#/RCAuthenticationConfig"
   required:
-    - baseUrl
+    - base_url
 
 RCAuthenticationConfig:
   type: object
   properties:
-    headerKeyName:
+    header_key_name:
       type: string
       minLength: 1
       description: header key name
@@ -666,36 +666,36 @@ RCAuthenticationConfig:
     cert:
       $ref: "#/RCClientCert"
   required:
-    - headerKeyName
+    - header_key_name
     - key
     - type
 
 RCClientCert:
   type: object
   properties:
-    clientCert:
+    client_cert:
       type: string
       minLength: 1
       description: authentication config client cert
-    clientKey:
+    client_key:
       type: string
       minLength: 1
       description: authentication config client key
-    serverCa:
+    server_ca:
       type: string
       minLength: 1
       description: authentication config server ca
   required:
-    - clientCert
-    - clientKey
-    - serverCa
+    - client_cert
+    - client_key
+    - server_ca
 
 RCConfigurationTestEnvironment:
   allOf:
     - $ref: "#/RCConfigurationProdEnvironment"
     - type: object
       properties:
-        testUsers:
+        test_users:
           type: array
           items:
             $ref: "#/FiscalCode"

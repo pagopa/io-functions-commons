@@ -2,11 +2,11 @@ import * as E from "fp-ts/lib/Either";
 import { NonEmptyString, Ulid } from "@pagopa/ts-commons/lib/strings";
 import {
   RCConfiguration,
+  RCConfigurationBase,
   RetrievedRCConfiguration
 } from "../rc_configuration";
-import { RCConfigurationBase } from "../../../generated/definitions/RCConfigurationBase";
-import { HasPreconditionEnum } from "../../../generated/definitions/HasPrecondition";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
+import { HasPreconditionEnum } from "../../../generated/definitions/HasPrecondition";
 
 const aRemoteContentEnvironmentConfiguration = {
   baseUrl: "https://anydomain.anytld/api/v1/anyapi" as NonEmptyString,
