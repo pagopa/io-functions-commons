@@ -554,7 +554,7 @@ NewRCConfiguration:
 RCConfigurationResponse:
   allOf:
     - $ref: "#/RCConfigurationBase"
-    - $ref: "#/RCConfigurationEnvironment"
+    - $ref: "#/RCConfigurationEnvironmentResponse"
 
 NewRCConfigurationBase:
   type: object
@@ -594,13 +594,8 @@ RCConfigurationBase:
             format: Ulid
             x-import: '@pagopa/ts-commons/lib/strings'
             example: 01ARZ3NDEKTSV4RRFFQ69G5FAV
-          user_id:
-            type: string
-            minLength: 1
-            description: User id managed by APIM.
         required:
           - configuration_id
-          - user_id
 
 RCConfigurationEnvironment:
   x-one-of: true
@@ -608,6 +603,14 @@ RCConfigurationEnvironment:
     - $ref: "#/RCConfigurationWithTestEnvironment"
     - $ref: "#/RCConfigurationWithProdEnvironment"
     - $ref: "#/RCConfigurationWithProdAndTestEnvironment"
+
+RCConfigurationEnvironmentResponse:
+  type: object
+  properties:
+    test_environment:
+      $ref: "#/RCConfigurationTestEnvironment"
+    prod_environment:
+      $ref: "#/RCConfigurationProdEnvironment"
 
 RCConfigurationWithTestEnvironment:
   type: object
