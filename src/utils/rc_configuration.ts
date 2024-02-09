@@ -47,9 +47,9 @@ const getProdEnvironment = (
 });
 
 /**
- * Converts a retrieved RCConfiguration to a configuration that can be shared via API
+ * Converts a RetrievedRCConfiguration to a configuration that can be shared via API
  */
-export const retrievedMessageToPublic = (
+export const retrievedRCConfigurationToPublic = (
   retrievedConfiguration: RetrievedRCConfiguration
 ): RCConfigurationResponse =>
   withoutUndefinedValues({
