@@ -7,4 +7,4 @@ export type ObjectIdGenerator = () => NonEmptyString;
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 export const ulidGenerator: ObjectIdGenerator = () => ulid() as NonEmptyString;
 
-export const ulidGeneratorAsUlid = () => ulid() as Ulid;
+export const ulidGeneratorAsUlid = (): Ulid => ulid() as Ulid;
