@@ -13,28 +13,28 @@ import {
 } from "../models/rc_configuration";
 
 const getCert = (cert: RCClientCertModel): RCClientCert => ({
-  client_key: cert.clientKey,
   client_cert: cert.clientCert,
+  client_key: cert.clientKey,
   server_ca: cert.serverCa
 });
 
 const getDetailsAuthentication = (
   detailsAuth: RCAuthenticationConfigModel
 ): RCAuthenticationConfig => ({
+  cert: detailsAuth.cert ? getCert(detailsAuth.cert) : undefined,
   header_key_name: detailsAuth.headerKeyName,
   key: detailsAuth.key,
-  type: detailsAuth.type,
-  cert: detailsAuth.cert ? getCert(detailsAuth.cert) : undefined
+  type: detailsAuth.type
 });
 
 const getTestEnvironment = (
   testEnv: RCTestEnvironmentConfig
 ): RCConfigurationTestEnvironment => ({
-  test_users: testEnv.testUsers,
   base_url: testEnv.baseUrl,
   details_authentication: getDetailsAuthentication(
     testEnv.detailsAuthentication
-  )
+  ),
+  test_users: testEnv.testUsers
 });
 
 const getProdEnvironment = (
@@ -54,15 +54,15 @@ export const retrievedMessageToPublic = (
 ): RCConfigurationResponse =>
   withoutUndefinedValues({
     configuration_id: retrievedConfiguration.configurationId,
-    name: retrievedConfiguration.name,
     description: retrievedConfiguration.description,
-    has_precondition: retrievedConfiguration.hasPrecondition,
     disable_lollipop_for: retrievedConfiguration.disableLollipopFor,
+    has_precondition: retrievedConfiguration.hasPrecondition,
     is_lollipop_enabled: retrievedConfiguration.isLollipopEnabled,
-    test_environment: retrievedConfiguration.testEnvironment
-      ? getTestEnvironment(retrievedConfiguration.testEnvironment)
-      : undefined,
+    name: retrievedConfiguration.name,
     prod_environment: retrievedConfiguration.prodEnvironment
       ? getProdEnvironment(retrievedConfiguration.prodEnvironment)
+      : undefined,
+    test_environment: retrievedConfiguration.testEnvironment
+      ? getTestEnvironment(retrievedConfiguration.testEnvironment)
       : undefined
   });
