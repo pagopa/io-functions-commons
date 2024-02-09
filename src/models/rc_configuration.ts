@@ -22,6 +22,7 @@ export const RCClientCert = t.interface({
   clientKey: NonEmptyString,
   serverCa: NonEmptyString
 });
+export type RCClientCert = t.TypeOf<typeof RCClientCert>;
 
 const RCAuthenticationDetails = t.interface({
   headerKeyName: NonEmptyString,
