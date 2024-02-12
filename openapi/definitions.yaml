@@ -546,15 +546,10 @@ InternalMessageResponseWithContent:
   required:
     - message
 
-NewRCConfiguration:
+RCConfigurationPublic:
   allOf:
     - $ref: "#/NewRCConfigurationBase"
     - $ref: "#/RCConfigurationEnvironment"
-
-RCConfigurationResponse:
-  allOf:
-    - $ref: "#/RCConfigurationBase"
-    - $ref: "#/RCConfigurationEnvironmentResponse"
 
 NewRCConfigurationBase:
   type: object
@@ -598,46 +593,12 @@ RCConfigurationBase:
           - configuration_id
 
 RCConfigurationEnvironment:
-  x-one-of: true
-  allOf:
-    - $ref: "#/RCConfigurationWithTestEnvironment"
-    - $ref: "#/RCConfigurationWithProdEnvironment"
-    - $ref: "#/RCConfigurationWithProdAndTestEnvironment"
-
-RCConfigurationEnvironmentResponse:
   type: object
   properties:
     test_environment:
       $ref: "#/RCConfigurationTestEnvironment"
     prod_environment:
       $ref: "#/RCConfigurationProdEnvironment"
-
-RCConfigurationWithTestEnvironment:
-  type: object
-  properties:
-    test_environment:
-      $ref: "#/RCConfigurationTestEnvironment"
-  required:
-    - test_environment
-
-RCConfigurationWithProdEnvironment:
-  type: object
-  properties:
-    prod_environment:
-      $ref: "#/RCConfigurationProdEnvironment"
-  required:
-    - prod_environment
-
-RCConfigurationWithProdAndTestEnvironment:
-  type: object
-  properties:
-    prod_environment:
-      $ref: "#/RCConfigurationProdEnvironment"
-    test_environment:
-      $ref: "#/RCConfigurationTestEnvironment"
-  required:
-    - prod_environment
-    - test_environment
 
 RCConfigurationProdEnvironment:
   type: object
@@ -650,6 +611,7 @@ RCConfigurationProdEnvironment:
       $ref: "#/RCAuthenticationConfig"
   required:
     - base_url
+    - details_authentication
 
 RCAuthenticationConfig:
   type: object
@@ -702,6 +664,8 @@ RCConfigurationTestEnvironment:
           type: array
           items:
             $ref: "#/FiscalCode"
+      required:
+      - test_users
 
 MessageResponseWithContent:
   type: object
