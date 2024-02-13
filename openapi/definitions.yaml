@@ -548,6 +548,11 @@ InternalMessageResponseWithContent:
 
 RCConfigurationPublic:
   allOf:
+    - $ref: "#/RCConfigurationBase"
+    - $ref: "#/RCConfigurationEnvironment"
+
+NewRCConfigurationPublic:
+  allOf:
     - $ref: "#/NewRCConfigurationBase"
     - $ref: "#/RCConfigurationEnvironment"
 
