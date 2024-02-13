@@ -127,9 +127,4 @@ describe("RC", () => {
     );
     expect(E.isRight(result)).toBeTruthy();
   });
-
-  it("GIVEN a not valid RC object with no environments WHEN the object is decoded THEN the decode fail", async () => {
-    const result = RCConfiguration.decode(aRemoteContentConfigurationWithNoEnv);
-    expect(E.isLeft(result)).toBeTruthy();
-  });
 });

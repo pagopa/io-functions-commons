@@ -74,16 +74,8 @@ export type RCConfigurationBase = t.TypeOf<typeof RCConfigurationBase>;
 export type RCConfiguration = t.TypeOf<typeof RCConfiguration>;
 export const RCConfiguration = t.intersection([
   RCConfigurationBase,
-  t.union([
-    t.intersection([
-      t.interface({ prodEnvironment: RCEnvironmentConfig }),
-      t.partial({ testEnvironment: RCTestEnvironmentConfig })
-    ]),
-    t.intersection([
-      t.partial({ prodEnvironment: RCEnvironmentConfig }),
-      t.interface({ testEnvironment: RCTestEnvironmentConfig })
-    ])
-  ])
+  t.partial({ testEnvironment: RCTestEnvironmentConfig }),
+  t.partial({ prodEnvironment: RCEnvironmentConfig })
 ]);
 
 export const RetrievedRCConfiguration = t.intersection([
