@@ -13,7 +13,7 @@ import {
 } from "../utils/cosmosdb_model_versioned";
 import { HasPreconditionEnum } from "../../generated/definitions/HasPrecondition";
 
-export const RC_CONFIGURATION_COLLECTION_NAME = "remote-content-configuration";
+export const RC_CONFIGURATION_COLLECTION_NAME = "message-configuration";
 
 const RC_CONFIGURATION_MODEL_PK_FIELD = "configurationId";
 
