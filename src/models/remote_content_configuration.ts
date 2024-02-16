@@ -7,6 +7,10 @@ import { ServiceId } from "../../generated/definitions/ServiceId";
 import { CosmosResource, CosmosdbModel } from "../utils/cosmosdb_model";
 import { HasPreconditionEnum } from "../../generated/definitions/HasPrecondition";
 
+/**
+ * OLD MODEL TO REMOVE
+ */
+
 export const REMOTE_CONTENT_CONFIGURATION_COLLECTION_NAME =
   "remote-content-configuration";
 const REMOTE_CONTENT_CONFIGURATION_MODEL_PK_FIELD = "serviceId";
