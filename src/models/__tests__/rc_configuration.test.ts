@@ -1,9 +1,6 @@
 import * as E from "fp-ts/lib/Either";
 import { NonEmptyString, Ulid } from "@pagopa/ts-commons/lib/strings";
-import {
-  RCConfiguration,
-  RetrievedRCConfiguration
-} from "../rc_configuration";
+import { RCConfiguration, RetrievedRCConfiguration } from "../rc_configuration";
 import { RCConfigurationBase } from "../../../generated/definitions/RCConfigurationBase";
 import { HasPreconditionEnum } from "../../../generated/definitions/HasPrecondition";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
@@ -85,51 +82,51 @@ const aRetrievedRemoteContentConfigurationWithBothEnv: RetrievedRCConfiguration 
   _ts: 1
 };
 
-describe("RC", () => {
-  it("GIVEN a valid RC object with test environment WHEN the object is decoded THEN the decode succeed", async () => {
+describe("RCConfiguration", () => {
+  it("GIVEN a valid RCConfiguration object with test environment WHEN the object is decoded THEN the decode succeed", async () => {
     const result = RCConfiguration.decode(
       aRemoteContentConfigurationWithTestEnv
     );
-    expect(E.isRight(result)).toBeTruthy();
+    expect(E.isRight(result)).toBe(true);
   });
 
-  it("GIVEN a retrieved RC object with test environment WHEN the object is decoded THEN the decode succeed", async () => {
+  it("GIVEN a retrieved RCConfiguration object with test environment WHEN the object is decoded THEN the decode succeed", async () => {
     const result = RCConfiguration.decode(
       aRetrievedRemoteContentConfigurationWithTestEnv
     );
-    expect(E.isRight(result)).toBeTruthy();
+    expect(E.isRight(result)).toBe(true);
   });
 
-  it("GIVEN a valid RC object with prod environment WHEN the object is decoded THEN the decode succeed", async () => {
+  it("GIVEN a valid RCConfiguration object with prod environment WHEN the object is decoded THEN the decode succeed", async () => {
     const result = RCConfiguration.decode(
       aRemoteContentConfigurationWithProdEnv
     );
-    expect(E.isRight(result)).toBeTruthy();
+    expect(E.isRight(result)).toBe(true);
   });
 
-  it("GIVEN a retrieved RC object with prod environment WHEN the object is decoded THEN the decode succeed", async () => {
+  it("GIVEN a retrieved RCConfiguration object with prod environment WHEN the object is decoded THEN the decode succeed", async () => {
     const result = RCConfiguration.decode(
       aRetrievedRemoteContentConfigurationWithProdEnv
     );
-    expect(E.isRight(result)).toBeTruthy();
+    expect(E.isRight(result)).toBe(true);
   });
 
-  it("GIVEN a valid RC object with both environments WHEN the object is decoded THEN the decode succeed", async () => {
+  it("GIVEN a valid RCConfiguration object with both environments WHEN the object is decoded THEN the decode succeed", async () => {
     const result = RCConfiguration.decode(
       aRemoteContentConfigurationWithBothEnv
     );
-    expect(E.isRight(result)).toBeTruthy();
+    expect(E.isRight(result)).toBe(true);
   });
 
-  it("GIVEN a retrieved RC object with both environment WHEN the object is decoded THEN the decode succeed", async () => {
+  it("GIVEN a retrieved RCConfiguration object with both environment WHEN the object is decoded THEN the decode succeed", async () => {
     const result = RCConfiguration.decode(
       aRetrievedRemoteContentConfigurationWithBothEnv
     );
-    expect(E.isRight(result)).toBeTruthy();
+    expect(E.isRight(result)).toBe(true);
   });
 
-  it("GIVEN a not valid RC object with no environments WHEN the object is decoded THEN the decode fail", async () => {
+  it("GIVEN a not valid RCConfiguration object with no environments WHEN the object is decoded THEN the decode fail", async () => {
     const result = RCConfiguration.decode(aRemoteContentConfigurationWithNoEnv);
-    expect(E.isLeft(result)).toBeTruthy();
+    expect(E.isLeft(result)).toBe(true);
   });
 });

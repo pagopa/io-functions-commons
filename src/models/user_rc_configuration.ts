@@ -1,12 +1,12 @@
 import * as t from "io-ts";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { Container } from "@azure/cosmos";
-import { CosmosResource, CosmosdbModel } from "../utils/cosmosdb_model";
+import { AzureCosmosResource, CosmosdbModel } from "../utils/cosmosdb_model";
 
 export const USER_RC_CONFIGURATIONS_COLLECTION_NAME = "user-configurations";
 const USER_RC_CONFIGURATIONS_MODEL_PK_FIELD = "userId";
 
-const UserRCConfiguration = t.interface({
+export const UserRCConfiguration = t.interface({
   userId: NonEmptyString,
   id: NonEmptyString
 });
@@ -14,7 +14,7 @@ export type UserRCConfiguration = t.TypeOf<typeof UserRCConfiguration>;
 
 export const RetrievedUserRCConfiguration = t.intersection([
   UserRCConfiguration,
-  CosmosResource
+  AzureCosmosResource
 ]);
 export type RetrievedUserRCConfiguration = t.TypeOf<
   typeof RetrievedUserRCConfiguration
