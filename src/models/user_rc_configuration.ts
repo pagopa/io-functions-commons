@@ -20,9 +20,6 @@ export type RetrievedUserRCConfiguration = t.TypeOf<
   typeof RetrievedUserRCConfiguration
 >;
 
-/**
- * @deprecated This model is deprecated, use the one inside ./remote_content.ts instead
- */
 export class UserRCConfigurationModel extends CosmosdbModel<
   UserRCConfiguration,
   UserRCConfiguration,
