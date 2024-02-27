@@ -1008,7 +1008,10 @@ describe("ThirdPartyData", () => {
   });
 
   it("should decode a ThirdPartyData with the right configurationId if provided", () => {
-    const aThirdPartyData = { id: aThirdPartyId, configuration_id: "01ARZ3NDEKTSV4RRFFQ69G5FAV" };
+    const aThirdPartyData = {
+      id: aThirdPartyId,
+      configuration_id: "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+    };
 
     const decoded = ThirdPartyData.decode(aThirdPartyData);
 
@@ -1026,7 +1029,10 @@ describe("ThirdPartyData", () => {
   });
 
   it("should fail to decode a ThirdPartyData if a wrong ulid is provided as configuration_id", () => {
-    const aThirdPartyData = { id: aThirdPartyId, configuration_id: "notAnUlid" };
+    const aThirdPartyData = {
+      id: aThirdPartyId,
+      configuration_id: "notAnUlid"
+    };
     const decoded = ThirdPartyData.decode(aThirdPartyData);
     expect(E.isLeft(decoded)).toBeTruthy();
   });

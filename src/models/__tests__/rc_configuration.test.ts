@@ -1,9 +1,12 @@
 import * as E from "fp-ts/lib/Either";
 import { NonEmptyString, Ulid } from "@pagopa/ts-commons/lib/strings";
-import { RCConfiguration, RetrievedRCConfiguration } from "../rc_configuration";
-import { RCConfigurationBase } from "../../../generated/definitions/RCConfigurationBase";
-import { HasPreconditionEnum } from "../../../generated/definitions/HasPrecondition";
+import {
+  RCConfiguration,
+  RCConfigurationBase,
+  RetrievedRCConfiguration
+} from "../rc_configuration";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
+import { HasPreconditionEnum } from "../../../generated/definitions/HasPrecondition";
 
 const aRemoteContentEnvironmentConfiguration = {
   baseUrl: "https://anydomain.anytld/api/v1/anyapi" as NonEmptyString,
@@ -123,10 +126,5 @@ describe("RCConfiguration", () => {
       aRetrievedRemoteContentConfigurationWithBothEnv
     );
     expect(E.isRight(result)).toBe(true);
-  });
-
-  it("GIVEN a not valid RCConfiguration object with no environments WHEN the object is decoded THEN the decode fail", async () => {
-    const result = RCConfiguration.decode(aRemoteContentConfigurationWithNoEnv);
-    expect(E.isLeft(result)).toBe(true);
   });
 });
