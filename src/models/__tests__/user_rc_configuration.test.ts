@@ -1,0 +1,35 @@
+import * as E from "fp-ts/lib/Either";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import {
+  UserRCConfiguration,
+  RetrievedUserRCConfiguration
+} from "../user_rc_configuration";
+
+const aUserRCConfiguration: UserRCConfiguration = {
+  userId: "aUserId" as NonEmptyString,
+  id: "01HMRBX079WA5SGYBQP1A7FSKH" as NonEmptyString
+};
+
+const aRetrievedUserRCConfiguration: RetrievedUserRCConfiguration = {
+  ...aUserRCConfiguration,
+  _etag: "_etag",
+  _rid: "_rid",
+  _self: "_self",
+  _ts: 1
+};
+
+describe("UserRCConfiguration", () => {
+  it("GIVEN a valid UserRCConfiguration object WHEN the object is decoded THEN the decode succeed", async () => {
+    const result = UserRCConfiguration.decode(
+      aUserRCConfiguration
+    );
+    expect(E.isRight(result)).toBeTruthy();
+  });
+
+  it("GIVEN a retrieved RC object with test environment WHEN the object is decoded THEN the decode succeed", async () => {
+    const result = UserRCConfiguration.decode(
+        aRetrievedUserRCConfiguration
+    );
+    expect(E.isRight(result)).toBeTruthy();
+  });
+});
