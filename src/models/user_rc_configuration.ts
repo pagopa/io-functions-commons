@@ -7,8 +7,8 @@ export const USER_RC_CONFIGURATIONS_COLLECTION_NAME = "user-configurations";
 const USER_RC_CONFIGURATIONS_MODEL_PK_FIELD = "userId";
 
 export const UserRCConfiguration = t.interface({
-  userId: NonEmptyString,
-  id: NonEmptyString
+  id: NonEmptyString,
+  userId: NonEmptyString
 });
 export type UserRCConfiguration = t.TypeOf<typeof UserRCConfiguration>;
 
@@ -32,10 +32,6 @@ export class UserRCConfigurationModel extends CosmosdbModel<
    * @param container the Cosmos container client
    */
   constructor(container: Container) {
-    super(
-      container,
-      UserRCConfiguration,
-      RetrievedUserRCConfiguration
-    );
+    super(container, UserRCConfiguration, RetrievedUserRCConfiguration);
   }
 }
