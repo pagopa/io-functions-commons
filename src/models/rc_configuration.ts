@@ -115,9 +115,7 @@ export class RCConfigurationModel extends CosmosdbModelVersioned<
     configurationIds: ReadonlyArray<Ulid>
   ): TE.TaskEither<CosmosErrors, ReadonlyArray<RetrievedRCConfiguration>> {
     if (configurationIds.length === 0) {
-      return TE.left(
-        toCosmosErrorResponse(new Error("Empty configurationId array"))
-      );
+      return TE.right([]);
     }
     const querySpec = {
       parameters: [

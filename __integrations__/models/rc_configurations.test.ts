@@ -38,14 +38,15 @@ const aRemoteContentConfigurationWithTestEnv: RCConfiguration = {
 };
 
 describe("findAllLastVersionByConfigurationId", () => {
-  test("should return a cosmos error if the array of configurationId is empty", async () => {
+  test("should return an empty array if the array of configurationId is empty", async () => {
     const context = createContext(RC_CONFIGURATION_MODEL_PK_FIELD);
     await context.init();
     const model = new RCConfigurationModel(context.container);
 
     const r = await model.findAllLastVersionByConfigurationId([])();
 
-    expect(E.isLeft(r)).toBe(true);
+    expect(E.isRight(r)).toBe(true);
+    if (E.isRight(r)) expect(r.right).toHaveLength(0);
   });
 
   test("should return an array with length 1", async () => {
