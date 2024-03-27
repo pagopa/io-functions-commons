@@ -1,12 +1,23 @@
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { CosmosdbModelComposedVersioned, generateComposedVersionedModelId } from "../cosmosdb_model_composed_versioned";
+import {
+  CosmosdbModelComposedVersioned,
+  generateComposedVersionedModelId
+} from "../cosmosdb_model_composed_versioned";
 import * as t from "io-ts";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { RetrievedVersionedModel } from "../cosmosdb_model_versioned";
 import { BaseModel } from "../cosmosdb_model";
-import { Container, ErrorResponse, FeedResponse, ResourceResponse } from "@azure/cosmos";
+import {
+  Container,
+  CosmosDiagnostics,
+  ErrorResponse,
+  FeedResponse,
+  ResourceResponse
+} from "@azure/cosmos";
 import * as E from "fp-ts/lib/Either";
 import * as O from "fp-ts/lib/Option";
+
+const cosmosDiagnostics = new CosmosDiagnostics();
 
 const aModelExternalKeyId = "aModelExternalKeyId" as const;
 const aModelPartitionField = "aModelPartitionField" as const;
@@ -21,12 +32,16 @@ const MyDocument = t.interface({
 type MyDocument = t.TypeOf<typeof MyDocument>;
 
 // test stub that compose a document id from the tuple (externalKey, partitionKey, version)
-const documentId = (externalKey: string, partitionKey: number, version: number): NonEmptyString =>
-  generateComposedVersionedModelId<MyDocument, typeof aModelExternalKeyId, typeof aModelPartitionField>(
-    externalKey,
-    partitionKey,
-    version as NonNegativeInteger
-  );
+const documentId = (
+  externalKey: string,
+  partitionKey: number,
+  version: number
+): NonEmptyString =>
+  generateComposedVersionedModelId<
+    MyDocument,
+    typeof aModelExternalKeyId,
+    typeof aModelPartitionField
+  >(externalKey, partitionKey, version as NonNegativeInteger);
 
 const RetrievedMyDocument = t.intersection([
   MyDocument,
@@ -43,7 +58,13 @@ class MyComposedModel extends CosmosdbModelComposedVersioned<
   typeof aModelPartitionField
 > {
   constructor(c: Container) {
-    super(c, MyDocument, RetrievedMyDocument, aModelExternalKeyId, aModelPartitionField);
+    super(
+      c,
+      MyDocument,
+      RetrievedMyDocument,
+      aModelExternalKeyId,
+      aModelPartitionField
+    );
   }
 }
 
@@ -71,9 +92,11 @@ const containerMock = {
   items: {
     create: jest
       .fn()
-      .mockImplementation(async doc => new ResourceResponse(doc, {}, 200, 200)),
+      .mockImplementation(
+        async doc => new ResourceResponse(doc, {}, 200, cosmosDiagnostics, 200)
+      ),
     query: jest.fn().mockReturnValue({
-      fetchAll: async () => new FeedResponse([], {}, false)
+      fetchAll: async () => new FeedResponse([], {}, false, cosmosDiagnostics)
     }),
     upsert: jest.fn()
   }
@@ -99,7 +122,12 @@ describe("upsert", () => {
       containerMock.items.query.mockReturnValueOnce({
         fetchAll: async () =>
           // if currentlyOnDb is undefined return empty array
-          new FeedResponse([currentlyOnDb].filter(Boolean), {}, false)
+          new FeedResponse(
+            [currentlyOnDb].filter(Boolean),
+            {},
+            false,
+            cosmosDiagnostics
+          )
       });
 
       const model = new MyComposedModel(container);
@@ -108,7 +136,11 @@ describe("upsert", () => {
       expect(containerMock.items.create).toHaveBeenCalledWith(
         {
           ...document,
-          id: documentId(document[aModelExternalKeyId], document[aModelPartitionField], expectedVersion),
+          id: documentId(
+            document[aModelExternalKeyId],
+            document[aModelPartitionField],
+            expectedVersion
+          ),
           version: expectedVersion
         },
         { disableAutomaticIdGeneration: true }
@@ -118,7 +150,11 @@ describe("upsert", () => {
         expect(result.right).toEqual({
           ...document,
           ...someMetadata,
-          id: documentId(document[aModelExternalKeyId], document[aModelPartitionField], expectedVersion),
+          id: documentId(
+            document[aModelExternalKeyId],
+            document[aModelPartitionField],
+            expectedVersion
+          ),
           version: expectedVersion
         });
       }
@@ -143,7 +179,8 @@ describe("upsert", () => {
 
   it("should fail on query error when creating next version", async () => {
     containerMock.items.query.mockReturnValueOnce({
-      fetchAll: () => Promise.resolve(new FeedResponse([], {}, false))
+      fetchAll: () =>
+        Promise.resolve(new FeedResponse([], {}, false, cosmosDiagnostics))
     });
     containerMock.items.create.mockRejectedValueOnce(errorResponse);
     const model = new MyComposedModel(container);
@@ -235,7 +272,10 @@ describe("findLastVersionByModelId", () => {
       fetchAll: () => Promise.reject(errorResponse)
     });
     const model = new MyComposedModel(container);
-    const result = await model.findLastVersionByModelId([aModelExternalKeyValue, aModelPartitionValue])();
+    const result = await model.findLastVersionByModelId([
+      aModelExternalKeyValue,
+      aModelPartitionValue
+    ])();
     expect(E.isLeft(result));
     if (E.isLeft(result)) {
       expect(result.left.kind).toBe("COSMOS_ERROR_RESPONSE");
@@ -257,9 +297,14 @@ describe("typings restrictions", () => {
       typeof aModelExternalKeyId
     > {
       constructor(c: Container) {
-        super(c, MyDocument, RetrievedMyDocument, aModelExternalKeyId, aModelExternalKeyId);
+        super(
+          c,
+          MyDocument,
+          RetrievedMyDocument,
+          aModelExternalKeyId,
+          aModelExternalKeyId
+        );
       }
     }
   });
 });
-

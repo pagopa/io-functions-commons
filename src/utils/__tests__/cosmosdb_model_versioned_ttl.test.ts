@@ -1,5 +1,6 @@
 import {
   Container,
+  CosmosDiagnostics,
   FeedResponse,
   PatchOperationInput,
   ResourceResponse
@@ -51,15 +52,24 @@ const containerMock = {
   items: {
     create: jest
       .fn()
-      .mockImplementation(async doc => new ResourceResponse(doc, {}, 200, 200)),
+      .mockImplementation(
+        async doc =>
+          new ResourceResponse(doc, {}, 200, new CosmosDiagnostics(), 200)
+      ),
     query: jest.fn().mockReturnValue({
       getAsyncIterator: () =>
         yieldValues([
-          new FeedResponse([retrievedDocumentV2], {}, false),
+          new FeedResponse(
+            [retrievedDocumentV2],
+            {},
+            false,
+            new CosmosDiagnostics()
+          ),
           new FeedResponse(
             [retrievedDocumentV0, retrievedDocumentV1],
             {},
-            false
+            false,
+            new CosmosDiagnostics()
           )
         ])
     }),

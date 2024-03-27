@@ -27,7 +27,7 @@ import {
 } from "../message";
 
 jest.mock("../../utils/azure_storage");
-import { Container, ResourceResponse } from "@azure/cosmos";
+import { Container, CosmosDiagnostics, ResourceResponse } from "@azure/cosmos";
 import { MessageSubject } from "../../../generated/definitions/MessageSubject";
 import { ServiceId } from "../../../generated/definitions/ServiceId";
 import { TimeToLiveSeconds } from "../../../generated/definitions/TimeToLiveSeconds";
@@ -648,6 +648,7 @@ describe("findMessageForRecipient", () => {
         },
         {},
         200,
+        new CosmosDiagnostics(),
         200
       )
     );
@@ -675,7 +676,9 @@ describe("findMessageForRecipient", () => {
   it("should return an empty value if the recipient doesn't match", async () => {
     const readMock = jest
       .fn()
-      .mockResolvedValueOnce(new ResourceResponse(undefined, {}, 200, 200));
+      .mockResolvedValueOnce(
+        new ResourceResponse(undefined, {}, 200, new CosmosDiagnostics(), 200)
+      );
     const containerMock = ({
       item: jest.fn().mockReturnValue({ read: readMock })
     } as unknown) as Container;
