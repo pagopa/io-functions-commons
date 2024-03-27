@@ -1,5 +1,3 @@
-import * as t from "io-ts";
-
 import * as E from "fp-ts/lib/Either";
 import * as O from "fp-ts/lib/Option";
 
@@ -25,6 +23,8 @@ import {
 } from "@azure/cosmos";
 
 import { CosmosdbModelVersioned } from "../cosmosdb_model_versioned";
+
+const cosmosDiagnostics = new CosmosDiagnostics();
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -66,12 +66,10 @@ const containerMock = {
     create: jest
       .fn()
       .mockImplementation(
-        async doc =>
-          new ResourceResponse(doc, {}, 200, new CosmosDiagnostics(), 200)
+        async doc => new ResourceResponse(doc, {}, 200, cosmosDiagnostics, 200)
       ),
     query: jest.fn().mockReturnValue({
-      fetchAll: async () =>
-        new FeedResponse([], {}, false, new CosmosDiagnostics())
+      fetchAll: async () => new FeedResponse([], {}, false, cosmosDiagnostics)
     }),
     upsert: jest.fn()
   }
@@ -97,7 +95,7 @@ describe("upsert", () => {
             [currentlyOnDb].filter(Boolean),
             {},
             false,
-            new CosmosDiagnostics()
+            cosmosDiagnostics
           )
       });
 
@@ -143,9 +141,7 @@ describe("upsert", () => {
   it("should fail on query error when creating next version", async () => {
     containerMock.items.query.mockReturnValueOnce({
       fetchAll: () =>
-        Promise.resolve(
-          new FeedResponse([], {}, false, new CosmosDiagnostics())
-        )
+        Promise.resolve(new FeedResponse([], {}, false, cosmosDiagnostics))
     });
     containerMock.items.create.mockRejectedValueOnce(errorResponse);
     const model = new MyModel(container);
