@@ -12,7 +12,6 @@ import {
 import {
   Container,
   ItemDefinition,
-  PartitionKeyBuilder,
   RequestOptions,
   SqlQuerySpec,
   PartitionKey as CosmosPartitionKey
@@ -73,6 +72,9 @@ export const generateVersionedModelId = <T, ModelIdKey extends keyof T>(
 export const incVersion = (version: NonNegativeInteger): NonNegativeInteger =>
   (Number(version) + 1) as NonNegativeInteger;
 
+// since the type annotation of our inferred "partitionKey" type is not
+// compatible with the PartitionKey defined by "@azure/cosmos" we have
+// to parse it manually
 const getPartitionKeyFromSearchKey = <
   T,
   ModelIdKey extends keyof T,
@@ -80,17 +82,16 @@ const getPartitionKeyFromSearchKey = <
 >(
   searchKey: DocumentSearchKey<T, ModelIdKey, PartitionKey>
 ): CosmosPartitionKey => {
-  const builder = new PartitionKeyBuilder();
   const value: unknown =
-    searchKey[1] !== undefined ? searchKey[1] : searchKey[0];
+    typeof searchKey[1] !== "undefined" ? searchKey[1] : searchKey[0];
   if (
     typeof value === "string" ||
     typeof value === "number" ||
     typeof value === "boolean"
   ) {
-    builder.addValue(value);
+    return value;
   }
-  return builder.build();
+  return null;
 };
 
 /**
