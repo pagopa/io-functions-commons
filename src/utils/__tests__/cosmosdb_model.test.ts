@@ -3,7 +3,12 @@ import * as t from "io-ts";
 import * as E from "fp-ts/lib/Either";
 import * as O from "fp-ts/lib/Option";
 
-import { Container, ErrorResponse, ResourceResponse } from "@azure/cosmos";
+import {
+  Container,
+  CosmosDiagnostics,
+  ErrorResponse,
+  ResourceResponse
+} from "@azure/cosmos";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { BaseModel, CosmosdbModel, CosmosResource } from "../cosmosdb_model";
@@ -87,6 +92,7 @@ describe("create", () => {
         },
         {},
         200,
+        new CosmosDiagnostics(),
         200
       )
     );
@@ -174,6 +180,7 @@ describe("upsert", () => {
         },
         {},
         200,
+        new CosmosDiagnostics(),
         200
       )
     );
@@ -202,6 +209,7 @@ describe("find", () => {
         },
         {},
         200,
+        new CosmosDiagnostics(),
         200
       )
     );
@@ -230,6 +238,7 @@ describe("find", () => {
         },
         {},
         200,
+        new CosmosDiagnostics(),
         200
       )
     );
@@ -252,7 +261,7 @@ describe("find", () => {
   it("should return an empty option if the document does not exist", async () => {
     readMock.mockResolvedValueOnce(
       // TODO: check whether this is what the client actually returns
-      new ResourceResponse(undefined, {}, 200, 200)
+      new ResourceResponse(undefined, {}, 200, new CosmosDiagnostics(), 200)
     );
     containerMock.item.mockReturnValue({ read: readMock });
     const model = new MyModel(container);

@@ -9,7 +9,7 @@ import {
 } from "@pagopa/ts-commons/lib/numbers";
 import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
-import { Container, ResourceResponse } from "@azure/cosmos";
+import { Container, CosmosDiagnostics, ResourceResponse } from "@azure/cosmos";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { NotRejectedMessageStatusValueEnum as MessageStatusValueEnum } from "../../../generated/definitions/NotRejectedMessageStatusValue";
 import { RejectedMessageStatusValueEnum } from "../../../generated/definitions/RejectedMessageStatusValue";
@@ -84,6 +84,7 @@ mockCreateItem.mockImplementation(
       { ...doc, _etag: "_etag", _rid: "_rid", _self: "_self", _ts: 1 },
       {},
       200,
+      new CosmosDiagnostics(),
       200
     )
 );

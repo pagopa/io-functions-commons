@@ -12,8 +12,10 @@ import {
 import {
   Container,
   ItemDefinition,
+  PartitionKeyBuilder,
   RequestOptions,
-  SqlQuerySpec
+  SqlQuerySpec,
+  PartitionKey as CosmosPartitionKey
 } from "@azure/cosmos";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { flow, pipe } from "fp-ts/lib/function";
@@ -70,6 +72,26 @@ export const generateVersionedModelId = <T, ModelIdKey extends keyof T>(
 
 export const incVersion = (version: NonNegativeInteger): NonNegativeInteger =>
   (Number(version) + 1) as NonNegativeInteger;
+
+const getPartitionKeyFromSearchKey = <
+  T,
+  ModelIdKey extends keyof T,
+  PartitionKey extends keyof T = ModelIdKey
+>(
+  searchKey: DocumentSearchKey<T, ModelIdKey, PartitionKey>
+): CosmosPartitionKey => {
+  const builder = new PartitionKeyBuilder();
+  const value: unknown =
+    searchKey[1] !== undefined ? searchKey[1] : searchKey[0];
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    builder.addValue(value);
+  }
+  return builder.build();
+};
 
 /**
  * Assumption: the model ID is also the partition key
@@ -175,7 +197,7 @@ export abstract class CosmosdbModelVersioned<
   public findLastVersionByModelId(
     searchKey: DocumentSearchKey<T, ModelIdKey, PartitionKey>
   ): TaskEither<CosmosErrors, O.Option<TR>> {
-    const [modelId, partitionKey] = searchKey;
+    const [modelId] = searchKey;
     const q: SqlQuerySpec = {
       parameters: [
         {
@@ -188,9 +210,10 @@ export abstract class CosmosdbModelVersioned<
         this.modelIdKey
       )} = @modelId ORDER BY m.version DESC`
     };
+
     return super.findOneByQuery(q, {
       maxItemCount: 1,
-      partitionKey: partitionKey !== undefined ? partitionKey : modelId
+      partitionKey: getPartitionKeyFromSearchKey(searchKey)
     });
   }
 

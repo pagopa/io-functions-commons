@@ -18,6 +18,7 @@ import {
 
 import {
   Container,
+  CosmosDiagnostics,
   ErrorResponse,
   FeedResponse,
   ResourceResponse
@@ -64,9 +65,13 @@ const containerMock = {
   items: {
     create: jest
       .fn()
-      .mockImplementation(async doc => new ResourceResponse(doc, {}, 200, 200)),
+      .mockImplementation(
+        async doc =>
+          new ResourceResponse(doc, {}, 200, new CosmosDiagnostics(), 200)
+      ),
     query: jest.fn().mockReturnValue({
-      fetchAll: async () => new FeedResponse([], {}, false)
+      fetchAll: async () =>
+        new FeedResponse([], {}, false, new CosmosDiagnostics())
     }),
     upsert: jest.fn()
   }
@@ -88,7 +93,12 @@ describe("upsert", () => {
       containerMock.items.query.mockReturnValueOnce({
         fetchAll: async () =>
           // if currentlyOnDb is undefined return empty array
-          new FeedResponse([currentlyOnDb].filter(Boolean), {}, false)
+          new FeedResponse(
+            [currentlyOnDb].filter(Boolean),
+            {},
+            false,
+            new CosmosDiagnostics()
+          )
       });
 
       const model = new MyModel(container);
@@ -132,7 +142,10 @@ describe("upsert", () => {
 
   it("should fail on query error when creating next version", async () => {
     containerMock.items.query.mockReturnValueOnce({
-      fetchAll: () => Promise.resolve(new FeedResponse([], {}, false))
+      fetchAll: () =>
+        Promise.resolve(
+          new FeedResponse([], {}, false, new CosmosDiagnostics())
+        )
     });
     containerMock.items.create.mockRejectedValueOnce(errorResponse);
     const model = new MyModel(container);
