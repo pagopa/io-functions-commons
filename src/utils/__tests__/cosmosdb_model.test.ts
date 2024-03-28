@@ -11,7 +11,12 @@ import {
 } from "@azure/cosmos";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { BaseModel, CosmosdbModel, CosmosResource } from "../cosmosdb_model";
+import {
+  BaseModel,
+  CosmosdbModel,
+  CosmosResource,
+  DocumentSearchKey
+} from "../cosmosdb_model";
 
 beforeEach(() => {
   jest.resetAllMocks();
@@ -81,6 +86,27 @@ export const someMetadata = {
 const errorResponse: ErrorResponse = new Error();
 // eslint-disable-next-line functional/immutable-data
 errorResponse.code = 500;
+
+type Equal<X, Y extends X> = X extends Y ? (Y extends X ? X : never) : never;
+
+describe("DocumentSearchKey", () => {
+  type MyModel = { foo: string; bar: number; baz: boolean[] };
+
+  // alway allow id as a search key
+  type _0 = Equal<DocumentSearchKey<MyModel, "id">, [string]>;
+  // allow a string as partition key
+  type _1 = Equal<DocumentSearchKey<MyModel, "id", "foo">, [string, string]>;
+  // same model and partition key
+  type _2 = Equal<DocumentSearchKey<MyModel, "foo", "foo">, [string]>;
+  // @ts-expect-error MyModel["bar"] is not a string
+  type _3 = Equal<DocumentSearchKey<MyModel, "bar">, [string]>;
+  // @ts-expect-error MyModel["baz"] is not a string or number
+  type _4 = Equal<DocumentSearchKey<MyModel, "id", "baz">, [string, string]>;
+  // allow custom fields as search key
+  type _5 = Equal<DocumentSearchKey<MyModel, "foo">, [string]>;
+  // @ts-expect-error "pippo" is not a field of MyModel
+  type _6 = Equal<DocumentSearchKey<MyModel, "pippo">, [string]>;
+});
 
 describe("create", () => {
   it("should create a document", async () => {

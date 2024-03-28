@@ -81,18 +81,8 @@ const getPartitionKeyFromSearchKey = <
   PartitionKey extends keyof T = ModelIdKey
 >(
   searchKey: DocumentSearchKey<T, ModelIdKey, PartitionKey>
-): CosmosPartitionKey => {
-  const value: unknown =
-    typeof searchKey[1] !== "undefined" ? searchKey[1] : searchKey[0];
-  if (
-    typeof value === "string" ||
-    typeof value === "number" ||
-    typeof value === "boolean"
-  ) {
-    return value;
-  }
-  return null;
-};
+): CosmosPartitionKey =>
+  typeof searchKey[1] === "undefined" ? searchKey[0] : searchKey[1];
 
 /**
  * Assumption: the model ID is also the partition key
