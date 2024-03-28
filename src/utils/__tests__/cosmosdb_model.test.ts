@@ -93,19 +93,26 @@ describe("DocumentSearchKey", () => {
   type MyModel = { foo: string; bar: number; baz: boolean[] };
 
   // alway allow id as a search key
-  type _0 = Equal<DocumentSearchKey<MyModel, "id">, [string]>;
+  type _0 = Equal<DocumentSearchKey<MyModel, "id">, readonly [string]>;
   // allow a string as partition key
-  type _1 = Equal<DocumentSearchKey<MyModel, "id", "foo">, [string, string]>;
+  type _1 = Equal<
+    DocumentSearchKey<MyModel, "id", "foo">,
+    readonly [string, string]
+  >;
   // same model and partition key
-  type _2 = Equal<DocumentSearchKey<MyModel, "foo", "foo">, [string]>;
+  type _2 = Equal<DocumentSearchKey<MyModel, "foo", "foo">, readonly [string]>;
   // @ts-expect-error MyModel["bar"] is not a string
-  type _3 = Equal<DocumentSearchKey<MyModel, "bar">, [string]>;
-  // @ts-expect-error MyModel["baz"] is not a string or number
-  type _4 = Equal<DocumentSearchKey<MyModel, "id", "baz">, [string, string]>;
+  type _3 = Equal<DocumentSearchKey<MyModel, "bar">, readonly [string]>;
+  // @ ts-expect-error MyModel["baz"] is not a string or number
+  type _4 = Equal<
+    DocumentSearchKey<MyModel, "id", "baz">,
+    // @ts-expect-error
+    readonly [string, string]
+  >;
   // allow custom fields as search key
-  type _5 = Equal<DocumentSearchKey<MyModel, "foo">, [string]>;
+  type _5 = Equal<DocumentSearchKey<MyModel, "foo">, readonly [string]>;
   // @ts-expect-error "pippo" is not a field of MyModel
-  type _6 = Equal<DocumentSearchKey<MyModel, "pippo">, [string]>;
+  type _6 = Equal<DocumentSearchKey<MyModel, "pippo">, readonly [string]>;
 });
 
 describe("create", () => {
