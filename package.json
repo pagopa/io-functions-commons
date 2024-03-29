@@ -59,7 +59,7 @@
     "@azure/cosmos": "^3.17.1",
     "@azure/data-tables": "^13.2.2",
     "@pagopa/ts-commons": "^12.6.0",
-    "applicationinsights": "^1.8.10",
+    "applicationinsights": "^2.9.5",
     "azure-storage": "^2.10.5",
     "cidr-matcher": "^2.1.1",
     "helmet": "^4.6.0",
