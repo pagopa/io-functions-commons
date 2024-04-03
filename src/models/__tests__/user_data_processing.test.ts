@@ -6,7 +6,12 @@ import * as E from "fp-ts/lib/Either";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { FiscalCode } from "../../../generated/definitions/FiscalCode";
 
-import { Container, FeedResponse, ResourceResponse } from "@azure/cosmos";
+import {
+  Container,
+  CosmosDiagnostics,
+  FeedResponse,
+  ResourceResponse
+} from "@azure/cosmos";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { UserDataProcessingChoiceEnum } from "../../../generated/definitions/UserDataProcessingChoice";
 import { UserDataProcessingStatusEnum } from "../../../generated/definitions/UserDataProcessingStatus";
@@ -82,13 +87,19 @@ describe("createOrUpdateByNewOne", () => {
             },
             {},
             200,
+            new CosmosDiagnostics(),
             200
           )
         ),
         query: jest.fn(() => ({
           fetchAll: jest.fn(() =>
             Promise.resolve(
-              new FeedResponse([aRetrievedUserDataProcessing], {}, false)
+              new FeedResponse(
+                [aRetrievedUserDataProcessing],
+                {},
+                false,
+                new CosmosDiagnostics()
+              )
             )
           )
         }))

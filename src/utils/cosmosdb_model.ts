@@ -57,13 +57,19 @@ export type DocumentSearchKey<
   // Hence we omit "extends BaseModel", but we check keys to be part of "T & BaseModel"
   ModelIdKey extends keyof (T & BaseModel),
   PartitionKey extends keyof (T & BaseModel) = ModelIdKey
-> = (T & BaseModel)[ModelIdKey] extends string // narrow type to the ones that might be an identity
-  ? PartitionKey extends ModelIdKey // eslint-disable-next-line functional/prefer-readonly-type
-    ? [(T & BaseModel)[ModelIdKey]] // eslint-disable-next-line functional/prefer-readonly-type
-    : PartitionKey extends keyof (T & BaseModel) // eslint-disable-next-line functional/prefer-readonly-type
-    ? [(T & BaseModel)[ModelIdKey], (T & BaseModel)[PartitionKey]]
-    : never
-  : never;
+> =
+  // We must be sure the provided keys refer to fields whose value is appropriate
+  // the modelId must be a string
+  // the partitiion key might be a string or a number
+  Pick<BaseModel & T, ModelIdKey | PartitionKey> extends Record<
+    ModelIdKey,
+    string
+  > &
+    Record<PartitionKey, string | number>
+    ? PartitionKey extends ModelIdKey // partition key === model id means no partition key is provided
+      ? readonly [string]
+      : readonly [string, string | number]
+    : never;
 
 export type AzureCosmosResource = t.TypeOf<typeof AzureCosmosResource>;
 export const AzureCosmosResource = t.interface({

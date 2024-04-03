@@ -3,10 +3,20 @@ import * as t from "io-ts";
 import * as E from "fp-ts/lib/Either";
 import * as O from "fp-ts/lib/Option";
 
-import { Container, ErrorResponse, ResourceResponse } from "@azure/cosmos";
+import {
+  Container,
+  CosmosDiagnostics,
+  ErrorResponse,
+  ResourceResponse
+} from "@azure/cosmos";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { BaseModel, CosmosdbModel, CosmosResource } from "../cosmosdb_model";
+import {
+  BaseModel,
+  CosmosdbModel,
+  CosmosResource,
+  DocumentSearchKey
+} from "../cosmosdb_model";
 
 beforeEach(() => {
   jest.resetAllMocks();
@@ -77,6 +87,34 @@ const errorResponse: ErrorResponse = new Error();
 // eslint-disable-next-line functional/immutable-data
 errorResponse.code = 500;
 
+type Equal<X, Y extends X> = X extends Y ? (Y extends X ? X : never) : never;
+
+describe("DocumentSearchKey", () => {
+  type MyModel = { foo: string; bar: number; baz: boolean[] };
+
+  // alway allow id as a search key
+  type _0 = Equal<DocumentSearchKey<MyModel, "id">, readonly [string]>;
+  // allow a string as partition key
+  type _1 = Equal<
+    DocumentSearchKey<MyModel, "id", "foo">,
+    readonly [string, string]
+  >;
+  // same model and partition key
+  type _2 = Equal<DocumentSearchKey<MyModel, "foo", "foo">, readonly [string]>;
+  // @ts-expect-error MyModel["bar"] is not a string
+  type _3 = Equal<DocumentSearchKey<MyModel, "bar">, readonly [string]>;
+  // @ ts-expect-error MyModel["baz"] is not a string or number
+  type _4 = Equal<
+    DocumentSearchKey<MyModel, "id", "baz">,
+    // @ts-expect-error
+    readonly [string, string]
+  >;
+  // allow custom fields as search key
+  type _5 = Equal<DocumentSearchKey<MyModel, "foo">, readonly [string]>;
+  // @ts-expect-error "pippo" is not a field of MyModel
+  type _6 = Equal<DocumentSearchKey<MyModel, "pippo">, readonly [string]>;
+});
+
 describe("create", () => {
   it("should create a document", async () => {
     containerMock.items.create.mockResolvedValueOnce(
@@ -87,6 +125,7 @@ describe("create", () => {
         },
         {},
         200,
+        new CosmosDiagnostics(),
         200
       )
     );
@@ -174,6 +213,7 @@ describe("upsert", () => {
         },
         {},
         200,
+        new CosmosDiagnostics(),
         200
       )
     );
@@ -202,6 +242,7 @@ describe("find", () => {
         },
         {},
         200,
+        new CosmosDiagnostics(),
         200
       )
     );
@@ -230,6 +271,7 @@ describe("find", () => {
         },
         {},
         200,
+        new CosmosDiagnostics(),
         200
       )
     );
@@ -252,7 +294,7 @@ describe("find", () => {
   it("should return an empty option if the document does not exist", async () => {
     readMock.mockResolvedValueOnce(
       // TODO: check whether this is what the client actually returns
-      new ResourceResponse(undefined, {}, 200, 200)
+      new ResourceResponse(undefined, {}, 200, new CosmosDiagnostics(), 200)
     );
     containerMock.item.mockReturnValue({ read: readMock });
     const model = new MyModel(container);
