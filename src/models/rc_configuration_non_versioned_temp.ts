@@ -116,12 +116,22 @@ export class RCConfigurationModel extends CosmosdbModel<
     configurationId: Ulid
   ): TE.TaskEither<CosmosErrors, O.Option<RetrievedRCConfiguration>> {
     return pipe(
-      // TOFIX: After records sanitization we have
-      // to restore ${configurationId}-0000000000000000 to configurationId
-      // this is put for retrocompatibility due to a change request
-      // next step will be to migrate the other model to the correct final version
-      // after sanitization
-      this.find([`${configurationId}-0000000000000000`, configurationId])
+      this.find([configurationId, configurationId]),
+      TE.chain(maybeConfiguration =>
+        pipe(
+          maybeConfiguration,
+          O.fold(
+            // TEMP: If we cannot find by configurationId
+            // we try to get the versioned id
+            () =>
+              this.find([
+                `${configurationId}-0000000000000000`,
+                configurationId
+              ]),
+            config => TE.right(O.some(config))
+          )
+        )
+      )
     );
   }
 }
