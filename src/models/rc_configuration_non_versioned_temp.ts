@@ -1,6 +1,7 @@
 import * as t from "io-ts";
 import * as TE from "fp-ts/lib/TaskEither";
 import * as O from "fp-ts/lib/Option";
+import * as RA from "fp-ts/lib/ReadonlyArray";
 
 import {
   FiscalCode,
@@ -15,8 +16,10 @@ import { HasPreconditionEnum } from "../../generated/definitions/HasPrecondition
 import {
   AzureCosmosResource,
   CosmosErrors,
-  CosmosdbModel
+  CosmosdbModel,
+  toCosmosErrorResponse
 } from "../utils/cosmosdb_model";
+import { asyncIterableToArray } from "../utils/async";
 
 export const RC_CONFIGURATION_COLLECTION_NAME = "message-configuration";
 
@@ -129,6 +132,36 @@ export class RCConfigurationModel extends CosmosdbModel<
           )
         )
       )
+    );
+  }
+
+  /**
+   * Returns all the RCConfiguration identified by every configurationId
+   *
+   * @param configurationIds an array of configurationId
+   */
+  public findAllByConfigurationId(
+    configurationIds: ReadonlyArray<Ulid>
+  ): TE.TaskEither<CosmosErrors, ReadonlyArray<RetrievedRCConfiguration>> {
+    if (configurationIds.length === 0) {
+      return TE.right([]);
+    }
+    const querySpec = {
+      parameters: [
+        {
+          name: "@configurationIds",
+          value: configurationIds
+        }
+      ],
+      query: `SELECT * FROM n WHERE ARRAY_CONTAINS(@configurationIds, n.${RC_CONFIGURATION_MODEL_PK_FIELD})`
+    };
+    return pipe(
+      TE.tryCatch(
+        () => asyncIterableToArray(this.getQueryIterator(querySpec)),
+        toCosmosErrorResponse
+      ),
+      TE.map(RA.flatten),
+      TE.map(RA.rights)
     );
   }
 }
