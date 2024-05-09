@@ -1,6 +1,5 @@
 import * as t from "io-ts";
 import * as TE from "fp-ts/lib/TaskEither";
-import * as RA from "fp-ts/lib/ReadonlyArray";
 import * as O from "fp-ts/lib/Option";
 
 import {
@@ -11,15 +10,13 @@ import {
 import { enumType } from "@pagopa/ts-commons/lib/types";
 import { Container } from "@azure/cosmos";
 import { pipe } from "fp-ts/lib/function";
+import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { HasPreconditionEnum } from "../../generated/definitions/HasPrecondition";
 import {
   AzureCosmosResource,
   CosmosErrors,
-  CosmosdbModel,
-  toCosmosErrorResponse
+  CosmosdbModel
 } from "../utils/cosmosdb_model";
-import { asyncIterableToArray } from "../utils/async";
-import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 
 export const RC_CONFIGURATION_COLLECTION_NAME = "message-configuration";
 
@@ -59,7 +56,6 @@ export const RCTestEnvironmentConfig = t.intersection([
 ]);
 
 const RCConfigurationR = t.interface({
-  id: NonEmptyString,
   configurationId: Ulid,
   description: NonEmptyString,
   disableLollipopFor: t.readonlyArray(FiscalCode),
@@ -67,6 +63,7 @@ const RCConfigurationR = t.interface({
     HasPreconditionEnum,
     "hasPrecondition"
   ),
+  id: NonEmptyString,
   isLollipopEnabled: t.boolean,
   name: NonEmptyString,
   userId: NonEmptyString
