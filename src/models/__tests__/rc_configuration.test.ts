@@ -51,9 +51,7 @@ const aRemoteContentConfigurationWithTestEnv: RCConfiguration = {
 
 const aRetrievedRemoteContentConfigurationWithTestEnv: RetrievedRCConfiguration = {
   ...aRemoteContentConfigurationWithTestEnv,
-  id: `${aRemoteContentConfigurationWithTestEnv.configurationId}-${"0".repeat(
-    16
-  )}` as NonEmptyString,
+  id: `${aRemoteContentConfigurationWithTestEnv.configurationId}` as NonEmptyString,
   _etag: "_etag",
   _rid: "_rid",
   _self: "_self",
@@ -71,9 +69,7 @@ const aRemoteContentConfigurationWithBothEnv: RCConfiguration = {
 
 const aRetrievedRemoteContentConfigurationWithBothEnv: RetrievedRCConfiguration = {
   ...aRemoteContentConfigurationWithBothEnv,
-  id: `${aRemoteContentConfigurationWithProdEnv.configurationId}-${"0".repeat(
-    16
-  )}` as NonEmptyString,
+  id: `${aRemoteContentConfigurationWithProdEnv.configurationId}` as NonEmptyString,
   _etag: "_etag",
   _rid: "_rid",
   _self: "_self",
