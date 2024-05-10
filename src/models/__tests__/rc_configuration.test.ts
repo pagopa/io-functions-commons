@@ -5,7 +5,6 @@ import {
   RCConfigurationBase,
   RetrievedRCConfiguration
 } from "../rc_configuration";
-import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { HasPreconditionEnum } from "../../../generated/definitions/HasPrecondition";
 
 const aRemoteContentEnvironmentConfiguration = {
@@ -19,6 +18,7 @@ const aRemoteContentEnvironmentConfiguration = {
 
 const aRemoteContentConfigurationWithNoEnv: RCConfigurationBase = {
   userId: "aUserId" as NonEmptyString,
+  id: "01HMRBX079WA5SGYBQP1A7FSKH" as NonEmptyString,
   configurationId: "01HMRBX079WA5SGYBQP1A7FSKH" as Ulid,
   name: "aName" as NonEmptyString,
   description: "a simple description" as NonEmptyString,
@@ -34,10 +34,7 @@ const aRemoteContentConfigurationWithProdEnv: RCConfiguration = {
 
 const aRetrievedRemoteContentConfigurationWithProdEnv: RetrievedRCConfiguration = {
   ...aRemoteContentConfigurationWithProdEnv,
-  id: `${aRemoteContentConfigurationWithProdEnv.configurationId}-${"0".repeat(
-    16
-  )}` as NonEmptyString,
-  version: 0 as NonNegativeInteger,
+  id: `${aRemoteContentConfigurationWithProdEnv.configurationId}` as NonEmptyString,
   _etag: "_etag",
   _rid: "_rid",
   _self: "_self",
@@ -57,7 +54,6 @@ const aRetrievedRemoteContentConfigurationWithTestEnv: RetrievedRCConfiguration 
   id: `${aRemoteContentConfigurationWithTestEnv.configurationId}-${"0".repeat(
     16
   )}` as NonEmptyString,
-  version: 0 as NonNegativeInteger,
   _etag: "_etag",
   _rid: "_rid",
   _self: "_self",
@@ -78,7 +74,6 @@ const aRetrievedRemoteContentConfigurationWithBothEnv: RetrievedRCConfiguration 
   id: `${aRemoteContentConfigurationWithProdEnv.configurationId}-${"0".repeat(
     16
   )}` as NonEmptyString,
-  version: 0 as NonNegativeInteger,
   _etag: "_etag",
   _rid: "_rid",
   _self: "_self",
