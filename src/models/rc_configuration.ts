@@ -1,6 +1,7 @@
 import * as t from "io-ts";
 import * as TE from "fp-ts/lib/TaskEither";
 import * as RA from "fp-ts/lib/ReadonlyArray";
+import * as O from "fp-ts/lib/Option";
 
 import {
   FiscalCode,
@@ -10,12 +11,13 @@ import {
 import { enumType } from "@pagopa/ts-commons/lib/types";
 import { Container } from "@azure/cosmos";
 import { pipe } from "fp-ts/lib/function";
-import {
-  CosmosdbModelVersioned,
-  RetrievedVersionedModel
-} from "../utils/cosmosdb_model_versioned";
 import { HasPreconditionEnum } from "../../generated/definitions/HasPrecondition";
-import { CosmosErrors, toCosmosErrorResponse } from "../utils/cosmosdb_model";
+import {
+  AzureCosmosResource,
+  CosmosErrors,
+  CosmosdbModel,
+  toCosmosErrorResponse
+} from "../utils/cosmosdb_model";
 import { asyncIterableToArray } from "../utils/async";
 
 export const RC_CONFIGURATION_COLLECTION_NAME = "message-configuration";
@@ -63,6 +65,7 @@ const RCConfigurationR = t.interface({
     HasPreconditionEnum,
     "hasPrecondition"
   ),
+  id: NonEmptyString,
   isLollipopEnabled: t.boolean,
   name: NonEmptyString,
   userId: NonEmptyString
@@ -85,25 +88,31 @@ export const RCConfiguration = t.intersection([
 
 export const RetrievedRCConfiguration = t.intersection([
   RCConfiguration,
-  RetrievedVersionedModel
+  AzureCosmosResource
 ]);
 export type RetrievedRCConfiguration = t.TypeOf<
   typeof RetrievedRCConfiguration
 >;
 
-export class RCConfigurationModel extends CosmosdbModelVersioned<
+export class RCConfigurationModel extends CosmosdbModel<
   RCConfiguration,
   RCConfiguration,
   RetrievedRCConfiguration,
   typeof RC_CONFIGURATION_MODEL_PK_FIELD
 > {
   constructor(container: Container) {
-    super(
-      container,
-      RCConfiguration,
-      RetrievedRCConfiguration,
-      RC_CONFIGURATION_MODEL_PK_FIELD
-    );
+    super(container, RCConfiguration, RetrievedRCConfiguration);
+  }
+
+  /**
+   * Returns a RCConfiguration identified by configurationId
+   *
+   * @param configurationId a configurationId
+   */
+  public findByConfigurationId(
+    configurationId: Ulid
+  ): TE.TaskEither<CosmosErrors, O.Option<RetrievedRCConfiguration>> {
+    return this.find([configurationId, configurationId]);
   }
 
   /**
@@ -111,7 +120,7 @@ export class RCConfigurationModel extends CosmosdbModelVersioned<
    *
    * @param configurationIds an array of configurationId
    */
-  public findAllLastVersionByConfigurationId(
+  public findAllByConfigurationId(
     configurationIds: ReadonlyArray<Ulid>
   ): TE.TaskEither<CosmosErrors, ReadonlyArray<RetrievedRCConfiguration>> {
     if (configurationIds.length === 0) {
@@ -132,25 +141,7 @@ export class RCConfigurationModel extends CosmosdbModelVersioned<
         toCosmosErrorResponse
       ),
       TE.map(RA.flatten),
-      TE.map(RA.rights),
-      TE.map(retrievedRCConfigurations =>
-        this.filterLastVersion(retrievedRCConfigurations, configurationIds)
-      )
-    );
-  }
-
-  /**
-   * Filter the last version of every configuration identified by every configurationId
-   * */
-  private filterLastVersion(
-    retrievedRCConfiguration: ReadonlyArray<RetrievedRCConfiguration>,
-    configurationIds: ReadonlyArray<Ulid>
-  ): ReadonlyArray<RetrievedRCConfiguration> {
-    return configurationIds.map(
-      configurationId =>
-        retrievedRCConfiguration
-          .filter(rc => rc.configurationId === configurationId)
-          .sort((a, b) => b.version - a.version)[0]
+      TE.map(RA.rights)
     );
   }
 }
