@@ -10,7 +10,7 @@ import {
   RCAuthenticationConfig as RCAuthenticationConfigModel,
   RCClientCert as RCClientCertModel,
   RCEnvironmentConfig
-} from "../models/rc_configuration_non_versioned_temp";
+} from "../models/rc_configuration";
 
 const getCert = (cert: RCClientCertModel): RCClientCert => ({
   client_cert: cert.clientCert,

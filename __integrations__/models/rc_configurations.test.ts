@@ -21,6 +21,7 @@ const aRemoteContentEnvironmentConfiguration = {
 
 const aRemoteContentConfigurationWithNoEnv: RCConfigurationBase = {
   userId: "aUserId" as NonEmptyString,
+  id: "01HMRBX079WA5SGYBQP1A7FSKH" as NonEmptyString,
   configurationId: "01HMRBX079WA5SGYBQP1A7FSKH" as Ulid,
   name: "aName" as NonEmptyString,
   description: "a simple description" as NonEmptyString,
@@ -43,7 +44,7 @@ describe("findAllLastVersionByConfigurationId", () => {
     await context.init();
     const model = new RCConfigurationModel(context.container);
 
-    const r = await model.findAllLastVersionByConfigurationId([])();
+    const r = await model.findAllByConfigurationId([])();
 
     expect(E.isRight(r)).toBe(true);
     if (E.isRight(r)) expect(r.right).toHaveLength(0);
@@ -62,7 +63,7 @@ describe("findAllLastVersionByConfigurationId", () => {
       configurationId: "01HMRBX079WA5SGYBQP1A7FSKK" as Ulid
     })();
 
-    const r = await model.findAllLastVersionByConfigurationId([
+    const r = await model.findAllByConfigurationId([
       aRemoteContentConfigurationWithTestEnv.configurationId,
       "01HMRBX079WA5SGYBQP1A7FSKK" as Ulid
     ])();
@@ -70,14 +71,6 @@ describe("findAllLastVersionByConfigurationId", () => {
     expect(E.isRight(r)).toBe(true);
     if (E.isRight(r)) {
       expect(r.right).toHaveLength(2);
-      expect(
-        r.right.find(i => i.configurationId === "01HMRBX079WA5SGYBQP1A7FSKH")
-          ?.version
-      ).toBe(1);
-      expect(
-        r.right.find(i => i.configurationId === "01HMRBX079WA5SGYBQP1A7FSKK")
-          ?.version
-      ).toBe(0);
     }
   });
 });
