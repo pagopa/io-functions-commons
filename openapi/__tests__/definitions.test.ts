@@ -269,8 +269,8 @@ describe("EnrichedMessage definition", () => {
 });
 
 describe("EnrichedMessageWithOrganizationFiscalCode definition", () => {
-  it("should fail decoding a EnrichedMessageWithOrganizationFiscalCode if the CF is not provided", () => {
-    const aBaseEnrichedMessage = {
+  it("should fail decoding a EnrichedMessageWithOrganizationFiscalCode if the organization fiscal code is not provided", () => {
+    const aBaseEnrichedMessageWithOrganizationFiscalCode = {
       ...aMessageWithoutContent,
       service_name: "aService",
       organization_name: aService.organizationName,
@@ -278,11 +278,11 @@ describe("EnrichedMessageWithOrganizationFiscalCode definition", () => {
     };
 
     expect(
-      E.isLeft(EnrichedMessageWithOrganizationFiscalCode.decode(aBaseEnrichedMessage))
+      E.isLeft(EnrichedMessageWithOrganizationFiscalCode.decode(aBaseEnrichedMessageWithOrganizationFiscalCode))
     ).toBe(true);
   });
 
-  it("should decode correctly a EnrichedMessageWithOrganizationFiscalCode if the CF is provided", () => {
+  it("should decode correctly a EnrichedMessageWithOrganizationFiscalCode if the organization fiscal code is provided", () => {
     const aBaseEnrichedMessage = {
       ...aMessageWithoutContent,
       service_name: "aService",
