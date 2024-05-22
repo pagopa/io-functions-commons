@@ -444,10 +444,21 @@ BaseEnrichedMessage:
     - service_name
     - organization_name
     - message_title
+
 EnrichedMessage:
   allOf:
     - $ref: "#/BaseEnrichedMessage"
     - $ref: "#/MessageStatusAttributes"
+
+EnrichedMessageWithOrganizationFiscalCode:
+  allOf:
+    - $ref: "#/EnrichedMessage"
+    - type: object
+      properties:
+        organization_fiscal_code:
+          $ref: "#/OrganizationFiscalCode"
+      required:
+        - organization_fiscal_code
 
 ExternalCreatedMessageWithoutContent:
   allOf:
@@ -515,8 +526,9 @@ ExternalMessageResponseWithContent:
 PublicMessage:
   x-one-of: true
   allOf:
-    - $ref: "#/EnrichedMessage"
-    - $ref: "#/CreatedMessageWithoutContent" 
+    - $ref: "#/EnrichedMessageWithOrganizationFiscalCode"
+    - $ref: "#/CreatedMessageWithoutContent"
+
 MessageResponseNotificationStatus:
   type: object
   properties:
