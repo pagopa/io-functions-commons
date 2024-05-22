@@ -40,6 +40,7 @@ import { NonEmptyString, Semver } from "@pagopa/ts-commons/lib/strings";
 import { AppVersion } from "../../generated/definitions/AppVersion";
 import { ThirdPartyData } from "../../generated/definitions/ThirdPartyData";
 import { aService } from "../../__mocks__/mocks";
+import { EnrichedMessage } from "../../generated/definitions/EnrichedMessage";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -246,6 +247,23 @@ describe("BaseEnrichedMessage definition", () => {
 
     expect(
       E.isRight(BaseEnrichedMessage.decode(aBaseEnrichedMessage))
+    ).toBe(true);
+  });
+});
+
+describe("EnrichedMessage definition", () => {
+  it("should not fail decoding an EnrichedMessage with an organization fiscal code", () => {
+    const anEnrichedMessage = {
+      ...aMessageWithoutContent,
+      sender_service_id: "test" as NonEmptyString,
+      service_name: "aService",
+      organization_name: aService.organizationName,
+      organization_fiscal_code: aService.organizationFiscalCode,
+      message_title: "aTitle",
+    };
+
+    expect(
+      E.isRight(EnrichedMessage.decode(anEnrichedMessage))
     ).toBe(true);
   });
 });
