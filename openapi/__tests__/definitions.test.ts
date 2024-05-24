@@ -33,10 +33,12 @@ import { Change_typeEnum as ReadingChangeType } from "../../generated/definition
 import { Change_typeEnum as ArchinvingChangeType } from "../../generated/definitions/MessageStatusArchivingChange";
 import { FeatureLevelTypeEnum } from "../../generated/definitions/FeatureLevelType";
 import { ThirdPartyMessage } from "../../generated/definitions/ThirdPartyMessage";
+import { EnrichedMessage } from "../../generated/definitions/EnrichedMessage";
 import { NonEmptyString, Semver } from "@pagopa/ts-commons/lib/strings";
 
 import { AppVersion } from "../../generated/definitions/AppVersion";
 import { ThirdPartyData } from "../../generated/definitions/ThirdPartyData";
+import { aService } from "../../__mocks__/mocks";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -231,6 +233,29 @@ const aContentWithThirdPartyData = {
 const aPayee: Payee = { fiscal_code: anOrganizationFiscalCode };
 
 const aThirdPartyId = "aThirdPartyId" as NonEmptyString;
+
+describe("EnrichedMessage", () => {
+  const aValidEnrichedMessage: EnrichedMessage = {
+    id: "A_MESSAGE_ID",
+    fiscal_code: aFiscalCode,
+    created_at: aDate,
+    sender_service_id: aMessageWithoutContent.sender_service_id as NonEmptyString,
+    service_name: "aService",
+    organization_name: aService.organizationName,
+    organization_fiscal_code: aService.organizationFiscalCode,
+    message_title: "aTitle",
+    is_read: false,
+    is_archived: false,
+  };
+
+  it("should correctly decode a valid EnrichedMessage", () => {
+    expect(E.isRight(EnrichedMessage.decode(aValidEnrichedMessage))).toBe(true)
+  })
+
+  it("should fail decoding an EnrichedMessage without organization fiscal code", () => {
+    expect(E.isLeft(EnrichedMessage.decode({ ...aValidEnrichedMessage, organization_fiscal_code: undefined }))).toBe(true)
+  })
+})
 
 describe("NewMessage definition", () => {
   it("should decode STANDARD NewMessage with content but without payment data", () => {

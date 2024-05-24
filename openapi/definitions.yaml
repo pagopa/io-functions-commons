@@ -426,6 +426,8 @@ BaseEnrichedMessage:
       type: string
     organization_name:
       type: string
+    organization_fiscal_code:
+      $ref: "#/OrganizationFiscalCode"
     message_title:
       type: string
     category:
@@ -443,6 +445,7 @@ BaseEnrichedMessage:
     - sender_service_id
     - service_name
     - organization_name
+    - organization_fiscal_code
     - message_title
 EnrichedMessage:
   allOf:
