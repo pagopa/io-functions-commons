@@ -1322,14 +1322,14 @@
     node-fetch "^2.6.0"
     validator "^13.7.0"
 
-"@pagopa/ts-commons@^12.6.0":
-  version "12.6.0"
-  resolved "https://registry.yarnpkg.com/@pagopa/ts-commons/-/ts-commons-12.6.0.tgz#2df8bd8f626f5e70d41736bf991a88c833f729b5"
-  integrity sha512-Sci1WD2TDmKVUGyAvBkcxAoXBDfVj9cgJBlRIai36oFuYxJfvdMx/34iZFP6detmXq/McnTESBF2Tz+aCh7DGQ==
+"@pagopa/ts-commons@^13.1.1":
+  version "13.1.1"
+  resolved "https://registry.yarnpkg.com/@pagopa/ts-commons/-/ts-commons-13.1.1.tgz#a8bef24022af7d49253d58626914273e142f79dd"
+  integrity sha512-IjmsrGwO9DFuU1IpzzBRNf3VIO9gd+gNdl4jGK4U1P7T47lWqozDqp6rPjF2sZfA1EoKnH5cFfgYT8uVsH0Z0g==
   dependencies:
     abort-controller "^3.0.0"
     agentkeepalive "^4.1.4"
-    applicationinsights "^1.8.10"
+    applicationinsights "^2.9.5"
     jose "^4.15.5"
     json-set-map "^1.1.2"
     jsonwebtoken "^9.0.1"
