@@ -23,7 +23,7 @@ import { CommonServiceMetadata as ApiCommonServiceMetadata } from "../../generat
 import { StandardServiceMetadata as ApiStandardServiceMetadata } from "../../generated/definitions/StandardServiceMetadata";
 import { ServiceScopeEnum } from "../../generated/definitions/ServiceScope";
 import { SpecialServiceCategoryEnum } from "../../generated/definitions/SpecialServiceCategory";
-import { NotRejectedMessageStatusValueEnum as MessageStatusValueEnum, NotRejectedMessageStatusValueEnum } from "../../generated/definitions/NotRejectedMessageStatusValue";
+import { NotRejectedMessageStatusValueEnum as MessageStatusValueEnum } from "../../generated/definitions/NotRejectedMessageStatusValue";
 import { MessageStatus } from "../../generated/definitions/MessageStatus";
 import { MessageStatusChange } from "../../generated/definitions/MessageStatusChange";
 import { MessageStatusAttributes } from "../../generated/definitions/MessageStatusAttributes";
@@ -33,14 +33,12 @@ import { Change_typeEnum as ReadingChangeType } from "../../generated/definition
 import { Change_typeEnum as ArchinvingChangeType } from "../../generated/definitions/MessageStatusArchivingChange";
 import { FeatureLevelTypeEnum } from "../../generated/definitions/FeatureLevelType";
 import { ThirdPartyMessage } from "../../generated/definitions/ThirdPartyMessage";
-import { BaseEnrichedMessage } from "../../generated/definitions/BaseEnrichedMessage"
-import { EnrichedMessageWithOrganizationFiscalCode } from "../../generated/definitions/EnrichedMessageWithOrganizationFiscalCode"
+import { EnrichedMessage } from "../../generated/definitions/EnrichedMessage";
 import { NonEmptyString, Semver } from "@pagopa/ts-commons/lib/strings";
 
 import { AppVersion } from "../../generated/definitions/AppVersion";
 import { ThirdPartyData } from "../../generated/definitions/ThirdPartyData";
 import { aService } from "../../__mocks__/mocks";
-import { EnrichedMessage } from "../../generated/definitions/EnrichedMessage";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -236,66 +234,28 @@ const aPayee: Payee = { fiscal_code: anOrganizationFiscalCode };
 
 const aThirdPartyId = "aThirdPartyId" as NonEmptyString;
 
-describe("BaseEnrichedMessage definition", () => {
-  it("should decode a BaseEnrichedMessage", () => {
-    const aBaseEnrichedMessage = {
-      ...aMessageWithoutContent,
-      service_name: "aService",
-      organization_name: aService.organizationName,
-      message_title: "aTitle",
-    };
+describe("EnrichedMessage", () => {
+  const aValidEnrichedMessage: EnrichedMessage = {
+    id: "A_MESSAGE_ID",
+    fiscal_code: aFiscalCode,
+    created_at: aDate,
+    sender_service_id: aMessageWithoutContent.sender_service_id as NonEmptyString,
+    service_name: "aService",
+    organization_name: aService.organizationName,
+    organization_fiscal_code: aService.organizationFiscalCode,
+    message_title: "aTitle",
+    is_read: false,
+    is_archived: false,
+  };
 
-    expect(
-      E.isRight(BaseEnrichedMessage.decode(aBaseEnrichedMessage))
-    ).toBe(true);
-  });
-});
+  it("should correctly decode a valid EnrichedMessage", () => {
+    expect(E.isRight(EnrichedMessage.decode(aValidEnrichedMessage))).toBe(true)
+  })
 
-describe("EnrichedMessage definition", () => {
-  it("should not fail decoding an EnrichedMessage with an organization fiscal code", () => {
-    const anEnrichedMessage = {
-      ...aMessageWithoutContent,
-      sender_service_id: "test" as NonEmptyString,
-      service_name: "aService",
-      organization_name: aService.organizationName,
-      organization_fiscal_code: aService.organizationFiscalCode,
-      message_title: "aTitle",
-    };
-
-    expect(
-      E.isRight(EnrichedMessage.decode(anEnrichedMessage))
-    ).toBe(true);
-  });
-});
-
-describe("EnrichedMessageWithOrganizationFiscalCode definition", () => {
-  it("should fail decoding a EnrichedMessageWithOrganizationFiscalCode if the organization fiscal code is not provided", () => {
-    const aBaseEnrichedMessageWithOrganizationFiscalCode = {
-      ...aMessageWithoutContent,
-      service_name: "aService",
-      organization_name: aService.organizationName,
-      message_title: "aTitle",
-    };
-
-    expect(
-      E.isLeft(EnrichedMessageWithOrganizationFiscalCode.decode(aBaseEnrichedMessageWithOrganizationFiscalCode))
-    ).toBe(true);
-  });
-
-  it("should decode correctly a EnrichedMessageWithOrganizationFiscalCode if the organization fiscal code is provided", () => {
-    const aBaseEnrichedMessage = {
-      ...aMessageWithoutContent,
-      service_name: "aService",
-      organization_name: aService.organizationName,
-      organization_fiscal_code: aService.organizationFiscalCode,
-      message_title: "aTitle",
-    };
-
-    expect(
-      E.isRight(EnrichedMessageWithOrganizationFiscalCode.decode(aBaseEnrichedMessage))
-    ).toBe(true);
-  });
-});
+  it("should fail decoding an EnrichedMessage without organization fiscal code", () => {
+    expect(E.isLeft(EnrichedMessage.decode({ ...aValidEnrichedMessage, organization_fiscal_code: undefined }))).toBe(true)
+  })
+})
 
 describe("NewMessage definition", () => {
   it("should decode STANDARD NewMessage with content but without payment data", () => {
