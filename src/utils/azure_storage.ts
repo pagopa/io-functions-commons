@@ -221,6 +221,36 @@ export const getBlobAsTextWithError = (
     constant
   );
 
+const downloadBlobToString = (
+  containerClient: ContainerClient,
+  blobName: string
+): Promise<BlobDownloadResponseParsed> => {
+  const blobClient: BlobClient = containerClient.getBlobClient(blobName);
+  return blobClient.download();
+};
+
+const streamToString = async (
+  readableStream: NodeJS.ReadableStream
+): Promise<string> =>
+  new Promise((resolve, reject) => {
+    // eslint-disable-next-line functional/prefer-readonly-type, @typescript-eslint/array-type
+    const chunks: Array<string> = [];
+    readableStream.on("data", data => {
+      // eslint-disable-next-line functional/immutable-data
+      chunks.push(data.toString());
+    });
+    readableStream.on("end", () => {
+      resolve(chunks.join(""));
+    });
+    readableStream.on("error", reject);
+  });
+
+const toStorageError = (message: string, code: string): StorageError =>
+  ({
+    code,
+    message
+  } as StorageError);
+
 /**
  * Get a blob content as text (string). In case of error, it will return error details.
  *
@@ -240,7 +270,7 @@ export const getBlobFromContainerAsTextWithError = (
       TE.fromPredicate(
         r => !r.errorCode && !!r.readableStreamBody,
         r =>
-          !!r.errorCode
+          r.errorCode
             ? toStorageError(
                 `Blob storage: Error code ${r.errorCode}.`,
                 r.errorCode
@@ -250,6 +280,7 @@ export const getBlobFromContainerAsTextWithError = (
     ),
     TE.chain(res =>
       TE.tryCatch(
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         () => streamToString(res.readableStreamBody!),
         _ =>
           toStorageError(
@@ -260,35 +291,6 @@ export const getBlobFromContainerAsTextWithError = (
     ),
     TE.map(fromNullable)
   );
-
-const downloadBlobToString = (
-  containerClient: ContainerClient,
-  blobName: string
-): Promise<BlobDownloadResponseParsed> => {
-  const blobClient: BlobClient = containerClient.getBlobClient(blobName);
-  return blobClient.download();
-};
-
-const streamToString = async (
-  readableStream: NodeJS.ReadableStream
-): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const chunks: string[] = [];
-    readableStream.on("data", data => {
-      chunks.push(data.toString());
-    });
-    readableStream.on("end", () => {
-      resolve(chunks.join(""));
-    });
-    readableStream.on("error", reject);
-  });
-};
-
-const toStorageError = (message: string, code: string): StorageError =>
-  ({
-    code,
-    message
-  } as StorageError);
 
 /**
  * Get a blob content as a typed (io-ts) object.

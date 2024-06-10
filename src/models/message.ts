@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-identical-functions */
 import { BlobService } from "azure-storage";
 import * as E from "fp-ts/lib/Either";
 import * as J from "fp-ts/Json";
@@ -15,6 +16,7 @@ import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { flow, pipe } from "fp-ts/lib/function";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { ContainerClient } from "@azure/storage-blob";
 import {
   BaseModel,
   CosmosDecodingError,
@@ -41,7 +43,6 @@ import { NewMessageContent } from "../../generated/definitions/NewMessageContent
 import { FeatureLevelType } from "../../generated/definitions/FeatureLevelType";
 import { BlobNotFoundCode } from "../utils/azure_storage";
 import { CosmosdbModelTTL } from "../utils/cosmosdb_model_ttl";
-import { ContainerClient } from "@azure/storage-blob";
 
 export const MESSAGE_COLLECTION_NAME = "messages";
 export const MESSAGE_MODEL_PK_FIELD = "fiscalCode" as const;
@@ -392,6 +393,7 @@ export class MessageModel extends CosmosdbModelTTL<
   }
 
   /**
+   * @deprecated
    * Retrieve the message content from a blob
    *
    * @param blobService The azure.BlobService used to store the media
