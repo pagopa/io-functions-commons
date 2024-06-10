@@ -33,6 +33,7 @@ import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds
 import {
   GenericCode,
   getBlobAsTextWithError,
+  getBlobFromContainerAsTextWithError,
   upsertBlobFromObject
 } from "../utils/azure_storage";
 import { wrapWithKind } from "../utils/types";
@@ -40,6 +41,7 @@ import { NewMessageContent } from "../../generated/definitions/NewMessageContent
 import { FeatureLevelType } from "../../generated/definitions/FeatureLevelType";
 import { BlobNotFoundCode } from "../utils/azure_storage";
 import { CosmosdbModelTTL } from "../utils/cosmosdb_model_ttl";
+import { ContainerClient } from "@azure/storage-blob";
 
 export const MESSAGE_COLLECTION_NAME = "messages";
 export const MESSAGE_MODEL_PK_FIELD = "fiscalCode" as const;
@@ -403,6 +405,67 @@ export class MessageModel extends CosmosdbModelTTL<
     return pipe(
       blobIdFromMessageId(messageId),
       getBlobAsTextWithError(blobService, this.containerName),
+      TE.mapLeft(storageError => ({
+        code: storageError.code ?? GenericCode,
+        message: storageError.message
+      })),
+      TE.chain(maybeContentAsText =>
+        TE.fromEither(
+          E.fromOption(
+            // Blob exists but the content is empty
+            () => ({
+              code: GenericCode,
+              message: "Cannot get stored message content from empty blob"
+            })
+          )(maybeContentAsText)
+        )
+      ),
+      // Try to decode the MessageContent
+      TE.chain(
+        flow(
+          J.parse,
+          E.mapLeft(E.toError),
+          TE.fromEither,
+          TE.mapLeft(parseError => ({
+            code: GenericCode,
+            message: `Cannot parse content text into object: ${parseError.message}`
+          }))
+        )
+      ),
+      TE.chain(
+        flow(
+          MessageContent.decode,
+          TE.fromEither,
+          TE.mapLeft(decodeErrors => ({
+            code: GenericCode,
+            message: `Cannot deserialize stored message content: ${readableReport(
+              decodeErrors
+            )}`
+          })),
+          TE.map(some)
+        )
+      ),
+      TE.orElse(error =>
+        error.code === BlobNotFoundCode ? TE.right(none) : TE.left(error)
+      ),
+      TE.mapLeft(error => new Error(error.message))
+    );
+  }
+
+  /**
+   * Retrieve the message content from a blob with container client
+   *
+   * @param containerClient The azure.ContainerClient used to store the media
+   * @param messageId The id of the message used to set the blob name
+   */
+  public getContentFromContainer(
+    containerClient: ContainerClient,
+    messageId: string
+  ): TE.TaskEither<Error, Option<MessageContent>> {
+    // Retrieve blob content and deserialize
+    return pipe(
+      blobIdFromMessageId(messageId),
+      getBlobFromContainerAsTextWithError(containerClient),
       TE.mapLeft(storageError => ({
         code: storageError.code ?? GenericCode,
         message: storageError.message

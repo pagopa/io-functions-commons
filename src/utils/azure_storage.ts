@@ -12,6 +12,11 @@ import { fromNullable, isNone, none, Option, some } from "fp-ts/lib/Option";
 
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { pipe, constant } from "fp-ts/lib/function";
+import {
+  BlobClient,
+  BlobDownloadResponseParsed,
+  ContainerClient
+} from "@azure/storage-blob";
 
 type Resolve<T> = (value: T | PromiseLike<T>) => void;
 
@@ -215,6 +220,70 @@ export const getBlobAsTextWithError = (
     ),
     constant
   );
+
+/**
+ * Get a blob content as text (string). In case of error, it will return error details.
+ *
+ * @param containerClient     the Azure blob service ContainerClient
+ * @param containerName   the name of the Azure blob storage container
+ * @param blobName        blob file name
+ */
+export const getBlobFromContainerAsTextWithError = (
+  containerClient: ContainerClient
+) => (blobName: string): TE.TaskEither<StorageError, Option<string>> =>
+  pipe(
+    TE.tryCatch(
+      () => downloadBlobToString(containerClient, blobName),
+      _ => toStorageError("Blob storage: Internal error.")
+    ),
+    TE.chain(
+      TE.fromPredicate(
+        r => !r.errorCode && !!r.readableStreamBody,
+        r =>
+          !!r.errorCode
+            ? toStorageError(
+                `Blob storage: Error code ${r.errorCode}.`,
+                r.errorCode
+              )
+            : toStorageError("Blob storage: Empty response body.")
+      )
+    ),
+    TE.chain(res =>
+      TE.tryCatch(
+        () => streamToString(res.readableStreamBody!),
+        _ => toStorageError("Blob storage: Cannot parse stream to string.")
+      )
+    ),
+    TE.map(fromNullable)
+  );
+
+const downloadBlobToString = (
+  containerClient: ContainerClient,
+  blobName: string
+): Promise<BlobDownloadResponseParsed> => {
+  const blobClient: BlobClient = containerClient.getBlobClient(blobName);
+  return blobClient.download();
+};
+
+const streamToString = async (
+  readableStream: NodeJS.ReadableStream
+): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const chunks: string[] = [];
+    readableStream.on("data", data => {
+      chunks.push(data.toString());
+    });
+    readableStream.on("end", () => {
+      resolve(chunks.join(""));
+    });
+    readableStream.on("error", reject);
+  });
+};
+
+const toStorageError = (message: string, code?: string): StorageError => ({
+  ...new Error(message),
+  code
+});
 
 /**
  * Get a blob content as a typed (io-ts) object.
