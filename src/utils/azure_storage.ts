@@ -234,7 +234,7 @@ export const getBlobFromContainerAsTextWithError = (
   pipe(
     TE.tryCatch(
       () => downloadBlobToString(containerClient, blobName),
-      _ => toStorageError("Blob storage: Internal error.")
+      _ => toStorageError("Blob storage: Internal error.", GenericCode)
     ),
     TE.chain(
       TE.fromPredicate(
@@ -245,13 +245,17 @@ export const getBlobFromContainerAsTextWithError = (
                 `Blob storage: Error code ${r.errorCode}.`,
                 r.errorCode
               )
-            : toStorageError("Blob storage: Empty response body.")
+            : toStorageError("Blob storage: Empty response body.", GenericCode)
       )
     ),
     TE.chain(res =>
       TE.tryCatch(
         () => streamToString(res.readableStreamBody!),
-        _ => toStorageError("Blob storage: Cannot parse stream to string.")
+        _ =>
+          toStorageError(
+            "Blob storage: Cannot parse stream to string.",
+            GenericCode
+          )
       )
     ),
     TE.map(fromNullable)
@@ -280,10 +284,11 @@ const streamToString = async (
   });
 };
 
-const toStorageError = (message: string, code?: string): StorageError => ({
-  ...new Error(message),
-  code
-});
+const toStorageError = (message: string, code: string): StorageError =>
+  ({
+    code,
+    message
+  } as StorageError);
 
 /**
  * Get a blob content as a typed (io-ts) object.
