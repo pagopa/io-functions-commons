@@ -5,19 +5,14 @@ import { flow } from "fp-ts/lib/function";
 import { TableClient, odata, RestError } from "@azure/data-tables";
 import { EmailString } from "@pagopa/ts-commons/lib/strings";
 
+import { TableEntity } from "../data_tables";
+
 import {
   ProfileEmail,
   IProfileEmailReader,
   IProfileEmailWriter,
   ProfileEmailWriterError
 } from "./index";
-
-const TableEntity = t.type({
-  partitionKey: t.string,
-  rowKey: t.string
-});
-
-type TableEntity = t.TypeOf<typeof TableEntity>;
 
 const ProfileEmailToTableEntity = new t.Type<ProfileEmail, TableEntity>(
   "TableEntityFromProfileEmail",
