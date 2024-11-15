@@ -1,8 +1,10 @@
 import * as t from "io-ts";
 
-export const TableEntity = t.type({
+export const TableEntityAzureDataTables = t.type({
   partitionKey: t.string,
   rowKey: t.string
 });
 
-export type TableEntity = t.TypeOf<typeof TableEntity>;
+export type TableEntityAzureDataTables = t.TypeOf<
+  typeof TableEntityAzureDataTables
+>;

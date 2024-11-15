@@ -267,13 +267,13 @@ export const getBlobAsObject = async <A, O, I>(
  * Legacy. Basic type for a table entity for the library `azure-storage`.
  */
 /* eslint-disable @typescript-eslint/naming-convention */
-export const TableEntityAzureStorage = t.interface({
+export const TableEntity = t.interface({
   PartitionKey: t.string,
   RowKey: t.string
 });
 /* eslint-enable @typescript-eslint/naming-convention */
 
-export type ITableEntity = t.TypeOf<typeof TableEntityAzureStorage>;
+export type ITableEntity = t.TypeOf<typeof TableEntity>;
 
 // Code used by tableService when an entity is not found
 
