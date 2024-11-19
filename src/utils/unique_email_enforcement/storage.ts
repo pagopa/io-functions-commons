@@ -5,7 +5,7 @@ import { flow } from "fp-ts/lib/function";
 import { TableClient, odata, RestError } from "@azure/data-tables";
 import { EmailString } from "@pagopa/ts-commons/lib/strings";
 
-import { TableEntity } from "../data_tables";
+import { TableEntityAzureDataTables } from "../data_tables";
 
 import {
   ProfileEmail,
@@ -14,11 +14,14 @@ import {
   ProfileEmailWriterError
 } from "./index";
 
-const ProfileEmailToTableEntity = new t.Type<ProfileEmail, TableEntity>(
+const ProfileEmailToTableEntity = new t.Type<
+  ProfileEmail,
+  TableEntityAzureDataTables
+>(
   "TableEntityFromProfileEmail",
   ProfileEmail.is,
   flow(
-    TableEntity.decode,
+    TableEntityAzureDataTables.decode,
     E.chain(({ partitionKey: email, rowKey: fiscalCode }) =>
       ProfileEmail.decode({ email, fiscalCode })
     )
