@@ -87,6 +87,15 @@ const Html = t.interface({
 type Html = t.TypeOf<typeof NameValue>;
 
 /* eslint-disable @typescript-eslint/naming-convention */
+const Attachment = t.interface({
+  Body: t.array(t.number),
+  ContentId: t.string,
+  Filename: t.string
+});
+type Attachment = t.TypeOf<typeof Attachment>;
+/* eslint-enable @typescript-eslint/naming-convention */
+
+/* eslint-disable @typescript-eslint/naming-convention */
 const EmailPayload = t.intersection([
   t.interface({
     ExtendedHeaders: t.array(NameValue),
@@ -97,6 +106,7 @@ const EmailPayload = t.intersection([
     To: t.array(Address)
   }),
   t.partial({
+    Attachments: t.array(Attachment),
     Bcc: t.array(Address),
     Cc: t.array(Address),
     ReplyTo: t.string
@@ -212,6 +222,36 @@ const toMailupAddress = (
   return fromNullable(addrs[0]);
 };
 
+type NodemailerAttachment = NonNullable<
+  nodemailer.SendMailOptions["attachments"]
+>[0];
+
+const toMailupAttachmentBody = (content: string): ReadonlyArray<number> => {
+  const textEncoder = new TextEncoder();
+  return Array.from(textEncoder.encode(content));
+};
+
+/**
+ * Converts an array of Nodemailer attachments to an array of MailUp attachments.
+ *
+ * @param attachments - An array of NodemailerAttachment objects.
+ * @returns An array of objects representing MailUp attachments, with each object containing:
+ *   - `Body`: The content of the attachment.
+ *   - `ContentId`: The content ID of the attachment.
+ *   - `Filename`: The filename of the attachment.
+ */
+const toMailupAttachments = (
+  attachments: ReadonlyArray<NodemailerAttachment>
+): ReadonlyArray<{ [k in keyof Attachment]: unknown }> =>
+  attachments.map(att => ({
+    Body:
+      typeof att.content === "string"
+        ? toMailupAttachmentBody(att.content)
+        : undefined,
+    ContentId: att.cid,
+    Filename: att.filename
+  }));
+
 /**
  * Nodemailer transport for MailUp transactional APIs
  *
@@ -237,7 +277,14 @@ const toMailupAddress = (
  *     replyTo:   "foobar-reply@xexample.com",
  *     subject:   "lorem ipsum",
  *     text:      "lorem ipsum",
- *     html:      "<b>lorem ipsum</b>"
+ *     html:      "<b>lorem ipsum</b>",
+ *     attachments: [
+ *      {
+ *        filename: "lorem.txt",
+ *        content: "lorem ipsum",
+ *        cid: "cid:lorem"
+ *      }
+ *    ]
  *   })
  *   .then(res => console.log(JSON.stringify(res)))
  *   .catch(err => console.error(JSON.stringify(err)));
@@ -280,6 +327,11 @@ export const MailUpTransport = (
       }));
 
       const emailPayload = {
+        Attachments: pipe(
+          fromNullable(mail.data.attachments),
+          O.map(toMailupAttachments),
+          O.toUndefined
+        ),
         Bcc: pipe(
           fromNullable(addresses.bcc),
           O.map(toMailupAddresses),
