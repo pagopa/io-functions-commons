@@ -5,7 +5,7 @@ import {
   RCConfigurationBase,
   RetrievedRCConfiguration
 } from "../rc_configuration";
-import { HasPreconditionEnum } from "../../../generated/definitions/HasPrecondition";
+import { HasPreconditionEnum } from "../../../generated/definitions/v2/HasPrecondition";
 
 const aRemoteContentEnvironmentConfiguration = {
   baseUrl: "https://anydomain.anytld/api/v1/anyapi" as NonEmptyString,

@@ -1,0 +1,14 @@
+openapi: 3.0.1
+info:
+  title: "IO APIs, shared specs"
+  description: The definitions of the shared models generated with OpenAPI v3
+  version: 1.0.0
+paths:
+  "/dummy":
+    get:
+      responses:
+        "200":
+          description: "ok"
+components:
+  schemas:
+    $ref: definitions_v3.yaml

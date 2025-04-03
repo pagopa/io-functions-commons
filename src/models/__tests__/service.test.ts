@@ -10,7 +10,7 @@ import {
   NonEmptyString,
   OrganizationFiscalCode
 } from "@pagopa/ts-commons/lib/strings";
-import { MaxAllowedPaymentAmount } from "../../../generated/definitions/MaxAllowedPaymentAmount";
+import { MaxAllowedPaymentAmount } from "../../../generated/definitions/v2/MaxAllowedPaymentAmount";
 import {
   CommonServiceMetadata,
   NewService,
@@ -23,9 +23,9 @@ import {
   toAuthorizedCIDRs,
   toAuthorizedRecipients
 } from "../service";
-import { ServiceScopeEnum } from "../../../generated/definitions/ServiceScope";
-import { StandardServiceCategoryEnum } from "../../../generated/definitions/StandardServiceCategory";
-import { SpecialServiceCategoryEnum } from "../../../generated/definitions/SpecialServiceCategory";
+import { ServiceScopeEnum } from "../../../generated/definitions/v2/ServiceScope";
+import { StandardServiceCategoryEnum } from "../../../generated/definitions/v2/StandardServiceCategory";
+import { SpecialServiceCategoryEnum } from "../../../generated/definitions/v2/SpecialServiceCategory";
 
 const aServiceId = "xyz" as NonEmptyString;
 const anOrganizationFiscalCode = "01234567890" as OrganizationFiscalCode;
@@ -86,9 +86,7 @@ describe("findOneServiceById", () => {
     expect(E.isRight(result)).toBeTruthy();
     if (E.isRight(result)) {
       expect(O.isSome(result.right)).toBeTruthy();
-      expect(O.toUndefined(result.right)).toMatchObject(
-        aRetrievedService
-      );
+      expect(O.toUndefined(result.right)).toMatchObject(aRetrievedService);
     }
   });
 
@@ -127,22 +125,33 @@ describe("findOneServiceById", () => {
   });
 });
 
-const getAsyncIterable = <T>(pages: ReadonlyArray<ReadonlyArray<T>>) =>
-  ({
-    [Symbol.asyncIterator]: async function* asyncGenerator() {
-      let array = pages.map(_ => Promise.resolve(_));
-      while (array.length) {
-        yield {resources: await array.shift()};
-      }
+const getAsyncIterable = <T>(pages: ReadonlyArray<ReadonlyArray<T>>) => ({
+  [Symbol.asyncIterator]: async function* asyncGenerator() {
+    let array = pages.map(_ => Promise.resolve(_));
+    while (array.length) {
+      yield { resources: await array.shift() };
     }
-  });
+  }
+});
 
 describe("listLastVersionServices", () => {
   it("should return existing services", async () => {
-    const nextServiceVersion = {...aRetrievedService, version: aRetrievedService.version + 1}
-    const anotherService = {...aRetrievedService, serviceId: "anotherServiceId"};
-    const expectedService = {...nextServiceVersion, version: nextServiceVersion.version + 1};
-    const asyncIterable = getAsyncIterable([[aRetrievedService, expectedService], [anotherService, nextServiceVersion]])
+    const nextServiceVersion = {
+      ...aRetrievedService,
+      version: aRetrievedService.version + 1
+    };
+    const anotherService = {
+      ...aRetrievedService,
+      serviceId: "anotherServiceId"
+    };
+    const expectedService = {
+      ...nextServiceVersion,
+      version: nextServiceVersion.version + 1
+    };
+    const asyncIterable = getAsyncIterable([
+      [aRetrievedService, expectedService],
+      [anotherService, nextServiceVersion]
+    ]);
     mockGetAsyncIterator.mockReturnValueOnce(asyncIterable);
     const model = new ServiceModel(containerMock);
 
@@ -150,11 +159,14 @@ describe("listLastVersionServices", () => {
     expect(E.isRight(result)).toBeTruthy();
     if (E.isRight(result)) {
       expect(O.toUndefined(result.right)).toHaveLength(2);
-      expect(O.toUndefined(result.right)).toMatchObject([expectedService, anotherService]);
+      expect(O.toUndefined(result.right)).toMatchObject([
+        expectedService,
+        anotherService
+      ]);
     }
   });
   it("should resolve to an empty value if no service is found", async () => {
-    const asyncIterable = getAsyncIterable([[]])
+    const asyncIterable = getAsyncIterable([[]]);
     mockGetAsyncIterator.mockReturnValueOnce(asyncIterable);
 
     const model = new ServiceModel(containerMock);
@@ -190,38 +202,47 @@ describe("create", () => {
     };
     const aRawServiceWithMetadata: Service = {
       ...aRawService,
-      serviceMetadata,
+      serviceMetadata
     };
     mockCreate.mockImplementationOnce((_, __) =>
       Promise.resolve({
-        resource: {...aRetrievedService, serviceMetadata, id: _.id}
+        resource: { ...aRetrievedService, serviceMetadata, id: _.id }
       })
     );
     const model = new ServiceModel(containerMock);
-    const result = await model.create({...aRawServiceWithMetadata, kind: "INewService"})();
+    const result = await model.create({
+      ...aRawServiceWithMetadata,
+      kind: "INewService"
+    })();
     expect(mockCreate).toBeCalled();
     expect(mockCreate).toBeCalledWith(
       expect.objectContaining({
-          serviceMetadata: expect.objectContaining({
-            category: serviceMetadata.category
-          })
-        }),
-        expect.anything()
-      );
+        serviceMetadata: expect.objectContaining({
+          category: serviceMetadata.category
+        })
+      }),
+      expect.anything()
+    );
     expect(E.isRight(result)).toBeTruthy();
     if (E.isRight(result)) {
-      expect(result.right).toEqual({...aRetrievedService, serviceMetadata, kind: "IRetrievedService", id: expect.any(String)})
+      expect(result.right).toEqual({
+        ...aRetrievedService,
+        serviceMetadata,
+        kind: "IRetrievedService",
+        id: expect.any(String)
+      });
     }
   });
-})
+});
 
 describe("Special Service metadata types", () => {
-
   it("should decode services metadata without category as Standard Services metadata", async () => {
     const oldServiceMetadata: CommonServiceMetadata = {
       scope: ServiceScopeEnum.LOCAL
     };
-    const asyncIterable = getAsyncIterable([[{...aRetrievedService, serviceMetadata: oldServiceMetadata}]]);
+    const asyncIterable = getAsyncIterable([
+      [{ ...aRetrievedService, serviceMetadata: oldServiceMetadata }]
+    ]);
     mockGetAsyncIterator.mockReturnValueOnce(asyncIterable);
 
     const model = new ServiceModel(containerMock);
@@ -233,7 +254,10 @@ describe("Special Service metadata types", () => {
       const values = O.toUndefined(result.right);
       expect(values).toHaveLength(1);
       if (values !== undefined) {
-        expect(values[0]).toHaveProperty("serviceMetadata.category", StandardServiceCategoryEnum.STANDARD);
+        expect(values[0]).toHaveProperty(
+          "serviceMetadata.category",
+          StandardServiceCategoryEnum.STANDARD
+        );
       }
     }
   });
@@ -251,9 +275,17 @@ describe("Special Service metadata types", () => {
       customSpecialFlow: "custom-flow-name" as NonEmptyString
     };
 
-    const anotherService = {...aRetrievedService, serviceId: "anotherServiceId"};
+    const anotherService = {
+      ...aRetrievedService,
+      serviceId: "anotherServiceId"
+    };
 
-    const asyncIterable = getAsyncIterable([[{...aRetrievedService, serviceMetadata: standardServiceMetadata}, {...anotherService, serviceMetadata: specialServiceMetadata}]]);
+    const asyncIterable = getAsyncIterable([
+      [
+        { ...aRetrievedService, serviceMetadata: standardServiceMetadata },
+        { ...anotherService, serviceMetadata: specialServiceMetadata }
+      ]
+    ]);
     mockGetAsyncIterator.mockReturnValueOnce(asyncIterable);
 
     const model = new ServiceModel(containerMock);
@@ -265,14 +297,19 @@ describe("Special Service metadata types", () => {
       const values = O.toUndefined(result.right);
       expect(values).toHaveLength(2);
       if (values !== undefined) {
-        expect(values[0]).toHaveProperty("serviceMetadata", standardServiceMetadata);
-        expect(values[1]).toHaveProperty("serviceMetadata", specialServiceMetadata);
+        expect(values[0]).toHaveProperty(
+          "serviceMetadata",
+          standardServiceMetadata
+        );
+        expect(values[1]).toHaveProperty(
+          "serviceMetadata",
+          specialServiceMetadata
+        );
       }
     }
   });
 
   it("should require category on NewService type", () => {
-
     const aCommonServiceMetadata: CommonServiceMetadata = {
       scope: ServiceScopeEnum.LOCAL
     };
@@ -282,7 +319,7 @@ describe("Special Service metadata types", () => {
       kind: "INewService",
       // @ts-expect-error
       serviceMetadata: aCommonServiceMetadata
-    }
+    };
 
     const decodedValue = NewService.decode(aNewServiceWithoutCategory);
     expect(E.isRight(decodedValue)).toBeTruthy();
@@ -290,16 +327,15 @@ describe("Special Service metadata types", () => {
     const aServiceMetadata: ServiceMetadata = {
       scope: ServiceScopeEnum.LOCAL,
       category: SpecialServiceCategoryEnum.SPECIAL
-    }
+    };
 
     const aNewServiceWithCategory: NewService = {
       ...aRawService,
       kind: "INewService",
       serviceMetadata: aServiceMetadata
-    }
+    };
 
     const decodedValue2 = NewService.decode(aNewServiceWithoutCategory);
     expect(E.isRight(decodedValue2)).toBeTruthy();
-
   });
 });

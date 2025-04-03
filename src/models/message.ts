@@ -23,21 +23,21 @@ import {
   toCosmosErrorResponse
 } from "../utils/cosmosdb_model";
 
-import { MessageContent } from "../../generated/definitions/MessageContent";
+import { MessageContent } from "../../generated/definitions/v2/MessageContent";
 
-import { FiscalCode } from "../../generated/definitions/FiscalCode";
+import { FiscalCode } from "../../generated/definitions/v2/FiscalCode";
 
-import { ServiceId } from "../../generated/definitions/ServiceId";
-import { Timestamp } from "../../generated/definitions/Timestamp";
-import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds";
+import { ServiceId } from "../../generated/definitions/v2/ServiceId";
+import { Timestamp } from "../../generated/definitions/v2/Timestamp";
+import { TimeToLiveSeconds } from "../../generated/definitions/v2/TimeToLiveSeconds";
 import {
   GenericCode,
   getBlobAsTextWithError,
   upsertBlobFromObject
 } from "../utils/azure_storage";
 import { wrapWithKind } from "../utils/types";
-import { NewMessageContent } from "../../generated/definitions/NewMessageContent";
-import { FeatureLevelType } from "../../generated/definitions/FeatureLevelType";
+import { NewMessageContent } from "../../generated/definitions/v2/NewMessageContent";
+import { FeatureLevelType } from "../../generated/definitions/v2/FeatureLevelType";
 import { BlobNotFoundCode } from "../utils/azure_storage";
 import { CosmosdbModelTTL } from "../utils/cosmosdb_model_ttl";
 

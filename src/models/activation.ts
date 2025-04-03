@@ -1,7 +1,7 @@
 import { Container } from "@azure/cosmos";
 import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import * as t from "io-ts";
-import { ActivationStatus } from "../../generated/definitions/ActivationStatus";
+import { ActivationStatus } from "../../generated/definitions/v2/ActivationStatus";
 import { CosmosdbModelComposedVersioned } from "../utils/cosmosdb_model_composed_versioned";
 import { RetrievedVersionedModel } from "../utils/cosmosdb_model_versioned";
 import { wrapWithKind } from "../utils/types";

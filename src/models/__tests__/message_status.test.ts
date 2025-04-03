@@ -11,8 +11,8 @@ import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import { Container, CosmosDiagnostics, ResourceResponse } from "@azure/cosmos";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
-import { NotRejectedMessageStatusValueEnum as MessageStatusValueEnum } from "../../../generated/definitions/NotRejectedMessageStatusValue";
-import { RejectedMessageStatusValueEnum } from "../../../generated/definitions/RejectedMessageStatusValue";
+import { NotRejectedMessageStatusValueEnum as MessageStatusValueEnum } from "../../../generated/definitions/v2/NotRejectedMessageStatusValue";
+import { RejectedMessageStatusValueEnum } from "../../../generated/definitions/v2/RejectedMessageStatusValue";
 import {
   getMessageStatusUpdater,
   MessageStatus,
@@ -21,7 +21,7 @@ import {
   RetrievedMessageStatus
 } from "../message_status";
 import { pipe } from "fp-ts/lib/function";
-import { RejectionReasonEnum } from "../../../generated/definitions/RejectionReason";
+import { RejectionReasonEnum } from "../../../generated/definitions/v2/RejectionReason";
 import { Ttl } from "../../utils/cosmosdb_model_ttl";
 
 const aMessageId = "A_MESSAGE_ID" as NonEmptyString;

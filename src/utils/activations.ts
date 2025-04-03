@@ -1,5 +1,5 @@
 import { RetrievedActivation } from "../models/activation";
-import { Activation } from "../../generated/definitions/Activation";
+import { Activation } from "../../generated/definitions/v2/Activation";
 
 export const toApiServiceActivation = (
   activation: RetrievedActivation

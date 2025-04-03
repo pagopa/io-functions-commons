@@ -16,11 +16,11 @@ import {
   CosmosErrors,
   toCosmosErrorResponse
 } from "../../src/utils/cosmosdb_model";
-import { NotRejectedMessageStatusValueEnum } from "../../generated/definitions/NotRejectedMessageStatusValue";
+import { NotRejectedMessageStatusValueEnum } from "../../generated/definitions/v2/NotRejectedMessageStatusValue";
 import { pipe } from "fp-ts/lib/function";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
-import { RejectedMessageStatusValueEnum } from "../../generated/definitions/RejectedMessageStatusValue";
-import { RejectionReasonEnum } from "../../generated/definitions/RejectionReason";
+import { RejectedMessageStatusValueEnum } from "../../generated/definitions/v2/RejectedMessageStatusValue";
+import { RejectionReasonEnum } from "../../generated/definitions/v2/RejectionReason";
 import { Ttl } from "../../src/utils/cosmosdb_model_ttl";
 
 const aMessageId = "A_MESSAGE_ID" as NonEmptyString;

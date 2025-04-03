@@ -21,21 +21,21 @@ import * as TE from "fp-ts/lib/TaskEither";
 import { isRight } from "fp-ts/lib/Either";
 import { pipe } from "fp-ts/lib/function";
 import { Tuple2 } from "@pagopa/ts-commons/lib/tuples";
-import { CIDR } from "../../generated/definitions/CIDR";
+import { CIDR } from "../../generated/definitions/v2/CIDR";
 import {
   CosmosdbModelVersioned,
   RetrievedVersionedModel
 } from "../utils/cosmosdb_model_versioned";
-import { MaxAllowedPaymentAmount } from "../../generated/definitions/MaxAllowedPaymentAmount";
-import { ServiceScope } from "../../generated/definitions/ServiceScope";
+import { MaxAllowedPaymentAmount } from "../../generated/definitions/v2/MaxAllowedPaymentAmount";
+import { ServiceScope } from "../../generated/definitions/v2/ServiceScope";
 import { CosmosDecodingError, CosmosErrors } from "../utils/cosmosdb_model";
 import { wrapWithKind } from "../utils/types";
 import { mapAsyncIterable, reduceAsyncIterator } from "../utils/async";
 import {
   StandardServiceCategory,
   StandardServiceCategoryEnum
-} from "../../generated/definitions/StandardServiceCategory";
-import { SpecialServiceCategory } from "../../generated/definitions/SpecialServiceCategory";
+} from "../../generated/definitions/v2/StandardServiceCategory";
+import { SpecialServiceCategory } from "../../generated/definitions/v2/SpecialServiceCategory";
 
 export const SERVICE_COLLECTION_NAME = "services";
 export const SERVICE_MODEL_ID_FIELD = "serviceId" as const;

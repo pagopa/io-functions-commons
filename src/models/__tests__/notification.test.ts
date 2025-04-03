@@ -3,13 +3,13 @@
 import * as E from "fp-ts/lib/Either";
 import * as O from "fp-ts/lib/Option";
 
-import { FiscalCode } from "../../../generated/definitions/FiscalCode";
+import { FiscalCode } from "../../../generated/definitions/v2/FiscalCode";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import { Container } from "@azure/cosmos";
-import { EmailAddress } from "../../../generated/definitions/EmailAddress";
-import { NotificationChannelEnum } from "../../../generated/definitions/NotificationChannel";
+import { EmailAddress } from "../../../generated/definitions/v2/EmailAddress";
+import { NotificationChannelEnum } from "../../../generated/definitions/v2/NotificationChannel";
 import {
   NewNotification,
   NotificationAddressSourceEnum,

@@ -8,8 +8,8 @@ import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import { Container } from "@azure/cosmos";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
-import { NotificationChannelEnum } from "../../../generated/definitions/NotificationChannel";
-import { NotificationChannelStatusValueEnum } from "../../../generated/definitions/NotificationChannelStatusValue";
+import { NotificationChannelEnum } from "../../../generated/definitions/v2/NotificationChannel";
+import { NotificationChannelStatusValueEnum } from "../../../generated/definitions/v2/NotificationChannelStatusValue";
 import {
   NotificationStatus,
   NotificationStatusId,

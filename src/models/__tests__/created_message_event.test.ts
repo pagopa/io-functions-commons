@@ -3,7 +3,7 @@
 import { CreatedMessageEvent } from "../created_message_event";
 
 import { isRight } from "fp-ts/lib/Either";
-import { MessageBodyMarkdown } from "../../../generated/definitions/MessageBodyMarkdown";
+import { MessageBodyMarkdown } from "../../../generated/definitions/v2/MessageBodyMarkdown";
 
 const aMessageBodyMarkdown = "test".repeat(80) as MessageBodyMarkdown;
 

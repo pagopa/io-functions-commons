@@ -2,19 +2,19 @@
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
-import { MessageBodyMarkdown } from "../../../generated/definitions/MessageBodyMarkdown";
+import { MessageBodyMarkdown } from "../../../generated/definitions/v2/MessageBodyMarkdown";
 
 import { NotificationEvent } from "../notification_event";
 
-import { MessageContent } from "../../../generated/definitions/MessageContent";
+import { MessageContent } from "../../../generated/definitions/v2/MessageContent";
 
 import { isRight } from "fp-ts/lib/Either";
-import { EmailAddress } from "../../../generated/definitions/EmailAddress";
-import { MessageSubject } from "../../../generated/definitions/MessageSubject";
-import { OrganizationFiscalCode } from "../../../generated/definitions/OrganizationFiscalCode";
-import { TimeToLiveSeconds } from "../../../generated/definitions/TimeToLiveSeconds";
+import { EmailAddress } from "../../../generated/definitions/v2/EmailAddress";
+import { MessageSubject } from "../../../generated/definitions/v2/MessageSubject";
+import { OrganizationFiscalCode } from "../../../generated/definitions/v2/OrganizationFiscalCode";
+import { TimeToLiveSeconds } from "../../../generated/definitions/v2/TimeToLiveSeconds";
 import { CreatedMessageEventSenderMetadata } from "../created_message_sender_metadata";
-import { StandardServiceCategoryEnum } from "../../../generated/definitions/StandardServiceCategory";
+import { StandardServiceCategoryEnum } from "../../../generated/definitions/v2/StandardServiceCategory";
 
 const aMessageId = "A_MESSAGE_ID" as NonEmptyString;
 const aNotificationId = "A_NOTIFICATION_ID" as NonEmptyString;

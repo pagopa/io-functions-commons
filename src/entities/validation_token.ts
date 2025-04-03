@@ -5,8 +5,8 @@
 import * as t from "io-ts";
 
 import { UTCISODateFromString } from "@pagopa/ts-commons/lib/dates";
-import { EmailAddress } from "../../generated/definitions/EmailAddress";
-import { FiscalCode } from "../../generated/definitions/FiscalCode";
+import { EmailAddress } from "../../generated/definitions/v2/EmailAddress";
+import { FiscalCode } from "../../generated/definitions/v2/FiscalCode";
 import { TableEntityAzureDataTables } from "../utils/data_tables";
 import { TableEntity } from "../utils/azure_storage";
 

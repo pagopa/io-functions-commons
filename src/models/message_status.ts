@@ -9,16 +9,16 @@ import { pipe } from "fp-ts/lib/function";
 import {
   RejectedMessageStatusValue,
   RejectedMessageStatusValueEnum
-} from "../../generated/definitions/RejectedMessageStatusValue";
+} from "../../generated/definitions/v2/RejectedMessageStatusValue";
 import {
   NotRejectedMessageStatusValue,
   NotRejectedMessageStatusValueEnum
-} from "../../generated/definitions/NotRejectedMessageStatusValue";
+} from "../../generated/definitions/v2/NotRejectedMessageStatusValue";
 import {
   RejectionReason,
   RejectionReasonEnum
-} from "../../generated/definitions/RejectionReason";
-import { Timestamp } from "../../generated/definitions/Timestamp";
+} from "../../generated/definitions/v2/RejectionReason";
+import { Timestamp } from "../../generated/definitions/v2/Timestamp";
 
 import { CosmosErrors } from "../utils/cosmosdb_model";
 import { wrapWithKind } from "../utils/types";

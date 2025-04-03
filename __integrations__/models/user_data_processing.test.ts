@@ -2,8 +2,8 @@
 import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import { fromEither, taskEither } from "fp-ts/lib/TaskEither";
-import { UserDataProcessingChoiceEnum } from "../../generated/definitions/UserDataProcessingChoice";
-import { UserDataProcessingStatusEnum } from "../../generated/definitions/UserDataProcessingStatus";
+import { UserDataProcessingChoiceEnum } from "../../generated/definitions/v2/UserDataProcessingChoice";
+import { UserDataProcessingStatusEnum } from "../../generated/definitions/v2/UserDataProcessingStatus";
 import {
   makeUserDataProcessingId,
   USER_DATA_PROCESSING_MODEL_ID_FIELD,
