@@ -1368,7 +1368,8 @@ HttpsUrl:
   type: string
   format: uri
   description: An http(s) url.
-  pattern: "^https:\/\/[-a-zA-Z0-9@:%._+~#=]{2,256}[.][a-z]{2,6}\b([-a-zA-Z0-9@:%_+.~#?&\/=]*)$"
+  # \b is is backquote becouse the code generator convert it as a special unicode character
+  pattern: "^https:\/\/[-a-zA-Z0-9@:%._+~#=]{2,256}[.][a-z]{2,6}\\b([-a-zA-Z0-9@:%_+.~#?&\/=]*)$"
 UserDataProcessingStatus:
   type: string
   description: |-
