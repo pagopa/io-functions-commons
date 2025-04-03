@@ -1,44 +1,81 @@
-import { CreatedMessageWithContent } from "../../generated/definitions/v2/CreatedMessageWithContent";
-import { ExternalCreatedMessageWithContent } from "../../generated/definitions/v2/ExternalCreatedMessageWithContent";
+import { CreatedMessageWithContent } from "../../generated/definitions/v3/CreatedMessageWithContent";
+import { ExternalCreatedMessageWithContent } from "../../generated/definitions/v3/ExternalCreatedMessageWithContent";
 
-import { HiddenServicePayload } from "../../generated/definitions/v2/HiddenServicePayload";
-import { ServicePayload } from "../../generated/definitions/v2/ServicePayload";
-import { VisibleServicePayload } from "../../generated/definitions/v2/VisibleServicePayload";
 import * as E from "fp-ts/lib/Either";
 import * as t from "io-ts";
+import { HiddenServicePayload } from "../../generated/definitions/v3/HiddenServicePayload";
+import { ServicePayload } from "../../generated/definitions/v3/ServicePayload";
+import { VisibleServicePayload } from "../../generated/definitions/v3/VisibleServicePayload";
 
-import { FiscalCode } from "../../generated/definitions/v2/FiscalCode";
-import { PaymentData } from "../../generated/definitions/v2/PaymentData";
-import { OrganizationFiscalCode } from "../../generated/definitions/v2/OrganizationFiscalCode";
-import { PaymentAmount } from "../../generated/definitions/v2/PaymentAmount";
-import { PaymentNoticeNumber } from "../../generated/definitions/v2/PaymentNoticeNumber";
-import { Payee } from "../../generated/definitions/v2/Payee";
-import { MessageContent } from "../../generated/definitions/v2/MessageContent";
-import { NewMessage } from "../../generated/definitions/v2/NewMessage";
 import { identity, pipe } from "fp-ts/lib/function";
-import { StandardServiceCategoryEnum } from "../../generated/definitions/v2/StandardServiceCategory";
+import { FiscalCode } from "../../generated/definitions/v3/FiscalCode";
+import { MessageContent } from "../../generated/definitions/v3/MessageContent";
+import { NewMessage } from "../../generated/definitions/v3/NewMessage";
+import { OrganizationFiscalCode } from "../../generated/definitions/v3/OrganizationFiscalCode";
+import { Payee } from "../../generated/definitions/v3/Payee";
+import { PaymentAmount } from "../../generated/definitions/v3/PaymentAmount";
+import { PaymentData } from "../../generated/definitions/v3/PaymentData";
+import { PaymentNoticeNumber } from "../../generated/definitions/v3/PaymentNoticeNumber";
+import { StandardServiceCategoryEnum } from "../../generated/definitions/v3/StandardServiceCategory";
 
-import { ServiceMetadata as ApiServiceMetadata } from "../../generated/definitions/v2/ServiceMetadata";
-import { CommonServiceMetadata as ApiCommonServiceMetadata } from "../../generated/definitions/v2/CommonServiceMetadata";
-import { StandardServiceMetadata as ApiStandardServiceMetadata } from "../../generated/definitions/v2/StandardServiceMetadata";
-import { ServiceScopeEnum } from "../../generated/definitions/v2/ServiceScope";
-import { SpecialServiceCategoryEnum } from "../../generated/definitions/v2/SpecialServiceCategory";
-import { NotRejectedMessageStatusValueEnum as MessageStatusValueEnum } from "../../generated/definitions/v2/NotRejectedMessageStatusValue";
-import { MessageStatus } from "../../generated/definitions/v2/MessageStatus";
-import { MessageStatusChange } from "../../generated/definitions/v2/MessageStatusChange";
-import { MessageStatusAttributes } from "../../generated/definitions/v2/MessageStatusAttributes";
-import { MessageStatusWithAttributes } from "../../generated/definitions/v2/MessageStatusWithAttributes";
-import { Change_typeEnum as BulkChangeType } from "../../generated/definitions/v2/MessageStatusBulkChange";
-import { Change_typeEnum as ReadingChangeType } from "../../generated/definitions/v2/MessageStatusReadingChange";
-import { Change_typeEnum as ArchinvingChangeType } from "../../generated/definitions/v2/MessageStatusArchivingChange";
-import { FeatureLevelTypeEnum } from "../../generated/definitions/v2/FeatureLevelType";
-import { ThirdPartyMessage } from "../../generated/definitions/v2/ThirdPartyMessage";
-import { EnrichedMessage } from "../../generated/definitions/v2/EnrichedMessage";
 import { NonEmptyString, Semver } from "@pagopa/ts-commons/lib/strings";
+import { CommonServiceMetadata as ApiCommonServiceMetadata } from "../../generated/definitions/v3/CommonServiceMetadata";
+import { EnrichedMessage } from "../../generated/definitions/v3/EnrichedMessage";
+import { FeatureLevelTypeEnum } from "../../generated/definitions/v3/FeatureLevelType";
+import { MessageStatus } from "../../generated/definitions/v3/MessageStatus";
+import { Change_typeEnum as ArchinvingChangeType } from "../../generated/definitions/v3/MessageStatusArchivingChange";
+import { MessageStatusAttributes } from "../../generated/definitions/v3/MessageStatusAttributes";
+import { Change_typeEnum as BulkChangeType } from "../../generated/definitions/v3/MessageStatusBulkChange";
+import { MessageStatusChange } from "../../generated/definitions/v3/MessageStatusChange";
+import { Change_typeEnum as ReadingChangeType } from "../../generated/definitions/v3/MessageStatusReadingChange";
+import { MessageStatusWithAttributes } from "../../generated/definitions/v3/MessageStatusWithAttributes";
+import { NotRejectedMessageStatusValueEnum as MessageStatusValueEnum } from "../../generated/definitions/v3/NotRejectedMessageStatusValue";
+import { ServiceMetadata as ApiServiceMetadata } from "../../generated/definitions/v3/ServiceMetadata";
+import { ServiceScopeEnum } from "../../generated/definitions/v3/ServiceScope";
+import { SpecialServiceCategoryEnum } from "../../generated/definitions/v3/SpecialServiceCategory";
+import { StandardServiceMetadata as ApiStandardServiceMetadata } from "../../generated/definitions/v3/StandardServiceMetadata";
+import { ThirdPartyMessage } from "../../generated/definitions/v3/ThirdPartyMessage";
 
-import { AppVersion } from "../../generated/definitions/v2/AppVersion";
-import { ThirdPartyData } from "../../generated/definitions/v2/ThirdPartyData";
+import { AppVersion } from "../../generated/definitions/v3/AppVersion";
+import { HttpsUrl } from "../../generated/definitions/v3/HttpsUrl";
+import { ThirdPartyData } from "../../generated/definitions/v3/ThirdPartyData";
+import { UnlockCode } from "../../generated/definitions/v3/UnlockCode";
 import { aService } from "../../__mocks__/mocks";
+
+import { CreatedMessageWithContent as CreatedMessageWithContentV2 } from "../../generated/definitions/v2/CreatedMessageWithContent";
+import { ExternalCreatedMessageWithContent as ExternalCreatedMessageWithContentV2 } from "../../generated/definitions/v2/ExternalCreatedMessageWithContent";
+import { HiddenServicePayload as HiddenServicePayloadV2 } from "../../generated/definitions/v2/HiddenServicePayload";
+import { ServicePayload as ServicePayloadV2 } from "../../generated/definitions/v2/ServicePayload";
+import { VisibleServicePayload as VisibleServicePayloadV2 } from "../../generated/definitions/v2/VisibleServicePayload";
+import { FiscalCode as FiscalCodeV2 } from "../../generated/definitions/v2/FiscalCode";
+import { MessageContent as MessageContentV2 } from "../../generated/definitions/v2/MessageContent";
+import { NewMessage as NewMessageV2 } from "../../generated/definitions/v2/NewMessage";
+import { OrganizationFiscalCode as OrganizationFiscalCodeV2 } from "../../generated/definitions/v2/OrganizationFiscalCode";
+import { Payee as PayeeV2 } from "../../generated/definitions/v2/Payee";
+import { PaymentAmount as PaymentAmountV2 } from "../../generated/definitions/v2/PaymentAmount";
+import { PaymentData as PaymentDataV2 } from "../../generated/definitions/v2/PaymentData";
+import { PaymentNoticeNumber as PaymentNoticeNumberV2 } from "../../generated/definitions/v2/PaymentNoticeNumber";
+import { StandardServiceCategoryEnum as StandardServiceCategoryEnumV2 } from "../../generated/definitions/v2/StandardServiceCategory";
+import { CommonServiceMetadata as ApiCommonServiceMetadataV2 } from "../../generated/definitions/v2/CommonServiceMetadata";
+import { EnrichedMessage as EnrichedMessageV2 } from "../../generated/definitions/v2/EnrichedMessage";
+import { FeatureLevelTypeEnum as FeatureLevelTypeEnumV2 } from "../../generated/definitions/v2/FeatureLevelType";
+import { MessageStatus as MessageStatusV2 } from "../../generated/definitions/v2/MessageStatus";
+import { Change_typeEnum as ArchinvingChangeTypeV2 } from "../../generated/definitions/v2/MessageStatusArchivingChange";
+import { MessageStatusAttributes as MessageStatusAttributesV2 } from "../../generated/definitions/v2/MessageStatusAttributes";
+import { Change_typeEnum as BulkChangeTypeV2 } from "../../generated/definitions/v2/MessageStatusBulkChange";
+import { MessageStatusChange as MessageStatusChangeV2 } from "../../generated/definitions/v2/MessageStatusChange";
+import { Change_typeEnum as ReadingChangeTypeV2 } from "../../generated/definitions/v2/MessageStatusReadingChange";
+import { MessageStatusWithAttributes as MessageStatusWithAttributesV2 } from "../../generated/definitions/v2/MessageStatusWithAttributes";
+import { NotRejectedMessageStatusValueEnum as MessageStatusValueEnumV2 } from "../../generated/definitions/v2/NotRejectedMessageStatusValue";
+import { ServiceMetadata as ApiServiceMetadataV2 } from "../../generated/definitions/v2/ServiceMetadata";
+import { ServiceScopeEnum as ServiceScopeEnumV2 } from "../../generated/definitions/v2/ServiceScope";
+import { SpecialServiceCategoryEnum as SpecialServiceCategoryEnumV2 } from "../../generated/definitions/v2/SpecialServiceCategory";
+import { StandardServiceMetadata as ApiStandardServiceMetadataV2 } from "../../generated/definitions/v2/StandardServiceMetadata";
+import { ThirdPartyMessage as ThirdPartyMessageV2 } from "../../generated/definitions/v2/ThirdPartyMessage";
+import { AppVersion as AppVersionV2 } from "../../generated/definitions/v2/AppVersion";
+import { HttpsUrl as HttpsUrlV2 } from "../../generated/definitions/v2/HttpsUrl";
+import { ThirdPartyData as ThirdPartyDataV2 } from "../../generated/definitions/v2/ThirdPartyData";
+import { UnlockCode as UnlockCodeV2 } from "../../generated/definitions/v2/UnlockCode";
 
 describe("ServicePayload definition", () => {
   const commonServicePayload = {
@@ -250,12 +287,23 @@ describe("EnrichedMessage", () => {
 
   it("should correctly decode a valid EnrichedMessage", () => {
     expect(E.isRight(EnrichedMessage.decode(aValidEnrichedMessage))).toBe(true);
+    expect(E.isRight(EnrichedMessageV2.decode(aValidEnrichedMessage))).toBe(
+      true
+    );
   });
 
   it("should fail decoding an EnrichedMessage without organization fiscal code", () => {
     expect(
       E.isLeft(
         EnrichedMessage.decode({
+          ...aValidEnrichedMessage,
+          organization_fiscal_code: undefined
+        })
+      )
+    ).toBe(true);
+    expect(
+      E.isLeft(
+        EnrichedMessageV2.decode({
           ...aValidEnrichedMessage,
           organization_fiscal_code: undefined
         })
@@ -274,6 +322,9 @@ describe("NewMessage definition", () => {
     expect(
       E.isRight(MessageContent.decode(aContentWithoutPaymentData))
     ).toBeTruthy();
+    expect(
+      E.isRight(MessageContentV2.decode(aContentWithoutPaymentData))
+    ).toBeTruthy();
 
     const messageWithContent = NewMessage.decode(
       aMessageWithContentWithoutPaymentData
@@ -281,6 +332,22 @@ describe("NewMessage definition", () => {
 
     pipe(
       messageWithContent,
+      E.fold(
+        () => fail(),
+        value =>
+          expect(value).toEqual({
+            ...aMessageWithContentWithoutPaymentData,
+            time_to_live: 3600,
+            feature_level_type: FeatureLevelTypeEnum.STANDARD
+          })
+      )
+    );
+    const messageWithContentV2 = NewMessageV2.decode(
+      aMessageWithContentWithoutPaymentData
+    );
+
+    pipe(
+      messageWithContentV2,
       E.fold(
         () => fail(),
         value =>
@@ -303,6 +370,9 @@ describe("NewMessage definition", () => {
     expect(
       E.isRight(MessageContent.decode(aContentWithoutPaymentData))
     ).toBeTruthy();
+    expect(
+      E.isRight(MessageContentV2.decode(aContentWithoutPaymentData))
+    ).toBeTruthy();
 
     const messageWithContent = NewMessage.decode(
       aMessageWithContentWithoutPaymentData
@@ -310,6 +380,23 @@ describe("NewMessage definition", () => {
 
     pipe(
       messageWithContent,
+      E.fold(
+        () => fail(),
+        value =>
+          expect(value).toEqual({
+            ...aMessageWithContentWithoutPaymentData,
+            time_to_live: 3600,
+            feature_level_type: FeatureLevelTypeEnum.ADVANCED
+          })
+      )
+    );
+
+    const messageWithContentV2 = NewMessageV2.decode(
+      aMessageWithContentWithoutPaymentData
+    );
+
+    pipe(
+      messageWithContentV2,
       E.fold(
         () => fail(),
         value =>
@@ -426,6 +513,20 @@ describe("CreatedMessageWithContent definition", () => {
     );
 
     expect(E.isRight(messageWithContent)).toBeTruthy();
+    expect(
+      E.isRight(
+        PayeeV2.decode(
+          aMessageWithContentWithPaymentDataWithoutPayee.content.payment_data
+            .payee
+        )
+      )
+    ).toBeTruthy();
+
+    const messageWithContentV2 = CreatedMessageWithContentV2.decode(
+      aMessageWithContentWithPaymentDataWithoutPayee
+    );
+
+    expect(E.isRight(messageWithContentV2)).toBeTruthy();
   });
 
   it("should NOT decode CreatedMessageWithContent with content and payment data without payee", () => {
@@ -442,6 +543,12 @@ describe("CreatedMessageWithContent definition", () => {
     );
 
     expect(E.isLeft(messageWithContent)).toBeTruthy();
+
+    const messageWithContentV2 = CreatedMessageWithContentV2.decode(
+      aMessageWithContentWithPaymentDataWithoutPayee
+    );
+
+    expect(E.isLeft(messageWithContentV2)).toBeTruthy();
   });
 
   it("should decode ADVANCED CreatedMessageWithContent with content and payment data with payee", () => {
@@ -467,6 +574,20 @@ describe("CreatedMessageWithContent definition", () => {
     );
 
     expect(E.isRight(messageWithContent)).toBeTruthy();
+
+    expect(
+      E.isRight(
+        PayeeV2.decode(
+          aMessageWithContentWithPaymentDataWithPayee.content.payment_data.payee
+        )
+      )
+    ).toBeTruthy();
+
+    const messageWithContentV2 = CreatedMessageWithContentV2.decode(
+      aMessageWithContentWithPaymentDataWithPayee
+    );
+
+    expect(E.isRight(messageWithContentV2)).toBeTruthy();
   });
 });
 
@@ -494,6 +615,21 @@ describe("ExternalCreatedMessageWithContent definition", () => {
     );
 
     expect(E.isRight(messageWithContent)).toBeTruthy();
+
+    expect(
+      E.isRight(
+        PayeeV2.decode(
+          aMessageWithContentWithPaymentDataWithoutPayee.content.payment_data
+            .payee
+        )
+      )
+    ).toBeTruthy();
+
+    const messageWithContentV2 = ExternalCreatedMessageWithContent.decode(
+      aMessageWithContentWithPaymentDataWithoutPayee
+    );
+
+    expect(E.isRight(messageWithContentV2)).toBeTruthy();
   });
 
   it("should NOT decode ExternalCreatedMessageWithContent with content and payment data without payee", () => {
@@ -510,6 +646,12 @@ describe("ExternalCreatedMessageWithContent definition", () => {
     );
 
     expect(E.isLeft(messageWithContent)).toBeTruthy();
+
+    const messageWithContentV2 = ExternalCreatedMessageWithContentV2.decode(
+      aMessageWithContentWithPaymentDataWithoutPayee
+    );
+
+    expect(E.isLeft(messageWithContentV2)).toBeTruthy();
   });
 
   it("should decode ADVANCED ExternalCreatedMessageWithContent with content and payment data with payee", () => {
@@ -548,6 +690,33 @@ describe("ExternalCreatedMessageWithContent definition", () => {
           )
       )
     );
+
+    expect(
+      E.isRight(
+        PayeeV2.decode(
+          aMessageWithContentWithPaymentDataWithPayee.content.payment_data.payee
+        )
+      )
+    ).toBeTruthy();
+
+    const messageWithContentV2 = ExternalCreatedMessageWithContentV2.decode(
+      aMessageWithContentWithPaymentDataWithPayee
+    );
+
+    expect(E.isRight(messageWithContentV2)).toBeTruthy();
+
+    pipe(
+      messageWithContentV2,
+      E.fold(
+        () => fail(),
+        value =>
+          expect(value).toMatchObject(
+            expect.objectContaining({
+              feature_level_type: FeatureLevelTypeEnum.ADVANCED
+            })
+          )
+      )
+    );
   });
 });
 
@@ -559,6 +728,18 @@ describe("Type definition", () => {
 
     pipe(
       decodedMessageContent,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(aContentWithoutPaymentData)
+      )
+    );
+
+    const decodedMessageContentV2 = MessageContentV2.decode(
+      aContentWithoutPaymentData
+    );
+
+    pipe(
+      decodedMessageContentV2,
       E.fold(
         () => fail(),
         value => expect(value).toEqual(aContentWithoutPaymentData)
@@ -580,6 +761,20 @@ describe("Type definition", () => {
           })
       )
     );
+
+    const decodedPaymentDataV2 = PaymentDataV2.decode(aPaymentDataWithoutPayee);
+
+    pipe(
+      decodedPaymentDataV2,
+      E.fold(
+        () => fail(),
+        value =>
+          expect(value).toEqual({
+            ...aPaymentDataWithoutPayee,
+            invalid_after_due_date: false
+          })
+      )
+    );
   });
 
   it("should decode MessageContent with content with legal data", () => {
@@ -587,6 +782,18 @@ describe("Type definition", () => {
 
     pipe(
       decodedMessageContent,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(aContentWithLegalData)
+      )
+    );
+
+    const decodedMessageContentV2 = MessageContentV2.decode(
+      aContentWithLegalData
+    );
+
+    pipe(
+      decodedMessageContentV2,
       E.fold(
         () => fail(),
         value => expect(value).toEqual(aContentWithLegalData)
@@ -601,6 +808,26 @@ describe("Type definition", () => {
 
     pipe(
       decodedMessageContent,
+      E.fold(
+        () => fail(),
+        value =>
+          expect(value).toEqual({
+            ...aContentWithThirdPartyData,
+            third_party_data: {
+              ...aContentWithThirdPartyData.third_party_data,
+              has_attachments: false,
+              has_remote_content: false
+            }
+          })
+      )
+    );
+
+    const decodedMessageContentV2 = MessageContentV2.decode(
+      aContentWithThirdPartyData
+    );
+
+    pipe(
+      decodedMessageContentV2,
       E.fold(
         () => fail(),
         value =>
@@ -635,6 +862,18 @@ describe("Type definition", () => {
         _ => fail()
       )
     );
+
+    const decodedMessageContentV2 = MessageContentV2.decode(
+      aContentWithThirdPartyDataWithoutId
+    );
+
+    pipe(
+      decodedMessageContentV2,
+      E.fold(
+        () => expect(1).toBe(1),
+        _ => fail()
+      )
+    );
   });
 
   it("should fail decoding a MessageContent with Third Party data with empty id", () => {
@@ -657,6 +896,18 @@ describe("Type definition", () => {
         _ => fail()
       )
     );
+
+    const decodedMessageContentV2 = MessageContentV2.decode(
+      aContentWithThirdPartyDataWithoutId
+    );
+
+    pipe(
+      decodedMessageContentV2,
+      E.fold(
+        () => expect(1).toBe(1),
+        _ => fail()
+      )
+    );
   });
 
   it("should fail decoding a MessageContent with Third Party data without with empty summary", () => {
@@ -674,6 +925,18 @@ describe("Type definition", () => {
 
     pipe(
       decodedMessageContent,
+      E.fold(
+        () => expect(1).toBe(1),
+        _ => fail()
+      )
+    );
+
+    const decodedMessageContentV2 = MessageContentV2.decode(
+      aContentWithThirdPartyDataWithoutSummary
+    );
+
+    pipe(
+      decodedMessageContentV2,
       E.fold(
         () => expect(1).toBe(1),
         _ => fail()
@@ -706,6 +969,7 @@ describe("ServiceMetadata", () => {
       E.mapLeft(_ => fail("Unexpected decoding error")),
       E.map(_ => {
         expect(ApiCommonServiceMetadata.is(_)).toBeTruthy();
+        expect(ApiCommonServiceMetadataV2.is(_)).toBeTruthy();
         expect(_).not.toHaveProperty("category");
         expect(_).not.toHaveProperty("other_property");
       })
@@ -720,6 +984,7 @@ describe("ServiceMetadata", () => {
       E.mapLeft(_ => fail("Unexpected decoding error")),
       E.map(_ => {
         expect(ApiStandardServiceMetadata.is(_)).toBeTruthy();
+        expect(ApiStandardServiceMetadataV2.is(_)).toBeTruthy();
         expect(_).toHaveProperty(
           "category",
           StandardServiceCategoryEnum.STANDARD
@@ -754,11 +1019,15 @@ describe("MessageStatus", () => {
   it("should fail decoding an empty MessageStatus", () => {
     const result = MessageStatus.decode({});
     expect(E.isLeft(result)).toBeTruthy();
+    const resultV2 = MessageStatusV2.decode({});
+    expect(E.isLeft(resultV2)).toBeTruthy();
   });
 
   it("should fail decoding a wrong MessageStatus", () => {
     const result = MessageStatus.decode(aWrongMessageStatus);
     expect(E.isLeft(result)).toBeTruthy();
+    const resultV2 = MessageStatusV2.decode(aWrongMessageStatus);
+    expect(E.isLeft(resultV2)).toBeTruthy();
   });
 
   it("should succeed decoding a correct MessageStatus", () => {
@@ -766,6 +1035,15 @@ describe("MessageStatus", () => {
     expect(E.isRight(result)).toBeTruthy();
     pipe(
       result,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(aRightMessageStatus)
+      )
+    );
+    const resultV2 = MessageStatusV2.decode(aRightMessageStatus);
+    expect(E.isRight(resultV2)).toBeTruthy();
+    pipe(
+      resultV2,
       E.fold(
         () => fail(),
         value => expect(value).toEqual(aRightMessageStatus)
@@ -786,6 +1064,18 @@ describe("MessageStatus", () => {
         value => expect(value).toEqual(aRightMessageStatus)
       )
     );
+    const resultV2 = MessageStatusV2.decode({
+      ...aRightMessageStatus,
+      ...aRightMessageStatusAttributes
+    });
+    expect(E.isRight(resultV2)).toBeTruthy();
+    pipe(
+      resultV2,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(aRightMessageStatus)
+      )
+    );
   });
 
   it("should succeed decoding MessageStatusWithAttributes from a MessageStatus with default", () => {
@@ -795,6 +1085,17 @@ describe("MessageStatus", () => {
     expect(E.isRight(result)).toBeTruthy();
     pipe(
       result,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(aDefaultMessageWriteWithAttributes)
+      )
+    );
+    const resultV2 = MessageStatusWithAttributesV2.decode({
+      ...aRightMessageStatus
+    });
+    expect(E.isRight(resultV2)).toBeTruthy();
+    pipe(
+      resultV2,
       E.fold(
         () => fail(),
         value => expect(value).toEqual(aDefaultMessageWriteWithAttributes)
@@ -815,6 +1116,19 @@ describe("MessageStatus", () => {
         value => expect(value).toEqual(aDefaultMessageWriteWithAttributes)
       )
     );
+
+    const resultV2 = MessageStatusWithAttributesV2.decode({
+      ...aRightMessageStatus,
+      ...aRightMessageStatusAttributes
+    });
+    expect(E.isRight(resultV2)).toBeTruthy();
+    pipe(
+      resultV2,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(aDefaultMessageWriteWithAttributes)
+      )
+    );
   });
 
   it("should fail decoding a wrong MessageStatusWithAttributes", () => {
@@ -823,6 +1137,12 @@ describe("MessageStatus", () => {
       is_read: "false"
     });
     expect(E.isLeft(result)).toBeTruthy();
+
+    const resultV2 = MessageStatusWithAttributesV2.decode({
+      ...aRightMessageStatus,
+      is_read: "false"
+    });
+    expect(E.isLeft(resultV2)).toBeTruthy();
   });
 });
 
@@ -867,21 +1187,29 @@ describe("MessageStatusChange", () => {
   it("should fail decoding an empty change", () => {
     const result = MessageStatusChange.decode({});
     expect(E.isLeft(result)).toBeTruthy();
+    const resultV2 = MessageStatusChangeV2.decode({});
+    expect(E.isLeft(resultV2)).toBeTruthy();
   });
 
   it("should fail decoding a wrong read change", () => {
     const result = MessageStatusChange.decode(aWrongReadChange);
     expect(E.isLeft(result)).toBeTruthy();
+    const resultV2 = MessageStatusChangeV2.decode(aWrongReadChange);
+    expect(E.isLeft(resultV2)).toBeTruthy();
   });
 
   it("should fail decoding a wrong bulk change", () => {
     const result = MessageStatusChange.decode(aWrongBulkChange);
     expect(E.isLeft(result)).toBeTruthy();
+    const resultV2 = MessageStatusChangeV2.decode(aWrongBulkChange);
+    expect(E.isLeft(resultV2)).toBeTruthy();
   });
 
   it("should fail decoding a wrong change", () => {
     const result = MessageStatusChange.decode(aWrongChange);
     expect(E.isLeft(result)).toBeTruthy();
+    const resultV2 = MessageStatusChangeV2.decode(aWrongChange);
+    expect(E.isLeft(resultV2)).toBeTruthy();
   });
 
   it("should succeed decoding a correct read change", () => {
@@ -889,6 +1217,15 @@ describe("MessageStatusChange", () => {
     expect(E.isRight(result)).toBeTruthy();
     pipe(
       result,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(aRightReadChange)
+      )
+    );
+    const resultV2 = MessageStatusChangeV2.decode(aRightReadChange);
+    expect(E.isRight(resultV2)).toBeTruthy();
+    pipe(
+      resultV2,
       E.fold(
         () => fail(),
         value => expect(value).toEqual(aRightReadChange)
@@ -906,6 +1243,15 @@ describe("MessageStatusChange", () => {
         value => expect(value).toEqual(anUnarchiveChange)
       )
     );
+    const resultV2 = MessageStatusChangeV2.decode(anUnarchiveChange);
+    expect(E.isRight(resultV2)).toBeTruthy();
+    pipe(
+      resultV2,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(anUnarchiveChange)
+      )
+    );
   });
 
   it("should succeed decoding an archive change", () => {
@@ -918,6 +1264,16 @@ describe("MessageStatusChange", () => {
         value => expect(value).toEqual(anArchiveChange)
       )
     );
+
+    const resultV2 = MessageStatusChangeV2.decode(anArchiveChange);
+    expect(E.isRight(resultV2)).toBeTruthy();
+    pipe(
+      resultV2,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(anArchiveChange)
+      )
+    );
   });
 
   it("should succeed decoding a right bulk change", () => {
@@ -925,6 +1281,15 @@ describe("MessageStatusChange", () => {
     expect(E.isRight(result)).toBeTruthy();
     pipe(
       result,
+      E.fold(
+        () => fail(),
+        value => expect(value).toEqual(aRightBulkChange)
+      )
+    );
+    const resultV2 = MessageStatusChangeV2.decode(aRightBulkChange);
+    expect(E.isRight(resultV2)).toBeTruthy();
+    pipe(
+      resultV2,
       E.fold(
         () => fail(),
         value => expect(value).toEqual(aRightBulkChange)
@@ -946,6 +1311,14 @@ describe("ThirdPartyMessage", () => {
       E.map(d => expect(d).toEqual(aThirdPartyMessage)),
       E.mapLeft(_ => fail())
     );
+
+    const decodedV2 = ThirdPartyMessageV2.decode(aThirdPartyMessage);
+
+    pipe(
+      decodedV2,
+      E.map(d => expect(d).toEqual(aThirdPartyMessage)),
+      E.mapLeft(_ => fail())
+    );
   });
 
   it("should decode a ThirdPartyMessage without attachment list", async () => {
@@ -955,6 +1328,14 @@ describe("ThirdPartyMessage", () => {
 
     pipe(
       decoded,
+      E.map(d => expect(d).toEqual(aThirdPartyMessage)),
+      E.mapLeft(_ => fail())
+    );
+
+    const decodedV2 = ThirdPartyMessageV2.decode(aThirdPartyMessage);
+
+    pipe(
+      decodedV2,
       E.map(d => expect(d).toEqual(aThirdPartyMessage)),
       E.mapLeft(_ => fail())
     );
@@ -976,6 +1357,14 @@ describe("ThirdPartyMessage", () => {
 
     pipe(
       decoded,
+      E.map(d => expect(d).toEqual(aThirdPartyMessage)),
+      E.mapLeft(_ => fail())
+    );
+
+    const decodedV2 = ThirdPartyMessageV2.decode(aThirdPartyMessage);
+
+    pipe(
+      decodedV2,
       E.map(d => expect(d).toEqual(aThirdPartyMessage)),
       E.mapLeft(_ => fail())
     );
@@ -1001,6 +1390,14 @@ describe("ThirdPartyMessage", () => {
       E.map(d => expect(d).toEqual(aThirdPartyMessage)),
       E.mapLeft(_ => fail())
     );
+
+    const decodedV2 = ThirdPartyMessageV2.decode(aThirdPartyMessage);
+
+    pipe(
+      decodedV2,
+      E.map(d => expect(d).toEqual(aThirdPartyMessage)),
+      E.mapLeft(_ => fail())
+    );
   });
 });
 
@@ -1020,6 +1417,19 @@ describe("ThirdPartyData", () => {
         }
       })
     );
+
+    const decodedV2 = ThirdPartyDataV2.decode(aThirdPartyData);
+
+    expect(decodedV2).toMatchObject(
+      expect.objectContaining({
+        _tag: "Right",
+        right: {
+          id: aThirdPartyId,
+          has_attachments: false,
+          has_remote_content: false
+        }
+      })
+    );
   });
 
   it("should decode a ThirdPartyData with has_remote_content true if provided with true", () => {
@@ -1028,6 +1438,19 @@ describe("ThirdPartyData", () => {
     const decoded = ThirdPartyData.decode(aThirdPartyData);
 
     expect(decoded).toMatchObject(
+      expect.objectContaining({
+        _tag: "Right",
+        right: {
+          id: aThirdPartyId,
+          has_attachments: false,
+          has_remote_content: true
+        }
+      })
+    );
+
+    const decodedV2 = ThirdPartyDataV2.decode(aThirdPartyData);
+
+    expect(decodedV2).toMatchObject(
       expect.objectContaining({
         _tag: "Right",
         right: {
@@ -1058,6 +1481,20 @@ describe("ThirdPartyData", () => {
         }
       })
     );
+
+    const decodedV2 = ThirdPartyDataV2.decode(aThirdPartyData);
+
+    expect(decodedV2).toMatchObject(
+      expect.objectContaining({
+        _tag: "Right",
+        right: {
+          id: aThirdPartyId,
+          has_attachments: false,
+          has_remote_content: false,
+          configuration_id: "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+        }
+      })
+    );
   });
 
   it("should fail to decode a ThirdPartyData if a wrong ulid is provided as configuration_id", () => {
@@ -1067,6 +1504,9 @@ describe("ThirdPartyData", () => {
     };
     const decoded = ThirdPartyData.decode(aThirdPartyData);
     expect(E.isLeft(decoded)).toBeTruthy();
+
+    const decodedV2 = ThirdPartyDataV2.decode(aThirdPartyData);
+    expect(E.isLeft(decodedV2)).toBeTruthy();
   });
 });
 
@@ -1085,20 +1525,68 @@ const exactType: <T, U>(
 ) => IfEquals<T, U> = (_, __) => _;
 let semver: Semver;
 let appVersion: AppVersion;
+let appVersionV2: AppVersionV2;
 
 describe("Semver and AppVersion compatibility", () => {
   it("Should decode successfully a valid semver string", () => {
     const semver = "1.10.1" as Semver;
     const decoded = AppVersion.decode(semver);
     expect(E.isRight(decoded)).toBeTruthy();
+
+    const decodedV2 = AppVersionV2.decode(semver);
+    expect(E.isRight(decodedV2)).toBeTruthy();
   });
   it("Should fail the decode of a invalid semver string", () => {
     const semver = "1.10.01" as Semver;
     const decoded = AppVersion.decode(semver);
     expect(E.isLeft(decoded)).toBeTruthy();
+
+    const decodedV2 = AppVersionV2.decode(semver);
+    expect(E.isLeft(decodedV2)).toBeTruthy();
   });
   it("Typescript type are compatible and interchangeable", () => {
     exactType(semver, appVersion);
     exactType(appVersion, semver);
+
+    exactType(semver, appVersionV2);
+    exactType(appVersionV2, semver);
   });
+});
+
+describe("HttpsUrl", () => {
+  it("should decode successfully a valid https url string", () => {
+    const httpsUrl = "https://sub.domain.com/path/method/file.ext";
+    const decoded = HttpsUrl.decode(httpsUrl);
+    expect(E.isRight(decoded)).toBeTruthy();
+    const decodedV2 = HttpsUrlV2.decode(httpsUrl);
+    expect(E.isRight(decodedV2)).toBeTruthy();
+  });
+  it.each([
+    ["http://sub.domain.com/path/method/file.ext"],
+    ["https://wrong/path"]
+  ])("should fail the decode of a invalid https url string", url => {
+    const decoded = HttpsUrl.decode(url);
+    expect(E.isLeft(decoded)).toBeTruthy();
+    const decodedV2 = HttpsUrlV2.decode(url);
+    expect(E.isLeft(decodedV2)).toBeTruthy();
+  });
+});
+
+describe("UnlockCode", () => {
+  it("should decode successfully a valid unlock code string", () => {
+    const unlockCode = "123456789";
+    const decoded = UnlockCode.decode(unlockCode);
+    expect(E.isRight(decoded)).toBeTruthy();
+    const decodedV2 = UnlockCodeV2.decode(unlockCode);
+    expect(E.isRight(decodedV2)).toBeTruthy();
+  });
+  it.each([["12345678"], ["1234567890"], ["12345678a"], [""]])(
+    "should fail the decode of a invalid unlock code string",
+    unlockCode => {
+      const decoded = UnlockCode.decode(unlockCode);
+      expect(E.isLeft(decoded)).toBeTruthy();
+      const decodedV2 = UnlockCodeV2.decode(unlockCode);
+      expect(E.isLeft(decodedV2)).toBeTruthy();
+    }
+  );
 });
