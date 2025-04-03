@@ -12,12 +12,12 @@ import { Ord } from "fp-ts/lib/string";
 import {
   NotificationChannel,
   NotificationChannelEnum
-} from "../../generated/definitions/NotificationChannel";
-import { ServicePublic } from "../../generated/definitions/ServicePublic";
+} from "../../generated/definitions/v2/NotificationChannel";
+import { ServicePublic } from "../../generated/definitions/v2/ServicePublic";
 import { BaseModel } from "../utils/cosmosdb_model";
 import { toApiServiceMetadata } from "../utils/service_metadata";
-import { ServiceTuple } from "../../generated/definitions/ServiceTuple";
-import { ServiceScopeEnum } from "../../generated/definitions/ServiceScope";
+import { ServiceTuple } from "../../generated/definitions/v2/ServiceTuple";
+import { ServiceScopeEnum } from "../../generated/definitions/v2/ServiceScope";
 import { Service, ServiceMetadata } from "./service";
 
 // This is not a CosmosDB model, but entities are stored into blob storage

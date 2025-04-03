@@ -18,9 +18,9 @@ import { RetrievedMessage } from "../models/message";
 import { NotificationModel } from "../models/notification";
 import { NotificationStatusModel } from "../models/notification_status";
 
-import { CreatedMessageWithoutContent } from "../../generated/definitions/CreatedMessageWithoutContent";
-import { NotificationChannelEnum } from "../../generated/definitions/NotificationChannel";
-import { NotificationChannelStatusValueEnum } from "../../generated/definitions/NotificationChannelStatusValue";
+import { CreatedMessageWithoutContent } from "../../generated/definitions/v2/CreatedMessageWithoutContent";
+import { NotificationChannelEnum } from "../../generated/definitions/v2/NotificationChannel";
+import { NotificationChannelStatusValueEnum } from "../../generated/definitions/v2/NotificationChannelStatusValue";
 
 /**
  * Convenience structure to hold notification channels

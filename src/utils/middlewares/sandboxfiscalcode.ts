@@ -1,4 +1,4 @@
-import { SandboxFiscalCode } from "../../../generated/definitions/SandboxFiscalCode";
+import { SandboxFiscalCode } from "../../../generated/definitions/v2/SandboxFiscalCode";
 
 import { RequiredParamMiddleware } from "./required_param";
 

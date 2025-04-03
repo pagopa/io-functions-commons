@@ -1,9 +1,9 @@
 import { withoutUndefinedValues } from "@pagopa/ts-commons/lib/types";
-import { RCConfigurationPublic } from "../../generated/definitions/RCConfigurationPublic";
-import { RCAuthenticationConfig } from "../../generated/definitions/RCAuthenticationConfig";
-import { RCClientCert } from "../../generated/definitions/RCClientCert";
-import { RCConfigurationProdEnvironment } from "../../generated/definitions/RCConfigurationProdEnvironment";
-import { RCConfigurationTestEnvironment } from "../../generated/definitions/RCConfigurationTestEnvironment";
+import { RCConfigurationPublic } from "../../generated/definitions/v2/RCConfigurationPublic";
+import { RCAuthenticationConfig } from "../../generated/definitions/v2/RCAuthenticationConfig";
+import { RCClientCert } from "../../generated/definitions/v2/RCClientCert";
+import { RCConfigurationProdEnvironment } from "../../generated/definitions/v2/RCConfigurationProdEnvironment";
+import { RCConfigurationTestEnvironment } from "../../generated/definitions/v2/RCConfigurationTestEnvironment";
 import {
   RCTestEnvironmentConfig,
   RetrievedRCConfiguration,

@@ -13,11 +13,14 @@ import { createContext } from "./cosmos_utils";
 import * as e from "fp-ts/lib/Either";
 import * as te from "fp-ts/lib/TaskEither";
 import { pipe } from "fp-ts/lib/function";
-import { ServiceScopeEnum } from "../../generated/definitions/ServiceScope";
-import { CosmosErrors, toCosmosErrorResponse } from "../../src/utils/cosmosdb_model";
+import { ServiceScopeEnum } from "../../generated/definitions/v2/ServiceScope";
+import {
+  CosmosErrors,
+  toCosmosErrorResponse
+} from "../../src/utils/cosmosdb_model";
 import { generateVersionedModelId } from "../../src/utils/cosmosdb_model_versioned";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
-import { StandardServiceCategoryEnum } from "../../generated/definitions/StandardServiceCategory";
+import { StandardServiceCategoryEnum } from "../../generated/definitions/v2/StandardServiceCategory";
 
 const aService: Service = pipe(
   Service.decode({
@@ -147,15 +150,24 @@ describe("Models |> Service", () => {
     };
 
     // Seed the database with a document without serviceMetadata category (backwards compatibility check)
-    const savedService: e.Either<CosmosErrors, RetrievedService> = await te.tryCatch<CosmosErrors, any>(
+    const savedService: e.Either<
+      CosmosErrors,
+      RetrievedService
+    > = await te.tryCatch<CosmosErrors, any>(
       () =>
-        context.container.items.create({
-          ...newDoc,
-          id: generateVersionedModelId<Service, typeof SERVICE_MODEL_ID_FIELD>(newDoc.serviceId, 0 as NonNegativeInteger),
-          version: 0
-        }, {
-          disableAutomaticIdGeneration: true
-        }),
+        context.container.items.create(
+          {
+            ...newDoc,
+            id: generateVersionedModelId<
+              Service,
+              typeof SERVICE_MODEL_ID_FIELD
+            >(newDoc.serviceId, 0 as NonNegativeInteger),
+            version: 0
+          },
+          {
+            disableAutomaticIdGeneration: true
+          }
+        ),
       toCosmosErrorResponse
     )();
     expect(e.isRight(savedService)).toBeTruthy();

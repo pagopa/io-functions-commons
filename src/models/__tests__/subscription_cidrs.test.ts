@@ -3,7 +3,7 @@ import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import * as E from "fp-ts/lib/Either";
 import * as O from "fp-ts/lib/Option";
-import { CIDR } from "../../../generated/definitions/CIDR";
+import { CIDR } from "../../../generated/definitions/v2/CIDR";
 import { toAuthorizedCIDRs } from "../service";
 import {
   SubscriptionCIDRs,

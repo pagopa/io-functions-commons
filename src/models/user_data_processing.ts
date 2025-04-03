@@ -11,13 +11,13 @@ import {
   CosmosdbModelVersioned,
   RetrievedVersionedModel
 } from "../utils/cosmosdb_model_versioned";
-import { FiscalCode } from "../../generated/definitions/FiscalCode";
-import { Timestamp } from "../../generated/definitions/Timestamp";
-import { UserDataProcessingChoice } from "../../generated/definitions/UserDataProcessingChoice";
+import { FiscalCode } from "../../generated/definitions/v2/FiscalCode";
+import { Timestamp } from "../../generated/definitions/v2/Timestamp";
+import { UserDataProcessingChoice } from "../../generated/definitions/v2/UserDataProcessingChoice";
 import {
   UserDataProcessingStatus,
   UserDataProcessingStatusEnum
-} from "../../generated/definitions/UserDataProcessingStatus";
+} from "../../generated/definitions/v2/UserDataProcessingStatus";
 import { CosmosErrors } from "../utils/cosmosdb_model";
 import { wrapWithKind } from "../utils/types";
 

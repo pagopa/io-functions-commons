@@ -1,21 +1,31 @@
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { ServiceCategory } from "../../../generated/definitions/ServiceCategory";
-import { ServiceId } from "../../../generated/definitions/ServiceId";
-import { ServiceScopeEnum } from "../../../generated/definitions/ServiceScope";
-import { SpecialServiceCategoryEnum } from "../../../generated/definitions/SpecialServiceCategory";
-import { StandardServiceCategoryEnum } from "../../../generated/definitions/StandardServiceCategory";
+import { ServiceCategory } from "../../../generated/definitions/v2/ServiceCategory";
+import { ServiceId } from "../../../generated/definitions/v2/ServiceId";
+import { ServiceScopeEnum } from "../../../generated/definitions/v2/ServiceScope";
+import { SpecialServiceCategoryEnum } from "../../../generated/definitions/v2/SpecialServiceCategory";
+import { StandardServiceCategoryEnum } from "../../../generated/definitions/v2/StandardServiceCategory";
 import { aVisibleService } from "../../../__mocks__/mocks";
-import { ServiceMetadata, SpecialServiceMetadata, StandardServiceMetadata } from "../service";
 import {
-  toServicesTuple,
-  VisibleService
-} from "../visible_service";
+  ServiceMetadata,
+  SpecialServiceMetadata,
+  StandardServiceMetadata
+} from "../service";
+import { toServicesTuple, VisibleService } from "../visible_service";
 
-const withScopeAndCategory = (scope: ServiceScopeEnum, category: ServiceCategory) => (
-  s: VisibleService
-): VisibleService => ({
+const withScopeAndCategory = (
+  scope: ServiceScopeEnum,
+  category: ServiceCategory
+) => (s: VisibleService): VisibleService => ({
   ...s,
-  serviceMetadata: category === StandardServiceCategoryEnum.STANDARD ? { ...s.serviceMetadata, scope, category } as StandardServiceMetadata : { ...s.serviceMetadata, scope, category, customSpecialFlow: "flow" as NonEmptyString } as SpecialServiceMetadata
+  serviceMetadata:
+    category === StandardServiceCategoryEnum.STANDARD
+      ? ({ ...s.serviceMetadata, scope, category } as StandardServiceMetadata)
+      : ({
+          ...s.serviceMetadata,
+          scope,
+          category,
+          customSpecialFlow: "flow" as NonEmptyString
+        } as SpecialServiceMetadata)
 });
 
 const withId = (serviceId: ServiceId) => (
@@ -26,10 +36,14 @@ const withId = (serviceId: ServiceId) => (
 });
 
 const aVisibleServiceWithoutMetadata = aVisibleService;
-const aVisibleNationalService = withScopeAndCategory(ServiceScopeEnum.NATIONAL, StandardServiceCategoryEnum.STANDARD)(
-  aVisibleService
-);
-const aVisibleLocalService = withScopeAndCategory(ServiceScopeEnum.LOCAL, StandardServiceCategoryEnum.STANDARD)(aVisibleService);
+const aVisibleNationalService = withScopeAndCategory(
+  ServiceScopeEnum.NATIONAL,
+  StandardServiceCategoryEnum.STANDARD
+)(aVisibleService);
+const aVisibleLocalService = withScopeAndCategory(
+  ServiceScopeEnum.LOCAL,
+  StandardServiceCategoryEnum.STANDARD
+)(aVisibleService);
 
 // this to check our assumptions on mock values
 expect(aVisibleServiceWithoutMetadata.serviceMetadata).not.toBeDefined();

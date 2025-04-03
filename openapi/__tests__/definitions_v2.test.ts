@@ -1,43 +1,43 @@
-import { CreatedMessageWithContent } from "../../generated/definitions/CreatedMessageWithContent";
-import { ExternalCreatedMessageWithContent } from "../../generated/definitions/ExternalCreatedMessageWithContent";
+import { CreatedMessageWithContent } from "../../generated/definitions/v2/CreatedMessageWithContent";
+import { ExternalCreatedMessageWithContent } from "../../generated/definitions/v2/ExternalCreatedMessageWithContent";
 
-import { HiddenServicePayload } from "../../generated/definitions/HiddenServicePayload";
-import { ServicePayload } from "../../generated/definitions/ServicePayload";
-import { VisibleServicePayload } from "../../generated/definitions/VisibleServicePayload";
+import { HiddenServicePayload } from "../../generated/definitions/v2/HiddenServicePayload";
+import { ServicePayload } from "../../generated/definitions/v2/ServicePayload";
+import { VisibleServicePayload } from "../../generated/definitions/v2/VisibleServicePayload";
 import * as E from "fp-ts/lib/Either";
 import * as t from "io-ts";
 
-import { FiscalCode } from "../../generated/definitions/FiscalCode";
-import { PaymentData } from "../../generated/definitions/PaymentData";
-import { OrganizationFiscalCode } from "../../generated/definitions/OrganizationFiscalCode";
-import { PaymentAmount } from "../../generated/definitions/PaymentAmount";
-import { PaymentNoticeNumber } from "../../generated/definitions/PaymentNoticeNumber";
-import { Payee } from "../../generated/definitions/Payee";
-import { MessageContent } from "../../generated/definitions/MessageContent";
-import { NewMessage } from "../../generated/definitions/NewMessage";
+import { FiscalCode } from "../../generated/definitions/v2/FiscalCode";
+import { PaymentData } from "../../generated/definitions/v2/PaymentData";
+import { OrganizationFiscalCode } from "../../generated/definitions/v2/OrganizationFiscalCode";
+import { PaymentAmount } from "../../generated/definitions/v2/PaymentAmount";
+import { PaymentNoticeNumber } from "../../generated/definitions/v2/PaymentNoticeNumber";
+import { Payee } from "../../generated/definitions/v2/Payee";
+import { MessageContent } from "../../generated/definitions/v2/MessageContent";
+import { NewMessage } from "../../generated/definitions/v2/NewMessage";
 import { identity, pipe } from "fp-ts/lib/function";
-import { StandardServiceCategoryEnum } from "../../generated/definitions/StandardServiceCategory";
+import { StandardServiceCategoryEnum } from "../../generated/definitions/v2/StandardServiceCategory";
 
-import { ServiceMetadata as ApiServiceMetadata } from "../../generated/definitions/ServiceMetadata";
-import { CommonServiceMetadata as ApiCommonServiceMetadata } from "../../generated/definitions/CommonServiceMetadata";
-import { StandardServiceMetadata as ApiStandardServiceMetadata } from "../../generated/definitions/StandardServiceMetadata";
-import { ServiceScopeEnum } from "../../generated/definitions/ServiceScope";
-import { SpecialServiceCategoryEnum } from "../../generated/definitions/SpecialServiceCategory";
-import { NotRejectedMessageStatusValueEnum as MessageStatusValueEnum } from "../../generated/definitions/NotRejectedMessageStatusValue";
-import { MessageStatus } from "../../generated/definitions/MessageStatus";
-import { MessageStatusChange } from "../../generated/definitions/MessageStatusChange";
-import { MessageStatusAttributes } from "../../generated/definitions/MessageStatusAttributes";
-import { MessageStatusWithAttributes } from "../../generated/definitions/MessageStatusWithAttributes";
-import { Change_typeEnum as BulkChangeType } from "../../generated/definitions/MessageStatusBulkChange";
-import { Change_typeEnum as ReadingChangeType } from "../../generated/definitions/MessageStatusReadingChange";
-import { Change_typeEnum as ArchinvingChangeType } from "../../generated/definitions/MessageStatusArchivingChange";
-import { FeatureLevelTypeEnum } from "../../generated/definitions/FeatureLevelType";
-import { ThirdPartyMessage } from "../../generated/definitions/ThirdPartyMessage";
-import { EnrichedMessage } from "../../generated/definitions/EnrichedMessage";
+import { ServiceMetadata as ApiServiceMetadata } from "../../generated/definitions/v2/ServiceMetadata";
+import { CommonServiceMetadata as ApiCommonServiceMetadata } from "../../generated/definitions/v2/CommonServiceMetadata";
+import { StandardServiceMetadata as ApiStandardServiceMetadata } from "../../generated/definitions/v2/StandardServiceMetadata";
+import { ServiceScopeEnum } from "../../generated/definitions/v2/ServiceScope";
+import { SpecialServiceCategoryEnum } from "../../generated/definitions/v2/SpecialServiceCategory";
+import { NotRejectedMessageStatusValueEnum as MessageStatusValueEnum } from "../../generated/definitions/v2/NotRejectedMessageStatusValue";
+import { MessageStatus } from "../../generated/definitions/v2/MessageStatus";
+import { MessageStatusChange } from "../../generated/definitions/v2/MessageStatusChange";
+import { MessageStatusAttributes } from "../../generated/definitions/v2/MessageStatusAttributes";
+import { MessageStatusWithAttributes } from "../../generated/definitions/v2/MessageStatusWithAttributes";
+import { Change_typeEnum as BulkChangeType } from "../../generated/definitions/v2/MessageStatusBulkChange";
+import { Change_typeEnum as ReadingChangeType } from "../../generated/definitions/v2/MessageStatusReadingChange";
+import { Change_typeEnum as ArchinvingChangeType } from "../../generated/definitions/v2/MessageStatusArchivingChange";
+import { FeatureLevelTypeEnum } from "../../generated/definitions/v2/FeatureLevelType";
+import { ThirdPartyMessage } from "../../generated/definitions/v2/ThirdPartyMessage";
+import { EnrichedMessage } from "../../generated/definitions/v2/EnrichedMessage";
 import { NonEmptyString, Semver } from "@pagopa/ts-commons/lib/strings";
 
-import { AppVersion } from "../../generated/definitions/AppVersion";
-import { ThirdPartyData } from "../../generated/definitions/ThirdPartyData";
+import { AppVersion } from "../../generated/definitions/v2/AppVersion";
+import { ThirdPartyData } from "../../generated/definitions/v2/ThirdPartyData";
 import { aService } from "../../__mocks__/mocks";
 
 describe("ServicePayload definition", () => {
@@ -245,17 +245,24 @@ describe("EnrichedMessage", () => {
     organization_fiscal_code: aService.organizationFiscalCode,
     message_title: "aTitle",
     is_read: false,
-    is_archived: false,
+    is_archived: false
   };
 
   it("should correctly decode a valid EnrichedMessage", () => {
-    expect(E.isRight(EnrichedMessage.decode(aValidEnrichedMessage))).toBe(true)
-  })
+    expect(E.isRight(EnrichedMessage.decode(aValidEnrichedMessage))).toBe(true);
+  });
 
   it("should fail decoding an EnrichedMessage without organization fiscal code", () => {
-    expect(E.isLeft(EnrichedMessage.decode({ ...aValidEnrichedMessage, organization_fiscal_code: undefined }))).toBe(true)
-  })
-})
+    expect(
+      E.isLeft(
+        EnrichedMessage.decode({
+          ...aValidEnrichedMessage,
+          organization_fiscal_code: undefined
+        })
+      )
+    ).toBe(true);
+  });
+});
 
 describe("NewMessage definition", () => {
   it("should decode STANDARD NewMessage with content but without payment data", () => {

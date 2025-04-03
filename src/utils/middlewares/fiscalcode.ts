@@ -1,4 +1,4 @@
-import { FiscalCode } from "../../../generated/definitions/FiscalCode";
+import { FiscalCode } from "../../../generated/definitions/v2/FiscalCode";
 
 import { OptionalParamMiddleware } from "./optional_param";
 import { RequiredParamMiddleware } from "./required_param";

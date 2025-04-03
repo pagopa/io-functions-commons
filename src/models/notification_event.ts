@@ -2,7 +2,7 @@ import * as t from "io-ts";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
-import { MessageContent } from "../../generated/definitions/MessageContent";
+import { MessageContent } from "../../generated/definitions/v2/MessageContent";
 
 import { CreatedMessageEventSenderMetadata } from "./created_message_sender_metadata";
 import { NewMessageWithoutContent } from "./message";

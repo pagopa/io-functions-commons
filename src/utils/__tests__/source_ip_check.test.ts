@@ -14,7 +14,7 @@ import {
   clientIPAndCidrTuple
 } from "../source_ip_check";
 import { IAzureUserAttributesManage } from "../middlewares/azure_user_attributes_manage";
-import { CIDR } from "../../../generated/definitions/CIDR";
+import { CIDR } from "../../../generated/definitions/v2/CIDR";
 
 describe("checkSourceIpForHandler", () => {
   // a sample request handler that gets the source IP and allowed CIDRs
