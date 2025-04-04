@@ -8,8 +8,8 @@
 import { NonNegativeNumber } from "@pagopa/ts-commons/lib/numbers";
 import * as t from "io-ts";
 
-import { MessageContent } from "../../generated/definitions/MessageContent";
-import { NewMessageDefaultAddresses } from "../../generated/definitions/NewMessageDefaultAddresses";
+import { MessageContent } from "../../generated/definitions/v2/MessageContent";
+import { NewMessageDefaultAddresses } from "../../generated/definitions/v2/NewMessageDefaultAddresses";
 
 import { NewMessageWithoutContent } from "./message";
 

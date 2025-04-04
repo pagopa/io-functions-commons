@@ -13,7 +13,7 @@ import {
 import { createContext } from "./cosmos_utils";
 import { fromOption } from "fp-ts/lib/Either";
 import { identity, pipe } from "fp-ts/lib/function";
-import { ServicesPreferencesModeEnum } from "../../generated/definitions/ServicesPreferencesMode";
+import { ServicesPreferencesModeEnum } from "../../generated/definitions/v2/ServicesPreferencesMode";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import * as e from "fp-ts/lib/Either";
 import * as te from "fp-ts/lib/TaskEither";

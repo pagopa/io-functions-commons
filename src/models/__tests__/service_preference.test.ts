@@ -3,7 +3,7 @@ import * as O from "fp-ts/lib/Option";
 
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { FiscalCode } from "../../../generated/definitions/FiscalCode";
+import { FiscalCode } from "../../../generated/definitions/v2/FiscalCode";
 
 import {
   makeServicesPreferencesDocumentId,

@@ -5,7 +5,7 @@ import * as O from "fp-ts/lib/Option";
 import { EmailString, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { AzureUserAttributesManageMiddleware } from "../azure_user_attributes_manage";
 import { SubscriptionCIDRs } from "../../../models/subscription_cidrs";
-import { CIDR } from "../../../../generated/definitions/CIDR";
+import { CIDR } from "../../../../generated/definitions/v2/CIDR";
 import { CosmosErrors, toCosmosErrorResponse } from "../../cosmosdb_model";
 
 jest.mock("winston");

@@ -4,7 +4,7 @@
 import * as E from "fp-ts/lib/Either";
 
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
-import { FiscalCode } from "../../../generated/definitions/FiscalCode";
+import { FiscalCode } from "../../../generated/definitions/v2/FiscalCode";
 
 import {
   Container,
@@ -13,8 +13,8 @@ import {
   ResourceResponse
 } from "@azure/cosmos";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { UserDataProcessingChoiceEnum } from "../../../generated/definitions/UserDataProcessingChoice";
-import { UserDataProcessingStatusEnum } from "../../../generated/definitions/UserDataProcessingStatus";
+import { UserDataProcessingChoiceEnum } from "../../../generated/definitions/v2/UserDataProcessingChoice";
+import { UserDataProcessingStatusEnum } from "../../../generated/definitions/v2/UserDataProcessingStatus";
 import {
   makeUserDataProcessingId,
   NewUserDataProcessing,

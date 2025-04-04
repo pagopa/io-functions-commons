@@ -1,8 +1,13 @@
 import { pipe } from "fp-ts/lib/function";
-import { Activation, ActivationModel, ACTIVATION_MODEL_PK_FIELD, ACTIVATION_REFERENCE_ID_FIELD } from "../../src/models/activation";
+import {
+  Activation,
+  ActivationModel,
+  ACTIVATION_MODEL_PK_FIELD,
+  ACTIVATION_REFERENCE_ID_FIELD
+} from "../../src/models/activation";
 import * as E from "fp-ts/Either";
 import * as TE from "fp-ts/TaskEither";
-import { ActivationStatusEnum } from "../../generated/definitions/ActivationStatus";
+import { ActivationStatusEnum } from "../../generated/definitions/v2/ActivationStatus";
 import { createContext } from "./cosmos_utils";
 import { generateComposedVersionedModelId } from "../../src/utils/cosmosdb_model_composed_versioned";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
@@ -39,7 +44,15 @@ describe("Models |> Profile", () => {
             expect.objectContaining({
               ...anActivation,
               version: 0,
-              id: generateComposedVersionedModelId<Activation, typeof ACTIVATION_REFERENCE_ID_FIELD, typeof ACTIVATION_MODEL_PK_FIELD  >(anActivation.serviceId, anActivation.fiscalCode, 0 as NonNegativeInteger)
+              id: generateComposedVersionedModelId<
+                Activation,
+                typeof ACTIVATION_REFERENCE_ID_FIELD,
+                typeof ACTIVATION_MODEL_PK_FIELD
+              >(
+                anActivation.serviceId,
+                anActivation.fiscalCode,
+                0 as NonNegativeInteger
+              )
             })
           );
           return result;
@@ -49,7 +62,7 @@ describe("Models |> Profile", () => {
     )();
 
     // update document
-    const updates = { status: ActivationStatusEnum.INACTIVE};
+    const updates = { status: ActivationStatusEnum.INACTIVE };
     await pipe(
       model.update({ ...created, ...updates }),
       TE.bimap(
@@ -60,7 +73,15 @@ describe("Models |> Profile", () => {
               ...anActivation,
               ...updates,
               version: 1,
-              id: generateComposedVersionedModelId<Activation, typeof ACTIVATION_REFERENCE_ID_FIELD, typeof ACTIVATION_MODEL_PK_FIELD  >(anActivation.serviceId, anActivation.fiscalCode, 1 as NonNegativeInteger)
+              id: generateComposedVersionedModelId<
+                Activation,
+                typeof ACTIVATION_REFERENCE_ID_FIELD,
+                typeof ACTIVATION_MODEL_PK_FIELD
+              >(
+                anActivation.serviceId,
+                anActivation.fiscalCode,
+                1 as NonNegativeInteger
+              )
             })
           );
         }
@@ -70,7 +91,10 @@ describe("Models |> Profile", () => {
 
     // read latest version of the document
     await pipe(
-      model.findLastVersionByModelId([newDoc[ACTIVATION_REFERENCE_ID_FIELD], newDoc[ACTIVATION_MODEL_PK_FIELD]]),
+      model.findLastVersionByModelId([
+        newDoc[ACTIVATION_REFERENCE_ID_FIELD],
+        newDoc[ACTIVATION_MODEL_PK_FIELD]
+      ]),
       TE.chainW(_ => TE.fromOption(() => "It's none")(_)),
       TE.bimap(
         _ => fail(`Failed to read doc, error: ${JSON.stringify(_)}`),
@@ -80,7 +104,15 @@ describe("Models |> Profile", () => {
               ...anActivation,
               ...updates,
               version: 1,
-              id: generateComposedVersionedModelId<Activation, typeof ACTIVATION_REFERENCE_ID_FIELD, typeof ACTIVATION_MODEL_PK_FIELD  >(anActivation.serviceId, anActivation.fiscalCode, 1 as NonNegativeInteger)
+              id: generateComposedVersionedModelId<
+                Activation,
+                typeof ACTIVATION_REFERENCE_ID_FIELD,
+                typeof ACTIVATION_MODEL_PK_FIELD
+              >(
+                anActivation.serviceId,
+                anActivation.fiscalCode,
+                1 as NonNegativeInteger
+              )
             })
           );
         }
@@ -106,7 +138,15 @@ describe("Models |> Profile", () => {
               ...anActivation,
               ...upserts,
               version: 2,
-              id: generateComposedVersionedModelId<Activation, typeof ACTIVATION_REFERENCE_ID_FIELD, typeof ACTIVATION_MODEL_PK_FIELD  >(anActivation.serviceId, anActivation.fiscalCode, 2 as NonNegativeInteger)
+              id: generateComposedVersionedModelId<
+                Activation,
+                typeof ACTIVATION_REFERENCE_ID_FIELD,
+                typeof ACTIVATION_MODEL_PK_FIELD
+              >(
+                anActivation.serviceId,
+                anActivation.fiscalCode,
+                2 as NonNegativeInteger
+              )
             })
           );
         }

@@ -1,7 +1,7 @@
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { MaxAllowedPaymentAmount } from "../generated/definitions/MaxAllowedPaymentAmount";
-import { OrganizationFiscalCode } from "../generated/definitions/OrganizationFiscalCode";
+import { MaxAllowedPaymentAmount } from "../generated/definitions/v2/MaxAllowedPaymentAmount";
+import { OrganizationFiscalCode } from "../generated/definitions/v2/OrganizationFiscalCode";
 import {
   NewService,
   RetrievedService,

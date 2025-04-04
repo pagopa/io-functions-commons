@@ -19,7 +19,7 @@ import {
 } from "@pagopa/ts-commons/lib/strings";
 
 import { Set } from "json-set-map";
-import { MaxAllowedPaymentAmount } from "../../../../generated/definitions/MaxAllowedPaymentAmount";
+import { MaxAllowedPaymentAmount } from "../../../../generated/definitions/v2/MaxAllowedPaymentAmount";
 import { CosmosErrorResponse } from "../../cosmosdb_model";
 import { AzureUserAttributesMiddleware } from "../azure_user_attributes";
 
