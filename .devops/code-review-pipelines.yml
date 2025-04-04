@@ -1,8 +1,8 @@
 # Azure DevOps pipeline to build, check source codes and run tests.
 #
-# To make Danger JS run on a pull request you need to add the following pipeline 
-# variable and set it with a GitHub access token (scope public_repo); otherwise 
-# set its value to 'skip' without marking it secret: 
+# To make Danger JS run on a pull request you need to add the following pipeline
+# variable and set it with a GitHub access token (scope public_repo); otherwise
+# set its value to 'skip' without marking it secret:
 # - DANGER_GITHUB_API_TOKEN
 #
 
@@ -16,10 +16,10 @@ resources:
       type: github
       name: pagopa/azure-pipeline-templates
       ref: refs/tags/v15
-      endpoint: 'io-azure-devops-github-ro'
+      endpoint: "io-azure-devops-github-ro"
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: "ubuntu-latest"
 
 stages:
   - stage: Build
@@ -30,24 +30,24 @@ stages:
           - template: templates/node-job-setup/template.yaml@pagopaCommons
           - script: |
               yarn build
-            displayName: 'Build'
-  
+            displayName: "Build"
+
   - stage: Static_analysis
     dependsOn: []
-    jobs:          
+    jobs:
       - job: lint
         steps:
           - template: templates/node-job-setup/template.yaml@pagopaCommons
           - script: |
               yarn lint
-            displayName: 'Lint'
+            displayName: "Lint"
 
       - job: lint_api
         steps:
           - template: templates/node-job-setup/template.yaml@pagopaCommons
           - bash: |
               npx oval validate -p openapi/index.yaml
-            displayName: 'Validate openAPI'
+            displayName: "Validate openAPI"
 
   - stage: Test
     dependsOn: []
@@ -57,16 +57,16 @@ stages:
           - template: templates/node-job-setup/template.yaml@pagopaCommons
 
           - script: |
-              yarn generate:definitions && yarn generate:lollipop-definitions
-            displayName: 'Generate code'
+              yarn generate
+            displayName: "Generate code"
 
           - script: |
               yarn test
-            displayName: 'Unit tests exec'
+            displayName: "Unit tests exec"
 
           - bash: |
               bash <(curl -s https://codecov.io/bash)
-            displayName: 'Code coverage'
+            displayName: "Code coverage"
 
   - stage: IntegrationsTest
     dependsOn: []
@@ -77,16 +77,16 @@ stages:
 
           - bash: |
               docker run -d -p 1025:1025 -p 8025:8025 --name mailhog --rm mailhog/mailhog
-            displayName: 'Start mailhog'
+            displayName: "Start mailhog"
 
           - bash: |
               npm install -g @zeit/cosmosdb-server
               nohup cosmosdb-server -p 3000 &
-            displayName: 'Start mock CosmosDB'
+            displayName: "Start mock CosmosDB"
 
           - bash: |
               docker run -d --rm -p 10000:10000 mcr.microsoft.com/azure-storage/azurite azurite-blob --blobHost 0.0.0.0
-            displayName: 'Start mock Azure Storage'
+            displayName: "Start mock Azure Storage"
 
           - bash: |
               MAILHOG_HOSTNAME=localhost \
@@ -95,4 +95,4 @@ stages:
               COSMOSDB_DATABASE_NAME=integration-tests \
               STORAGE_CONN_STRING="DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;" \
               yarn test:integration
-            displayName: 'Integrations tests exec'
+            displayName: "Integrations tests exec"
