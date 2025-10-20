@@ -1,5 +1,8 @@
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import * as t from "io-ts";
+import { NumberFromString } from "@pagopa/ts-commons/lib/numbers";
+import { BooleanFromString } from "@pagopa/ts-commons/lib/booleans";
+
 import { MailMultiTransportConnectionsFromString } from "./multi_transport_connection";
 
 // exclude a specific value from a type
@@ -16,6 +19,37 @@ export const AnyBut = <A extends string | number | boolean | symbol, O = A>(
       s !== but,
     "AnyBut"
   );
+
+// Using SMTP
+export const SMTPMailerConfig = t.intersection([
+  /* eslint-disable sort-keys */
+  t.interface({
+    SMTP_HOSTNAME: NonEmptyString,
+    SMTP_PORT: NumberFromString,
+    SMTP_SECURE: BooleanFromString,
+    SMTP_USE_POOL: BooleanFromString,
+
+    NODE_ENV: t.literal("production"),
+    MAILHOG_HOSTNAME: t.undefined,
+    MAILUP_SECRET: t.undefined,
+    MAILUP_USERNAME: t.undefined,
+    MAIL_TRANSPORTS: t.undefined,
+    SENDGRID_API_KEY: t.undefined
+  }),
+  t.union([
+    // Both defined
+    t.type({
+      SMTP_USER: NonEmptyString,
+      SMTP_PASS: NonEmptyString
+    }),
+    // Both absent
+    t.type({
+      SMTP_USER: t.undefined,
+      SMTP_PASS: t.undefined
+    })
+  ])
+  /* eslint-enable sort-keys */
+]);
 
 // Using sendgrid
 // we allow mailup values as well, as sendgrid would be selected first if present
@@ -78,6 +112,7 @@ export const MailerConfig = t.intersection([
   // the following union includes the possible configuration variants for different mail transports we use in prod
   // undefined values are kept for easy usage
   t.union([
+    SMTPMailerConfig,
     SendgridMailerConfig,
     MailupMailerConfig,
     MultiTrasnsportMailerConfig,

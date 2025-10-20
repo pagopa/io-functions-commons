@@ -16,6 +16,7 @@ import {
 } from "@pagopa/ts-commons/lib/fetch";
 import { Millisecond } from "@pagopa/ts-commons/lib/units";
 import { agent } from "@pagopa/ts-commons";
+import { withoutUndefinedValues } from "@pagopa/ts-commons/lib/types";
 import {
   createMailTransporter,
   getTransportsForConnections,
@@ -31,7 +32,8 @@ import {
   MailhogMailerConfig,
   MailupMailerConfig,
   MultiTrasnsportMailerConfig,
-  SendgridMailerConfig
+  SendgridMailerConfig,
+  SMTPMailerConfig
 } from "./config";
 
 // expects a never value. return a constant or the value itself
@@ -93,6 +95,18 @@ export const getMailerTransporter = (
         host: config.MAILHOG_HOSTNAME,
         port: 1025,
         secure: false
+      })
+    : SMTPMailerConfig.is(config)
+    ? O.some({
+        // Either both are defined or undefined
+        auth: withoutUndefinedValues({
+          pass: config.SMTP_PASS,
+          user: config.SMTP_USER
+        }),
+        host: config.SMTP_HOSTNAME,
+        pool: config.SMTP_USE_POOL,
+        port: config.SMTP_PORT,
+        secure: config.SMTP_SECURE
       })
     : defaultNever(config, O.none);
 

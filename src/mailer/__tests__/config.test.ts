@@ -7,7 +7,8 @@ import {
   MailhogMailerConfig,
   MailupMailerConfig,
   MultiTrasnsportMailerConfig,
-  SendgridMailerConfig
+  SendgridMailerConfig,
+  SMTPMailerConfig
 } from "../config";
 import { pipe } from "fp-ts/lib/function";
 
@@ -77,6 +78,40 @@ const aMultiTransport = {
 };
 
 describe("MailerConfig", () => {
+  it("should decode SMPT configuration without authentication", () => {
+    const rawConf = {
+      MAIL_FROM: aMailFrom,
+      NODE_ENV: "production",
+
+      SMTP_HOSTNAME: "localhost",
+      SMTP_USE_POOL: "true",
+      SMTP_PORT: "1025",
+      SMTP_SECURE: "true"
+    };
+    const result = MailerConfig.decode(rawConf);
+
+    expectRight(result, value => {
+      expect(SMTPMailerConfig.is(value)).toBe(true);
+    });
+  });
+
+  it("should decode SMPT configuration without authentication", () => {
+    const rawConf = {
+      MAIL_FROM: aMailFrom,
+      NODE_ENV: "production",
+
+      SMTP_HOSTNAME: "localhost",
+      SMTP_USE_POOL: "true",
+      SMTP_PORT: "1025",
+      SMTP_SECURE: "true"
+    };
+    const result = MailerConfig.decode(rawConf);
+
+    expectRight(result, value => {
+      expect(SMTPMailerConfig.is(value)).toBe(true);
+    });
+  });
+
   it("should decode configuration for sendgrid", () => {
     const rawConf = {
       MAIL_FROM: aMailFrom,
