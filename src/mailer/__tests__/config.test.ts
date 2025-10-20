@@ -60,6 +60,22 @@ const aMailhogConf = {
   MAILHOG_HOSTNAME: "a-mh-host"
 };
 
+const anSMTPWithoutAuthConfig = {
+  MAIL_FROM: aMailFrom,
+  NODE_ENV: "production",
+
+  SMTP_HOSTNAME: "localhost",
+  SMTP_USE_POOL: "true",
+  SMTP_PORT: "1025",
+  SMTP_SECURE: "true"
+};
+
+const anSMTPWithAuthConfig = {
+  ...anSMTPWithoutAuthConfig,
+  SMTP_USER: "aUser",
+  SMTP_PASS: "aPass"
+};
+
 const aTransport = {
   password: "abc".repeat(5),
   transport: "transport-name",
@@ -79,36 +95,29 @@ const aMultiTransport = {
 
 describe("MailerConfig", () => {
   it("should decode SMPT configuration without authentication", () => {
-    const rawConf = {
-      MAIL_FROM: aMailFrom,
-      NODE_ENV: "production",
-
-      SMTP_HOSTNAME: "localhost",
-      SMTP_USE_POOL: "true",
-      SMTP_PORT: "1025",
-      SMTP_SECURE: "true"
-    };
+    const rawConf = anSMTPWithoutAuthConfig;
     const result = MailerConfig.decode(rawConf);
 
     expectRight(result, value => {
       expect(SMTPMailerConfig.is(value)).toBe(true);
+      expect(result).toMatchObject(
+        E.right({
+          SMTP_USER: undefined,
+          SMTP_PASS: undefined
+        })
+      );
     });
   });
 
-  it("should decode SMPT configuration without authentication", () => {
-    const rawConf = {
-      MAIL_FROM: aMailFrom,
-      NODE_ENV: "production",
-
-      SMTP_HOSTNAME: "localhost",
-      SMTP_USE_POOL: "true",
-      SMTP_PORT: "1025",
-      SMTP_SECURE: "true"
-    };
+  it("should decode SMTP configuration with authentication", () => {
+    const rawConf = anSMTPWithAuthConfig;
     const result = MailerConfig.decode(rawConf);
 
     expectRight(result, value => {
       expect(SMTPMailerConfig.is(value)).toBe(true);
+      expect(result).toMatchObject(
+        E.right({ SMTP_USER: "aUser", SMTP_PASS: "aPass" })
+      );
     });
   });
 
@@ -263,6 +272,8 @@ describe("MailerConfig", () => {
     ${"sendgrid(2)"} | ${aSendgridConf2}
     ${"multi"}       | ${aMultiTransport}
     ${"mailhog"}     | ${aMailhogConf}
+    ${"smtp(1)"}     | ${anSMTPWithoutAuthConfig}
+    ${"smtp(2)"}     | ${anSMTPWithAuthConfig}
   `("should match $name with one and one only config type", ({ conf }) => {
     const decoded = MailerConfig.decode(conf);
     expectRight(decoded, value => {
@@ -272,7 +283,8 @@ describe("MailerConfig", () => {
           MailhogMailerConfig,
           MailupMailerConfig,
           MultiTrasnsportMailerConfig,
-          SendgridMailerConfig
+          SendgridMailerConfig,
+          SMTPMailerConfig
         ].filter(x => x.is(value)).length
       ).toBe(1);
     });
