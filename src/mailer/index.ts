@@ -104,6 +104,7 @@ export const getMailerTransporter = (
           user: config.SMTP_USER
         }),
         host: config.SMTP_HOSTNAME,
+        pool: config.SMTP_USE_POOL,
         port: config.SMTP_PORT,
         secure: config.SMTP_SECURE
       })

@@ -84,6 +84,7 @@ describe("MailerConfig", () => {
       NODE_ENV: "production",
 
       SMTP_HOSTNAME: "localhost",
+      SMTP_USE_POOL: "true",
       SMTP_PORT: "1025",
       SMTP_SECURE: "true"
     };
@@ -100,6 +101,7 @@ describe("MailerConfig", () => {
       NODE_ENV: "production",
 
       SMTP_HOSTNAME: "localhost",
+      SMTP_USE_POOL: "true",
       SMTP_PORT: "1025",
       SMTP_SECURE: "true"
     };

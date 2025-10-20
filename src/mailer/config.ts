@@ -27,6 +27,7 @@ export const SMTPMailerConfig = t.intersection([
     SMTP_HOSTNAME: NonEmptyString,
     SMTP_PORT: NumberFromString,
     SMTP_SECURE: BooleanFromString,
+    SMTP_USE_POOL: BooleanFromString,
 
     NODE_ENV: t.literal("production"),
     MAILHOG_HOSTNAME: t.undefined,
