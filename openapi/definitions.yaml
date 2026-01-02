@@ -1029,6 +1029,7 @@ PreferredLanguage:
     - es_ES
     - de_DE
     - fr_FR
+    - sl_SI
   example: it_IT
 PreferredLanguages:
   type: array
