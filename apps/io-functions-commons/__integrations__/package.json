@@ -1,0 +1,20 @@
+{
+  "name": "io-functions-commons-integrations",
+  "version": "1.0.0",
+  "description": "Integration test suite for integration testing",
+  "license": "MIT",
+  "scripts": {
+    "start": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest --verbose",
+    "start:local": "dotenv -e ../.env -- jest --verbose"
+  },
+  "keywords": [],
+  "author": "",
+  "dependencies": {
+    "express": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "~18.13.0",
+    "dotenv-cli": "^4.1.0",
+    "vitest": "^3.2.4"
+  }
+}

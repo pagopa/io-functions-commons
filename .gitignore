@@ -10,6 +10,11 @@ coverage
 .env
 nohup.out
 
+.turbo
+
+.yarn
+**/.yarn/*
+
 # eslint section
 !.eslintrc.js
 .eslintcache
