@@ -11,8 +11,10 @@
     "openapi/**/*.y*ml"
   ],
   "scripts": {
-    "prebuild": "rimraf dist",
+    "clean": "shx rm -rf dist",
+    "clean:generated": "shx rm -rf generated",
     "build": "yarn generate:definitions && yarn generate:lollipop-definitions && tsc",
+    "typecheck": "tsc --noemit",
     "postversion": "git push && git push --tags",
     "test": "vitest --run",
     "test:coverage": "vitest --run --coverage",

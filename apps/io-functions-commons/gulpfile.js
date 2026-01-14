@@ -1,9 +1,9 @@
-import * as gulp from "gulp";
-import * as prettier from "gulp-prettier";
-import * as rename from "gulp-rename";
-import * as textSimple from "gulp-text-simple";
-import * as mjml2html from "mjml";
-import * as path from "path";
+import gulp from "gulp";
+import prettier from "gulp-prettier";
+import rename from "gulp-rename";
+import textSimple from "gulp-text-simple";
+import mjml2html from "mjml";
+import path from "path";
 
 const TYPESCRIPT_SOURCE_DIR = "src";
 
@@ -53,4 +53,4 @@ gulp.task("generate:templates", () =>
     .pipe(gulp.dest(TEMPLATES_OUTPUT_DIR)),
 );
 
-gulp.task("default", ["generate:templates"]);
+gulp.task("default", gulp.series("generate:templates"));
