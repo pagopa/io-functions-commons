@@ -1,6 +1,9 @@
 {
   "name": "@pagopa/io-functions-commons",
   "version": "29.4.0",
+  "engines": {
+    "node": "20.13.0"
+  },
   "description": "Common code for Azure functions",
   "repository": "https://github.com/pagopa/io-functions-commons",
   "author": "https://www.pagopa.gov.it",
@@ -38,7 +41,7 @@
     "@pagopa/typescript-config-node": "*",
     "@types/express": "^4.17.12",
     "@types/jest": "^24.9.1",
-    "@types/node": "~18.13.0",
+    "@types/node": "~20.13.0",
     "@types/node-fetch": "^2.5.7",
     "@types/nodemailer": "^6.4.2",
     "@types/nodemailer-sendgrid": "^1.0.0",
@@ -52,20 +55,20 @@
     "gulp-prettier": "^6.0.0",
     "gulp-rename": "^2.1.0",
     "gulp-text-simple": "^0.6.0",
-    "io-ts": "^2.2.21",
+    "io-ts": "^2.2.22",
     "json-set-map": "^1.1.2",
     "mjml": "^4.9.3",
     "npm-run-all": "^4.1.1",
     "prettier": "3.0.0",
     "shx": "^0.3.2",
-    "typescript": "^5.9.3",
+    "typescript": "^5.7.3",
     "typescript-eslint": "^8.53.0",
     "vitest": "^3.2.4"
   },
   "dependencies": {
     "@azure/cosmos": "^4.0.0",
     "@azure/data-tables": "^13.2.2",
-    "@pagopa/ts-commons": "^13.1.1",
+    "@pagopa/ts-commons": "^13.1.2",
     "applicationinsights": "^2.9.5",
     "azure-storage": "^2.10.5",
     "cidr-matcher": "^2.1.1",
