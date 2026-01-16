@@ -6525,13 +6525,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"io-commons-repo@workspace:.":
+"io-functions-commons-repo@workspace:.":
   version: 0.0.0-use.local
-  resolution: "io-commons-repo@workspace:."
+  resolution: "io-functions-commons-repo@workspace:."
   dependencies:
     "@changesets/cli": "npm:^2.29.8"
-    "@eslint/js": "npm:^9.39.2"
-    eslint: "npm:^9.39.2"
     turbo: "npm:^2.0.7"
   languageName: unknown
   linkType: soft
