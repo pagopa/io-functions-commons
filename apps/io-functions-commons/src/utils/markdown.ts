@@ -1,0 +1,15 @@
+import * as html from "rehype-stringify";
+import frontmatter from "remark-frontmatter";
+import * as markdown from "remark-parse";
+import * as remark2rehype from "remark-rehype";
+import unified from "unified";
+
+/**
+ * A Unified pipeline thar uses remark and rehype to parse a Markdown file and
+ * convert it to HTML.
+ */
+export const markdownToHtml = unified()
+  .use(markdown)
+  .use(frontmatter, ["yaml"])
+  .use(remark2rehype)
+  .use(html);

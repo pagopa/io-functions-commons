@@ -1,0 +1,19 @@
+name: Code Review
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - apps/**
+      - packages/**
+      - .node-version
+      - package.json
+      - turbo.json
+      - .github/workflows/code-review.yaml
+
+jobs:
+  js_code_review:
+    uses: pagopa/dx/.github/workflows/js_code_review.yaml@main
+    name: Code Review
+    secrets: inherit
