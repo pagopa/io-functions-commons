@@ -1,6 +1,6 @@
 import { TelemetryClient } from "applicationinsights";
 import * as w from "winston";
-import * as Transport from "winston-transport";
+import Transport from "winston-transport";
 
 export class ApplicationInsightTransport extends Transport {
   constructor(

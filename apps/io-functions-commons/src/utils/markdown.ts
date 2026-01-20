@@ -1,5 +1,5 @@
 import * as html from "rehype-stringify";
-import * as frontmatter from "remark-frontmatter";
+import frontmatter from "remark-frontmatter";
 import * as markdown from "remark-parse";
 import * as remark2rehype from "remark-rehype";
 import unified from "unified";

@@ -1,6 +1,6 @@
 import { Context } from "@azure/functions";
 import { LogEntry } from "winston";
-import * as Transport from "winston-transport";
+import Transport from "winston-transport";
 
 /**
  * Returns the Context logging function matching the provided logging level

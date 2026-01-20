@@ -1,5 +1,5 @@
 import * as express from "express";
-import * as helmet from "helmet";
+import helmet from "helmet";
 import * as csp from "helmet-csp";
 import * as referrerPolicy from "referrer-policy";
 

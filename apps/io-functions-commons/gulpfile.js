@@ -1,9 +1,8 @@
-import gulp from "gulp";
-import prettier from "gulp-prettier";
-import rename from "gulp-rename";
-import textSimple from "gulp-text-simple";
-import mjml2html from "mjml";
-import path from "path";
+const gulp = require("gulp");
+const rename = require("gulp-rename");
+const textSimple = require("gulp-text-simple");
+const mjml2html = require("mjml");
+const path = require("path");
 
 const TYPESCRIPT_SOURCE_DIR = "src";
 
@@ -43,13 +42,17 @@ const toMjml = (content, options) => {
 /**
  * Generate Typescript template files from mjml (https://mjml.io/).
  */
-gulp.task("generate:templates", () =>
-  gulp
+gulp.task("generate:templates", async function () {
+  // `gulp-prettier` is an ES module; use dynamic import to load it from CommonJS
+  const prettierModule = await import("gulp-prettier");
+  const prettier = prettierModule.default || prettierModule;
+
+  return gulp
     .src(TEMPLATES_SOURCE)
     .pipe(textSimple(toMjml)())
     .pipe(prettier())
     .pipe(rename((filepath) => (filepath.extname = ".ts")))
-    .pipe(gulp.dest(TEMPLATES_OUTPUT_DIR)),
-);
+    .pipe(gulp.dest(TEMPLATES_OUTPUT_DIR));
+});
 
 gulp.task("default", gulp.series("generate:templates"));
