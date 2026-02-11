@@ -13,9 +13,7 @@ describe("Wrap an handler with Application Insights context", () => {
     const handler = (a: string, b: number) => `${a}${b}`;
     const ret = withAppInsightsContext(
       {
-        executionContext: {
-          functionName: "foo"
-        },
+        functionName: "foo",
         invocationId: "123"
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any,
@@ -28,12 +26,10 @@ describe("Wrap an handler with Application Insights context", () => {
     const handler = (a: string, b: number) => `${a}${b}`;
     const ret = withAppInsightsContext(
       {
-        executionContext: {
-          functionName: "foo"
-        },
+        functionName: "foo",
         invocationId: "123",
         traceContext: {
-          traceparent: "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"
+          traceParent: "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any,
