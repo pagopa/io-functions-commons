@@ -1,4 +1,4 @@
-import { Context } from "@azure/functions";
+import { InvocationContext } from "@azure/functions";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 // eslint-disable-next-line import/no-internal-modules
 import { CorrelationContextManager } from "applicationinsights/out/AutoCollection/CorrelationContextManager";
@@ -12,7 +12,10 @@ import * as E from "fp-ts/lib/Either";
  * Wraps a function handler with a telemetry context,
  * useful in case you want to set correlation id.
  */
-export const withAppInsightsContext = <R>(context: Context, f: () => R): R => {
+export const withAppInsightsContext = <R>(
+  context: InvocationContext,
+  f: () => R
+): R => {
   // @see https://github.com/Azure/azure-functions-host/issues/5170#issuecomment-553583362
   const traceId = pipe(
     O.fromNullable(context.traceContext),
@@ -20,7 +23,7 @@ export const withAppInsightsContext = <R>(context: Context, f: () => R): R => {
       () => context.invocationId,
       tc =>
         pipe(
-          NonEmptyString.decode(tc.traceparent),
+          NonEmptyString.decode(tc.traceParent),
           E.fold(
             _ => context.invocationId,
             traceParentAsString => new Traceparent(traceParentAsString).traceId
@@ -31,7 +34,7 @@ export const withAppInsightsContext = <R>(context: Context, f: () => R): R => {
   const correlationContext = CorrelationContextManager.generateContextObject(
     traceId,
     traceId,
-    context.executionContext.functionName
+    context.functionName
   );
   return CorrelationContextManager.runWithContext(correlationContext, () =>
     f()
