@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/io-functions-commons",
-  "version": "29.4.4",
+  "version": "29.4.5",
   "description": "Common code for Azure functions",
   "author": "https://www.pagopa.gov.it",
   "license": "MIT",
