@@ -23,7 +23,7 @@
     "generate:lollipop-definitions": "rimraf ./generated/definitions/lollipop && gen-api-models --api-spec ./openapi/lollipop_definitions.yaml --out-dir ./generated/definitions/lollipop",
     "generate:templates": "gulp generate:templates",
     "version": "changeset version",
-    "release": "yarn build && changeset publish"
+    "release": "changeset publish"
   },
   "devDependencies": {
     "@azure/functions": "^3.2.0",
