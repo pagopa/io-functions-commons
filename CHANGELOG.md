@@ -1,5 +1,11 @@
 ### Changelog
 
+## 29.4.3
+
+### Patch Changes
+
+- 3c2da86: test NPM publish
+
 ## 29.4.2
 
 ### Patch Changes
