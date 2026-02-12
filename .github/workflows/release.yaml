@@ -41,12 +41,14 @@ jobs:
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
-        uses: changesets/action@c48e67d110a68bc90ccf1098e9646092baacaa87 # v1.6.0
+        uses: changesets/action@e0145edc7d9d8679003495b11f87bd8ef63c0cba
         with:
-          version: yarn run version
-          publish: yarn run release
-          commit: 'ci(changesets): version packages'
+          version: yarn version
+          publish: yarn release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Fix until https://github.com/changesets/action/pull/545 is merged and released.
+          # More context: https://github.com/changesets/action/issues/542
+          NPM_TOKEN: ''
           NPM_CONFIG_PROVENANCE: true
 
