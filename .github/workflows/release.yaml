@@ -31,8 +31,6 @@ jobs:
           node-version-file: '.node-version'
           cache: 'yarn'
           cache-dependency-path: "yarn.lock"
-          registry-url: 'https://registry.npmjs.org'
-          scope: '@pagopa'
 
       # Upgrade npm since trusted publishing requires npm CLI version 11.5.1 or later
       - name: Upgrade npm
@@ -40,9 +38,6 @@ jobs:
 
       - name: Install Dependencies
         run: yarn install --frozen-lockfile
-
-      - name: Build
-        run: yarn build
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
@@ -54,12 +49,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
-
-      - name: Create GitHub Release
-        if: steps.changesets.outputs.published == 'true'
-        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b #2.5.0
-        with:
-          draft: false
-          tag_name: v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}
-          name: Release v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}
 
