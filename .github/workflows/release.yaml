@@ -1,0 +1,20 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  release:
+    permissions:
+      contents: write
+      id-token: write
+      pull-requests: write
+    uses: pagopa/dx/.github/workflows/release-v1.yaml@1d42a810ef06eda087ee094eb5d593dc0ca1df7f
+    with:
+      environment: prod-cd
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
