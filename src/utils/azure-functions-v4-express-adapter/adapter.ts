@@ -62,7 +62,6 @@ export const extractArgsFromMiddlewares = (
 const addSecurityHeaders = (response: HttpResponseInit): HttpResponseInit => ({
   ...response,
   headers: {
-    ...response.headers,
     "Content-Security-Policy": "default-src 'none'; upgrade-insecure-requests",
     "Cross-Origin-Embedder-Policy": "require-corp",
     "Cross-Origin-Opener-Policy": "same-origin",
@@ -75,7 +74,8 @@ const addSecurityHeaders = (response: HttpResponseInit): HttpResponseInit => ({
     "X-Download-Options": "noopen",
     "X-Frame-Options": "DENY",
     "X-Permitted-Cross-Domain-Policies": "none",
-    "X-XSS-Protection": "0"
+    "X-XSS-Protection": "0",
+    ...response.headers
   }
 });
 
