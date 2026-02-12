@@ -1,5 +1,11 @@
 ### Changelog
 
+## 29.4.4
+
+### Patch Changes
+
+- 8de5399: Deploy to NPM
+
 ## 29.4.3
 
 ### Patch Changes
