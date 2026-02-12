@@ -55,7 +55,7 @@ jobs:
 
       - name: Create GitHub Release
         if: steps.changesets.outputs.published == 'true'
-        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b #2.5.0
         with:
           draft: false
           tag_name: v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}
