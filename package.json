@@ -2,7 +2,6 @@
   "name": "@pagopa/io-functions-commons",
   "version": "29.4.3",
   "description": "Common code for Azure functions",
-  "repository": "https://github.com/pagopa/io-functions-commons",
   "author": "https://www.pagopa.gov.it",
   "license": "MIT",
   "files": [
@@ -21,8 +20,8 @@
     "generate:definitions": "rimraf ./generated && gen-api-models --api-spec ./openapi/index.yaml --out-dir ./generated/definitions",
     "generate:lollipop-definitions": "rimraf ./generated/definitions/lollipop && gen-api-models --api-spec ./openapi/lollipop_definitions.yaml --out-dir ./generated/definitions/lollipop",
     "generate:templates": "gulp generate:templates",
-    "version": "changeset version",
-    "release": "changeset publish"
+    "version": "yarn changeset version && yarn --mode update-lockfile",
+    "release": "yarn build && changeset publish"
   },
   "devDependencies": {
     "@azure/functions": "^3.2.0",
@@ -97,9 +96,6 @@
     "testMatch": [
       "**/__tests__/*.ts"
     ]
-  },
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org/"
   },
   "resolutions": {
     "graceful-fs": "^4.2.4"
