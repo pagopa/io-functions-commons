@@ -1,5 +1,11 @@
 ### Changelog
 
+## 29.4.5
+
+### Patch Changes
+
+- 5c5bf5a: test deploy NPM
+
 ## 29.4.4
 
 ### Patch Changes
