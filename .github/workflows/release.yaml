@@ -43,8 +43,9 @@ jobs:
         id: changesets
         uses: changesets/action@e0145edc7d9d8679003495b11f87bd8ef63c0cba
         with:
-          version: yarn version
-          publish: yarn release
+          version: yarn run version
+          publish: yarn run release
+          commit: 'ci(changesets): version packages'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Fix until https://github.com/changesets/action/pull/545 is merged and released.
