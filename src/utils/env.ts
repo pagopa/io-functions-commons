@@ -1,6 +1,5 @@
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { isLeft } from "fp-ts/lib/Either";
-const breakBuild: number = "not a number";
 
 /**
  * Helper function that validates an environment variable and return its value
