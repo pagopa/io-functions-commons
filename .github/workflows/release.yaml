@@ -18,21 +18,22 @@ jobs:
     environment: prod-cd
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
+          fetch-tags: "true"
           fetch-depth: 0
 
       - name: Setup Node.js environment
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version-file: '.node-version'
-          cache: 'yarn'
-          cache-dependency-path: "yarn.lock"
+          node-version-file: .node-version
+          cache: yarn
 
       # Upgrade npm since trusted publishing requires npm CLI version 11.5.1 or later
-      - name: Upgrade npm
-        run: npm install -g npm@^11.5.1
+      - name: Update npm (for provenance support)
+        shell: bash
+        run: npm install -g npm@11.8.0
 
       - name: Install Dependencies
         run: yarn install --frozen-lockfile
