@@ -1,5 +1,12 @@
 ### Changelog
 
+## 29.4.6
+
+### Patch Changes
+
+- bc00161: Add debug step for checking npm version
+- 4d66476: remove NPM version step
+
 ## 29.4.5
 
 ### Patch Changes
