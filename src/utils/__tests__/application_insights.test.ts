@@ -11,6 +11,7 @@ describe("Wrap an handler with Application Insights context", () => {
 
   it("should return the handler value", async () => {
     const handler = (a: string, b: number) => `${a}${b}`;
+    expect(true).toBe(false); // intentional failure
     const ret = withAppInsightsContext(
       {
         executionContext: {
