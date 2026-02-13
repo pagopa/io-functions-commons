@@ -4,8 +4,8 @@
   "description": "Integration test suite for integration testing",
   "license": "MIT",
   "scripts": {
-    "start": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest --verbose",
-    "start:local": "dotenv -e ../.env -- jest --verbose"
+    "start": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest --verbose --runInBand",
+    "start:local": "dotenv -e ../.env -- jest --verbose --runInBand"
   },
   "keywords": [],
   "author": "",
