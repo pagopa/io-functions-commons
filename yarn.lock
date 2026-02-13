@@ -2015,6 +2015,7 @@ __metadata:
     applicationinsights: "npm:^2.9.5"
     azure-storage: "npm:^2.10.5"
     cidr-matcher: "npm:^2.1.1"
+    eslint: "npm:^7.32.0"
     eslint-plugin-prettier: "npm:^3.4.0"
     fp-ts: "npm:^2.16.5"
     gulp: "npm:^3.9.1"
@@ -5649,7 +5650,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^7.15.0":
+"eslint@npm:^7.15.0, eslint@npm:^7.32.0":
   version: 7.32.0
   resolution: "eslint@npm:7.32.0"
   dependencies:
