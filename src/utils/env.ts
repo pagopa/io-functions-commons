@@ -1,5 +1,6 @@
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { isLeft } from "fp-ts/lib/Either";
+const unused_lint_test = "this should fail lint";
 
 /**
  * Helper function that validates an environment variable and return its value
