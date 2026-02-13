@@ -13,16 +13,16 @@
     "openapi/**/*.y*ml"
   ],
   "scripts": {
-    "prebuild": "rimraf dist",
+    "prebuild": "yarn run shx rm -rf dist",
     "build": "yarn generate:definitions && yarn generate:lollipop-definitions && tsc",
     "test": "jest -i",
     "test:coverage": "jest --coverage",
-    "test:integration": "yarn build && cd ./__integrations__ && yarn install --frozen-lockfile && yarn start",
+    "test:integration": "yarn build && cd ./__integrations__ && yarn install --immutable && yarn start",
     "test:all": "yarn test && yarn test:integration",
     "lint": "eslint . -c .eslintrc.js --ext .ts,.tsx",
     "generate": "npm-run-all generate:*",
-    "generate:definitions": "rimraf ./generated && gen-api-models --api-spec ./openapi/index.yaml --out-dir ./generated/definitions",
-    "generate:lollipop-definitions": "rimraf ./generated/definitions/lollipop && gen-api-models --api-spec ./openapi/lollipop_definitions.yaml --out-dir ./generated/definitions/lollipop",
+    "generate:definitions": "yarn run shx rm -rf ./generated && yarn run gen-api-models --api-spec ./openapi/index.yaml --out-dir ./generated/definitions",
+    "generate:lollipop-definitions": "yarn run shx rm -rf ./generated/definitions/lollipop && yarn run gen-api-models --api-spec ./openapi/lollipop_definitions.yaml --out-dir ./generated/definitions/lollipop",
     "generate:templates": "gulp generate:templates",
     "version": "yarn changeset version && yarn --mode update-lockfile",
     "release": "yarn build && changeset publish"
@@ -54,6 +54,7 @@
     "npm-run-all": "^4.1.1",
     "prettier": "^1.14.3",
     "rimraf": "^2.7.1",
+    "shx": "^0.4.0",
     "ts-jest": "^29.1.1",
     "typescript": "^4.3.5"
   },

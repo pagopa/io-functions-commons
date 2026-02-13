@@ -36,13 +36,7 @@ jobs:
         run: npm install -g npm@11.8.0
 
       - name: Install Dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Check npm auth (debug)
-        run: |
-          npm --version
-          npm config get registry
-          npm whoami
+        run: yarn install --immutable
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
