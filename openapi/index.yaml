@@ -8,5 +8,10 @@ paths:
       responses:
         "200":
           description: "ok"
+  "/broken":
+    get:
+      parameters:
+        - name: invalid_param
+          in: invalid_location
 definitions:
   $ref: definitions.yaml
