@@ -14,8 +14,7 @@
   ],
   "scripts": {
     "prebuild": "yarn run shx rm -rf dist",
-"prebuild": "yarn run shx rm -rf dist",
-"build": "yarn prebuild && yarn generate:definitions && yarn generate:lollipop-definitions && tsc",
+    "build": "yarn prebuild && yarn generate:definitions && yarn generate:lollipop-definitions && tsc",
     "test": "jest -i",
     "test:coverage": "jest --coverage",
     "test:integration": "yarn build && cd ./__integrations__ && yarn install --immutable && yarn start",
