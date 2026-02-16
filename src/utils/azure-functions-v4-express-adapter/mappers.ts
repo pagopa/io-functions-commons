@@ -6,7 +6,12 @@ import {
 } from "@azure/functions";
 import { Request } from "express";
 import { ParsedQs } from "qs";
-import { IResponse } from "@pagopa/ts-commons/lib/responses";
+import {
+  IResponse,
+  HttpStatusCodeEnum
+} from "@pagopa/ts-commons/lib/responses";
+
+import { CONTEXT_IDENTIFIER } from "../middlewares/context_middleware";
 
 // -----------------------------------------------------
 // HTTP Request mapping from Azure Functions to Express
@@ -28,32 +33,22 @@ export const functionRequestToExpressRequest = async (
   // Convert query to plain object (Express expects ParsedQs)
   const query = Object.fromEntries(req.query.entries());
 
-  // eslint-disable-next-line functional/no-let
-  let body;
-  try {
-    body = req.body ? await req.json() : undefined;
-  } catch {
-    throw new Error("Invalid JSON body");
-  }
+  const body = req.body ? await req.json() : undefined;
 
-  // eslint-disable-next-line sonarjs/prefer-immediate-return
-  const expressReq: Partial<Request> = {
+  return {
     app: {
       // Mocking app.get for ContextMiddleware compatibility
-      // @ts-expect-error - Type mismatch between Azure and Express
-      get: (key: string) => (key === "context" ? context : undefined)
-    },
+      get: (key: string) => (key === CONTEXT_IDENTIFIER ? context : undefined)
+    } as Partial<Request>["app"],
     body,
-    // @ts-expect-error - Simplified header accessor
-    header: (field: string) => headers[field.toLowerCase()] || undefined,
+    header: ((field: string) =>
+      headers[field.toLowerCase()] || undefined) as Request["header"],
     headers,
     method: String(req.method),
     params: req.params as Record<string, string>,
     query: query as ParsedQs,
     url: req.url
   };
-
-  return expressReq;
 };
 
 // -----------------------------------------------------
@@ -86,7 +81,12 @@ class MockExpressResponse {
   }
 
   public send(body: unknown): this {
-    if (typeof body === "number") {
+    // Needed for ResponseSuccessAccepted to work
+    // https://github.com/pagopa/io-ts-commons/blob/a97327df37fd373a9d74454157832722f2f94adb/src/responses.ts#L171-L172
+    if (
+      typeof body === "number" &&
+      Object.values(HttpStatusCodeEnum).includes(body)
+    ) {
       this.statusCode = body;
     } else {
       this.body = body;

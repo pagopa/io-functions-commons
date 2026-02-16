@@ -13,17 +13,7 @@ import { InvocationContext } from "@azure/functions";
 import { pipe } from "fp-ts/lib/function";
 import { IRequestMiddleware } from "../request_middleware";
 
-const CONTEXT_IDENTIFIER = "context";
-
-/**
- * @deprecated
- */
-export const setAppContext = (
-  app: express.Express,
-  context: InvocationContext
-): void => {
-  app.set(CONTEXT_IDENTIFIER, context);
-};
+export const CONTEXT_IDENTIFIER = "context";
 
 export const getAppContext = (
   request: express.Request
