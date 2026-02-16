@@ -57,7 +57,8 @@ describe("iResponseToHttpResponse", () => {
       expect(result).toEqual({
         status: 200,
         headers: { ["content-type"]: "application/xml" },
-        jsonBody: xmlData
+        body: xmlData,
+        jsonBody: undefined
       });
     });
 
@@ -66,8 +67,10 @@ describe("iResponseToHttpResponse", () => {
 
       const result = iResponseToHttpResponse(iresponse);
 
-      expect(result.status).toBe(202);
-      expect(result.jsonBody).toBeUndefined();
+      expect(result).toEqual({
+        status: 202,
+        headers: {}
+      });
     });
 
     it("should convert ResponseSuccessAccepted with payload", () => {
@@ -88,8 +91,10 @@ describe("iResponseToHttpResponse", () => {
 
       const result = iResponseToHttpResponse(iresponse);
 
-      expect(result.status).toBe(204);
-      expect(result.jsonBody).toBeUndefined();
+      expect(result).toEqual({
+        status: 204,
+        headers: {}
+      });
     });
 
     it("should convert ResponseSuccessRedirectToResource correctly", () => {

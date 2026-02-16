@@ -121,9 +121,14 @@ export const iResponseToHttpResponse = <T>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   iresponse.apply(mockExpressResponse as any);
 
+  const isJson = /json/i.test(
+    mockExpressResponse.headers["content-type"] ?? ""
+  );
+  const body = mockExpressResponse.body;
+
   return {
     headers: mockExpressResponse.headers,
-    jsonBody: mockExpressResponse.body,
-    status: mockExpressResponse.statusCode
-  };
+    status: mockExpressResponse.statusCode,
+    ...(isJson ? { jsonBody: body } : { body })
+  } as HttpResponseInit;
 };
