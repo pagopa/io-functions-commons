@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "prebuild": "yarn run shx rm -rf dist",
-    "build": "yarn generate:definitions && yarn generate:lollipop-definitions && tsc",
+    "build": "yarn prebuild && yarn generate:definitions && yarn generate:lollipop-definitions && tsc",
     "test": "jest -i",
     "test:coverage": "jest --coverage",
     "test:integration": "yarn build && cd ./__integrations__ && yarn install --immutable && yarn start",
@@ -41,6 +41,7 @@
     "@types/nodemailer-sendgrid": "^1.0.0",
     "@types/request-ip": "^0.0.33",
     "@types/winston": "^2.4.4",
+    "eslint": "^7.32.0",
     "eslint-plugin-prettier": "^3.4.0",
     "fp-ts": "^2.16.5",
     "gulp": "^3.9.1",
