@@ -4,7 +4,6 @@ import * as Transport from "winston-transport";
 
 /**
  * Returns the InvocationContext logging function matching the provided logging level
- * In Azure Functions v4, context.log is a simple function without sub-methods
  */
 const getLoggerForLevel = (
   context: InvocationContext,

@@ -3,20 +3,11 @@
  * Tests the middleware execution and argument extraction logic
  */
 
-import {
-  InvocationContext,
-  HttpRequest,
-  HttpRequestInit
-} from "@azure/functions";
 import { IRequestMiddleware } from "@pagopa/ts-commons/lib/request_middleware";
 import * as E from "fp-ts/lib/Either";
 import * as O from "fp-ts/lib/Option";
 import { extractArgsFromMiddlewares } from "../adapter";
-import {
-  ResponseErrorValidation,
-  ResponseErrorForbiddenAnonymousUser,
-  ResponseErrorInternal
-} from "@pagopa/ts-commons/lib/responses";
+import { ResponseErrorValidation } from "@pagopa/ts-commons/lib/responses";
 
 // Import middlewares to test
 import { FiscalCodeMiddleware } from "../../middlewares/fiscalcode";
@@ -38,7 +29,6 @@ import { AzureUserAttributesMiddleware } from "../../middlewares/azure_user_attr
 import { AzureUserAttributesManageMiddleware } from "../../middlewares/azure_user_attributes_manage";
 
 // Import types for testing
-import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
 import { ServiceId } from "../../../../generated/definitions/ServiceId";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import * as t from "io-ts";
