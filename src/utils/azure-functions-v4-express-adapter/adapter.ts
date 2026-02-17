@@ -16,7 +16,10 @@ import {
   IRequestMiddleware,
   MiddlewareResults
 } from "@pagopa/ts-commons/lib/request_middleware";
-import { ResponseErrorInternal } from "@pagopa/ts-commons/lib/responses";
+import {
+  IResponse,
+  ResponseErrorInternal
+} from "@pagopa/ts-commons/lib/responses";
 
 import {
   functionRequestToExpressRequest,
@@ -26,6 +29,7 @@ import {
 /**
  * Executes the provided request middlewares sequentially and returns either * - an IResponse (when a middleware fails validation), or
  * - an array of extracted arguments (middleware successful values)
+ *
  * @internal - exported only for testing purposes
  */
 export const extractArgsFromMiddlewares = (
@@ -57,6 +61,7 @@ export const extractArgsFromMiddlewares = (
 
 /**
  * Adds security headers to the HTTP response
+ *
  * @internal
  */
 const addSecurityHeaders = (response: HttpResponseInit): HttpResponseInit => ({
@@ -78,11 +83,6 @@ const addSecurityHeaders = (response: HttpResponseInit): HttpResponseInit => ({
     ...response.headers
   }
 });
-
-interface IResponse<T> {
-  readonly kind: T;
-  readonly apply: (response: any) => void;
-}
 
 /**
  * Wraps a handler function for Azure Functions v4 programming model.

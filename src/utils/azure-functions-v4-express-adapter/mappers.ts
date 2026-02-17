@@ -13,6 +13,8 @@ import {
 
 import { CONTEXT_IDENTIFIER } from "../middlewares/context_middleware";
 
+const CONTENT_TYPE_HEADER = "content-type";
+
 // -----------------------------------------------------
 // HTTP Request mapping from Azure Functions to Express
 // -----------------------------------------------------
@@ -57,6 +59,7 @@ export const functionRequestToExpressRequest = async (
 
 /* eslint-disable functional/no-class, functional/no-this-expression */
 /* eslint-disable functional/prefer-readonly-type, functional/immutable-data */
+
 class MockExpressResponse {
   public statusCode = 200;
   public headers: Record<string, string> = {};
@@ -74,8 +77,8 @@ class MockExpressResponse {
 
   public json(obj: unknown): this {
     this.body = obj;
-    if (!this.headers["content-type"]) {
-      this.headers["content-type"] = "application/json";
+    if (!this.headers[CONTENT_TYPE_HEADER]) {
+      this.headers[CONTENT_TYPE_HEADER] = "application/json";
     }
     return this;
   }
@@ -122,7 +125,7 @@ export const iResponseToHttpResponse = <T>(
   iresponse.apply(mockExpressResponse as any);
 
   const isJson = /json/i.test(
-    mockExpressResponse.headers["content-type"] ?? ""
+    mockExpressResponse.headers[CONTENT_TYPE_HEADER] ?? ""
   );
   const body = mockExpressResponse.body;
 
