@@ -1,5 +1,5 @@
 ---
-"@pagopa/io-functions-commons": major
+"@pagopa/io-functions-commons": patch
 ---
 
 Move @pagopa/ts-commons to peer dependencies
