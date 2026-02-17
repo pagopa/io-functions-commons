@@ -1,5 +1,11 @@
 ### Changelog
 
+## 29.4.7
+
+### Patch Changes
+
+- 4d5ae8e: Move @pagopa/ts-commons to peer dependencies
+
 ## 29.4.6
 
 ### Patch Changes
