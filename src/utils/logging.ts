@@ -1,28 +1,28 @@
-import { Context } from "@azure/functions";
+import { InvocationContext } from "@azure/functions";
 import { LogEntry } from "winston";
 import * as Transport from "winston-transport";
 
 /**
- * Returns the Context logging function matching the provided logging level
+ * Returns the InvocationContext logging function matching the provided logging level
  */
 const getLoggerForLevel = (
-  logger: Context["log"],
+  context: InvocationContext,
   level: string
   // eslint-disable-next-line @typescript-eslint/array-type
 ): ((...args: readonly unknown[]) => void) => {
   switch (level) {
     case "debug":
-      return logger.verbose;
+      return context.debug;
     case "info":
-      return logger.info;
+      return context.info;
     case "warn":
-      return logger.warn;
+      return context.warn;
     case "error":
-      return logger.error;
+      return context.error;
     default:
       // eslint-disable-next-line @typescript-eslint/array-type
       return (...args: readonly unknown[]): void =>
-        logger.info(`[${level}] `, ...args);
+        context.info(`[${level}] `, ...args);
   }
 };
 
@@ -31,11 +31,11 @@ const getLoggerForLevel = (
  */
 export class AzureContextTransport extends Transport {
   /**
-   * @param getContextLogger A function that returns the `log` method in the Context
+   * @param getContextLogger A function that returns the `log` method in the InvocationContext
    * @param options Extra transport options
    */
   constructor(
-    private readonly getContextLogger: () => Context["log"] | undefined,
+    private readonly getContextLogger: () => InvocationContext | undefined,
     options: Transport.TransportStreamOptions
   ) {
     super(options);

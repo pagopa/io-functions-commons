@@ -9,17 +9,15 @@ import {
   ResponseErrorInternal
 } from "@pagopa/ts-commons/lib/responses";
 
-import { Context } from "@azure/functions";
+import { InvocationContext } from "@azure/functions";
 import { pipe } from "fp-ts/lib/function";
 import { IRequestMiddleware } from "../request_middleware";
 
-const CONTEXT_IDENTIFIER = "context";
+export const CONTEXT_IDENTIFIER = "context";
 
-export const setAppContext = (app: express.Express, context: Context): void => {
-  app.set(CONTEXT_IDENTIFIER, context);
-};
-
-export const getAppContext = (request: express.Request): O.Option<Context> =>
+export const getAppContext = (
+  request: express.Request
+): O.Option<InvocationContext> =>
   O.fromNullable(request.app.get(CONTEXT_IDENTIFIER));
 
 /**
@@ -30,21 +28,22 @@ export const getAppContext = (request: express.Request): O.Option<Context> =>
  */
 export const ContextMiddleware = (): IRequestMiddleware<
   "IResponseErrorInternal",
-  Context
+  InvocationContext
 > => (
   request
-): Promise<E.Either<IResponse<"IResponseErrorInternal">, Context>> =>
+): Promise<E.Either<IResponse<"IResponseErrorInternal">, InvocationContext>> =>
   new Promise(resolve => {
     pipe(
       getAppContext(request),
       O.fold(
         () =>
           resolve(
-            E.left<IResponseErrorInternal, Context>(
+            E.left<IResponseErrorInternal, InvocationContext>(
               ResponseErrorInternal("Cannot get context from request")
             )
           ),
-        context => resolve(E.right<IResponseErrorInternal, Context>(context))
+        context =>
+          resolve(E.right<IResponseErrorInternal, InvocationContext>(context))
       )
     );
   });

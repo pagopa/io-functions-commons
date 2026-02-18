@@ -1197,10 +1197,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:~18.13.0":
-  version: 18.13.0
-  resolution: "@types/node@npm:18.13.0"
-  checksum: 10c0/985ca4e6e19fb0ee8bf5618f96f0b6d96a434c28a9123c93f25a3dcc202c3fa903cf234fcee649e10977b057ccb3b796e81b094d9c84eadbaa2b7c4b97a8866e
+"@types/node@npm:~20.17.0":
+  version: 20.17.58
+  resolution: "@types/node@npm:20.17.58"
+  dependencies:
+    undici-types: "npm:~6.19.2"
+  checksum: 10c0/5d80d88aff0849ed729edff055ec6b93be07c11d5e19a816e3f4789b481adc18d0fa124a444f0879a8c2b1297ca76385c6077ee599ba25a7c07ffa7a6fdc018c
   languageName: node
   linkType: hard
 
@@ -2458,7 +2460,7 @@ __metadata:
   resolution: "io-functions-commons-integrations@workspace:."
   dependencies:
     "@types/jest": "npm:^25.2.1"
-    "@types/node": "npm:~18.13.0"
+    "@types/node": "npm:~20.17.0"
     dotenv-cli: "npm:^4.1.0"
     express: "npm:^4.0.0"
     jest: "npm:^29.7.0"
@@ -4269,6 +4271,13 @@ __metadata:
     media-typer: "npm:0.3.0"
     mime-types: "npm:~2.1.24"
   checksum: 10c0/a23daeb538591b7efbd61ecf06b6feb2501b683ffdc9a19c74ef5baba362b4347e42f1b4ed81f5882a8c96a3bfff7f93ce3ffaf0cbbc879b532b04c97a55db9d
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~6.19.2":
+  version: 6.19.8
+  resolution: "undici-types@npm:6.19.8"
+  checksum: 10c0/078afa5990fba110f6824823ace86073b4638f1d5112ee26e790155f481f2a868cc3e0615505b6f4282bdf74a3d8caad715fd809e870c2bb0704e3ea6082f344
   languageName: node
   linkType: hard
 
