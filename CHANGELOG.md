@@ -1,5 +1,12 @@
 ### Changelog
 
+## 30.0.0
+
+### Major Changes
+
+- 2145e1c: - Upgrade `@azure/functions` to v4, and align to new InvocationContext
+  - Add new Azure functions v4 wrapper for IResponses and Middlewares
+
 ## 29.4.7
 
 ### Patch Changes
