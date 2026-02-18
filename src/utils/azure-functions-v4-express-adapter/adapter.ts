@@ -33,8 +33,7 @@ import {
  * @internal - exported only for testing purposes
  */
 export const extractArgsFromMiddlewares = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ...middlewares: ReadonlyArray<IRequestMiddleware<any, any>>
+  ...middlewares: ReadonlyArray<IRequestMiddleware<unknown, unknown>>
 ) =>
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   async (req: HttpRequest, context: InvocationContext) => {

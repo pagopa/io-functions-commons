@@ -122,18 +122,17 @@ describe("iResponseToHttpResponse", () => {
 
   describe("Redirect responses", () => {
     it("should convert ResponsePermanentRedirect correctly", () => {
-      const urlResult = UrlFromString.decode("https://example.com/redirect");
+      const expectedUrl = "https://example.com/redirect";
+      const urlResult = UrlFromString.decode(expectedUrl);
       if (E.isLeft(urlResult)) {
         throw new Error("Invalid URL");
       }
-
       const iresponse = ResponsePermanentRedirect(urlResult.right);
       const result = iResponseToHttpResponse(iresponse);
-
       expect(result).toEqual({
         status: 301,
         headers: {
-          location: "https://example.com/redirect"
+          location: expectedUrl
         }
       });
     });
@@ -150,7 +149,7 @@ describe("iResponseToHttpResponse", () => {
       expect(result).toEqual({
         status: 303,
         headers: {
-          location: "https://example.com/other"
+          location: urlResult.right.href
         }
       });
     });

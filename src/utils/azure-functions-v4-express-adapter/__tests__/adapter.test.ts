@@ -188,17 +188,16 @@ describe("wrapHandlerV4 - Integration tests", () => {
           ResponseSuccessJson({ received: body })
       );
 
+      const expectedBody = { name: "John", age: 30 };
       const req = createMockRequest({
         method: "POST",
-        body: { string: JSON.stringify({ name: "John", age: 30 }) }
+        body: { string: JSON.stringify(expectedBody) }
       });
       const context = createMockContext();
-
       const response = await handler(req, context);
-
       expect(response.status).toBe(200);
       expect(response.jsonBody).toEqual({
-        received: { name: "John", age: 30 }
+        received: expectedBody
       });
     });
 
