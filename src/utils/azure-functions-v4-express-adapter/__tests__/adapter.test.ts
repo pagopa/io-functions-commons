@@ -3,8 +3,9 @@
  * Tests the complete flow from Azure Function request to response
  * For detailed convertIResponse tests, see convert-iresponse.test.ts
  */
+import * as E from "fp-ts/lib/Either";
+import * as O from "fp-ts/lib/Option";
 
-import { wrapHandlerV4 } from "../adapter";
 import {
   ResponseSuccessJson,
   ResponseErrorNotFound,
@@ -18,6 +19,22 @@ import { ServiceId } from "../../../../generated/definitions/ServiceId";
 import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import * as t from "io-ts";
 import { createMockContext, createMockRequest } from "./test-utils";
+import {
+  ClientIp,
+  ClientIpMiddleware
+} from "../../middlewares/client_ip_middleware";
+import {
+  AzureUserAttributesMiddleware,
+  IAzureUserAttributes
+} from "../../middlewares/azure_user_attributes";
+
+import { wrapHandlerV4 } from "../adapter";
+import {
+  checkSourceIpForHandler,
+  clientIPAndCidrTuple
+} from "../../source_ip_check";
+import { IAzureUserAttributesManage } from "../../middlewares/azure_user_attributes_manage";
+import { toAuthorizedCIDRs } from "../../../models/service";
 
 describe("wrapHandlerV4 - Integration tests", () => {
   describe("Basic handler execution", () => {
@@ -303,6 +320,86 @@ describe("wrapHandlerV4 - Integration tests", () => {
         fiscalCode: "AAAAAA00A00A000A",
         serviceId: "service-123",
         message: "Hello"
+      });
+    });
+
+    const mockService = {
+      serviceId: "test-service-id" as NonEmptyString,
+      serviceName: "Test Service" as NonEmptyString,
+      authorizedCIDRs: toAuthorizedCIDRs(["192.168.1.0/24"]),
+      version: 1 as any
+    };
+
+    const mockServiceModel = {
+      findLastVersionByModelId: jest.fn(() => async () =>
+        E.right(O.some(mockService))
+      )
+    } as any;
+    const middleware = [
+      ClientIpMiddleware,
+      AzureUserAttributesMiddleware(mockServiceModel)
+    ] as const;
+
+    const handler = async (
+      clientIp: ClientIp,
+      _userAttributes: IAzureUserAttributes | IAzureUserAttributesManage
+    ) =>
+      ResponseSuccessJson({
+        clientIp
+      });
+
+    const req = createMockRequest({
+      method: "GET",
+      headers: {
+        "x-forwarded-for": "192.168.1.1",
+        "x-user-email": "test@example.com",
+        "x-subscription-id": "test-subscription-id"
+      }
+    });
+    const context = createMockContext();
+
+    it("should handle checkSourceIpForHandler middleware correctly when passing valid IP and userAttributes", async () => {
+      const wrappedHandler = wrapHandlerV4(
+        middleware,
+        checkSourceIpForHandler(handler, (c, u) => clientIPAndCidrTuple(c, u))
+      );
+
+      const result = await wrappedHandler(req, context);
+
+      expect(result).toEqual({
+        status: 200,
+        headers: expect.any(Object),
+        jsonBody: {
+          clientIp: O.some("192.168.1.1")
+        }
+      });
+    });
+
+    it("should handle checkSourceIpForHandler middleware correctly when passing valid non-matching IP", async () => {
+      const wrappedHandler = wrapHandlerV4(
+        middleware,
+        checkSourceIpForHandler(handler, (c, u) => clientIPAndCidrTuple(c, u))
+      );
+      const invalidReq = createMockRequest({
+        method: "GET",
+        headers: {
+          "x-forwarded-for": "192.167.1.1",
+          "x-user-email": "test@example.com",
+          "x-subscription-id": "test-subscription-id"
+        }
+      });
+
+      const result = await wrappedHandler(invalidReq, context);
+
+      expect(result).toEqual({
+        status: 403,
+        headers: expect.any(Object),
+        jsonBody: {
+          detail:
+            "You do not have enough permission to complete the operation you requested",
+          status: 403,
+          title: "You are not allowed here"
+        }
       });
     });
   });
