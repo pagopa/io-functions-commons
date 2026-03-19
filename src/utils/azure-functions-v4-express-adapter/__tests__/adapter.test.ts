@@ -15,7 +15,7 @@ import {
 import { FiscalCodeMiddleware } from "../../middlewares/fiscalcode";
 import { RequiredParamMiddleware } from "../../middlewares/required_param";
 import { RequiredBodyPayloadMiddleware } from "../../middlewares/required_body_payload";
-import { ServiceId } from "../../../../generated/definitions/ServiceId";
+import { ServiceId } from "../../../../generated/definitions/v3/ServiceId";
 import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import * as t from "io-ts";
 import { createMockContext, createMockRequest } from "./test-utils";
