@@ -8,7 +8,7 @@ import {
   RC_CONFIGURATION_MODEL_PK_FIELD
 } from "../../src/models/rc_configuration";
 import { NonEmptyString, Ulid } from "@pagopa/ts-commons/lib/strings";
-import { HasPreconditionEnum } from "../../generated/definitions/HasPrecondition";
+import { HasPreconditionEnum } from "../../generated/definitions/v2/HasPrecondition";
 
 const aRemoteContentEnvironmentConfiguration = {
   baseUrl: "https://anydomain.anytld/api/v1/anyapi" as NonEmptyString,

@@ -15,12 +15,12 @@ import {
 import {
   NotificationChannel,
   NotificationChannelEnum
-} from "../../generated/definitions/NotificationChannel";
+} from "../../generated/definitions/v2/NotificationChannel";
 import {
   NotificationChannelStatusValue,
   NotificationChannelStatusValueEnum
-} from "../../generated/definitions/NotificationChannelStatusValue";
-import { Timestamp } from "../../generated/definitions/Timestamp";
+} from "../../generated/definitions/v2/NotificationChannelStatusValue";
+import { Timestamp } from "../../generated/definitions/v2/Timestamp";
 import { CosmosErrors } from "../utils/cosmosdb_model";
 import { wrapWithKind } from "../utils/types";
 

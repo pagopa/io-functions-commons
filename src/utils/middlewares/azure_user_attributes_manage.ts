@@ -15,7 +15,7 @@ import { isNone } from "fp-ts/lib/Option";
 import { IRequestMiddleware } from "../request_middleware";
 import { SubscriptionCIDRsModel } from "../../models/subscription_cidrs";
 import { ResponseErrorQuery } from "../response";
-import { CIDR } from "../../../generated/definitions/CIDR";
+import { CIDR } from "../../../generated/definitions/v2/CIDR";
 import { IAzureUserAttributes } from "./azure_user_attributes";
 
 // The user email will be passed in this header by the API Gateway

@@ -11,7 +11,7 @@ import {
 import { enumType } from "@pagopa/ts-commons/lib/types";
 import { Container } from "@azure/cosmos";
 import { pipe } from "fp-ts/lib/function";
-import { HasPreconditionEnum } from "../../generated/definitions/HasPrecondition";
+import { HasPreconditionEnum } from "../../generated/definitions/v2/HasPrecondition";
 import {
   AzureCosmosResource,
   CosmosErrors,

@@ -3,18 +3,18 @@ import { NonEmptyString, Ulid } from "@pagopa/ts-commons/lib/strings";
 import { Container } from "@azure/cosmos";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { enumType, withDefault } from "@pagopa/ts-commons/lib/types";
-import { FiscalCode } from "../../generated/definitions/FiscalCode";
-import { MessageStatusValue } from "../../generated/definitions/MessageStatusValue";
-import { ServiceId } from "../../generated/definitions/ServiceId";
-import { TimeToLiveSeconds } from "../../generated/definitions/TimeToLiveSeconds";
-import { Timestamp } from "../../generated/definitions/Timestamp";
+import { FiscalCode } from "../../generated/definitions/v2/FiscalCode";
+import { MessageStatusValue } from "../../generated/definitions/v2/MessageStatusValue";
+import { ServiceId } from "../../generated/definitions/v2/ServiceId";
+import { TimeToLiveSeconds } from "../../generated/definitions/v2/TimeToLiveSeconds";
+import { Timestamp } from "../../generated/definitions/v2/Timestamp";
 import { CosmosResource, CosmosdbModel } from "../utils/cosmosdb_model";
-import { PaymentNoticeNumber } from "../../generated/definitions/PaymentNoticeNumber";
+import { PaymentNoticeNumber } from "../../generated/definitions/v2/PaymentNoticeNumber";
 import {
   PaymentStatus,
   PaymentStatusEnum
-} from "../../generated/definitions/PaymentStatus";
-import { HasPreconditionEnum } from "../../generated/definitions/HasPrecondition";
+} from "../../generated/definitions/v2/PaymentStatus";
+import { HasPreconditionEnum } from "../../generated/definitions/v2/HasPrecondition";
 
 export const MESSAGE_VIEW_COLLECTION_NAME = "message-view";
 const MESSAGE_VIEW_MODEL_PK_FIELD = "fiscalCode";

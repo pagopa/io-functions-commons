@@ -8,14 +8,14 @@ import {
   Components,
   Status
 } from "../message_view";
-import { ServiceId } from "../../../generated/definitions/ServiceId";
-import { NotRejectedMessageStatusValueEnum as MessageStatusValueEnum } from "../../../generated/definitions/NotRejectedMessageStatusValue";
+import { ServiceId } from "../../../generated/definitions/v2/ServiceId";
+import { NotRejectedMessageStatusValueEnum as MessageStatusValueEnum } from "../../../generated/definitions/v2/NotRejectedMessageStatusValue";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { MessageViewModel } from "../message_view";
 import { pipe } from "fp-ts/lib/function";
-import { PaymentStatusEnum } from "../../../generated/definitions/PaymentStatus";
+import { PaymentStatusEnum } from "../../../generated/definitions/v2/PaymentStatus";
 import { errorsToReadableMessages } from "@pagopa/ts-commons/lib/reporters";
-import { TimeToLiveSeconds } from "../../../generated/definitions/TimeToLiveSeconds";
+import { TimeToLiveSeconds } from "../../../generated/definitions/v2/TimeToLiveSeconds";
 
 const aComponents: Components = {
   attachments: { has: false },
@@ -277,7 +277,6 @@ describe("message_view", () => {
       );
     }
   });
-  
 
   it("GIVEN a valid message_view without third party object WHEN the object is decode THEN the decode succeed", async () => {
     const { thirdParty, ...componentsWithoutThirdParty } = aComponents;

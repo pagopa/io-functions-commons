@@ -1,7 +1,7 @@
 import { pipe } from "fp-ts/lib/function";
-import { ServiceMetadata as ApiServiceMetadata } from "../../generated/definitions/ServiceMetadata";
-import { SpecialServiceMetadata as ApiSpecialServiceMetadata } from "../../generated/definitions/SpecialServiceMetadata";
-import { StandardServiceMetadata } from "../../generated/definitions/StandardServiceMetadata";
+import { ServiceMetadata as ApiServiceMetadata } from "../../generated/definitions/v2/ServiceMetadata";
+import { SpecialServiceMetadata as ApiSpecialServiceMetadata } from "../../generated/definitions/v2/SpecialServiceMetadata";
+import { StandardServiceMetadata } from "../../generated/definitions/v2/StandardServiceMetadata";
 import { ServiceMetadata, SpecialServiceMetadata } from "../models/service";
 
 /* eslint-disable @typescript-eslint/naming-convention */

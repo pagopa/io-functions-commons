@@ -9,4 +9,4 @@ paths:
         "200":
           description: "ok"
 definitions:
-  $ref: definitions.yaml
+  $ref: definitions_v2.yaml

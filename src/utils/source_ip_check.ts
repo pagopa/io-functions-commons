@@ -14,7 +14,7 @@ import {
   ResponseErrorForbiddenNotAuthorized,
   ResponseErrorInternal
 } from "@pagopa/ts-commons/lib/responses";
-import { CIDR } from "../../generated/definitions/CIDR";
+import { CIDR } from "../../generated/definitions/v2/CIDR";
 import { toAuthorizedCIDRs } from "../models/service";
 import { ClientIp } from "./middlewares/client_ip_middleware";
 import { IAzureUserAttributes } from "./middlewares/azure_user_attributes";

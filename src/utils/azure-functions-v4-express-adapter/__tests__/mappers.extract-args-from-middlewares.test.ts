@@ -29,7 +29,7 @@ import { AzureUserAttributesMiddleware } from "../../middlewares/azure_user_attr
 import { AzureUserAttributesManageMiddleware } from "../../middlewares/azure_user_attributes_manage";
 
 // Import types for testing
-import { ServiceId } from "../../../../generated/definitions/ServiceId";
+import { ServiceId } from "../../../../generated/definitions/v3/ServiceId";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import * as t from "io-ts";
 import { createMockContext, createMockRequest } from "./test-utils";

@@ -2,7 +2,7 @@ import * as t from "io-ts";
 import { Container } from "@azure/cosmos";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { readonlySetType } from "@pagopa/ts-commons/lib/types";
-import { CIDR } from "../../generated/definitions/CIDR";
+import { CIDR } from "../../generated/definitions/v2/CIDR";
 import {
   CosmosdbModelVersioned,
   RetrievedVersionedModel

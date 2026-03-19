@@ -6,8 +6,8 @@ import * as TE from "fp-ts/TaskEither";
 import * as O from "fp-ts/lib/Option";
 import * as asyncI from "../../utils/async";
 
-import { FiscalCode } from "../../../generated/definitions/FiscalCode";
-import { MessageBodyMarkdown } from "../../../generated/definitions/MessageBodyMarkdown";
+import { FiscalCode } from "../../../generated/definitions/v2/FiscalCode";
+import { MessageBodyMarkdown } from "../../../generated/definitions/v2/MessageBodyMarkdown";
 
 import {
   NonEmptyString,
@@ -28,18 +28,18 @@ import {
 
 jest.mock("../../utils/azure_storage");
 import { Container, CosmosDiagnostics, ResourceResponse } from "@azure/cosmos";
-import { MessageSubject } from "../../../generated/definitions/MessageSubject";
-import { ServiceId } from "../../../generated/definitions/ServiceId";
-import { TimeToLiveSeconds } from "../../../generated/definitions/TimeToLiveSeconds";
+import { MessageSubject } from "../../../generated/definitions/v2/MessageSubject";
+import { ServiceId } from "../../../generated/definitions/v2/ServiceId";
+import { TimeToLiveSeconds } from "../../../generated/definitions/v2/TimeToLiveSeconds";
 import * as azureStorageUtils from "../../utils/azure_storage";
-import { PaymentData } from "../../../generated/definitions/PaymentData";
-import { PaymentAmount } from "../../../generated/definitions/PaymentAmount";
-import { PaymentNoticeNumber } from "../../../generated/definitions/PaymentNoticeNumber";
-import { Payee } from "../../../generated/definitions/Payee";
+import { PaymentData } from "../../../generated/definitions/v2/PaymentData";
+import { PaymentAmount } from "../../../generated/definitions/v2/PaymentAmount";
+import { PaymentNoticeNumber } from "../../../generated/definitions/v2/PaymentNoticeNumber";
+import { Payee } from "../../../generated/definitions/v2/Payee";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { pipe } from "fp-ts/lib/function";
-import { PaymentDataWithRequiredPayee } from "../../../generated/definitions/PaymentDataWithRequiredPayee";
-import { FeatureLevelTypeEnum } from "../../../generated/definitions/FeatureLevelType";
+import { PaymentDataWithRequiredPayee } from "../../../generated/definitions/v2/PaymentDataWithRequiredPayee";
+import { FeatureLevelTypeEnum } from "../../../generated/definitions/v2/FeatureLevelType";
 import { withoutUndefinedValues } from "@pagopa/ts-commons/lib/types";
 
 beforeEach(() => {

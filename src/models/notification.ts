@@ -11,16 +11,16 @@ import { Container } from "@azure/cosmos";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { Option } from "fp-ts/lib/Option";
 import { TaskEither } from "fp-ts/lib/TaskEither";
-import { EmailAddress } from "../../generated/definitions/EmailAddress";
-import { FiscalCode } from "../../generated/definitions/FiscalCode";
+import { EmailAddress } from "../../generated/definitions/v2/EmailAddress";
+import { FiscalCode } from "../../generated/definitions/v2/FiscalCode";
 import {
   BaseModel,
   CosmosdbModel,
   CosmosErrors,
   CosmosResource
 } from "../utils/cosmosdb_model";
-import { HttpsUrl } from "../../generated/definitions/HttpsUrl";
-import { NotificationChannelEnum } from "../../generated/definitions/NotificationChannel";
+import { HttpsUrl } from "../../generated/definitions/v2/HttpsUrl";
+import { NotificationChannelEnum } from "../../generated/definitions/v2/NotificationChannel";
 import { ObjectIdGenerator } from "../utils/strings";
 import { wrapWithKind } from "../utils/types";
 

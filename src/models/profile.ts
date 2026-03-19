@@ -10,21 +10,21 @@ import {
   RetrievedVersionedModel
 } from "../utils/cosmosdb_model_versioned";
 
-import { AcceptedTosVersion } from "../../generated/definitions/AcceptedTosVersion";
-import { BlockedInboxOrChannels } from "../../generated/definitions/BlockedInboxOrChannels";
-import { EmailAddress } from "../../generated/definitions/EmailAddress";
-import { FiscalCode } from "../../generated/definitions/FiscalCode";
-import { IsEmailEnabled } from "../../generated/definitions/IsEmailEnabled";
-import { IsEmailValidated } from "../../generated/definitions/IsEmailValidated";
-import { IsInboxEnabled } from "../../generated/definitions/IsInboxEnabled";
-import { IsTestProfile } from "../../generated/definitions/IsTestProfile";
-import { IsWebhookEnabled } from "../../generated/definitions/IsWebhookEnabled";
-import { ServicesPreferencesModeEnum } from "../../generated/definitions/ServicesPreferencesMode";
-import { PreferredLanguages } from "../../generated/definitions/PreferredLanguages";
+import { AcceptedTosVersion } from "../../generated/definitions/v2/AcceptedTosVersion";
+import { BlockedInboxOrChannels } from "../../generated/definitions/v2/BlockedInboxOrChannels";
+import { EmailAddress } from "../../generated/definitions/v2/EmailAddress";
+import { FiscalCode } from "../../generated/definitions/v2/FiscalCode";
+import { IsEmailEnabled } from "../../generated/definitions/v2/IsEmailEnabled";
+import { IsEmailValidated } from "../../generated/definitions/v2/IsEmailValidated";
+import { IsInboxEnabled } from "../../generated/definitions/v2/IsInboxEnabled";
+import { IsTestProfile } from "../../generated/definitions/v2/IsTestProfile";
+import { IsWebhookEnabled } from "../../generated/definitions/v2/IsWebhookEnabled";
+import { ServicesPreferencesModeEnum } from "../../generated/definitions/v2/ServicesPreferencesMode";
+import { PreferredLanguages } from "../../generated/definitions/v2/PreferredLanguages";
 
 import { UNSET, UNSET_VALUE, wrapWithKind } from "../utils/types";
-import { ReminderStatus } from "../../generated/definitions/ReminderStatus";
-import { PushNotificationsContentType } from "../../generated/definitions/PushNotificationsContentType";
+import { ReminderStatus } from "../../generated/definitions/v2/ReminderStatus";
+import { PushNotificationsContentType } from "../../generated/definitions/v2/PushNotificationsContentType";
 
 export const PROFILE_COLLECTION_NAME = "profiles";
 export const PROFILE_MODEL_PK_FIELD = "fiscalCode" as const;

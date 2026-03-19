@@ -4,7 +4,7 @@ import * as O from "fp-ts/lib/Option";
 import { NonNegativeInteger } from "@pagopa/ts-commons/lib/numbers";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { EmailString, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { FiscalCode } from "../../../generated/definitions/FiscalCode";
+import { FiscalCode } from "../../../generated/definitions/v2/FiscalCode";
 
 import {
   NewProfile,
@@ -15,7 +15,7 @@ import {
 } from "../profile";
 
 import { Container } from "@azure/cosmos";
-import { ServicesPreferencesModeEnum } from "../../../generated/definitions/ServicesPreferencesMode";
+import { ServicesPreferencesModeEnum } from "../../../generated/definitions/v2/ServicesPreferencesMode";
 import { pipe } from "fp-ts/lib/function";
 import { generateVersionedModelId } from "../../utils/cosmosdb_model_versioned";
 

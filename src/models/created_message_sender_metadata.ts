@@ -2,9 +2,9 @@ import * as t from "io-ts";
 
 import { EmailString, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { withDefault } from "@pagopa/ts-commons/lib/types";
-import { OrganizationFiscalCode } from "../../generated/definitions/OrganizationFiscalCode";
-import { ServiceCategory } from "../../generated/definitions/ServiceCategory";
-import { StandardServiceCategoryEnum } from "../../generated/definitions/StandardServiceCategory";
+import { OrganizationFiscalCode } from "../../generated/definitions/v2/OrganizationFiscalCode";
+import { ServiceCategory } from "../../generated/definitions/v2/ServiceCategory";
+import { StandardServiceCategoryEnum } from "../../generated/definitions/v2/StandardServiceCategory";
 
 /**
  * Sender metadata associated to a message

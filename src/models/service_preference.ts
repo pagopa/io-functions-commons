@@ -6,7 +6,7 @@ import { Container, RequestOptions } from "@azure/cosmos";
 import { TaskEither } from "fp-ts/lib/TaskEither";
 import { withDefault } from "@pagopa/ts-commons/lib/types";
 import { enumType } from "@pagopa/ts-commons/lib/types";
-import { ServiceId } from "../../generated/definitions/ServiceId";
+import { ServiceId } from "../../generated/definitions/v2/ServiceId";
 import {
   BaseModel,
   CosmosdbModel,
