@@ -1,5 +1,11 @@
 ### Changelog
 
+## 31.0.0
+
+### Major Changes
+
+- 9a15b5b: New OpenApi v3 refactor
+
 ## 30.0.0
 
 ### Major Changes
