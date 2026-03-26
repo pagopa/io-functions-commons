@@ -1197,12 +1197,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:~20.17.0":
-  version: 20.17.58
-  resolution: "@types/node@npm:20.17.58"
+"@types/node@npm:^22.19.11":
+  version: 22.19.15
+  resolution: "@types/node@npm:22.19.15"
   dependencies:
-    undici-types: "npm:~6.19.2"
-  checksum: 10c0/5d80d88aff0849ed729edff055ec6b93be07c11d5e19a816e3f4789b481adc18d0fa124a444f0879a8c2b1297ca76385c6077ee599ba25a7c07ffa7a6fdc018c
+    undici-types: "npm:~6.21.0"
+  checksum: 10c0/f17eaf3d0d1da5e93ad9e287efb78201f8a5282973c004c5f70d91675c5c6b926a23acaa7b158a42b3d7e27e36b349d65a531710c91c308fca53dd7fa280ef98
   languageName: node
   linkType: hard
 
@@ -2460,7 +2460,7 @@ __metadata:
   resolution: "io-functions-commons-integrations@workspace:."
   dependencies:
     "@types/jest": "npm:^25.2.1"
-    "@types/node": "npm:~20.17.0"
+    "@types/node": "npm:^22.19.11"
     dotenv-cli: "npm:^4.1.0"
     express: "npm:^4.0.0"
     jest: "npm:^29.7.0"
@@ -4274,10 +4274,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"undici-types@npm:~6.19.2":
-  version: 6.19.8
-  resolution: "undici-types@npm:6.19.8"
-  checksum: 10c0/078afa5990fba110f6824823ace86073b4638f1d5112ee26e790155f481f2a868cc3e0615505b6f4282bdf74a3d8caad715fd809e870c2bb0704e3ea6082f344
+"undici-types@npm:~6.21.0":
+  version: 6.21.0
+  resolution: "undici-types@npm:6.21.0"
+  checksum: 10c0/c01ed51829b10aa72fc3ce64b747f8e74ae9b60eafa19a7b46ef624403508a54c526ffab06a14a26b3120d055e1104d7abe7c9017e83ced038ea5cf52f8d5e04
   languageName: node
   linkType: hard
 
