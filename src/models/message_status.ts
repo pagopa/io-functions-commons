@@ -112,31 +112,33 @@ export type MessageStatusUpdater = (
  * Convenience method that returns a function
  * to update the Message status.
  */
-export const getMessageStatusUpdater = (
-  messageStatusModel: MessageStatusModel,
-  messageId: NonEmptyString,
-  fiscalCode: FiscalCode
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-): MessageStatusUpdater => statusUpdate =>
-  pipe(
-    messageStatusModel.findLastVersionByModelId([messageId]),
-    TE.map(
-      O.getOrElseW(() => ({
-        fiscalCode,
-        isArchived: false,
-        isRead: false,
-        messageId
-      }))
-    ),
-    TE.chain(item =>
-      messageStatusModel.upsert({
-        ...item,
-        ...statusUpdate,
-        kind: "INewMessageStatus",
-        updatedAt: new Date()
-      })
-    )
-  );
+export const getMessageStatusUpdater =
+  (
+    messageStatusModel: MessageStatusModel,
+    messageId: NonEmptyString,
+    fiscalCode: FiscalCode
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  ): MessageStatusUpdater =>
+  (statusUpdate) =>
+    pipe(
+      messageStatusModel.findLastVersionByModelId([messageId]),
+      TE.map(
+        O.getOrElseW(() => ({
+          fiscalCode,
+          isArchived: false,
+          isRead: false,
+          messageId
+        }))
+      ),
+      TE.chain((item) =>
+        messageStatusModel.upsert({
+          ...item,
+          ...statusUpdate,
+          kind: "INewMessageStatus",
+          updatedAt: new Date()
+        })
+      )
+    );
 
 /**
  * A model for handling MessageStatus

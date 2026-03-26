@@ -5,10 +5,7 @@ import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
  * Returns hashed input based on sha256 algo
  */
 export const sha256 = (s: string): NonEmptyString =>
-  crypto
-    .createHash("sha256")
-    .update(s)
-    .digest("hex") as NonEmptyString;
+  crypto.createHash("sha256").update(s).digest("hex") as NonEmptyString;
 
 /**
  * Kindly imported from node-http-signature (https://github.com/eBay/digital-signature-nodejs-sdk/blob/main/lib/helpers/digest-helper.ts)

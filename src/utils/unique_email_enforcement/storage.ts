@@ -36,7 +36,8 @@ const isRestError = (u: unknown): u is RestError =>
   u instanceof Error && u.name === "RestError";
 
 export class DataTableProfileEmailsRepository
-  implements IProfileEmailReader, IProfileEmailWriter {
+  implements IProfileEmailReader, IProfileEmailWriter
+{
   constructor(private readonly tableClient: TableClient) {}
 
   // Generates an AsyncIterable<ProfileEmail>

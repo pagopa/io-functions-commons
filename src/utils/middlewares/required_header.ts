@@ -15,14 +15,16 @@ import { IRequestMiddleware } from "../request_middleware";
  * @param name  The name of the header
  * @param type  The io-ts Type for validating the header
  */
-export const RequiredHeaderMiddleware = <S, A>(
-  name: string,
-  type: t.Type<A, S>
-): IRequestMiddleware<"IResponseErrorValidation", A> => async (
-  request
-): Promise<E.Either<IResponse<"IResponseErrorValidation">, A>> =>
-  pipe(
-    request.headers[name],
-    type.decode,
-    E.mapLeft(ResponseErrorFromValidationErrors(type))
-  );
+export const RequiredHeaderMiddleware =
+  <S, A>(
+    name: string,
+    type: t.Type<A, S>
+  ): IRequestMiddleware<"IResponseErrorValidation", A> =>
+  async (
+    request
+  ): Promise<E.Either<IResponse<"IResponseErrorValidation">, A>> =>
+    pipe(
+      request.headers[name],
+      type.decode,
+      E.mapLeft(ResponseErrorFromValidationErrors(type))
+    );

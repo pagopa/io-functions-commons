@@ -21,13 +21,13 @@ export const toPageResults = <T extends { readonly id: string }>(
   const next = hasMoreResults
     ? pipe(
         O.fromNullable(items[items.length - 1]),
-        O.map(e => e.id),
+        O.map((e) => e.id),
         O.toUndefined
       )
     : undefined;
   const prev = pipe(
     O.fromNullable(items[0]),
-    O.map(e => e.id),
+    O.map((e) => e.id),
     O.toUndefined
   );
   return {

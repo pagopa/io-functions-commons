@@ -15,12 +15,14 @@ import { IRequestMiddleware } from "../request_middleware";
  * @param name  The name of the parameter
  * @param type  The io-ts Type for validating the parameter
  */
-export const RequiredBodyPayloadMiddleware = <S, A>(
-  type: t.Type<A, S>
-): IRequestMiddleware<"IResponseErrorValidation", A> => async (
-  request
-): Promise<E.Either<IResponse<"IResponseErrorValidation">, A>> =>
-  pipe(
-    type.decode(request.body),
-    E.mapLeft(ResponseErrorFromValidationErrors(type))
-  );
+export const RequiredBodyPayloadMiddleware =
+  <S, A>(
+    type: t.Type<A, S>
+  ): IRequestMiddleware<"IResponseErrorValidation", A> =>
+  async (
+    request
+  ): Promise<E.Either<IResponse<"IResponseErrorValidation">, A>> =>
+    pipe(
+      type.decode(request.body),
+      E.mapLeft(ResponseErrorFromValidationErrors(type))
+    );

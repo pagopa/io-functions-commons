@@ -46,96 +46,98 @@ export interface IAzureUserAttributes {
  * On success, the middleware provides an IUserAttributes.
  *
  */
-export const AzureUserAttributesMiddleware = (
-  serviceModel: ServiceModel
-): IRequestMiddleware<
-  | "IResponseErrorForbiddenNotAuthorized"
-  | "IResponseErrorQuery"
-  | "IResponseErrorInternal",
-  IAzureUserAttributes
-> => async (
-  request
-): Promise<
-  E.Either<
-    IResponse<
-      | "IResponseErrorInternal"
-      | "IResponseErrorQuery"
-      | "IResponseErrorForbiddenNotAuthorized"
-    >,
+export const AzureUserAttributesMiddleware =
+  (
+    serviceModel: ServiceModel
+  ): IRequestMiddleware<
+    | "IResponseErrorForbiddenNotAuthorized"
+    | "IResponseErrorQuery"
+    | "IResponseErrorInternal",
     IAzureUserAttributes
-  >
-> => {
-  const errorOrUserEmail = EmailString.decode(
-    request.header(HEADER_USER_EMAIL)
-  );
-
-  if (E.isLeft(errorOrUserEmail)) {
-    return E.left<IResponse<"IResponseErrorInternal">, IAzureUserAttributes>(
-      ResponseErrorInternal(
-        `Missing, empty or invalid ${HEADER_USER_EMAIL} header`
-      )
-    );
-  }
-
-  const userEmail = errorOrUserEmail.right;
-
-  const errorOrUserSubscriptionId = NonEmptyString.decode(
-    request.header(HEADER_USER_SUBSCRIPTION_KEY)
-  );
-
-  if (E.isLeft(errorOrUserSubscriptionId)) {
-    return E.left<IResponse<"IResponseErrorInternal">, IAzureUserAttributes>(
-      ResponseErrorInternal(
-        `Missing or empty ${HEADER_USER_SUBSCRIPTION_KEY} header`
-      )
-    );
-  }
-
-  const subscriptionId = errorOrUserSubscriptionId.right;
-
-  // serviceId equals subscriptionId
-  const errorOrMaybeService = await serviceModel.findLastVersionByModelId([
-    subscriptionId
-  ])();
-
-  if (E.isLeft(errorOrMaybeService)) {
-    winston.error(
-      `No service found for subscription|${subscriptionId}|${JSON.stringify(
-        errorOrMaybeService.left
-      )}`
-    );
-    return E.left<IResponse<"IResponseErrorQuery">, IAzureUserAttributes>(
-      ResponseErrorQuery(
-        `Error while retrieving the service tied to the provided subscription id`,
-        errorOrMaybeService.left
-      )
-    );
-  }
-
-  const maybeService = errorOrMaybeService.right;
-
-  if (isNone(maybeService)) {
-    winston.error(
-      `AzureUserAttributesMiddleware|Service not found|${subscriptionId}`
-    );
-    return E.left<
-      IResponse<"IResponseErrorForbiddenNotAuthorized">,
+  > =>
+  async (
+    request
+  ): Promise<
+    E.Either<
+      IResponse<
+        | "IResponseErrorInternal"
+        | "IResponseErrorQuery"
+        | "IResponseErrorForbiddenNotAuthorized"
+      >,
       IAzureUserAttributes
-    >(ResponseErrorForbiddenNotAuthorized);
-  }
+    >
+  > => {
+    const errorOrUserEmail = EmailString.decode(
+      request.header(HEADER_USER_EMAIL)
+    );
 
-  const authInfo: IAzureUserAttributes = {
-    email: userEmail,
-    kind: "IAzureUserAttributes",
-    service: maybeService.value
+    if (E.isLeft(errorOrUserEmail)) {
+      return E.left<IResponse<"IResponseErrorInternal">, IAzureUserAttributes>(
+        ResponseErrorInternal(
+          `Missing, empty or invalid ${HEADER_USER_EMAIL} header`
+        )
+      );
+    }
+
+    const userEmail = errorOrUserEmail.right;
+
+    const errorOrUserSubscriptionId = NonEmptyString.decode(
+      request.header(HEADER_USER_SUBSCRIPTION_KEY)
+    );
+
+    if (E.isLeft(errorOrUserSubscriptionId)) {
+      return E.left<IResponse<"IResponseErrorInternal">, IAzureUserAttributes>(
+        ResponseErrorInternal(
+          `Missing or empty ${HEADER_USER_SUBSCRIPTION_KEY} header`
+        )
+      );
+    }
+
+    const subscriptionId = errorOrUserSubscriptionId.right;
+
+    // serviceId equals subscriptionId
+    const errorOrMaybeService = await serviceModel.findLastVersionByModelId([
+      subscriptionId
+    ])();
+
+    if (E.isLeft(errorOrMaybeService)) {
+      winston.error(
+        `No service found for subscription|${subscriptionId}|${JSON.stringify(
+          errorOrMaybeService.left
+        )}`
+      );
+      return E.left<IResponse<"IResponseErrorQuery">, IAzureUserAttributes>(
+        ResponseErrorQuery(
+          `Error while retrieving the service tied to the provided subscription id`,
+          errorOrMaybeService.left
+        )
+      );
+    }
+
+    const maybeService = errorOrMaybeService.right;
+
+    if (isNone(maybeService)) {
+      winston.error(
+        `AzureUserAttributesMiddleware|Service not found|${subscriptionId}`
+      );
+      return E.left<
+        IResponse<"IResponseErrorForbiddenNotAuthorized">,
+        IAzureUserAttributes
+      >(ResponseErrorForbiddenNotAuthorized);
+    }
+
+    const authInfo: IAzureUserAttributes = {
+      email: userEmail,
+      kind: "IAzureUserAttributes",
+      service: maybeService.value
+    };
+
+    return E.right<
+      IResponse<
+        | "IResponseErrorForbiddenNotAuthorized"
+        | "IResponseErrorQuery"
+        | "IResponseErrorInternal"
+      >,
+      IAzureUserAttributes
+    >(authInfo);
   };
-
-  return E.right<
-    IResponse<
-      | "IResponseErrorForbiddenNotAuthorized"
-      | "IResponseErrorQuery"
-      | "IResponseErrorInternal"
-    >,
-    IAzureUserAttributes
-  >(authInfo);
-};

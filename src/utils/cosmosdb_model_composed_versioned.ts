@@ -128,7 +128,7 @@ export abstract class CosmosdbModelComposedVersioned<
         })
       ),
       TE.mapLeft(CosmosDecodingError),
-      TE.chain(document =>
+      TE.chain((document) =>
         // We need to call the create method from CosmosdbModel parent Class
         // because the super.create calls the create method from CosmosdbModelVersioned that call again
         // createNewVersion with a deadlock.

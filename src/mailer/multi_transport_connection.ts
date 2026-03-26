@@ -40,7 +40,7 @@ const parseMultiProviderConnection = (
   conn: string
 ): MailMultiTransportConnections =>
   A.compact(
-    conn.split(";").map(providerStr => {
+    conn.split(";").map((providerStr) => {
       const [transport, username, password] = providerStr.split(":");
       if (
         NonEmptyString.is(transport) &&
@@ -71,7 +71,7 @@ export const MailMultiTransportConnectionsFromString = new t.Type<
   (u, c) =>
     pipe(
       t.string.validate(u, c),
-      E.chain(s => {
+      E.chain((s) => {
         const conns = parseMultiProviderConnection(s);
         return conns.length === 0 ? t.failure(u, c) : t.success(conns);
       })

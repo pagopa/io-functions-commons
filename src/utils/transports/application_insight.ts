@@ -18,8 +18,9 @@ export class ApplicationInsightTransport extends Transport {
   ): void {
     if (!this.silent) {
       this.telemetryClient.trackEvent({
-        name: `${this.eventNamePrefix}.${level}.${name ??
-          "global"}`.toLowerCase(),
+        name: `${this.eventNamePrefix}.${level}.${
+          name ?? "global"
+        }`.toLowerCase(),
         // Warning: this entries operations is needed becouse winston add three Symbol properties to meta object given to log method: we want to strip this additional properties
         // https://github.com/winstonjs/winston/tree/v3.8.2#streams-objectmode-and-info-objects
         properties: Object.entries(properties).reduce(

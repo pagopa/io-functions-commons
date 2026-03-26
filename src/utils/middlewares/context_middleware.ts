@@ -26,24 +26,25 @@ export const getAppContext = (
  *
  * @param T The type of the bindings found in the context.
  */
-export const ContextMiddleware = (): IRequestMiddleware<
-  "IResponseErrorInternal",
-  InvocationContext
-> => (
-  request
-): Promise<E.Either<IResponse<"IResponseErrorInternal">, InvocationContext>> =>
-  new Promise(resolve => {
-    pipe(
-      getAppContext(request),
-      O.fold(
-        () =>
-          resolve(
-            E.left<IResponseErrorInternal, InvocationContext>(
-              ResponseErrorInternal("Cannot get context from request")
-            )
-          ),
-        context =>
-          resolve(E.right<IResponseErrorInternal, InvocationContext>(context))
-      )
-    );
-  });
+export const ContextMiddleware =
+  (): IRequestMiddleware<"IResponseErrorInternal", InvocationContext> =>
+  (
+    request
+  ): Promise<
+    E.Either<IResponse<"IResponseErrorInternal">, InvocationContext>
+  > =>
+    new Promise((resolve) => {
+      pipe(
+        getAppContext(request),
+        O.fold(
+          () =>
+            resolve(
+              E.left<IResponseErrorInternal, InvocationContext>(
+                ResponseErrorInternal("Cannot get context from request")
+              )
+            ),
+          (context) =>
+            resolve(E.right<IResponseErrorInternal, InvocationContext>(context))
+        )
+      );
+    });

@@ -28,19 +28,19 @@ export const BlobNotFoundCode = "BlobNotFound";
 /**
  * Utility function to avoid code duplication detection by tslint
  */
-const resolveErrorOrLeaseResult = (
-  resolve: Resolve<Either<Error, azureStorage.BlobService.LeaseResult>>
-) => (
-  err: Error,
-  result: azureStorage.BlobService.LeaseResult,
-  _: azureStorage.ServiceResponse
-): void => {
-  if (err) {
-    return resolve(E.left(err));
-  } else {
-    return resolve(E.right(result));
-  }
-};
+const resolveErrorOrLeaseResult =
+  (resolve: Resolve<Either<Error, azureStorage.BlobService.LeaseResult>>) =>
+  (
+    err: Error,
+    result: azureStorage.BlobService.LeaseResult,
+    _: azureStorage.ServiceResponse
+  ): void => {
+    if (err) {
+      return resolve(E.left(err));
+    } else {
+      return resolve(E.right(result));
+    }
+  };
 
 /**
  * Acquire lease for a blob.
@@ -55,7 +55,7 @@ export const acquireLease = (
   blobName: string,
   options: azureStorage.BlobService.AcquireLeaseRequestOptions = {}
 ): Promise<Either<Error, azureStorage.BlobService.LeaseResult>> =>
-  new Promise(resolve => {
+  new Promise((resolve) => {
     blobService.acquireLease(
       containerName,
       blobName,
@@ -79,7 +79,7 @@ export const releaseLease = (
   leaseId: string,
   options: azureStorage.BlobService.AcquireLeaseRequestOptions = {}
 ): Promise<Either<Error, azureStorage.BlobService.LeaseResult>> =>
-  new Promise(resolve => {
+  new Promise((resolve) => {
     blobService.releaseLease(
       containerName,
       blobName,
@@ -105,7 +105,7 @@ export const upsertBlobFromText = (
   text: string | Buffer,
   options: azureStorage.BlobService.CreateBlobRequestOptions = {}
 ): Promise<Either<Error, Option<azureStorage.BlobService.BlobResult>>> =>
-  new Promise(resolve =>
+  new Promise((resolve) =>
     blobService.createBlockBlobFromText(
       containerName,
       blobName,
@@ -164,7 +164,7 @@ export const getBlobAsText = (
   blobName: string,
   options: azureStorage.BlobService.GetBlobRequestOptions = {}
 ): Promise<Either<Error, Option<string>>> =>
-  new Promise(resolve => {
+  new Promise((resolve) => {
     blobService.getBlobToText(
       containerName,
       blobName,
@@ -194,27 +194,31 @@ export const getBlobAsText = (
  * @param containerName   the name of the Azure blob storage container
  * @param blobName        blob file name
  */
-export const getBlobAsTextWithError = (
-  blobService: azureStorage.BlobService,
-  containerName: string,
-  options: azureStorage.BlobService.GetBlobRequestOptions = {}
-) => (
-  blobName: string
-): TE.TaskEither<azureStorage.StorageError, Option<string>> =>
-  pipe(
-    new Promise<E.Either<azureStorage.StorageError, Option<string>>>(
-      resolve => {
-        blobService.getBlobToText(
-          containerName,
-          blobName,
-          options,
-          (err, result, _) =>
-            err ? resolve(E.left(err)) : resolve(E.right(fromNullable(result)))
-        );
-      }
-    ),
-    constant
-  );
+export const getBlobAsTextWithError =
+  (
+    blobService: azureStorage.BlobService,
+    containerName: string,
+    options: azureStorage.BlobService.GetBlobRequestOptions = {}
+  ) =>
+  (
+    blobName: string
+  ): TE.TaskEither<azureStorage.StorageError, Option<string>> =>
+    pipe(
+      new Promise<E.Either<azureStorage.StorageError, Option<string>>>(
+        (resolve) => {
+          blobService.getBlobToText(
+            containerName,
+            blobName,
+            options,
+            (err, result, _) =>
+              err
+                ? resolve(E.left(err))
+                : resolve(E.right(fromNullable(result)))
+          );
+        }
+      ),
+      constant
+    );
 
 /**
  * Get a blob content as a typed (io-ts) object.
@@ -238,7 +242,7 @@ export const getBlobAsObject = async <A, O, I>(
   );
   return pipe(
     errorOrMaybeText,
-    E.chain(maybeText => {
+    E.chain((maybeText) => {
       if (isNone(maybeText)) {
         return E.right(none);
       }
@@ -249,8 +253,8 @@ export const getBlobAsObject = async <A, O, I>(
         return pipe(
           type.decode(json),
           E.fold(
-            err => E.left(new Error(readableReport(err))),
-            _ => E.right(some(_))
+            (err) => E.left(new Error(readableReport(err))),
+            (_) => E.right(some(_))
           )
         );
       } catch (e) {
@@ -330,7 +334,7 @@ export const insertTableEntity = async <T extends ITableEntity>(
   tableName: string,
   entity: T
 ): Promise<Either<Error, azureStorage.TableService.EntityMetadata>> =>
-  new Promise(resolve => {
+  new Promise((resolve) => {
     // eslint-disable-next-line sonarjs/no-identical-functions
     tableService.insertEntity<T>(tableName, entity, (err, result, _) =>
       resolve(err ? E.left(err) : E.right(result))
@@ -354,7 +358,7 @@ export const retrieveTableEntity = async (
     entityResolver: getValueOnlyEntityResolver
   }
 ): Promise<Either<StorageError, Option<unknown>>> =>
-  new Promise(resolve => {
+  new Promise((resolve) => {
     tableService.retrieveEntity(
       tableName,
       partitionKey,

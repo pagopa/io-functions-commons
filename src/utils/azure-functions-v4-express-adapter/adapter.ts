@@ -5,6 +5,7 @@
  * Automatically adds security headers to all responses.
  */
 
+/* eslint-disable @typescript-eslint/naming-convention */
 import {
   InvocationContext,
   HttpRequest,
@@ -32,9 +33,8 @@ import {
  *
  * @internal - exported only for testing purposes
  */
-export const extractArgsFromMiddlewares = (
-  ...middlewares: ReadonlyArray<IRequestMiddleware<unknown, unknown>>
-) =>
+export const extractArgsFromMiddlewares =
+  (...middlewares: ReadonlyArray<IRequestMiddleware<unknown, unknown>>) =>
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   async (req: HttpRequest, context: InvocationContext) => {
     // eslint-disable-next-line functional/prefer-readonly-type
@@ -106,43 +106,42 @@ const addSecurityHeaders = (response: HttpResponseInit): HttpResponseInit => ({
  *   handler: GetProfile
  * });
  */
-export const wrapHandlerV4 = <
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  TMiddlewares extends ReadonlyArray<IRequestMiddleware<any, any>>,
-  T
->(
-  middlewares: TMiddlewares,
-  handler: (...args: MiddlewareResults<TMiddlewares>) => Promise<IResponse<T>>
-): ((
-  req: HttpRequest,
-  context: InvocationContext
-) => Promise<HttpResponseInit>) => async (
-  req,
-  context
-): Promise<HttpResponseInit> => {
-  try {
-    const extractArgs = extractArgsFromMiddlewares(...middlewares);
-    const maybe = await extractArgs(req, context);
+export const wrapHandlerV4 =
+  <
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    TMiddlewares extends ReadonlyArray<IRequestMiddleware<any, any>>,
+    T
+  >(
+    middlewares: TMiddlewares,
+    handler: (...args: MiddlewareResults<TMiddlewares>) => Promise<IResponse<T>>
+  ): ((
+    req: HttpRequest,
+    context: InvocationContext
+  ) => Promise<HttpResponseInit>) =>
+  async (req, context): Promise<HttpResponseInit> => {
+    try {
+      const extractArgs = extractArgsFromMiddlewares(...middlewares);
+      const maybe = await extractArgs(req, context);
 
-    if (E.isLeft(maybe)) {
-      context.error("Middleware Error:", maybe.left.kind, maybe.left.detail);
-      return addSecurityHeaders(iResponseToHttpResponse(maybe.left));
+      if (E.isLeft(maybe)) {
+        context.error("Middleware Error:", maybe.left.kind, maybe.left.detail);
+        return addSecurityHeaders(iResponseToHttpResponse(maybe.left));
+      }
+
+      const args = maybe.right;
+      const iresponse = await handler(
+        ...(args as unknown as MiddlewareResults<TMiddlewares>)
+      );
+
+      return addSecurityHeaders(iResponseToHttpResponse(iresponse));
+    } catch (error) {
+      context.error("Unexpected Internal Server Error:", error);
+
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+
+      return addSecurityHeaders(
+        iResponseToHttpResponse(ResponseErrorInternal(errorMessage))
+      );
     }
-
-    const args = maybe.right;
-    const iresponse = await handler(
-      ...((args as unknown) as MiddlewareResults<TMiddlewares>)
-    );
-
-    return addSecurityHeaders(iResponseToHttpResponse(iresponse));
-  } catch (error) {
-    context.error("Unexpected Internal Server Error:", error);
-
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-
-    return addSecurityHeaders(
-      iResponseToHttpResponse(ResponseErrorInternal(errorMessage))
-    );
-  }
-};
+  };

@@ -148,26 +148,26 @@ const sendTransactionalMail = (
           },
           method: "POST"
         }),
-      err => new Error(`Error posting to MailUp: ${err}`)
+      (err) => new Error(`Error posting to MailUp: ${err}`)
     ),
     TE.chain(
       fromPredicate<Error, Response>(
-        r => r.ok,
-        r => new Error(`Error returned from MailUp API: ${r.status}`)
+        (r) => r.ok,
+        (r) => new Error(`Error returned from MailUp API: ${r.status}`)
       )
     ),
-    TE.chain(response =>
+    TE.chain((response) =>
       tryCatch(
         () => response.json(),
-        err => new Error(`Error getting MailUp API payload: ${err}`)
+        (err) => new Error(`Error getting MailUp API payload: ${err}`)
       )
     ),
-    TE.chain(json =>
+    TE.chain((json) =>
       fromEither(
         pipe(
           ApiResponse.decode(json),
           E.mapLeft(
-            errors =>
+            (errors) =>
               new Error(
                 `Error while decoding response from MailUp: ${readableReport(
                   errors
@@ -179,8 +179,8 @@ const sendTransactionalMail = (
     ),
     TE.chain(
       fromPredicate(
-        ar => ar.Code === "0",
-        ar =>
+        (ar) => ar.Code === "0",
+        (ar) =>
           new Error(
             `Error sending email using MailUp: ${ar.Code}:${ar.Message}`
           )
@@ -242,8 +242,8 @@ const toMailupAttachmentBody = (content: string): ReadonlyArray<number> => {
  */
 const toMailupAttachments = (
   attachments: ReadonlyArray<NodemailerAttachment>
-): ReadonlyArray<{ [k in keyof Attachment]: unknown }> =>
-  attachments.map(att => ({
+): ReadonlyArray<{ readonly [k in keyof Attachment]: unknown }> =>
+  attachments.map((att) => ({
     Body:
       typeof att.content === "string"
         ? toMailupAttachmentBody(att.content)
@@ -296,7 +296,7 @@ export const MailUpTransport = (
   const fetchAgent =
     options.fetchAgent !== undefined
       ? options.fetchAgent
-      : ((nodeFetch as unknown) as typeof fetch);
+      : (nodeFetch as unknown as typeof fetch);
   return {
     name: TRANSPORT_NAME,
 
@@ -320,7 +320,7 @@ export const MailUpTransport = (
         mail.data.headers as {
           readonly [s: string]: string;
         }
-      ).map(header => ({
+      ).map((header) => ({
         N: header,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         V: (mail.data.headers as any)[header]
@@ -354,7 +354,7 @@ export const MailUpTransport = (
         ReplyTo: pipe(
           fromNullable(addresses["reply-to"]),
           O.chain(toMailupAddress),
-          O.map(addr => addr.Email),
+          O.map((addr) => addr.Email),
           O.toUndefined
         ),
         Subject: mail.data.subject,
@@ -380,7 +380,7 @@ export const MailUpTransport = (
       const email = errorOrEmail.right;
 
       sendTransactionalMail(options.creds, email, fetchAgent)()
-        .then(errorOrResponse => {
+        .then((errorOrResponse) => {
           if (isRight(errorOrResponse)) {
             return callback(null, {
               ...errorOrResponse.right,
@@ -390,7 +390,7 @@ export const MailUpTransport = (
             return callback(errorOrResponse.left, undefined);
           }
         })
-        .catch(e => callback(e, undefined));
+        .catch((e) => callback(e, undefined));
     }
   };
 };
