@@ -127,43 +127,42 @@ export const toCosmosErrorResponse = (
     (e instanceof Error ? e : new Error(String(e))) as ErrorResponse
   );
 
-const wrapCreate = <TN, TR>(
-  newItemT: t.Type<TN, ItemDefinition, unknown>,
-  retrievedItemT: t.Type<TR, unknown, unknown>,
-  createItem: (
-    document: ItemDefinition,
-    options?: RequestOptions
-  ) => Promise<ItemResponse<ItemDefinition>>
-) => (
-  newDocument: TN,
-  options?: RequestOptions
-): TaskEither<CosmosErrors, TR> => {
-  const item = newItemT.encode(newDocument);
+const wrapCreate =
+  <TN, TR>(
+    newItemT: t.Type<TN, ItemDefinition, unknown>,
+    retrievedItemT: t.Type<TR, unknown, unknown>,
+    createItem: (
+      document: ItemDefinition,
+      options?: RequestOptions
+    ) => Promise<ItemResponse<ItemDefinition>>
+  ) =>
+  (newDocument: TN, options?: RequestOptions): TaskEither<CosmosErrors, TR> => {
+    const item = newItemT.encode(newDocument);
 
-  return pipe(
-    TE.tryCatch<CosmosErrors, PromiseType<ReturnType<typeof createItem>>>(
-      () =>
-        createItem(item, {
-          // we never want the SDK to generate an ID for us, the item ID must
-          // always be provided by the type T
-          disableAutomaticIdGeneration: true,
-          ...options
-        }),
-      toCosmosErrorResponse
-    ),
-    TE.map(createResponse => createResponse.resource),
-    // FIXME: not sure whether an undefined resource should be an error
-    TE.filterOrElseW(isDefined, () => CosmosEmptyResponse),
-    TE.chainW(retrievedItem =>
-      TE.fromEither(
-        pipe(
-          retrievedItemT.decode(retrievedItem),
-          E.mapLeft(CosmosDecodingError)
+    return pipe(
+      TE.tryCatch<CosmosErrors, PromiseType<ReturnType<typeof createItem>>>(
+        () =>
+          createItem(item, {
+            // we never want the SDK to generate an ID for us, the item ID must
+            // always be provided by the type T
+            disableAutomaticIdGeneration: true,
+            ...options
+          }),
+        toCosmosErrorResponse
+      ),
+      TE.map((createResponse) => createResponse.resource),
+      // FIXME: not sure whether an undefined resource should be an error
+      TE.filterOrElseW(isDefined, () => CosmosEmptyResponse),
+      TE.chainW((retrievedItem) =>
+        TE.fromEither(
+          pipe(
+            retrievedItemT.decode(retrievedItem),
+            E.mapLeft(CosmosDecodingError)
+          )
         )
       )
-    )
-  );
-};
+    );
+  };
 
 /**
  * A persisted data model backed by a CosmosDB client: this base class
@@ -248,13 +247,13 @@ export abstract class CosmosdbModel<
     return pipe(
       partialDocument,
       R.toArray(),
-      RA.map(entry => ({
+      RA.map((entry) => ({
         op: PatchOperationType.add,
         path: `/${entry.key}`,
         value: entry.value
       })),
       RA.toArray, // copy the readonly array to a mutable one
-      patchOperations =>
+      (patchOperations) =>
         TE.tryCatch(
           () =>
             this.container
@@ -262,7 +261,7 @@ export abstract class CosmosdbModel<
               .patch({ condition, operations: patchOperations }, options),
           toCosmosErrorResponse
         ),
-      TE.map(patchResponse => O.fromNullable(patchResponse.resource)),
+      TE.map((patchResponse) => O.fromNullable(patchResponse.resource)),
       TE.chain(
         TE.fromOption(() =>
           CosmosErrorResponse({
@@ -297,8 +296,8 @@ export abstract class CosmosdbModel<
         () => this.container.item(documentId, partitionKey).read(options),
         toCosmosErrorResponse
       ),
-      TE.map(_ => O.fromNullable(_.resource)),
-      TE.chain(maybeDocument =>
+      TE.map((_) => O.fromNullable(_.resource)),
+      TE.chain((maybeDocument) =>
         O.isSome(maybeDocument)
           ? TE.fromEither(
               pipe(
@@ -319,7 +318,7 @@ export abstract class CosmosdbModel<
     options?: FeedOptions
   ): AsyncIterable<ReadonlyArray<t.Validation<TR>>> {
     const iterator = this.container.items.readAll(options).getAsyncIterator();
-    return mapAsyncIterable(iterator, feedResponse =>
+    return mapAsyncIterable(iterator, (feedResponse) =>
       feedResponse.resources.map(this.retrievedItemT.decode)
     );
   }
@@ -334,7 +333,7 @@ export abstract class CosmosdbModel<
     const iterator = this.container.items
       .query(query, options)
       .getAsyncIterator();
-    return mapAsyncIterable(iterator, feedResponse =>
+    return mapAsyncIterable(iterator, (feedResponse) =>
       feedResponse.resources.map(this.retrievedItemT.decode)
     );
   }
@@ -353,7 +352,7 @@ export abstract class CosmosdbModel<
         () => this.container.items.readAll(options).fetchAll(),
         toCosmosErrorResponse
       ),
-      TE.map(_ => _.resources.map(this.retrievedItemT.decode))
+      TE.map((_) => _.resources.map(this.retrievedItemT.decode))
     );
   }
 
@@ -371,8 +370,8 @@ export abstract class CosmosdbModel<
         () => this.container.items.query<TR>(query, options).fetchAll(),
         toCosmosErrorResponse
       ),
-      TE.map(_ => O.fromNullable(_.resources)),
-      TE.chain(maybeDocuments =>
+      TE.map((_) => O.fromNullable(_.resources)),
+      TE.chain((maybeDocuments) =>
         O.isSome(maybeDocuments)
           ? maybeDocuments.value.length > 0
             ? TE.fromEither(

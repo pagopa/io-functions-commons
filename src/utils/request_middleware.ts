@@ -20,22 +20,22 @@ export type RequestHandler<R> = (
  *
  * Failed promises will be mapped to 500 errors handled by ResponseErrorGeneric.
  */
-export const wrapRequestHandler = <R>(
-  handler: RequestHandler<R>
-): express.RequestHandler => (request, response, _): Promise<void> =>
-  handler(request).then(
-    r => {
-      winston.log(
-        "debug",
-        `wrapRequestHandler|SUCCESS|${request.url}|${r.kind}`
-      );
-      r.apply(response);
-    },
-    e => {
-      winston.log("debug", `wrapRequestHandler|ERROR|${request.url}|${e}`);
-      ResponseErrorInternal(e).apply(response);
-    }
-  );
+export const wrapRequestHandler =
+  <R>(handler: RequestHandler<R>): express.RequestHandler =>
+  (request, response, _): Promise<void> =>
+    handler(request).then(
+      (r) => {
+        winston.log(
+          "debug",
+          `wrapRequestHandler|SUCCESS|${request.url}|${r.kind}`
+        );
+        r.apply(response);
+      },
+      (e) => {
+        winston.log("debug", `wrapRequestHandler|ERROR|${request.url}|${e}`);
+        ResponseErrorInternal(e).apply(response);
+      }
+    );
 
 export {
   IRequestMiddleware,

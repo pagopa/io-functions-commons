@@ -76,9 +76,8 @@ export const serviceAvailableNotificationChannels = (
 export const toServicePublic = (
   visibleService: VisibleService
 ): ServicePublic => ({
-  available_notification_channels: serviceAvailableNotificationChannels(
-    visibleService
-  ),
+  available_notification_channels:
+    serviceAvailableNotificationChannels(visibleService),
   department_name: visibleService.departmentName,
   organization_fiscal_code: visibleService.organizationFiscalCode,
   organization_name: visibleService.organizationName,

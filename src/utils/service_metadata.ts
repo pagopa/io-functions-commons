@@ -26,7 +26,7 @@ export const toApiServiceMetadata = (
       tos_url: serviceMetadata.tosUrl,
       web_url: serviceMetadata.webUrl
     },
-    apiCommonService =>
+    (apiCommonService) =>
       SpecialServiceMetadata.is(serviceMetadata)
         ? ({
             ...apiCommonService,

@@ -41,9 +41,11 @@ export enum NotificationAddressSourceEnum {
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
-export const NotificationAddressSource = enumType<
-  NotificationAddressSourceEnum
->(NotificationAddressSourceEnum, "NotificationAddressSource");
+export const NotificationAddressSource =
+  enumType<NotificationAddressSourceEnum>(
+    NotificationAddressSourceEnum,
+    "NotificationAddressSource"
+  );
 
 export type NotificationAddressSource = NotificationAddressSourceEnum;
 

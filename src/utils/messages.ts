@@ -39,15 +39,16 @@ export const getChannelStatus = async (
   notificationId: NonEmptyString,
   channel: NotificationChannelEnum
 ): Promise<NotificationChannelStatusValueEnum | undefined> => {
-  const errorOrMaybeStatus = await notificationStatusModel.findOneNotificationStatusByNotificationChannel(
-    notificationId,
-    channel
-  )();
+  const errorOrMaybeStatus =
+    await notificationStatusModel.findOneNotificationStatusByNotificationChannel(
+      notificationId,
+      channel
+    )();
 
   return pipe(
     O.fromEither(errorOrMaybeStatus),
     O.chain(t.identity),
-    O.map(o => o.status),
+    O.map((o) => o.status),
     O.toUndefined
   );
 };
@@ -69,12 +70,12 @@ export const getMessageNotificationStatuses = (
 ): TaskEither<Error, Option<NotificationStatusHolder>> =>
   pipe(
     notificationModel.findNotificationForMessage(messageId),
-    TE.mapLeft(error => {
+    TE.mapLeft((error) => {
       // temporary log COSMOS_ERROR_RESPONSE kind due to body unavailability
       winston.error(`getMessageNotificationStatuses|Query error|${error.kind}`);
       return new Error(`Error querying for NotificationStatus`);
     }),
-    TE.chain(maybeNotification =>
+    TE.chain((maybeNotification) =>
       // It may happen that the notification object is not yet created in the database
       // due to some latency, so it's better to not fail here but return an empty object
       pipe(
@@ -86,15 +87,15 @@ export const getMessageNotificationStatuses = (
             );
             return TE.of<Error, Option<NotificationStatusHolder>>(none);
           },
-          notification =>
+          (notification) =>
             pipe(
               A.sequence(taskEither)(
                 // collect the statuses of all channels
                 Object.keys(NotificationChannelEnum)
                   .map(
-                    k => NotificationChannelEnum[k as NotificationChannelEnum]
+                    (k) => NotificationChannelEnum[k as NotificationChannelEnum]
                   )
-                  .map(channel =>
+                  .map((channel) =>
                     pipe(
                       TE.tryCatch(
                         () =>
@@ -106,11 +107,11 @@ export const getMessageNotificationStatuses = (
                           ),
                         toError
                       ),
-                      TE.map(status => ({ channel, status }))
+                      TE.map((status) => ({ channel, status }))
                     )
                   )
               ),
-              TE.map(channelStatuses =>
+              TE.map((channelStatuses) =>
                 // reduce the statuses in one response
                 channelStatuses.reduce<NotificationStatusHolder>(
                   (a, s) =>
@@ -123,7 +124,7 @@ export const getMessageNotificationStatuses = (
                   {}
                 )
               ),
-              TE.map(response => some(response))
+              TE.map((response) => some(response))
             )
         )
       )

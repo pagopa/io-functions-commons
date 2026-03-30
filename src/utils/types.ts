@@ -35,7 +35,7 @@ export const wrapWithKind = <C extends t.Any, K extends string>(
     (i: t.InputOf<C>, context: t.Context) =>
       pipe(
         codec.validate(i, context),
-        E.map(_ => ({
+        E.map((_) => ({
           ..._,
           kind
         }))
@@ -46,5 +46,5 @@ export const wrapWithKind = <C extends t.Any, K extends string>(
       return o;
     },
     codec,
-    _ => true
+    (_) => true
   );

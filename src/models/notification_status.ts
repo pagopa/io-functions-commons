@@ -85,24 +85,26 @@ export type NotificationStatusUpdater = (
  * Convenience method that returns a function to update the notification status
  * for the message / notification / channel passed as inputs.
  */
-export const getNotificationStatusUpdater = (
-  notificationStatusModel: NotificationStatusModel,
-  channel: NotificationChannelEnum,
-  messageId: NonEmptyString,
-  notificationId: NonEmptyString
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-): NotificationStatusUpdater => status => {
-  const statusId = makeStatusId(notificationId, channel);
-  return notificationStatusModel.upsert({
-    channel,
-    kind: "INewNotificationStatus",
-    messageId,
-    notificationId,
-    status,
-    statusId,
-    updatedAt: new Date()
-  });
-};
+export const getNotificationStatusUpdater =
+  (
+    notificationStatusModel: NotificationStatusModel,
+    channel: NotificationChannelEnum,
+    messageId: NonEmptyString,
+    notificationId: NonEmptyString
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  ): NotificationStatusUpdater =>
+  (status) => {
+    const statusId = makeStatusId(notificationId, channel);
+    return notificationStatusModel.upsert({
+      channel,
+      kind: "INewNotificationStatus",
+      messageId,
+      notificationId,
+      status,
+      statusId,
+      updatedAt: new Date()
+    });
+  };
 
 /**
  * A model for handling NotificationStatus

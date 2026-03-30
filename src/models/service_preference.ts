@@ -15,7 +15,8 @@ import {
 } from "../utils/cosmosdb_model";
 import { wrapWithKind } from "../utils/types";
 
-export const SERVICE_PREFERENCES_COLLECTION_NAME = "services-preferences" as NonEmptyString;
+export const SERVICE_PREFERENCES_COLLECTION_NAME =
+  "services-preferences" as NonEmptyString;
 export const SERVICE_PREFERENCES_MODEL_PK_FIELD = "fiscalCode" as const;
 
 /**

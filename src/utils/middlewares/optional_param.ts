@@ -17,23 +17,25 @@ import { IRequestMiddleware } from "../request_middleware";
  * @param name  The name of the parameter
  * @param type  The io-ts Type for validating the parameter
  */
-export const OptionalParamMiddleware = <S, A>(
-  name: string,
-  type: t.Type<A, S>
-): IRequestMiddleware<"IResponseErrorValidation", Option<A>> => (
-  request
-): Promise<E.Either<IResponse<"IResponseErrorValidation">, Option<A>>> =>
-  new Promise(resolve => {
-    // If the parameter is not found return None
-    if (request.params[name] === undefined) {
-      resolve(E.right(none));
-    }
+export const OptionalParamMiddleware =
+  <S, A>(
+    name: string,
+    type: t.Type<A, S>
+  ): IRequestMiddleware<"IResponseErrorValidation", Option<A>> =>
+  (
+    request
+  ): Promise<E.Either<IResponse<"IResponseErrorValidation">, Option<A>>> =>
+    new Promise((resolve) => {
+      // If the parameter is not found return None
+      if (request.params[name] === undefined) {
+        resolve(E.right(none));
+      }
 
-    const validation = type.decode(request.params[name]);
-    const result = pipe(
-      validation,
-      E.bimap(ResponseErrorFromValidationErrors(type), some)
-    );
+      const validation = type.decode(request.params[name]);
+      const result = pipe(
+        validation,
+        E.bimap(ResponseErrorFromValidationErrors(type), some)
+      );
 
-    resolve(result);
-  });
+      resolve(result);
+    });

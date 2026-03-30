@@ -21,12 +21,13 @@ export const withAppInsightsContext = <R>(
     O.fromNullable(context.traceContext),
     O.fold(
       () => context.invocationId,
-      tc =>
+      (tc) =>
         pipe(
           NonEmptyString.decode(tc.traceParent),
           E.fold(
-            _ => context.invocationId,
-            traceParentAsString => new Traceparent(traceParentAsString).traceId
+            (_) => context.invocationId,
+            (traceParentAsString) =>
+              new Traceparent(traceParentAsString).traceId
           )
         )
     )

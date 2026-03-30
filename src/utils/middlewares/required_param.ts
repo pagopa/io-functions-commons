@@ -15,17 +15,17 @@ import { IRequestMiddleware } from "../request_middleware";
  * @param name  The name of the parameter
  * @param type  The io-ts Type for validating the parameter
  */
-export const RequiredParamMiddleware = <S, A>(
-  name: string,
-  type: t.Type<A, S>
-): IRequestMiddleware<"IResponseErrorValidation", A> => (
-  request
-): Promise<E.Either<IResponse<"IResponseErrorValidation">, A>> =>
-  new Promise(resolve => {
-    const validation = type.decode(request.params[name]);
-    const result = pipe(
-      validation,
-      E.mapLeft(ResponseErrorFromValidationErrors(type))
-    );
-    resolve(result);
-  });
+export const RequiredParamMiddleware =
+  <S, A>(
+    name: string,
+    type: t.Type<A, S>
+  ): IRequestMiddleware<"IResponseErrorValidation", A> =>
+  (request): Promise<E.Either<IResponse<"IResponseErrorValidation">, A>> =>
+    new Promise((resolve) => {
+      const validation = type.decode(request.params[name]);
+      const result = pipe(
+        validation,
+        E.mapLeft(ResponseErrorFromValidationErrors(type))
+      );
+      resolve(result);
+    });

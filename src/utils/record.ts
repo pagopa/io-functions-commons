@@ -9,7 +9,7 @@ interface IEntry {
 export const isObject = (i: unknown): i is Record<string, unknown> =>
   typeof i === "object" &&
   i !== null &&
-  !Object.keys(i).some(property => typeof property !== "string");
+  !Object.keys(i).some((property) => typeof property !== "string");
 
 /**
  * Flatten all the input object properties in an array of {key,value}.
@@ -30,7 +30,7 @@ export const propertiesToArray = (input: unknown): ReadonlyArray<IEntry> => {
           RA.reduce(
             [] as ReadonlyArray<IEntry>, // cast required in order to avoid never[] automatic assigned type to empty array
             (output, [key, value]) =>
-              pipe(addDelimiter(head, key), fullPath =>
+              pipe(addDelimiter(head, key), (fullPath) =>
                 isObject(value)
                   ? output.concat(paths(value, fullPath))
                   : output.concat([{ key: fullPath, value }])
@@ -45,4 +45,4 @@ export const propertiesToArray = (input: unknown): ReadonlyArray<IEntry> => {
 export const toArray: () => (
   input: unknown
 ) => // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-ReadonlyArray<IEntry> = () => input => propertiesToArray(input);
+ReadonlyArray<IEntry> = () => (input) => propertiesToArray(input);

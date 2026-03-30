@@ -40,31 +40,30 @@ const formatProblem = <S extends ProblemSource<S>>(
 ): HealthProblem<S> => `${source}|${message}` as HealthProblem<S>;
 
 // utility to format an unknown error to an arry of HealthProblem
-export const toHealthProblems = <S extends ProblemSource<S>>(source: S) => (
-  e: unknown
-): ReadonlyArray<HealthProblem<S>> => [
-  formatProblem(source, E.toError(e).message)
-];
+export const toHealthProblems =
+  <S extends ProblemSource<S>>(source: S) =>
+  (e: unknown): ReadonlyArray<HealthProblem<S>> =>
+    [formatProblem(source, E.toError(e).message)];
 
 /**
  * Check application's configuration is correct
  *
  * @returns either true or an array of error messages
  */
-export const checkConfigHealth = <IConfig extends t.Mixed>(
-  ConfigCodec: IConfig
-) => (value: unknown): HealthCheck<"Config", t.TypeOf<IConfig>> =>
-  pipe(
-    value,
-    ConfigCodec.decode,
-    TE.fromEither,
-    TE.mapLeft(errors =>
-      errors.map(e =>
-        // give each problem its own line
-        formatProblem("Config", readableReport([e]))
+export const checkConfigHealth =
+  <IConfig extends t.Mixed>(ConfigCodec: IConfig) =>
+  (value: unknown): HealthCheck<"Config", t.TypeOf<IConfig>> =>
+    pipe(
+      value,
+      ConfigCodec.decode,
+      TE.fromEither,
+      TE.mapLeft((errors) =>
+        errors.map((e) =>
+          // give each problem its own line
+          formatProblem("Config", readableReport([e]))
+        )
       )
-    )
-  );
+    );
 
 /**
  * Return a CosmosClient
@@ -103,7 +102,7 @@ export const checkAzureCosmosDbHealth = (
           () => cosmosClient.getDatabaseAccount(),
           toHealthProblems("AzureCosmosDB")
         ),
-        TE.mapLeft(healthProblem => {
+        TE.mapLeft((healthProblem) => {
           cosmosClient.dispose();
           return healthProblem;
         }),
@@ -139,25 +138,24 @@ export const checkAzureStorageHealth = (
       createTableService
     ]
       // for each, create a task that wraps getServiceProperties
-      .map(createService =>
+      .map((createService) =>
         TE.tryCatch(
           () =>
-            new Promise<
-              azurestorageCommon.models.ServicePropertiesResult.ServiceProperties
-            >((resolve, reject) =>
-              createService(connStr).getServiceProperties((err, result) => {
-                // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-                err
-                  ? reject(err.message.replace(/\n/gim, " ")) // avoid newlines
-                  : resolve(result);
-              })
+            new Promise<azurestorageCommon.models.ServicePropertiesResult.ServiceProperties>(
+              (resolve, reject) =>
+                createService(connStr).getServiceProperties((err, result) => {
+                  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+                  err
+                    ? reject(err.message.replace(/\n/gim, " ")) // avoid newlines
+                    : resolve(result);
+                })
             ),
           toHealthProblems("AzureStorage")
         )
       ),
     // run each taskEither and gather validation errors from each one of them, if any
     A.sequence(applicativeValidation),
-    TE.map(_ => true)
+    TE.map((_) => true)
   );
 };
 
@@ -171,7 +169,7 @@ export const checkAzureStorageHealth = (
 export const checkUrlHealth = (url: string): HealthCheck<"Url", true> =>
   pipe(
     TE.tryCatch(() => fetch(url, { method: "HEAD" }), toHealthProblems("Url")),
-    TE.map(_ => true)
+    TE.map((_) => true)
   );
 
 /**
@@ -179,34 +177,33 @@ export const checkUrlHealth = (url: string): HealthCheck<"Url", true> =>
  *
  * @returns either true or an array of error messages
  */
-export const checkApplicationHealth = <
-  IConfig extends t.Mixed,
-  S extends ProblemSource<S>
->(
-  ConfigCodec: IConfig,
-  checks: ReadonlyArray<(c: t.TypeOf<IConfig>) => HealthCheck<S, true>>
-) => (
-  config: unknown
-): TE.TaskEither<
-  ReadonlyArray<HealthProblem<S>> | ReadonlyArray<HealthProblem<"Config">>,
-  true
-> => {
-  const applicativeValidation = TE.getApplicativeTaskValidation(
-    T.ApplicativePar,
-    RA.getSemigroup<HealthProblem<S>>()
-  );
+export const checkApplicationHealth =
+  <IConfig extends t.Mixed, S extends ProblemSource<S>>(
+    ConfigCodec: IConfig,
+    checks: ReadonlyArray<(c: t.TypeOf<IConfig>) => HealthCheck<S, true>>
+  ) =>
+  (
+    config: unknown
+  ): TE.TaskEither<
+    ReadonlyArray<HealthProblem<S>> | ReadonlyArray<HealthProblem<"Config">>,
+    true
+  > => {
+    const applicativeValidation = TE.getApplicativeTaskValidation(
+      T.ApplicativePar,
+      RA.getSemigroup<HealthProblem<S>>()
+    );
 
-  return pipe(
-    config,
-    TE.of,
-    TE.chain(checkConfigHealth(ConfigCodec)),
-    TE.chainW(decodedConfig =>
-      pipe(
-        checks.map(check => check(decodedConfig)),
-        // run each taskEither and collect validation errors from each one of them, if any
-        A.sequence(applicativeValidation)
-      )
-    ),
-    TE.map(_ => true as const)
-  );
-};
+    return pipe(
+      config,
+      TE.of,
+      TE.chain(checkConfigHealth(ConfigCodec)),
+      TE.chainW((decodedConfig) =>
+        pipe(
+          checks.map((check) => check(decodedConfig)),
+          // run each taskEither and collect validation errors from each one of them, if any
+          A.sequence(applicativeValidation)
+        )
+      ),
+      TE.map((_) => true as const)
+    );
+  };

@@ -144,7 +144,7 @@ export abstract class CosmosdbModelVersioned<
   ): TaskEither<CosmosErrors, TR> {
     return pipe(
       this.getNextVersion(this.getSearchKey(o)),
-      TE.chain(nextVersion =>
+      TE.chain((nextVersion) =>
         this.createNewVersion(o, nextVersion, requestOptions)
       )
     );
@@ -231,7 +231,7 @@ export abstract class CosmosdbModelVersioned<
         })
       ),
       TE.mapLeft(CosmosDecodingError),
-      TE.chain(document => super.create(document, requestOptions))
+      TE.chain((document) => super.create(document, requestOptions))
     );
   }
 
@@ -250,9 +250,9 @@ export abstract class CosmosdbModelVersioned<
         ? [document[id]]
         : // this cast is needed as "Generics extending unions cannot be narrowed"
           // @see https://github.com/microsoft/TypeScript/issues/13995
-          [document[id], document[(pk as unknown) as keyof T]];
+          [document[id], document[pk as unknown as keyof T]];
 
-    return (searchKey as unknown) as DocumentSearchKey<
+    return searchKey as unknown as DocumentSearchKey<
       T,
       ModelIdKey,
       PartitionKey
@@ -292,7 +292,7 @@ export abstract class CosmosdbModelVersioned<
       lastVersion,
       TE.map(
         flow(
-          O.map(_ => incVersion(_.version)),
+          O.map((_) => incVersion(_.version)),
           O.getOrElse(() => 0 as NonNegativeInteger)
         )
       )
@@ -326,6 +326,6 @@ export abstract class CosmosdbModelVersioned<
     );
 
     // we know that T =  Omit<TR, keyof RetrievedVersionedModel>
-    return (skimmed as unknown) as T;
+    return skimmed as unknown as T;
   }
 }

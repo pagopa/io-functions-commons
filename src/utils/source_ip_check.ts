@@ -28,7 +28,7 @@ const isContainedInCidrs = (
   cidrs: ReadonlySet<string>
 ): boolean => {
   const matcher = new CIDRMatcher();
-  cidrs.forEach(c => {
+  cidrs.forEach((c) => {
     matcher.addNetworkClass(c);
   });
   return matcher.contains(ip);
@@ -161,7 +161,7 @@ export function checkSourceIpForHandler<P1, P2, P3, P4, P5, P6, P7, O>(
 > {
   // eslint-disable-next-line max-params, @typescript-eslint/explicit-function-return-type
   return (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6, p7: P7) =>
-    new Promise(resolve => {
+    new Promise((resolve) => {
       // extract the x-forwarded-for header and the allowed cidrs from the params
       const x = extractor(p1, p2, p3, p4, p5, p6, p7);
       const maybeClientIp = x.e1;

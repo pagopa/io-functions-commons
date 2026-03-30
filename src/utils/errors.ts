@@ -35,16 +35,15 @@ interface IRuntimeError<T extends ErrorTypes> {
   readonly cause?: Error;
 }
 
-const RuntimeError = <T extends ErrorTypes>(
-  kind: T
-): ((message: string, cause?: Error) => IRuntimeError<T>) => (
-  message: string,
-  cause?: Error
-): IRuntimeError<T> => ({
-  cause,
-  kind,
-  message
-});
+const RuntimeError =
+  <T extends ErrorTypes>(
+    kind: T
+  ): ((message: string, cause?: Error) => IRuntimeError<T>) =>
+  (message: string, cause?: Error): IRuntimeError<T> => ({
+    cause,
+    kind,
+    message
+  });
 
 export type TransientError = IRuntimeError<ErrorTypes.TransientError>;
 export const TransientError = RuntimeError(ErrorTypes.TransientError);

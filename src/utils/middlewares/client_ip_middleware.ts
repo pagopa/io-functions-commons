@@ -17,11 +17,10 @@ export type ClientIp = Option<IPString>;
  * If you call Functions logic bypassing the API gateway
  * the IP will be null and the middleware will return None.
  */
-export const ClientIpMiddleware: IRequestMiddleware<
-  never,
-  ClientIp
-> = request =>
-  new Promise(resolve => {
+export const ClientIpMiddleware: IRequestMiddleware<never, ClientIp> = (
+  request
+) =>
+  new Promise((resolve) => {
     const clientIp = requestIp.getClientIp(request);
     winston.debug(`Handling request for client IP|${clientIp}`);
     resolve(

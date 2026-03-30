@@ -171,7 +171,7 @@ export type RetrievedMessageWithoutContent = t.TypeOf<
 
 export const ActiveMessage = t.refinement(
   MessageBase,
-  message =>
+  (message) =>
     Date.now() - message.createdAt.getTime() <=
     message.timeToLiveSeconds * 1000,
   "NotExpiredMessage"
@@ -230,10 +230,10 @@ export class MessageModel extends CosmosdbModelTTL<
   ): TE.TaskEither<CosmosErrors, Option<RetrievedMessage>> {
     return pipe(
       this.find([messageId, fiscalCode]),
-      TE.map(maybeMessage =>
+      TE.map((maybeMessage) =>
         pipe(
           maybeMessage,
-          O.filter(m => m.fiscalCode === fiscalCode)
+          O.filter((m) => m.fiscalCode === fiscalCode)
         )
       )
     );
@@ -278,7 +278,7 @@ export class MessageModel extends CosmosdbModelTTL<
           fromNullable(maximumMessageId),
           O.foldW(
             () => emptyMessageParameter,
-            maximumId => ({
+            (maximumId) => ({
               condition: ` AND m.id < @maxId`,
               param: [{ name: "@maxId", value: maximumId }]
             })
@@ -288,7 +288,7 @@ export class MessageModel extends CosmosdbModelTTL<
           fromNullable(minimumMessageId),
           O.foldW(
             () => emptyMessageParameter,
-            minimumId => ({
+            (minimumId) => ({
               condition: ` AND m.id > @minId`,
               param: [{ name: "@minId", value: minimumId }]
             })
@@ -304,7 +304,7 @@ export class MessageModel extends CosmosdbModelTTL<
         ],
         query: `${commonQuerySpec.query}${nextMessagesParams.condition}${prevMessagesParams.condition} ORDER BY m.${MESSAGE_MODEL_PK_FIELD}, m.id DESC`
       })),
-      TE.chain(querySpec =>
+      TE.chain((querySpec) =>
         TE.fromEither(
           E.tryCatch(
             () =>
@@ -341,8 +341,8 @@ export class MessageModel extends CosmosdbModelTTL<
             .fetchAll(),
         toCosmosErrorResponse
       ),
-      TE.map(_ => fromNullable(_.resources)),
-      TE.chain(_ =>
+      TE.map((_) => fromNullable(_.resources)),
+      TE.chain((_) =>
         O.isSome(_)
           ? pipe(
               TE.fromEither(
@@ -403,11 +403,11 @@ export class MessageModel extends CosmosdbModelTTL<
     return pipe(
       blobIdFromMessageId(messageId),
       getBlobAsTextWithError(blobService, this.containerName),
-      TE.mapLeft(storageError => ({
+      TE.mapLeft((storageError) => ({
         code: storageError.code ?? GenericCode,
         message: storageError.message
       })),
-      TE.chain(maybeContentAsText =>
+      TE.chain((maybeContentAsText) =>
         TE.fromEither(
           E.fromOption(
             // Blob exists but the content is empty
@@ -424,7 +424,7 @@ export class MessageModel extends CosmosdbModelTTL<
           J.parse,
           E.mapLeft(E.toError),
           TE.fromEither,
-          TE.mapLeft(parseError => ({
+          TE.mapLeft((parseError) => ({
             code: GenericCode,
             message: `Cannot parse content text into object: ${parseError.message}`
           }))
@@ -434,7 +434,7 @@ export class MessageModel extends CosmosdbModelTTL<
         flow(
           MessageContent.decode,
           TE.fromEither,
-          TE.mapLeft(decodeErrors => ({
+          TE.mapLeft((decodeErrors) => ({
             code: GenericCode,
             message: `Cannot deserialize stored message content: ${readableReport(
               decodeErrors
@@ -443,10 +443,10 @@ export class MessageModel extends CosmosdbModelTTL<
           TE.map(some)
         )
       ),
-      TE.orElse(error =>
+      TE.orElse((error) =>
         error.code === BlobNotFoundCode ? TE.right(none) : TE.left(error)
       ),
-      TE.mapLeft(error => new Error(error.message))
+      TE.mapLeft((error) => new Error(error.message))
     );
   }
 }

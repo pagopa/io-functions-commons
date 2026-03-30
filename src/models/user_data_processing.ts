@@ -23,7 +23,8 @@ import { wrapWithKind } from "../utils/types";
 
 export const USER_DATA_PROCESSING_COLLECTION_NAME = "user-data-processing";
 export const USER_DATA_PROCESSING_MODEL_PK_FIELD = "fiscalCode" as const;
-export const USER_DATA_PROCESSING_MODEL_ID_FIELD = "userDataProcessingId" as const;
+export const USER_DATA_PROCESSING_MODEL_ID_FIELD =
+  "userDataProcessingId" as const;
 
 /**
  * Ensure UserDataProcessing IDs are in correct shape
@@ -101,7 +102,7 @@ export const makeUserDataProcessingId = (
 ): UserDataProcessingId =>
   pipe(
     UserDataProcessingId.decode(`${fiscalCode}-${choice}`),
-    E.getOrElseW(errors => {
+    E.getOrElseW((errors) => {
       throw new Error(
         `Invalid User Data Processing id, reason: ${readableReport(errors)}`
       );

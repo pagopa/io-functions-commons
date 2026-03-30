@@ -38,9 +38,9 @@ export function ResponseJsonIterator<T>(
 ): IResponseSuccessJsonIterator<T> {
   return {
     // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    apply: res =>
-      asyncIteratorToArray(i).then(documents => {
-        const kindlessDocuments = documents.map(d =>
+    apply: (res) =>
+      asyncIteratorToArray(i).then((documents) => {
+        const kindlessDocuments = documents.map((d) =>
           Object.assign(Object.assign({}, d), { kind: undefined })
         );
         return res.status(200).json({

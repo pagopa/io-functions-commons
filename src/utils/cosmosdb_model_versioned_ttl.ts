@@ -88,19 +88,19 @@ export class CosmosdbModelVersionedTTL<
     searchKey: DocumentSearchKey<TR, ModelIdKey, PartitionKey>,
     ttl: RetrievedVersionedModelTTL["ttl"]
   ): TE.TaskEither<CosmosErrors, number> {
-    const partitionKey = ((searchKey.length === 1
+    const partitionKey = (searchKey.length === 1
       ? searchKey[0]
-      : searchKey[1]) as unknown) as TN[PartitionKey];
+      : searchKey[1]) as unknown as TN[PartitionKey];
 
     return pipe(
       this.findAllVersionsBySearchKey(searchKey),
-      TE.chain(versions =>
+      TE.chain((versions) =>
         pipe(
           versions,
           TE.of,
           TE.map(RA.rights),
           TE.map(
-            RA.map(doc => ({
+            RA.map((doc) => ({
               id: doc.id,
               operationType: "Patch" as const,
               resourceBody: {
@@ -117,15 +117,15 @@ export class CosmosdbModelVersionedTTL<
           ),
           TE.map(RA.chunksOf(100)),
           TE.map(
-            RA.map(chunk =>
+            RA.map((chunk) =>
               pipe(
                 chunk,
                 RA.toArray,
-                operations => this.batch(operations, partitionKey),
+                (operations) => this.batch(operations, partitionKey),
                 TE.chainW(
                   TE.fromPredicate(
-                    response => response.code === 200,
-                    _ => {
+                    (response) => response.code === 200,
+                    (_) => {
                       const firstChunkId = chunk[0].id;
                       const lastChunkId = chunk[chunk.length - 1].id;
 
@@ -140,7 +140,7 @@ export class CosmosdbModelVersionedTTL<
             )
           ),
           TE.chainW(TE.sequenceSeqArray),
-          TE.chainW(responses =>
+          TE.chainW((responses) =>
             pipe(
               responses,
               RA.reduce(0, (v, r) => v + (r.result?.length ?? 0)),
@@ -148,8 +148,8 @@ export class CosmosdbModelVersionedTTL<
             )
           ),
           TE.filterOrElseW(
-            batchRecordsCount => batchRecordsCount === versions.length,
-            batchRecordsCount =>
+            (batchRecordsCount) => batchRecordsCount === versions.length,
+            (batchRecordsCount) =>
               CosmosErrorResponse({
                 message: `The message status versions found count (${
                   versions.length
@@ -217,18 +217,18 @@ export class CosmosdbModelVersionedTTL<
           this.container.items.batch(RA.toArray(operations), `${partitionKey}`),
         toCosmosErrorResponse
       ),
-      TE.chain(response =>
+      TE.chain((response) =>
         pipe(
           response.result,
           BatchResult.decode,
           TE.fromEither,
-          TE.mapLeft(error =>
+          TE.mapLeft((error) =>
             CosmosErrorResponse({
               message: errorsToReadableMessages(error).join(", "),
               name: `Error decoding batch result`
             })
           ),
-          TE.map(batchResult => ({ ...response, result: batchResult }))
+          TE.map((batchResult) => ({ ...response, result: batchResult }))
         )
       )
     );

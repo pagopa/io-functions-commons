@@ -296,7 +296,7 @@ export class ServiceModel extends CosmosdbModelVersioned<
           // Reduce all the services to a Record with serviceId as key
           // and the last version of the service as value.
           reduceAsyncIterator(
-            mapAsyncIterable(this.getCollectionIterator(), _ => {
+            mapAsyncIterable(this.getCollectionIterator(), (_) => {
               const elementSelector = _.reduce((acc, el) => {
                 if (isRight(el)) {
                   return Tuple2([...acc.e1, el.right], acc.e2);
@@ -321,13 +321,13 @@ export class ServiceModel extends CosmosdbModelVersioned<
             },
             {} as Record<string, RetrievedService>
           ),
-        err => CosmosDecodingError(err as t.Errors)
+        (err) => CosmosDecodingError(err as t.Errors)
       ),
       TE.chain<
         CosmosErrors,
         Record<string, RetrievedService>,
         Option<ReadonlyArray<RetrievedService>>
-      >(servicesMap => {
+      >((servicesMap) => {
         // Receive a Record with serviceId as key and
         // the last version service as value.
         // From that Record we keep only the values.
