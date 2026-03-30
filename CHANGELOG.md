@@ -1,5 +1,11 @@
 ### Changelog
 
+## 32.0.0
+
+### Major Changes
+
+- 5a702e5: Upgrade to Nodejs 22.22.0
+
 ## 31.0.0
 
 ### Major Changes
