@@ -5,7 +5,7 @@ const textSimple = require("gulp-text-simple");
 const rename = require("gulp-rename");
 
 const mjml2html = require("mjml");
-const prettier = require('gulp-prettier');
+const prettier = require("gulp-prettier");
 
 const TYPESCRIPT_SOURCE_DIR = "src";
 
@@ -34,7 +34,7 @@ const toMjml = (content, options) => {
     `  titleText: string,`,
     `  contentHtml: string,`,
     `  footerHtml: string,`,
-    `  organizationLogoPath: string = "https://assets.cdn.io.italia.it/logos/organizations"`,
+    `  organizationLogoPath: string = "https://assets.io.pagopa.it/logos/organizations"`,
     `): string {`,
     `  return \``,
     `${mjml2html(content, { minify: true }).html}\`;`,
@@ -51,8 +51,9 @@ gulp.task("generate:templates", () => {
     .src(TEMPLATES_SOURCE)
     .pipe(textSimple(toMjml)())
     .pipe(prettier())
-    .pipe(rename(filepath => (filepath.extname = ".ts")))
+    .pipe(rename((filepath) => (filepath.extname = ".ts")))
     .pipe(gulp.dest(TEMPLATES_OUTPUT_DIR));
 });
 
 gulp.task("default", ["generate:templates"]);
+
