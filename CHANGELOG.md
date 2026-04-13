@@ -1,5 +1,11 @@
 ### Changelog
 
+## 32.0.1
+
+### Patch Changes
+
+- 47697f4: Update Organization Logo Path
+
 ## 32.0.0
 
 ### Major Changes
