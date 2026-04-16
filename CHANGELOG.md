@@ -1,5 +1,11 @@
 ### Changelog
 
+## 32.1.0
+
+### Minor Changes
+
+- b5c6287: Remove legacy "Message Forward" E-Mail Template, cleanup gulp dependencies
+
 ## 32.0.1
 
 ### Patch Changes
