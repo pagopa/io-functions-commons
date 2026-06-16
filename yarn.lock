@@ -1710,7 +1710,7 @@ __metadata:
     json-set-map: "npm:^1.1.2"
     mjml: "npm:^4.9.3"
     node-fetch: "npm:^2.6.1"
-    nodemailer: "npm:^6.9.13"
+    nodemailer: "npm:^8.0.0"
     nodemailer-sendgrid: "npm:^1.0.3"
     npm-run-all: "npm:^4.1.1"
     prettier: "npm:^2.8.8"
@@ -8591,10 +8591,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nodemailer@npm:^6.9.13":
-  version: 6.9.13
-  resolution: "nodemailer@npm:6.9.13"
-  checksum: 10c0/4d6899f45abb7760a7d3b4d1046de7e08e80a471b84d1f09065a25941ded482e7f9877be248550e681e0270383cb9299f6caded507cbc0e917341bb137cc94a4
+"nodemailer@npm:^8.0.0":
+  version: 8.0.11
+  resolution: "nodemailer@npm:8.0.11"
+  checksum: 10c0/19229216c63a32eae59d7b39f3dffeba20be317f2335d08d86fb70bd01845a1bf108fecd019c0e90ef186e3d9177cf478192b333cf38620ad0f8c7a6e1e5ae05
   languageName: node
   linkType: hard
 
