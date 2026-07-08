@@ -7,6 +7,7 @@ import {
   MailhogMailerConfig,
   MailupMailerConfig,
   MultiTrasnsportMailerConfig,
+  OneMailMailerConfig,
   SendgridMailerConfig,
   SMTPMailerConfig
 } from "../config";
@@ -19,8 +20,9 @@ const expectRight = <L, R>(e: Either<L, R>, t: (r: R) => void = noop) =>
   pipe(
     e,
     E.fold(
-      l => fail(`Expecting right, received left. Value: ${JSON.stringify(l)}`),
-      r => t(r)
+      (l) =>
+        fail(`Expecting right, received left. Value: ${JSON.stringify(l)}`),
+      (r) => t(r)
     )
   );
 
@@ -28,8 +30,8 @@ const expectLeft = <L, R>(e: Either<L, R>, t: (l: L) => void = noop) =>
   pipe(
     e,
     E.fold(
-      l => t(l),
-      r => fail(`Expecting left, received right. Value: ${JSON.stringify(r)}`)
+      (l) => t(l),
+      (r) => fail(`Expecting left, received right. Value: ${JSON.stringify(r)}`)
     )
   );
 
@@ -58,6 +60,14 @@ const aMailhogConf = {
   MAIL_FROM: aMailFrom,
   NODE_ENV: "dev",
   MAILHOG_HOSTNAME: "a-mh-host"
+};
+
+const aOneMailConf = {
+  MAIL_FROM: aMailFrom,
+  NODE_ENV: "production",
+  ONEMAIL_API_KEY: "an-api-key",
+  ONEMAIL_BASE_URL: "https://onemail.example.com",
+  ONEMAIL_TENANT_NAME: "a-tenant"
 };
 
 const anSMTPWithoutAuthConfig = {
@@ -98,7 +108,7 @@ describe("MailerConfig", () => {
     const rawConf = anSMTPWithoutAuthConfig;
     const result = MailerConfig.decode(rawConf);
 
-    expectRight(result, value => {
+    expectRight(result, (value) => {
       expect(SMTPMailerConfig.is(value)).toBe(true);
       expect(result).toMatchObject(
         E.right({
@@ -113,7 +123,7 @@ describe("MailerConfig", () => {
     const rawConf = anSMTPWithAuthConfig;
     const result = MailerConfig.decode(rawConf);
 
-    expectRight(result, value => {
+    expectRight(result, (value) => {
       expect(SMTPMailerConfig.is(value)).toBe(true);
       expect(result).toMatchObject(
         E.right({ SMTP_USER: "aUser", SMTP_PASS: "aPass" })
@@ -129,7 +139,7 @@ describe("MailerConfig", () => {
     };
     const result = MailerConfig.decode(rawConf);
 
-    expectRight(result, value => {
+    expectRight(result, (value) => {
       expect(value.SENDGRID_API_KEY).toBe("a-sg-key");
       expect(SendgridMailerConfig.is(value)).toBe(true);
     });
@@ -145,7 +155,7 @@ describe("MailerConfig", () => {
     };
     const result = MailerConfig.decode(rawConf);
 
-    expectRight(result, value => {
+    expectRight(result, (value) => {
       expect(value.SENDGRID_API_KEY).toBe("a-sg-key");
       expect(SendgridMailerConfig.is(value)).toBe(true);
     });
@@ -160,7 +170,7 @@ describe("MailerConfig", () => {
     };
     const result = MailerConfig.decode(rawConf);
 
-    expectRight(result, value => {
+    expectRight(result, (value) => {
       expect(value.MAILUP_USERNAME).toBe("a-mu-username");
       expect(value.MAILUP_SECRET).toBe("a-mu-secret");
       expect(MailupMailerConfig.is(value)).toBe(true);
@@ -170,7 +180,7 @@ describe("MailerConfig", () => {
   it("should decode configuration with multi transport", () => {
     const result = MailerConfig.decode(aMultiTransport);
 
-    expectRight(result, value => {
+    expectRight(result, (value) => {
       expect(value.MAIL_TRANSPORTS).toEqual([aTransport, aTransport]);
       expect(MultiTrasnsportMailerConfig.is(value)).toBe(true);
     });
@@ -179,9 +189,20 @@ describe("MailerConfig", () => {
   it("should decode configuration for mailhog", () => {
     const result = MailerConfig.decode(aMailhogConf);
 
-    expectRight(result, value => {
+    expectRight(result, (value) => {
       expect(value.MAILHOG_HOSTNAME).toBe("a-mh-host");
       expect(MailhogMailerConfig.is(value)).toBe(true);
+    });
+  });
+
+  it("should decode configuration for onemail", () => {
+    const result = MailerConfig.decode(aOneMailConf);
+
+    expectRight(result, (value) => {
+      expect(value.ONEMAIL_API_KEY).toBe("an-api-key");
+      expect(value.ONEMAIL_BASE_URL).toBe("https://onemail.example.com");
+      expect(value.ONEMAIL_TENANT_NAME).toBe("a-tenant");
+      expect(OneMailMailerConfig.is(value)).toBe(true);
     });
   });
 
@@ -262,7 +283,7 @@ describe("MailerConfig", () => {
       { ...base, ...withMailUp, ...withSendGrid, ...withMultiTransport }
     ];
 
-    examples.map(MailerConfig.decode).forEach(_ => expectLeft(_));
+    examples.map(MailerConfig.decode).forEach((_) => expectLeft(_));
   });
 
   it.each`
@@ -272,20 +293,22 @@ describe("MailerConfig", () => {
     ${"sendgrid(2)"} | ${aSendgridConf2}
     ${"multi"}       | ${aMultiTransport}
     ${"mailhog"}     | ${aMailhogConf}
+    ${"onemail"}     | ${aOneMailConf}
     ${"smtp(1)"}     | ${anSMTPWithoutAuthConfig}
     ${"smtp(2)"}     | ${anSMTPWithAuthConfig}
   `("should match $name with one and one only config type", ({ conf }) => {
     const decoded = MailerConfig.decode(conf);
-    expectRight(decoded, value => {
+    expectRight(decoded, (value) => {
       // iterate config types to be sure that one and one only matches the decoded value
       expect(
         [
           MailhogMailerConfig,
           MailupMailerConfig,
           MultiTrasnsportMailerConfig,
+          OneMailMailerConfig,
           SendgridMailerConfig,
           SMTPMailerConfig
-        ].filter(x => x.is(value)).length
+        ].filter((x) => x.is(value)).length
       ).toBe(1);
     });
   });

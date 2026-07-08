@@ -18,6 +18,7 @@ import NodeMailerSendgrid = require("nodemailer-sendgrid");
 // eslint-disable-next-line import/no-internal-modules
 import MailerTransporter = require("nodemailer/lib/mailer");
 import { MailUpTransport } from "./mailup";
+import { OneMailTransport } from "./onemail";
 import { MailMultiTransportConnections } from "./multi_transport_connection";
 
 /**
@@ -142,6 +143,7 @@ export {
   // transport factories
   MailUpTransport,
   NodeMailerSendgrid,
+  OneMailTransport,
   MultiTransport,
   getTransportsForConnections,
   // There is actually a non-intuitive difference between trasnport and transporter

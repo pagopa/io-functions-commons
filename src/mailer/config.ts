@@ -34,7 +34,10 @@ export const SMTPMailerConfig = t.intersection([
     MAILUP_SECRET: t.undefined,
     MAILUP_USERNAME: t.undefined,
     MAIL_TRANSPORTS: t.undefined,
-    SENDGRID_API_KEY: t.undefined
+    SENDGRID_API_KEY: t.undefined,
+    ONEMAIL_API_KEY: t.undefined,
+    ONEMAIL_BASE_URL: t.undefined,
+    ONEMAIL_TENANT_NAME: t.undefined
   }),
   t.union([
     // Both defined
@@ -59,7 +62,10 @@ export const SendgridMailerConfig = t.intersection([
     MAILHOG_HOSTNAME: t.undefined,
     MAIL_TRANSPORTS: t.undefined,
     NODE_ENV: t.literal("production"),
-    SENDGRID_API_KEY: NonEmptyString
+    SENDGRID_API_KEY: NonEmptyString,
+    ONEMAIL_API_KEY: t.undefined,
+    ONEMAIL_BASE_URL: t.undefined,
+    ONEMAIL_TENANT_NAME: t.undefined
   }),
   t.partial({
     MAILUP_SECRET: NonEmptyString,
@@ -74,7 +80,10 @@ export const MailupMailerConfig = t.interface({
   MAILUP_USERNAME: NonEmptyString,
   MAIL_TRANSPORTS: t.undefined,
   NODE_ENV: t.literal("production"),
-  SENDGRID_API_KEY: t.undefined
+  SENDGRID_API_KEY: t.undefined,
+  ONEMAIL_API_KEY: t.undefined,
+  ONEMAIL_BASE_URL: t.undefined,
+  ONEMAIL_TENANT_NAME: t.undefined
 });
 
 // Using multi-transport definition
@@ -88,7 +97,10 @@ export const MultiTrasnsportMailerConfig = t.interface({
   MAILUP_USERNAME: t.undefined,
   MAIL_TRANSPORTS: MailMultiTransportConnectionsFromString,
   NODE_ENV: t.literal("production"),
-  SENDGRID_API_KEY: t.undefined
+  SENDGRID_API_KEY: t.undefined,
+  ONEMAIL_API_KEY: t.undefined,
+  ONEMAIL_BASE_URL: t.undefined,
+  ONEMAIL_TENANT_NAME: t.undefined
 });
 
 // the following states that a mailhog configuration is optional and can be provided only if not in prod
@@ -98,7 +110,24 @@ export const MailhogMailerConfig = t.interface({
   MAILUP_USERNAME: t.undefined,
   MAIL_TRANSPORTS: t.undefined,
   NODE_ENV: AnyBut("production", t.string),
-  SENDGRID_API_KEY: t.undefined
+  SENDGRID_API_KEY: t.undefined,
+  ONEMAIL_API_KEY: t.undefined,
+  ONEMAIL_BASE_URL: t.undefined,
+  ONEMAIL_TENANT_NAME: t.undefined
+});
+
+// using OneMail Dispatcher APIs
+export const OneMailMailerConfig = t.interface({
+  MAILHOG_HOSTNAME: t.undefined,
+  MAILUP_SECRET: t.undefined,
+  MAILUP_USERNAME: t.undefined,
+  MAIL_TRANSPORTS: t.undefined,
+  NODE_ENV: t.literal("production"),
+  SENDGRID_API_KEY: t.undefined,
+
+  ONEMAIL_API_KEY: NonEmptyString,
+  ONEMAIL_BASE_URL: NonEmptyString,
+  ONEMAIL_TENANT_NAME: NonEmptyString
 });
 
 // configuration to send email
@@ -116,6 +145,7 @@ export const MailerConfig = t.intersection([
     SendgridMailerConfig,
     MailupMailerConfig,
     MultiTrasnsportMailerConfig,
-    MailhogMailerConfig
+    MailhogMailerConfig,
+    OneMailMailerConfig
   ])
 ]);
