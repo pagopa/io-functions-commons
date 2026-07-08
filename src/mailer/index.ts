@@ -24,6 +24,7 @@ import {
   MailUpTransport,
   MultiTransport,
   NodeMailerSendgrid,
+  OneMailTransport,
   Transport
 } from "./transports";
 
@@ -32,6 +33,7 @@ import {
   MailhogMailerConfig,
   MailupMailerConfig,
   MultiTrasnsportMailerConfig,
+  OneMailMailerConfig,
   SendgridMailerConfig,
   SMTPMailerConfig
 } from "./config";
@@ -47,6 +49,81 @@ const defaultFetchAgent = toFetch(
   )
 );
 
+type TransportOpts =
+  | Transport
+  | {
+      readonly host: NonEmptyString;
+      readonly port: number;
+      readonly secure: boolean;
+    };
+
+/**
+ * Select the proper transport options inferring the type from a given configuration
+ */
+const selectTransportOpts = (
+  config: MailerConfig,
+  fetchAgent: typeof fetch
+): Option<TransportOpts> => {
+  if (SendgridMailerConfig.is(config)) {
+    return O.some(
+      NodeMailerSendgrid({
+        apiKey: config.SENDGRID_API_KEY
+      })
+    );
+  }
+  if (MailupMailerConfig.is(config)) {
+    return O.some(
+      MailUpTransport({
+        creds: {
+          Secret: config.MAILUP_SECRET,
+          Username: config.MAILUP_USERNAME
+        },
+        // HTTPS-only fetch with optional keepalive agent
+        fetchAgent
+      })
+    );
+  }
+  if (MultiTrasnsportMailerConfig.is(config)) {
+    return O.fromNullable(
+      MultiTransport(
+        getTransportsForConnections(config.MAIL_TRANSPORTS, fetchAgent)
+      )
+    );
+  }
+  if (OneMailMailerConfig.is(config)) {
+    return O.some(
+      OneMailTransport({
+        apiKey: config.ONEMAIL_API_KEY,
+        baseUrl: config.ONEMAIL_BASE_URL,
+        // HTTPS-only fetch with optional keepalive agent
+        fetchAgent,
+        tenantName: config.ONEMAIL_TENANT_NAME
+      })
+    );
+  }
+  if (MailhogMailerConfig.is(config)) {
+    return O.some({
+      host: config.MAILHOG_HOSTNAME,
+      port: 1025,
+      secure: false
+    });
+  }
+  if (SMTPMailerConfig.is(config)) {
+    return O.some({
+      // Either both are defined or undefined
+      auth: withoutUndefinedValues({
+        pass: config.SMTP_PASS,
+        user: config.SMTP_USER
+      }),
+      host: config.SMTP_HOSTNAME,
+      pool: config.SMTP_USE_POOL,
+      port: config.SMTP_PORT,
+      secure: config.SMTP_SECURE
+    });
+  }
+  return defaultNever(config, O.none);
+};
+
 /**
  * Create a mail transporter object inferring the type from a given configuration
  *
@@ -60,55 +137,7 @@ export const getMailerTransporter = (
   config: MailerConfig,
   fetchAgent: typeof fetch = defaultFetchAgent
 ): MailerTransporter => {
-  const maybeTransportOpts: Option<
-    | Transport
-    | {
-        readonly host: NonEmptyString;
-        readonly port: number;
-        readonly secure: boolean;
-      }
-  > = SendgridMailerConfig.is(config)
-    ? O.some(
-        NodeMailerSendgrid({
-          apiKey: config.SENDGRID_API_KEY
-        })
-      )
-    : MailupMailerConfig.is(config)
-    ? O.some(
-        MailUpTransport({
-          creds: {
-            Secret: config.MAILUP_SECRET,
-            Username: config.MAILUP_USERNAME
-          },
-          // HTTPS-only fetch with optional keepalive agent
-          fetchAgent
-        })
-      )
-    : MultiTrasnsportMailerConfig.is(config)
-    ? O.fromNullable(
-        MultiTransport(
-          getTransportsForConnections(config.MAIL_TRANSPORTS, fetchAgent)
-        )
-      )
-    : MailhogMailerConfig.is(config)
-    ? O.some({
-        host: config.MAILHOG_HOSTNAME,
-        port: 1025,
-        secure: false
-      })
-    : SMTPMailerConfig.is(config)
-    ? O.some({
-        // Either both are defined or undefined
-        auth: withoutUndefinedValues({
-          pass: config.SMTP_PASS,
-          user: config.SMTP_USER
-        }),
-        host: config.SMTP_HOSTNAME,
-        pool: config.SMTP_USE_POOL,
-        port: config.SMTP_PORT,
-        secure: config.SMTP_SECURE
-      })
-    : defaultNever(config, O.none);
+  const maybeTransportOpts = selectTransportOpts(config, fetchAgent);
 
   if (O.isSome(maybeTransportOpts)) {
     return createMailTransporter(maybeTransportOpts.value);
